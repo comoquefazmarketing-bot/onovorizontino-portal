@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-tigre: #FFD700;
+  --color-dark: #050505;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-dark);
+    color: #e4e4e7;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+/* Estilo para as manchetes */
+.headline {
+  font-weight: 900;
+  text-transform: uppercase;
+  font-style: italic;
+  line-height: 0.85;
+  letter-spacing: -0.05em;
+}

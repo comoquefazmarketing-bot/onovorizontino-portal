@@ -1,0 +1,24 @@
+{
+  "banners": [
+    {
+      "id": "banner-topo-01",
+      "cliente": "Patrocinador Master Exemplo",
+      "imagemUrl": "https://placehold.co/1200x400/18181b/eab308?text=SUA+MARCA+AQUI+NO+TOPODA+FERA",
+      "link": "https://felipe-makarios.com.br/anuncie",
+      "ativo": true,
+      "posicao": "horizontal"
+    },
+    {
+      "id": "banner-lateral-01",
+      "cliente": "Parceiro Local Novo Horizonte",
+      "imagemUrl": "https://placehold.co/600x600/18181b/eab308?text=BANNER+QUADRADO",
+      "link": "https://felipe-makarios.com.br/anuncie",
+      "ativo": true,
+      "posicao": "square"
+    }
+  ],
+  "configuracoes": {
+    "exibirPublicidade": true,
+    "contatoComercial": "contato@onovorizontino.com.br"
+  }
+}
