@@ -18,18 +18,18 @@ export default function RootLayout({
   return (
     <html lang="pt-br" className="scroll-smooth">
       <head>
-        {/* Google Analytics - G-J10P2E3X5X */}
+        {/* Google Analytics Tag */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-J10P2E3X5X"
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
-          {
+          {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-J10P2E3X5X');
-          }
+          `}
         </Script>
       </head>
       <body className={inter.className}>{children}</body>
