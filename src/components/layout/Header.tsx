@@ -2,14 +2,14 @@ import Link from 'next/link';
 
 export default function Header() {
   return (
-    <div className="w-full flex justify-center py-8 bg-black">
-      <Link href="/">
+    <header className="w-full bg-black flex justify-center py-6 border-b border-yellow-500/10">
+      <Link href="/" className="transition-transform hover:scale-105 duration-300">
         <img 
           src="/assets/logos/LOGO - O NOVORIZONTINO.png" 
           alt="Logo O Novorizontino" 
-          className="h-28 md:h-40 w-auto object-contain drop-shadow-[0_0_20px_rgba(255,215,0,0.2)]" 
+          className="h-24 md:h-36 w-auto object-contain" 
         />
       </Link>
-    </div>
+    </header>
   );
 }
