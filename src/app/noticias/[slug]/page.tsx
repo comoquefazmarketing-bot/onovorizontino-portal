@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
 
 export default async function NoticiaPage({ params }: { params: { slug: string } }) {
-  // Puxa tudo da sua tabela 'postagens' pelo slug
+  // Busca a matéria específica no seu banco pelo slug
   const { data: noticia, error } = await supabase
     .from('postagens')
     .select('*')
@@ -12,27 +12,27 @@ export default async function NoticiaPage({ params }: { params: { slug: string }
   if (error || !noticia) return notFound();
 
   return (
-    <main className="min-h-screen bg-black text-white pt-10 pb-20 px-4">
+    <main className="min-h-screen bg-black text-white pt-6 pb-20 px-4 md:px-0">
       <article className="max-w-4xl mx-auto">
-        <header className="mb-12">
-          <span className="text-yellow-500 font-black text-xs uppercase tracking-widest border-b-2 border-yellow-500 pb-1">
+        {/* Cabeçalho da Matéria */}
+        <header className="mb-10">
+          <span className="bg-yellow-500 text-black px-3 py-1 rounded text-xs font-black uppercase italic mb-4 inline-block">
             {noticia.categoria}
           </span>
-          <h1 className="text-4xl md:text-7xl font-black uppercase italic mt-6 leading-[0.9] tracking-tighter">
+          <h1 className="text-4xl md:text-7xl font-black uppercase italic leading-[0.9] tracking-tighter">
             {noticia.titulo}
           </h1>
         </header>
 
-        {noticia.imagem_capa && (
-          <div className="mb-12 rounded-2xl overflow-hidden border border-white/10">
-            <img src={noticia.imagem_capa} className="w-full h-auto object-cover" alt={noticia.titulo} />
-          </div>
-        )}
-
+        {/* Conteúdo HTML vindo direto do Supabase */}
         <div 
-          className="prose prose-invert prose-yellow max-w-none text-gray-300 text-xl leading-relaxed"
+          className="prose prose-invert prose-yellow max-w-none text-gray-200 text-xl leading-relaxed article-content"
           dangerouslySetInnerHTML={{ __html: noticia.conteudo }}
         />
+        
+        <footer className="mt-16 pt-8 border-t border-white/10 text-gray-500 text-sm italic">
+          Autor: {noticia.autor_ia || 'Portal O Novorizontino'} • Publicado em: {new Date(noticia.criado_em).toLocaleDateString('pt-BR')}
+        </footer>
       </article>
     </main>
   );
