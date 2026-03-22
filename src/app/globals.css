@@ -1,23 +1,14 @@
 @import "tailwindcss";
 
-@theme {
-  --color-tigre: #FFD700;
-  --color-dark: #050505;
+:root {
+  background-color: #09090b; /* zinc-950 */
+  color: white;
 }
 
-@layer base {
-  body {
-    background-color: var(--color-dark);
-    color: #e4e4e7;
-    font-family: ui-sans-serif, system-ui, sans-serif;
-  }
+/* Reset de base para garantir consistência */
+* {
+  box-sizing: border-box;
 }
 
-/* Estilo para as manchetes */
-.headline {
-  font-weight: 900;
-  text-transform: uppercase;
-  font-style: italic;
-  line-height: 0.85;
-  letter-spacing: -0.05em;
-}
+/* Fim das classes antigas de marquee que podem estar bagunçando */
+.ticker-scroll, .animate-marquee { display: none; }

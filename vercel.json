@@ -1,4 +1,7 @@
 {
   "cleanUrls": true,
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
 }

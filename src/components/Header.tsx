@@ -1,20 +1,34 @@
-﻿import Link from "next/link";
+'use client';
+import React from 'react';
+import Link from 'next/link';
 
 export default function Header() {
   return (
-    <header className="bg-black border-b border-zinc-800 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <header className="relative w-full z-50">
+      {/* Faixa de LED - Estilo Tum Dum */}
+      <div className="bg-yellow-500 py-1 overflow-hidden border-b border-black">
+        <div className="flex whitespace-nowrap animate-marquee">
+          <span className="text-black font-black italic uppercase text-[10px] px-4 tracking-widest">
+            O ACESSO É QUESTÃO DE HONRA • RUMO À SÉRIE A 2026 • O RUGIDO DO TIGRE • FELIPE MAKARIOS: CRIADOR • 
+          </span>
+          <span className="text-black font-black italic uppercase text-[10px] px-4 tracking-widest">
+            O ACESSO É QUESTÃO DE HONRA • RUMO À SÉRIE A 2026 • O RUGIDO DO TIGRE • FELIPE MAKARIOS: CRIADOR • 
+          </span>
+        </div>
+      </div>
 
-        <Link href="/" className="text-2xl md:text-3xl font-black italic text-[#FFD700]">
-          O NOVORIZONTINO
+      {/* Header Invisível/Vazado para compor com o fundo da Home */}
+      <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+        <Link href="/" className="flex flex-col">
+          <span className="text-white text-3xl font-black italic leading-none tracking-tighter">
+            O <span className="text-yellow-500">NOVORIZONTINO</span>
+          </span>
         </Link>
 
-        <nav className="hidden md:flex gap-8 text-xs font-bold uppercase text-zinc-400">
-          <Link href="/">Home</Link>
-          <Link href="/noticias">Notícias</Link>
-          <Link href="/tigre-tv">Tigre TV</Link>
-        </nav>
-
+        <div className="text-right">
+          <p className="text-yellow-500 font-black italic text-sm leading-none uppercase">Felipe Makarios</p>
+          <p className="text-zinc-500 font-bold text-[8px] uppercase tracking-widest mt-1">Founder & Developer</p>
+        </div>
       </div>
     </header>
   );
