@@ -1,25 +1,22 @@
-'use client';
-import React from 'react';
-import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Header() {
   return (
-    <nav className="absolute top-0 left-0 w-full h-screen pointer-events-none z-[150]">
-      {/* Container que ocupa a área do Hero para centralizar o logo no estádio */}
-      <div className="relative w-full h-full flex items-center justify-center">
-        
-        {/* LOGO: Centralização Cirúrgica com Scale para Imponência */}
-        <div className="relative w-[900px] h-[400px] pointer-events-auto transform scale-[1.2] -translate-y-24">
-          <Image 
-            src="/assets/logos/LOGO - O NOVORIZONTINO.png" 
-            alt="Logo O Novorizontino" 
-            fill 
-            className="object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,1)]" 
-            priority 
-          />
+    <header className="w-full bg-black border-b border-yellow-500/20 sticky top-0 z-[100] backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3">
+          <img src="/assets/logos/logo.png" alt="Logo Tigre" className="h-14 w-auto" />
+          <div className="flex flex-col">
+            <span className="text-white font-black italic text-xl leading-none tracking-tighter">O NOVORIZONTINO</span>
+            <span className="text-yellow-500 text-[10px] font-bold tracking-[0.3em]">PORTAL OFICIAL</span>
+          </div>
+        </Link>
+        <div className="hidden md:flex gap-6 text-white font-bold text-xs uppercase italic">
+          <Link href="/" className="hover:text-yellow-500 transition-colors">Notícias</Link>
+          <Link href="/" className="hover:text-yellow-500 transition-colors">O Clube</Link>
+          <Link href="/" className="hover:text-yellow-500 transition-colors">Sócio</Link>
         </div>
-
       </div>
-    </nav>
+    </header>
   );
 }
