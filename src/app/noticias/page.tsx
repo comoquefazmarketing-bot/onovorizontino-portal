@@ -17,7 +17,7 @@ export default async function NoticiasPage() {
       <Header />
       <div className="h-[200px] w-full"></div>
       <div className="max-w-7xl mx-auto px-4 py-20 w-full">
-        <h1 className="text-6xl font-black uppercase italic mb-12 border-l-8 border-yellow-500 pl-6">Notícias</h1>
+        <h1 className="text-6xl font-black uppercase italic mb-12 border-l-8 border-yellow-500 pl-6">NotÃ­cias</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {noticias?.map((post) => (
             <Link key={post.slug} href={`/noticias/${post.slug}`} className="group border border-white/10 p-6 hover:bg-yellow-500 transition-all">

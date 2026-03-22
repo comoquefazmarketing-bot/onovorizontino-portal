@@ -9,21 +9,21 @@ import Footer from '@/components/layout/Footer';
 export default function Home() {
   return (
     <main className="min-h-screen bg-black">
-      {/* 1. Topo do Site (Header + Banner do Estádio) */}
+      {/* 1. Topo do Site (Header + Banner do EstÃ¡dio) */}
       <Header />
       <HomeHero />
 
-      {/* 2. Conteúdo Principal (Grid de Matérias com Pré-Jogo em destaque) */}
+      {/* 2. ConteÃºdo Principal (Grid de MatÃ©rias com PrÃ©-Jogo em destaque) */}
       <PostagensGrid />
 
-      {/* 3. Seção de Vídeos e Shorts */}
+      {/* 3. SeÃ§Ã£o de VÃ­deos e Shorts */}
       <MainVideoSection />
       <MainShortsSection />
 
       {/* 4. Banner Master (O Tigre - Reordenado para o FINAL) */}
       <BannerMaster />
 
-      {/* 5. Rodapé */}
+      {/* 5. RodapÃ© */}
       <Footer />
     </main>
   );
