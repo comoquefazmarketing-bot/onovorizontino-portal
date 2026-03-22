@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="pt-br" className="scroll-smooth">
       <head>
-        {/* Google Analytics Tag */}
+        {/* Instalação da Google Tag (gtag.js) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-J10P2E3X5X"
           strategy="afterInteractive"
