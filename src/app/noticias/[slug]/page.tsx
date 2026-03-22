@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
 
 export default async function NoticiaPage({ params }: { params: { slug: string } }) {
-  // Busca a matéria diretamente na tabela do Supabase pelo slug
+  // Puxa tudo da sua tabela 'postagens' pelo slug
   const { data: noticia, error } = await supabase
     .from('postagens')
     .select('*')
@@ -12,23 +12,25 @@ export default async function NoticiaPage({ params }: { params: { slug: string }
   if (error || !noticia) return notFound();
 
   return (
-    <main className="min-h-screen bg-black text-white py-12 px-6">
+    <main className="min-h-screen bg-black text-white pt-10 pb-20 px-4">
       <article className="max-w-4xl mx-auto">
-        <header className="mb-10">
-          <span className="bg-yellow-500 text-black px-3 py-1 rounded text-xs font-black uppercase italic">
+        <header className="mb-12">
+          <span className="text-yellow-500 font-black text-xs uppercase tracking-widest border-b-2 border-yellow-500 pb-1">
             {noticia.categoria}
           </span>
-          <h1 className="text-4xl md:text-6xl font-black uppercase italic mt-4 leading-none">
+          <h1 className="text-4xl md:text-7xl font-black uppercase italic mt-6 leading-[0.9] tracking-tighter">
             {noticia.titulo}
           </h1>
         </header>
 
         {noticia.imagem_capa && (
-          <img src={noticia.imagem_capa} className="w-full rounded-2xl mb-12 border border-white/10 shadow-2xl" alt={noticia.titulo} />
+          <div className="mb-12 rounded-2xl overflow-hidden border border-white/10">
+            <img src={noticia.imagem_capa} className="w-full h-auto object-cover" alt={noticia.titulo} />
+          </div>
         )}
 
         <div 
-          className="prose prose-invert prose-yellow max-w-none text-gray-300 text-lg leading-relaxed article-content"
+          className="prose prose-invert prose-yellow max-w-none text-gray-300 text-xl leading-relaxed"
           dangerouslySetInnerHTML={{ __html: noticia.conteudo }}
         />
       </article>
