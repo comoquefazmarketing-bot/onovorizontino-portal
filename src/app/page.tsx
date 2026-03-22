@@ -29,3 +29,5 @@ export default function Home() {
   );
 }
 // Deploy Force: Layout Vertical v1.0.1
+
+// Force redeploy with clean env vars - 03/22/2026 02:19:54
