@@ -1,27 +1,21 @@
-'use client';
-import React from 'react';
-import Image from 'next/image';
-
 export default function HomeHero() {
   return (
-    <section className="relative w-full h-[70vh] overflow-hidden border-b-8 border-yellow-500 bg-black z-0">
-      {/* Container da Imagem do Jorjão */}
-      <div className="absolute inset-0">
-        <Image 
-          src="/jorjao.webp" 
-          alt="Estádio Jorjão"
-          fill
-          className="object-cover object-center animate-fade-in"
-          style={{ objectPosition: '50% 30%' }}
-          priority
+    <section className="relative h-[80vh] w-full overflow-hidden flex items-center justify-center">
+      {/* Imagem do Campo */}
+      <img 
+        src="/assets/backgrounds/estadio-jorjao.jpg" 
+        className="absolute inset-0 w-full h-full object-cover opacity-80"
+        alt="Estádio Jorjão"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black" />
+
+      {/* LOGO CENTRALIZADO DENTRO DO CAMPO */}
+      <div className="relative z-10 flex flex-col items-center">
+        <img 
+          src="/assets/logos/LOGO - O NOVORIZONTINO.png" 
+          className="h-32 md:h-52 w-auto object-contain drop-shadow-[0_0_30px_rgba(0,0,0,0.8)]"
+          alt="Logo O Novorizontino"
         />
-        
-        {/* --- EFEITO VINHETA PROFISSIONAL --- */}
-        {/* Camada 1: Vinheta Radial Pesada (Bordas Escuras, Centro Claro) */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_20%,_rgba(0,0,0,0.9)_90%)]"></div>
-        
-        {/* Camada 2: Gradiente de Fundo (para garantir leitura do rodapé) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
       </div>
     </section>
   );

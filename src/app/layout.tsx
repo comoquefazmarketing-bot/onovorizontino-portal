@@ -1,12 +1,10 @@
 import './globals.css';
-import Header from '@/components/layout/Header';
-import Ticker from '@/components/sections/Ticker';
+import Ticker from '@/components/layout/Ticker'; // Movido para layout para ser global no topo
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-br">
       <body className="bg-black antialiased">
-        <Header />
         <Ticker />
         {children}
       </body>
