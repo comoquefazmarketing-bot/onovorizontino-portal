@@ -13,6 +13,13 @@ export default function PostagensGrid() {
       imagem: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/sign/imagens-portal/Novorizontino%20x%20Londrina.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83YWRmNjZiNC02ZTNlLTRmYjQtOTk0ZC05YzFkYjNiYTQ0YzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZW5zLXBvcnRhbC9Ob3Zvcml6b250aW5vIHggTG9uZHJpbmEucG5nIiwiaWF0IjoxNzc0MTQ2MzgwLCJleHAiOjE4MDU2ODIzODB9.g0fC63gO5E6vJpShAbTgnN_BxqBoGrjPCCks_F6AdNs'
     },
     {
+      id: 'tyger-001',
+      titulo: 'O VÍCIO DO VICE: APATIA E CASTIGO NO JORJÃO',
+      slug: 'estreia-serie-b-novorizontino-x-londrina',
+      categoria: 'Crônica',
+      imagem: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/sign/imagens-portal/vslondrina.webp?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83YWRmNjZiNC02ZTNlLTRmYjQtOTk0ZC05YzFkYjNiYTQ0YzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZW5zLXBvcnRhbC92c2xvbmRyaW5hLndlYnAiLCJpYXQiOjE3NzQzNzU0MDcsImV4cCI6MTgwNTkxMTQwN30.mAQzfFxhIUfHbW-_RkNrddSovLpysfXeHe3V6x5SZtI'
+    },
+    {
       id: '9e74dda1',
       titulo: 'O ACESSO É QUESTÃO DE HONRA: REPARAÇÃO HISTÓRICA 2026',
       slug: 'o-acesso-e-questao-de-honra-2026',
