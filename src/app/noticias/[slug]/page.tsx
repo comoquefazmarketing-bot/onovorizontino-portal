@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = await createClient();
 
   const { data: postagem } = await supabase
-    .from('postagens')           // ✅ tabela correta
+    .from('postagens')
     .select('titulo, categoria, imagem_capa')
     .eq('slug', slug)
     .single();
@@ -48,9 +48,10 @@ export default async function NoticiaPage({ params }: Props) {
   const supabase  = await createClient();
 
   const { data: postagem, error } = await supabase
-    .from('postagens')           // ✅ tabela correta
-    .select('*')
+    .from('postagens')
+    .select('titulo, conteudo, categoria, imagem_capa, criado_em, autor_ia, resumo_ia')
     .eq('slug', slug)
+    .eq('status', 'published')
     .single();
 
   if (error || !postagem) return notFound();
@@ -71,64 +72,49 @@ export default async function NoticiaPage({ params }: Props) {
               {postagem.titulo}
             </h1>
 
-            <div className="flex items-center gap-4 mt-4 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
-              <span>{new Date(postagem.created_at).toLocaleDateString('pt-BR')}</span>
+            {/* Resumo IA — aparece só se preenchido */}
+            {postagem.resumo_ia && (
+              <p className="text-zinc-400 text-lg leading-relaxed max-w-2xl">
+                {postagem.resumo_ia}
+              </p>
+            )}
+
+            <div className="flex items-center gap-4 mt-2 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+              {/* ✅ coluna correta: criado_em (não created_at) */}
+              <span>
+                {new Date(postagem.criado_em).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </span>
               <span className="w-1 h-1 bg-zinc-800 rounded-full" />
-              <span>POR {postagem.autor_ia || 'FELIPE MAKARIOS'}</span>
+              <span>POR {postagem.autor_ia || 'REDAÇÃO'}</span>
             </div>
 
           </div>
         </header>
 
-        {/* ── IMAGEM DE CAPA (se existir) ────────────────────────────────────── */}
-        {postagem.imagem_capa && (
-          <div className="mb-16 -mx-4 md:mx-0">
-            <img
-              src={postagem.imagem_capa}
-              alt={postagem.titulo}
-              className="w-full rounded-2xl object-cover max-h-[520px] shadow-2xl"
-            />
-          </div>
-        )}
-
-        {/* ── CONTEÚDO HTML PRINCIPAL ────────────────────────────────────────── */}
+        {/* ── CONTEÚDO HTML DO BANCO ─────────────────────────────────────────── */}
+        {/*
+          O HTML já vem COMPLETO no campo `conteudo`:
+          inclui imagem de capa, ficha técnica e análise embutidas.
+          Não precisamos de seções separadas.
+        */}
         <div
           className="
             prose prose-neutral prose-invert prose-yellow max-w-none
-            text-zinc-300 text-xl leading-relaxed article-render
+            text-zinc-300 text-xl leading-relaxed
             prose-h2:text-yellow-500 prose-h2:italic prose-h2:uppercase
-            prose-h2:font-black prose-h2:text-3xl
+            prose-h2:font-black prose-h2:text-3xl prose-h2:mt-10
             prose-img:rounded-2xl prose-img:shadow-2xl
             prose-strong:text-white
+            prose-table:text-sm prose-th:text-yellow-500
+            prose-li:text-zinc-300
+            prose-blockquote:border-yellow-500 prose-blockquote:text-zinc-400
           "
           dangerouslySetInnerHTML={{ __html: postagem.conteudo }}
         />
-
-        {/* ── FICHA TÉCNICA (campo separado, se existir) ────────────────────── */}
-        {postagem.ficha_tecnica && (
-          <section className="mt-16 border border-zinc-800 rounded-2xl p-8 bg-zinc-950">
-            <h2 className="text-yellow-500 font-black text-xs uppercase tracking-[0.3em] border-l-4 border-yellow-500 pl-4 mb-6">
-              Ficha Técnica
-            </h2>
-            <div
-              className="prose prose-invert prose-sm max-w-none text-zinc-400"
-              dangerouslySetInnerHTML={{ __html: postagem.ficha_tecnica }}
-            />
-          </section>
-        )}
-
-        {/* ── ANÁLISE (campo separado, se existir) ─────────────────────────── */}
-        {postagem.analise && (
-          <section className="mt-8 border border-yellow-500/20 rounded-2xl p-8 bg-yellow-500/5">
-            <h2 className="text-yellow-500 font-black text-xs uppercase tracking-[0.3em] border-l-4 border-yellow-500 pl-4 mb-6">
-              Análise
-            </h2>
-            <div
-              className="prose prose-invert prose-sm max-w-none text-zinc-300"
-              dangerouslySetInnerHTML={{ __html: postagem.analise }}
-            />
-          </section>
-        )}
 
         {/* ── RODAPÉ DO ARTIGO ──────────────────────────────────────────────── */}
         <footer className="mt-20 pt-10 border-t border-zinc-900 flex justify-between items-center">
