@@ -1,3 +1,42 @@
+import { Metadata } from 'next';
+
+// Função para gerar as metatags automaticamente para cada notícia
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+
+  const { data: noticia } = await supabase
+    .from('noticias')
+    .select('titulo, categoria, imagem_capa')
+    .eq('slug', slug)
+    .single();
+
+  if (!noticia) {
+    return { title: 'Notícia não encontrada | Portal O Novorizontino' };
+  }
+
+  const title = `${noticia.titulo} | O Novorizontino`;
+  const description = `Confira os detalhes sobre ${noticia.titulo} na categoria ${noticia.categoria} do Tigre do Vale.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [noticia.imagem_capa || '/jorjao.jpg'],
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [noticia.imagem_capa || '/jorjao.jpg'],
+    },
+  };
+}
+
+// Seu componente NoticiaPage continua abaixo...
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from 'next/navigation';
 
