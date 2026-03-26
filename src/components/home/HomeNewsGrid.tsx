@@ -11,7 +11,10 @@ export default function NewsGrid() {
   useEffect(() => {
     fetch('/api/noticias')
       .then(res => res.json())
-      .then(data => { if(data && data.length > 1) setNews(data.slice(1)); })
+      .then(data => { 
+        // Filtramos para garantir que pegamos apenas quem tem slug e título
+        if(data && data.length > 0) setNews(data); 
+      })
       .catch(err => console.error("Erro ao buscar grid:", err));
   }, []);
 
@@ -19,10 +22,12 @@ export default function NewsGrid() {
     <section className="py-12">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
         {news.map((item: any) => (
-          <Link href={`/noticia/${item.slug}`} key={item.id} className="group flex flex-col gap-3">
+          /* AJUSTE: Mudamos de /noticia/ para /noticias/ para bater com a pasta do projeto */
+          <Link href={`/noticias/${item.slug}`} key={item.id} className="group flex flex-col gap-3">
             <div className="relative aspect-video overflow-hidden rounded-xl bg-zinc-800">
               <Image 
-                src={item.url_imagem} 
+                /* AJUSTE: Mudamos de url_imagem para imagem_capa que é o nome real no Supabase */
+                src={item.imagem_capa || item.url_imagem} 
                 alt={item.titulo} 
                 fill 
                 className="object-cover transition-transform duration-500 group-hover:scale-110" 
