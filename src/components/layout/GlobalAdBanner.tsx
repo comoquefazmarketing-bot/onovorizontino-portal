@@ -16,7 +16,7 @@ const VIDEOS = [
 // Cada slot dura 8s, CTA dura 5s
 const SEQUENCE = [0, 1, 'cta'] as const;
 type Slot = 0 | 1 | 'cta';
-const DURATIONS: Record<string, number> = { '0': 8000, '1': 8000, 'cta': 5000 };
+const DURATIONS: Record<string, number> = { '0': 8000, '1': 8000, 'cta': 15000 };
 
 export default function GlobalAdBanner() {
   const [slot, setSlot] = useState<Slot>(0);
