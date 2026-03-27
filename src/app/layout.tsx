@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     canonical: 'https://www.onovorizontino.com.br',
   },
   verification: {
-   google: 'njrcPMAtFlMQ0Hnc7xZbC5QF-3Ru_nvADZINPMTPTCE', -3Ru_nvADZINPMTPTCE, // substituir após verificar no Search Console
+    google: 'njrcPMAtFlMQ0Hnc7xZbC5QF-3Ru_nvADZINPMTPTCE',
   },
 };
 
@@ -69,7 +69,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR">
       <head>
-        {/* JSON-LD — Schema.org para o portal */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -83,10 +82,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 url: 'https://www.onovorizontino.com.br/assets/logos/LOGO - O NOVORIZONTINO.png',
               },
               description: 'Portal de notícias do Grêmio Novorizontino — Tigre do Vale.',
-              sameAs: [
-                'https://www.instagram.com/novorizontinooficial',
-                'https://www.gremionovorizontino.com.br',
-              ],
               address: {
                 '@type': 'PostalAddress',
                 addressLocality: 'Novo Horizonte',
@@ -96,7 +91,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }),
           }}
         />
-        {/* JSON-LD — SportsTeam */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
