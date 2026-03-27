@@ -1,7 +1,9 @@
 import React from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 
-export default async function MainVideoSectionComponent() {
+export default async function MainVideoSection() {
+  const supabase = await createClient();
+
   const { data: videos } = await supabase
     .from('videos')
     .select('*')
