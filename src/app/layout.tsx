@@ -1,10 +1,121 @@
+import type { Metadata } from 'next';
 import './globals.css';
 import Ticker from '@/components/layout/Ticker';
 import GlobalAdBanner from '@/components/layout/GlobalAdBanner';
 
+export const metadata: Metadata = {
+  metadataBase: new URL('https://www.onovorizontino.com.br'),
+  title: {
+    default: 'Portal O Novorizontino | Notícias do Grêmio Novorizontino',
+    template: '%s | Portal O Novorizontino',
+  },
+  description: 'O melhor portal de notícias do Grêmio Novorizontino. Acompanhe o Tigre do Vale na Série B 2026, resultados, escalações, transferências e análises táticas.',
+  keywords: [
+    'Grêmio Novorizontino',
+    'Novorizontino',
+    'Tigre do Vale',
+    'Novorizontino Série B 2026',
+    'Novorizontino notícias',
+    'Novo Horizonte futebol',
+    'Jorjão',
+    'Enderson Moreira',
+    'Portal O Novorizontino',
+  ],
+  authors: [{ name: 'Felipe Makarios', url: 'https://www.onovorizontino.com.br' }],
+  creator: 'Felipe Makarios',
+  publisher: 'Portal O Novorizontino',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: 'https://www.onovorizontino.com.br',
+    siteName: 'Portal O Novorizontino',
+    title: 'Portal O Novorizontino | Notícias do Grêmio Novorizontino',
+    description: 'O melhor portal de notícias do Grêmio Novorizontino. Tigre do Vale na Série B 2026.',
+    images: [
+      {
+        url: '/assets/logos/LOGO - O NOVORIZONTINO.png',
+        width: 1200,
+        height: 630,
+        alt: 'Portal O Novorizontino',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Portal O Novorizontino | Notícias do Grêmio Novorizontino',
+    description: 'O melhor portal de notícias do Grêmio Novorizontino. Tigre do Vale na Série B 2026.',
+    images: ['/assets/logos/LOGO - O NOVORIZONTINO.png'],
+  },
+  alternates: {
+    canonical: 'https://www.onovorizontino.com.br',
+  },
+  verification: {
+    google: 'COLE_SEU_CODIGO_AQUI', // substituir após verificar no Search Console
+  },
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-BR">
+      <head>
+        {/* JSON-LD — Schema.org para o portal */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'NewsMediaOrganization',
+              name: 'Portal O Novorizontino',
+              url: 'https://www.onovorizontino.com.br',
+              logo: {
+                '@type': 'ImageObject',
+                url: 'https://www.onovorizontino.com.br/assets/logos/LOGO - O NOVORIZONTINO.png',
+              },
+              description: 'Portal de notícias do Grêmio Novorizontino — Tigre do Vale.',
+              sameAs: [
+                'https://www.instagram.com/novorizontinooficial',
+                'https://www.gremionovorizontino.com.br',
+              ],
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: 'Novo Horizonte',
+                addressRegion: 'SP',
+                addressCountry: 'BR',
+              },
+            }),
+          }}
+        />
+        {/* JSON-LD — SportsTeam */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SportsTeam',
+              name: 'Grêmio Novorizontino',
+              alternateName: ['Novorizontino', 'Tigre do Vale'],
+              sport: 'Futebol',
+              url: 'https://www.gremionovorizontino.com.br',
+              location: {
+                '@type': 'Place',
+                name: 'Estádio Doutor Jorge Ismael de Biasi',
+                address: 'Novo Horizonte, SP, Brasil',
+              },
+            }),
+          }}
+        />
+      </head>
       <body className="bg-black antialiased">
         <Ticker />
         <GlobalAdBanner />
