@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     canonical: 'https://www.onovorizontino.com.br',
   },
   verification: {
-    google: 'COLE_SEU_CODIGO_AQUI', // substituir após verificar no Search Console
+    google: google-site-verification=njrcPMAtFlMQ0Hnc7xZbC5QF-3Ru_nvADZINPMTPTCE, // substituir após verificar no Search Console
   },
 };
 
