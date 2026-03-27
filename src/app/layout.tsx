@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Ticker from '@/components/layout/Ticker';
-import GlobalAdBanner from '@/components/layout/GlobalAdBanner';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.onovorizontino.com.br'),
@@ -69,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR">
       <head>
+        <meta name="google-site-verification" content="njrcPMAtFlMQ0Hnc7xZbC5QF-3Ru_nvADZINPMTPTCE" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -112,7 +112,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-black antialiased">
         <Ticker />
-        <GlobalAdBanner />
         {children}
       </body>
     </html>
