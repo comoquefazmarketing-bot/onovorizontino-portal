@@ -3,7 +3,7 @@ export default function HomeHero() {
     <section className="relative h-[80vh] w-full overflow-hidden flex items-center justify-center">
       {/* Imagem do Campo */}
       <img 
-        src="/assets/backgrounds/estadio-jorjao.jpg" 
+        src="/jorjao.webp" 
         className="absolute inset-0 w-full h-full object-cover opacity-80"
         alt="Estádio Jorjão"
       />
