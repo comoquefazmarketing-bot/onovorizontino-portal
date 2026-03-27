@@ -89,7 +89,7 @@ export default async function Home() {
       <section id="noticias">
         <PostagensGrid />
       </section>
-
+<Manifesto />
       <section id="videos">
         <MainVideoSection />
         <MainShortsSection />
