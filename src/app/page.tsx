@@ -6,6 +6,7 @@ import NovorizontinoWidget from '@/components/widgets/NovorizontinoWidget';
 import CategoryNav from '@/components/layout/CategoryNav';
 import CTCarousel from '@/components/sections/CTCarousel';
 import Footer from '@/components/layout/Footer';
+import Manifesto from '@/components/sections/Manifesto';
 
 export default async function Home() {
   return (
