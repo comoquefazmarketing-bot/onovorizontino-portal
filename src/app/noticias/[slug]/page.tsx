@@ -7,11 +7,16 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from('postagens').select('titulo, categoria, imagem_capa').eq('slug', slug).single();
+  const { data } = await supabase.from('postagens').select('titulo, categoria, imagem_capa, resumo_ia').eq('slug', slug).single();
   if (!data) return { title: 'Notícia não encontrada | Portal O Novorizontino' };
   const title = `${data.titulo} | O Novorizontino`;
-  const description = `Confira os detalhes sobre ${data.titulo} na categoria ${data.categoria} do Tigre do Vale.`;
-  return { title, description, openGraph: { title, description, images: [data.imagem_capa || '/jorjao.webp'], type: 'article' } };
+  const description = data.resumo_ia || `Confira os detalhes sobre ${data.titulo} na categoria ${data.categoria} do Tigre do Vale.`;
+  return {
+    title,
+    description,
+    openGraph: { title, description, images: [data.imagem_capa || '/jorjao.webp'], type: 'article' },
+    twitter: { card: 'summary_large_image', title, description, images: [data.imagem_capa || '/jorjao.webp'] },
+  };
 }
 
 export default async function NoticiaPage({ params }: Props) {
@@ -26,27 +31,37 @@ export default async function NoticiaPage({ params }: Props) {
 
   if (error || !postagem) return notFound();
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: postagem.titulo,
+    description: postagem.resumo_ia || '',
+    image: postagem.imagem_capa || 'https://www.onovorizontino.com.br/jorjao.webp',
+    datePublished: postagem.criado_em,
+    dateModified: postagem.criado_em,
+    author: { '@type': 'Person', name: postagem.autor_ia || 'Felipe Makarios' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Portal O Novorizontino',
+      logo: { '@type': 'ImageObject', url: 'https://www.onovorizontino.com.br/assets/logos/LOGO - O NOVORIZONTINO.png' },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `https://www.onovorizontino.com.br/noticias/${slug}` },
+  };
+
   return (
     <main className="min-h-screen bg-black text-white pb-24 selection:bg-yellow-500 selection:text-black">
 
-      {/* ── BOTÃO VOLTAR FIXO NO TOPO ─────────────────────────────────────── */}
+      {/* JSON-LD — Artigo para o Google */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
+      {/* Botão voltar fixo */}
       <div className="fixed top-8 left-6 z-50">
         <a
-          href="/"
-          className="
-            group flex items-center gap-2
-            bg-black/40 hover:bg-yellow-500
-            border border-white/20 hover:border-yellow-500
-            backdrop-blur-md
-            px-4 py-2 rounded-full
-            text-white hover:text-black
-            text-[11px] font-black uppercase tracking-widest
-            transition-all duration-300
-            shadow-lg hover:shadow-yellow-500/30
-          "
+          href="/noticias"
+          className="group flex items-center gap-2 bg-black/40 hover:bg-yellow-500 border border-white/20 hover:border-yellow-500 backdrop-blur-md px-4 py-2 rounded-full text-white hover:text-black text-[11px] font-black uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-yellow-500/30"
         >
           <span className="transition-transform duration-300 group-hover:-translate-x-1">←</span>
-          <span>Voltar</span>
+          <span>Notícias</span>
         </a>
       </div>
 
@@ -75,21 +90,16 @@ export default async function NoticiaPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: postagem.conteudo }}
         />
 
-        {/* ── RODAPÉ DO ARTIGO ──────────────────────────────────────────────── */}
         <footer className="mt-20 pt-10 border-t border-zinc-900 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-yellow-500 animate-pulse rounded-full" />
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Portal O Novorizontino</span>
           </div>
-          <a
-            href="/"
-            className="group flex items-center gap-2 text-zinc-500 hover:text-yellow-500 text-[10px] font-black uppercase tracking-widest transition-colors"
-          >
+          <a href="/noticias" className="group flex items-center gap-2 text-zinc-500 hover:text-yellow-500 text-[10px] font-black uppercase tracking-widest transition-colors">
             <span className="transition-transform duration-300 group-hover:-translate-x-1">←</span>
-            Voltar para o Portal
+            Voltar para as Notícias
           </a>
         </footer>
-
       </article>
     </main>
   );
