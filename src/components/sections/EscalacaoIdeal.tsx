@@ -303,6 +303,7 @@ export default function EscalacaoIdeal() {
   const [generating, setGenerating] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [showLeadModal, setShowLeadModal] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [fieldWidth, setFieldWidth] = useState(340);
   const [jogoAtual, setJogoAtual] = useState<Jogo | null>(null);
   const [palpite, setPalpite] = useState({ mandante: 0, visitante: 1 });
@@ -351,21 +352,52 @@ export default function EscalacaoIdeal() {
   const handleGenerate = () => {
     if (filledCount < 11) return;
     const jaRegistrado = typeof window !== 'undefined' && localStorage.getItem('tigre_lead_ok');
-    if (jaRegistrado) { doGenerate(); } else { setShowLeadModal(true); }
+    if (jaRegistrado) { setShowShare(true); } else { setShowLeadModal(true); }
   };
 
-  const doGenerate = async () => {
+  const doGenerate = async (tipo: 'download' | 'share' | 'whatsapp' = 'download') => {
     setShowLeadModal(false); setGenerating(true); setShowCard(true);
     await new Promise(r => setTimeout(r, 600));
     try {
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(cardRef.current!, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#080808', logging: false });
-      const link = document.createElement('a');
-      link.download = 'escalacao-tigre-novorizontino.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+
+      if (tipo === 'download') {
+        const link = document.createElement('a');
+        link.download = 'escalacao-tigre-novorizontino.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+      } else {
+        // Web Share API — abre seletor nativo (WhatsApp, Instagram, Telegram, etc.)
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          const file = new File([blob], 'escalacao-tigre.png', { type: 'image/png' });
+          const texto = 'Essa é minha escalação ideal pra hoje! 🐯⚫🟡\nMonte a sua em onovorizontino.com.br\n#TigreDoVale #Novorizontino';
+
+          if (tipo === 'whatsapp') {
+            // Fallback WhatsApp: compartilha só o link + texto (imagem via share nativo se disponível)
+            if (navigator.share && navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], text: texto });
+            } else {
+              window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+            }
+          } else {
+            // Share nativo geral (Instagram Stories, etc.)
+            if (navigator.share && navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], title: 'Minha Escalação do Tigre', text: texto });
+            } else {
+              // Fallback: baixa a imagem
+              const link = document.createElement('a');
+              link.download = 'escalacao-tigre-novorizontino.png';
+              link.href = canvas.toDataURL('image/png');
+              link.click();
+            }
+          }
+        }, 'image/png');
+      }
     } catch (e) { console.error(e); }
-    setGenerating(false); setShowCard(false);
+    setGenerating(false); setShowCard(false); setShowShare(false);
   };
 
   return (
@@ -528,17 +560,58 @@ export default function EscalacaoIdeal() {
 
       {/* Botão fixo rodapé */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: '#000', borderTop: '1px solid #27272a', padding: '10px 16px 16px' }}>
-        <button onClick={handleGenerate} disabled={filledCount < 11 || generating}
-          data-track="escalacao_baixar_story"
-          data-track-label={`Formação ${formation} - ${filledCount}/11`}
-          className={`w-full py-4 text-sm font-black uppercase tracking-widest transition-all rounded ${filledCount===11?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:opacity-80':'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'}`}>
-          {generating ? 'Gerando story...' : filledCount===11 ? 'Baixar Story para o Instagram' : `Faltam ${11-filledCount} jogador${11-filledCount>1?'es':''}  •  ${filledCount}/11`}
-        </button>
-        {filledCount===11 && <p className="text-yellow-500 text-[9px] text-center uppercase tracking-widest mt-1.5">Salva e posta nos stories com #tigredovale!</p>}
+        {!showShare ? (
+          <>
+            <button onClick={handleGenerate} disabled={filledCount < 11 || generating}
+              data-track="escalacao_compartilhar"
+              data-track-label={`Formação ${formation} - ${filledCount}/11`}
+              className={`w-full py-4 text-sm font-black uppercase tracking-widest transition-all rounded ${filledCount===11?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:opacity-80':'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'}`}>
+              {generating ? 'Gerando...' : filledCount===11 ? '🐯 Compartilhar Escalação' : `Faltam ${11-filledCount} jogador${11-filledCount>1?'es':''}  •  ${filledCount}/11`}
+            </button>
+            {filledCount===11 && <p className="text-yellow-500 text-[9px] text-center uppercase tracking-widest mt-1.5">Posta nos stories com #tigredovale!</p>}
+          </>
+        ) : (
+          <div>
+            <p className="text-zinc-500 text-[9px] uppercase tracking-widest text-center mb-2">Compartilhar via</p>
+            <div className="grid grid-cols-3 gap-2 mb-2">
+
+              {/* WhatsApp */}
+              <button onClick={() => doGenerate('whatsapp')} disabled={generating}
+                data-track="escalacao_share_whatsapp"
+                style={{ background: '#25D366', boxShadow: '0 4px 16px rgba(37,211,102,0.3)' }}
+                className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80 transition-all">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" width={28} height={28} style={{ filter: 'brightness(0) invert(1)' }} />
+                <span className="text-white font-black text-[10px] uppercase tracking-widest">WhatsApp</span>
+              </button>
+
+              {/* Instagram */}
+              <button onClick={() => doGenerate('share')} disabled={generating}
+                data-track="escalacao_share_nativo"
+                style={{ background: 'linear-gradient(135deg,#405DE6,#5851DB,#833AB4,#C13584,#E1306C,#FD1D1D,#F56040,#F77737,#FCAF45,#FFDC80)', boxShadow: '0 4px 16px rgba(193,53,132,0.35)' }}
+                className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80 transition-all">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" alt="Instagram" width={28} height={28} style={{ filter: 'brightness(0) invert(1)' }} />
+                <span className="text-white font-black text-[10px] uppercase tracking-widest">Instagram</span>
+              </button>
+
+              {/* Baixar */}
+              <button onClick={() => doGenerate('download')} disabled={generating}
+                data-track="escalacao_baixar_story"
+                style={{ background: '#18181b', border: '1px solid #3f3f46' }}
+                className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80 transition-all">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span className="text-zinc-400 font-black text-[10px] uppercase tracking-widest">Baixar</span>
+              </button>
+
+            </div>
+            <button onClick={() => setShowShare(false)} className="w-full text-zinc-600 text-[10px] uppercase tracking-widest font-black py-1">
+              Cancelar
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal lead */}
-      {showLeadModal && <LeadModal onConfirm={doGenerate} onClose={() => setShowLeadModal(false)} />}
+      {showLeadModal && <LeadModal onConfirm={() => { setShowLeadModal(false); setShowShare(true); }} onClose={() => setShowLeadModal(false)} />}
 
       {/* Card oculto */}
       {showCard && (
