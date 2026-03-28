@@ -179,9 +179,11 @@ function StoryCard({ lineup, slots, formation, jogo, palpite }: {
   palpite: { mandante: number; visitante: number };
 }) {
   const CW = 540; const CH = 960;
-  const FW = 500; const FH = 520;
+  const FW = 510; const FH = 540;
   const FX = (CW - FW) / 2;
-  const FY = 265;
+  const FY = 255;
+
+  const ESCUDO_NOVO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
 
   const formatHorario = (iso: string) => {
     const d = new Date(iso);
@@ -193,65 +195,68 @@ function StoryCard({ lineup, slots, formation, jogo, palpite }: {
     return `${dias[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
   };
 
+  const mandante = jogo ? jogo.mandante : { nome: 'Novorizontino', escudo_url: ESCUDO_NOVO };
+  const visitante = jogo ? jogo.visitante : { nome: 'Adversário', escudo_url: '' };
+
   return (
     <div style={{ width: CW, height: CH, background: '#080808', position: 'relative', overflow: 'hidden', fontFamily: 'Impact, Arial Black, sans-serif' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg,#1a1200,#080808 50%,#001a00)', opacity: 0.8 }} />
-      <div style={{ position: 'absolute', top: 0, left: 18, width: 4, height: '100%', background: '#F5C400', opacity: 0.6 }} />
-      <div style={{ position: 'absolute', top: 0, right: 18, width: 4, height: '100%', background: '#F5C400', opacity: 0.6 }} />
+      {/* Fundo gradiente */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg,#1a1200,#080808 50%,#001a00)', opacity: 0.9 }} />
+      {/* Linhas laterais douradas */}
+      <div style={{ position: 'absolute', top: 0, left: 16, width: 3, height: '100%', background: 'linear-gradient(to bottom,#F5C400,transparent)', opacity: 0.7 }} />
+      <div style={{ position: 'absolute', top: 0, right: 16, width: 3, height: '100%', background: 'linear-gradient(to bottom,#F5C400,transparent)', opacity: 0.7 }} />
 
-      {/* Header */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: FY, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24, gap: 0, zIndex: 20 }}>
+      {/* ── HEADER ── */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: FY, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 20, gap: 0, zIndex: 20 }}>
 
-        {/* Logo */}
-        <img src={LOGO} alt="O Novorizontino" style={{ height: 36, objectFit: 'contain', marginBottom: 14 }} />
+        {/* Logo maior */}
+        <img src={LOGO} alt="O Novorizontino" style={{ height: 52, objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.8))' }} />
 
-        {/* Escudos confrontando */}
-        {jogo && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, width: '100%', padding: '0 50px', marginBottom: 10 }}>
-            {/* Mandante */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flex: 1 }}>
-              <img src={jogo.mandante.escudo_url} alt={jogo.mandante.nome}
-                style={{ width: 72, height: 72, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }} />
-              <span style={{ fontSize: 10, color: '#aaa', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{jogo.mandante.nome}</span>
-            </div>
+        {/* Confronto — sempre visível */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '0 40px', marginBottom: 8 }}>
+          {/* Mandante */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
+            <img src={mandante.escudo_url} alt={mandante.nome} style={{ width: 68, height: 68, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }} />
+            <span style={{ fontSize: 11, color: '#ddd', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>{mandante.nome}</span>
+          </div>
 
-            {/* Centro — horário + palpite */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
-              <span style={{ fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{formatData(jogo.data_hora)}</span>
-              <span style={{ fontSize: 14, fontWeight: 900, color: '#F5C400', letterSpacing: '0.05em' }}>{formatHorario(jogo.data_hora)}</span>
-              {/* Palpite */}
-              <div style={{ background: 'rgba(245,196,0,0.12)', border: '1.5px solid #F5C400', borderRadius: 8, padding: '6px 16px', marginTop: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 11, color: '#aaa', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>PALPITE</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2 }}>
-                  <span style={{ fontSize: 32, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{palpite.mandante}</span>
-                  <span style={{ fontSize: 18, fontWeight: 900, color: '#F5C400' }}>×</span>
-                  <span style={{ fontSize: 32, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{palpite.visitante}</span>
-                </div>
+          {/* Centro — palpite */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1.1 }}>
+            {jogo && <span style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{formatData(jogo.data_hora)} • {formatHorario(jogo.data_hora)}</span>}
+            <div style={{ background: 'rgba(245,196,0,0.15)', border: '1.5px solid #F5C400', borderRadius: 10, padding: '8px 20px' }}>
+              <div style={{ fontSize: 9, color: '#888', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em', textAlign: 'center', marginBottom: 4 }}>MEU PALPITE</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{palpite.mandante}</span>
+                <span style={{ fontSize: 20, fontWeight: 900, color: '#F5C400' }}>×</span>
+                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{palpite.visitante}</span>
               </div>
             </div>
-
-            {/* Visitante */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flex: 1 }}>
-              <img src={jogo.visitante.escudo_url} alt={jogo.visitante.nome}
-                style={{ width: 72, height: 72, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(245,196,0,0.25))' }} />
-              <span style={{ fontSize: 10, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{jogo.visitante.nome}</span>
-            </div>
           </div>
-        )}
+
+          {/* Visitante */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
+            {visitante.escudo_url ? (
+              <img src={visitante.escudo_url} alt={visitante.nome} style={{ width: 68, height: 68, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(245,196,0,0.25))' }} />
+            ) : (
+              <div style={{ width: 68, height: 68, borderRadius: '50%', border: '2px dashed #444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ color: '#444', fontSize: 22, fontWeight: 900 }}>?</span>
+              </div>
+            )}
+            <span style={{ fontSize: 11, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>{visitante.nome}</span>
+          </div>
+        </div>
 
         {/* Título + formação */}
-        <span style={{ fontSize: 28, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.02em', lineHeight: 1, marginTop: jogo ? 0 : 16 }}>MINHA ESCALAÇÃO</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-          <div style={{ height: 2, width: 24, background: '#F5C400' }} />
-          <span style={{ fontSize: 12, fontWeight: 900, color: '#F5C400', fontStyle: 'italic', textTransform: 'uppercase' }}>{formation}</span>
-          <div style={{ height: 2, width: 24, background: '#F5C400' }} />
+        <span style={{ fontSize: 22, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.01em', lineHeight: 1 }}>MINHA ESCALAÇÃO</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 }}>
+          <div style={{ height: 2, width: 20, background: '#F5C400' }} />
+          <span style={{ fontSize: 13, fontWeight: 900, color: '#F5C400', fontStyle: 'italic', textTransform: 'uppercase' }}>{formation}</span>
+          <div style={{ height: 2, width: 20, background: '#F5C400' }} />
         </div>
       </div>
 
-      {/* Campo */}
-      <div style={{ position: 'absolute', left: FX, top: FY, width: FW, height: FH, borderRadius: 8, overflow: 'hidden', background: '#2d8a2d', zIndex: 10, boxShadow: '0 0 40px rgba(0,0,0,0.8)' }}>
+      {/* ── CAMPO ── */}
+      <div style={{ position: 'absolute', left: FX, top: FY, width: FW, height: FH, borderRadius: 8, overflow: 'hidden', background: '#2d8a2d', zIndex: 10, boxShadow: '0 0 50px rgba(0,0,0,0.9)' }}>
         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
           {[0,1,2,3,4,5,6].map(i => <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.06)':'transparent'} />)}
           <rect x="1.5" y="2" width="65" height="101" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
@@ -265,7 +270,7 @@ function StoryCard({ lineup, slots, formation, jogo, palpite }: {
         {slots.map(slot => {
           const player = lineup[slot.id];
           if (!player) return null;
-          const PS = 42;
+          const PS = 46;
           return (
             <div key={slot.id} style={{ position: 'absolute', left: (slot.x/100)*FW, top: (slot.y/100)*FH, transform: 'translate(-50%,-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, zIndex: 10 }}>
               <div style={{ width: PS, height: PS, borderRadius: '50%', border: '2.5px solid #F5C400', backgroundImage: `url(${player.foto})`, backgroundSize: '200% 100%', backgroundPosition: 'left top', backgroundRepeat: 'no-repeat', boxShadow: '0 3px 12px rgba(0,0,0,0.9)', position: 'relative', flexShrink: 0 }}>
@@ -273,20 +278,21 @@ function StoryCard({ lineup, slots, formation, jogo, palpite }: {
                   <span style={{ color: '#000', fontSize: 6, fontWeight: 900 }}>{player.num}</span>
                 </div>
               </div>
-              <div style={{ background: 'rgba(0,0,0,0.75)', borderRadius: 3, padding: '2px 6px' }}>
-                <span style={{ fontSize: 15, fontWeight: 900, color: '#fff', textTransform: 'uppercase', whiteSpace: 'nowrap', display: 'block', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis' }}>{player.short}</span>
+              {/* Label mais leve */}
+              <div style={{ background: 'rgba(0,0,0,0.55)', borderRadius: 3, padding: '2px 5px', backdropFilter: 'blur(4px)' }}>
+                <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', textTransform: 'uppercase', whiteSpace: 'nowrap', display: 'block', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{player.short}</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* CTA */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: CH - FY - FH, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 7, zIndex: 20 }}>
-        <div style={{ height: 2, width: '75%', background: 'linear-gradient(90deg,transparent,#F5C400,transparent)' }} />
-        <span style={{ fontSize: 28, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase' }}>QUAL É A SUA?</span>
+      {/* ── RODAPÉ ── */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: CH - FY - FH, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, zIndex: 20 }}>
+        <div style={{ height: 2, width: '70%', background: 'linear-gradient(90deg,transparent,#F5C400,transparent)' }} />
+        <span style={{ fontSize: 30, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase' }}>QUAL É A SUA?</span>
         <span style={{ fontSize: 11, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>#tigredovale #novorizontino #serieb2026</span>
-        <span style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', letterSpacing: '0.12em', fontStyle: 'italic', fontWeight: 900 }}>onovorizontino.com.br</span>
+        <span style={{ fontSize: 11, color: '#666', textTransform: 'uppercase', letterSpacing: '0.12em', fontStyle: 'italic', fontWeight: 900 }}>onovorizontino.com.br</span>
       </div>
     </div>
   );
@@ -304,6 +310,7 @@ export default function EscalacaoIdeal() {
   const [showCard, setShowCard] = useState(false);
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const generatedBlob = useRef<Blob | null>(null);
   const [fieldWidth, setFieldWidth] = useState(340);
   const [jogoAtual, setJogoAtual] = useState<Jogo | null>(null);
   const [palpite, setPalpite] = useState({ mandante: 0, visitante: 1 });
@@ -352,52 +359,56 @@ export default function EscalacaoIdeal() {
   const handleGenerate = () => {
     if (filledCount < 11) return;
     const jaRegistrado = typeof window !== 'undefined' && localStorage.getItem('tigre_lead_ok');
-    if (jaRegistrado) { setShowShare(true); } else { setShowLeadModal(true); }
+    if (jaRegistrado) { doGenerate(); } else { setShowLeadModal(true); }
   };
 
-  const doGenerate = async (tipo: 'download' | 'share' | 'whatsapp' = 'download') => {
+  // Gera a imagem e abre menu de compartilhamento
+  const doGenerate = async () => {
     setShowLeadModal(false); setGenerating(true); setShowCard(true);
     await new Promise(r => setTimeout(r, 600));
     try {
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(cardRef.current!, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#080808', logging: false });
+      // Pré-gera o blob e armazena na ref
+      const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/png'));
+      generatedBlob.current = blob;
+    } catch (e) { console.error(e); }
+    setGenerating(false); setShowCard(false);
+    setShowShare(true); // Abre menu APÓS geração completa
+  };
 
-      if (tipo === 'download') {
+  // Compartilha usando o blob já gerado — chamado diretamente pelo gesto do usuário
+  const doShare = async (tipo: 'download' | 'whatsapp' | 'instagram') => {
+    const blob = generatedBlob.current;
+    const texto = 'Essa é minha escalação ideal! 🐯⚫🟡\nMonte a sua em onovorizontino.com.br\n#TigreDoVale #Novorizontino';
+
+    if (tipo === 'download' || !blob) {
+      if (!blob) return;
+      const link = document.createElement('a');
+      link.download = 'escalacao-tigre-novorizontino.png';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      setShowShare(false);
+      return;
+    }
+
+    const file = new File([blob], 'escalacao-tigre.png', { type: 'image/png' });
+
+    try {
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: texto });
+      } else {
+        // Fallback: baixa a imagem
         const link = document.createElement('a');
         link.download = 'escalacao-tigre-novorizontino.png';
-        link.href = canvas.toDataURL('image/png');
+        link.href = URL.createObjectURL(blob);
         link.click();
-
-      } else {
-        // Web Share API — abre seletor nativo (WhatsApp, Instagram, Telegram, etc.)
-        canvas.toBlob(async (blob) => {
-          if (!blob) return;
-          const file = new File([blob], 'escalacao-tigre.png', { type: 'image/png' });
-          const texto = 'Essa é minha escalação ideal pra hoje! 🐯⚫🟡\nMonte a sua em onovorizontino.com.br\n#TigreDoVale #Novorizontino';
-
-          if (tipo === 'whatsapp') {
-            // Fallback WhatsApp: compartilha só o link + texto (imagem via share nativo se disponível)
-            if (navigator.share && navigator.canShare({ files: [file] })) {
-              await navigator.share({ files: [file], text: texto });
-            } else {
-              window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
-            }
-          } else {
-            // Share nativo geral (Instagram Stories, etc.)
-            if (navigator.share && navigator.canShare({ files: [file] })) {
-              await navigator.share({ files: [file], title: 'Minha Escalação do Tigre', text: texto });
-            } else {
-              // Fallback: baixa a imagem
-              const link = document.createElement('a');
-              link.download = 'escalacao-tigre-novorizontino.png';
-              link.href = canvas.toDataURL('image/png');
-              link.click();
-            }
-          }
-        }, 'image/png');
       }
-    } catch (e) { console.error(e); }
-    setGenerating(false); setShowCard(false); setShowShare(false);
+    } catch (e) {
+      // Usuário cancelou ou erro — fallback silencioso
+      console.log('Share cancelado:', e);
+    }
+    setShowShare(false);
   };
 
   return (
@@ -575,8 +586,7 @@ export default function EscalacaoIdeal() {
             <p className="text-zinc-500 text-[9px] uppercase tracking-widest text-center mb-2">Compartilhar via</p>
             <div className="grid grid-cols-3 gap-2 mb-2">
 
-              {/* WhatsApp */}
-              <button onClick={() => doGenerate('whatsapp')} disabled={generating}
+              <button onClick={() => doShare('whatsapp')}
                 data-track="escalacao_share_whatsapp"
                 style={{ background: '#25D366', boxShadow: '0 4px 16px rgba(37,211,102,0.3)' }}
                 className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80 transition-all">
@@ -584,8 +594,7 @@ export default function EscalacaoIdeal() {
                 <span className="text-white font-black text-[10px] uppercase tracking-widest">WhatsApp</span>
               </button>
 
-              {/* Instagram */}
-              <button onClick={() => doGenerate('share')} disabled={generating}
+              <button onClick={() => doShare('instagram')}
                 data-track="escalacao_share_nativo"
                 style={{ background: 'linear-gradient(135deg,#405DE6,#5851DB,#833AB4,#C13584,#E1306C,#FD1D1D,#F56040,#F77737,#FCAF45,#FFDC80)', boxShadow: '0 4px 16px rgba(193,53,132,0.35)' }}
                 className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80 transition-all">
@@ -593,8 +602,7 @@ export default function EscalacaoIdeal() {
                 <span className="text-white font-black text-[10px] uppercase tracking-widest">Instagram</span>
               </button>
 
-              {/* Baixar */}
-              <button onClick={() => doGenerate('download')} disabled={generating}
+              <button onClick={() => doShare('download')}
                 data-track="escalacao_baixar_story"
                 style={{ background: '#18181b', border: '1px solid #3f3f46' }}
                 className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80 transition-all">
@@ -611,7 +619,7 @@ export default function EscalacaoIdeal() {
       </div>
 
       {/* Modal lead */}
-      {showLeadModal && <LeadModal onConfirm={() => { setShowLeadModal(false); setShowShare(true); }} onClose={() => setShowLeadModal(false)} />}
+      {showLeadModal && <LeadModal onConfirm={() => { setShowLeadModal(false); doGenerate(); }} onClose={() => setShowLeadModal(false)} />}
 
       {/* Card oculto */}
       {showCard && (
