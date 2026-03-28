@@ -1,40 +1,9 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import ProximoDuelo from '@/components/sections/ProximoDuelo';
 
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/LOGO%20-%20O%20NOVORIZONTINO%20(1).png';
-
-// Escudos — Supabase
-const ESCUDO_NOVO   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-const ESCUDO_JUVEN  = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/juventude.png';
-
-// Próximos jogos hardcoded — futuro: virar automático via Supabase
-const PROXIMOS_JOGOS = [
-  {
-    competicao: 'Copa Sul-Sudeste',
-    rodada: '2ª Rodada',
-    mandante: 'Juventude',
-    visitante: 'Novorizontino',
-    escudoMandante: ESCUDO_JUVEN,
-    escudoVisitante: ESCUDO_NOVO,
-    data: 'Sáb, 28/03',
-    horario: '21h30',
-    local: 'Alfredo Jaconi • Caxias do Sul',
-    ao_vivo: true,
-  },
-  {
-    competicao: 'Série B',
-    rodada: '2ª Rodada',
-    mandante: 'Juventude',
-    visitante: 'Novorizontino',
-    escudoMandante: ESCUDO_JUVEN,
-    escudoVisitante: ESCUDO_NOVO,
-    data: 'Ter, 31/03',
-    horario: '19h00',
-    local: 'Alfredo Jaconi • Caxias do Sul',
-    ao_vivo: false,
-  },
-];
 
 const PLAYERS = [
   { id: 1,  name: 'César Augusto',    short: 'César',      num: 31, pos: 'GOL', foto: BASE + 'CESAR-AUGUSTO.jpg.webp' },
@@ -80,89 +49,56 @@ const PLAYERS = [
 
 const FORMATIONS: Record<string, { id: string; label: string; x: number; y: number }[]> = {
   '4-3-3': [
-    { id: 'gk',  label: 'GOL', x: 50, y: 88 },
-    { id: 'rb',  label: 'LAT', x: 82, y: 70 },
-    { id: 'cb1', label: 'ZAG', x: 62, y: 70 },
-    { id: 'cb2', label: 'ZAG', x: 38, y: 70 },
-    { id: 'lb',  label: 'LAT', x: 18, y: 70 },
-    { id: 'cm1', label: 'MEI', x: 72, y: 50 },
-    { id: 'cm2', label: 'MEI', x: 50, y: 46 },
-    { id: 'cm3', label: 'MEI', x: 28, y: 50 },
-    { id: 'rw',  label: 'ATA', x: 76, y: 24 },
-    { id: 'st',  label: 'ATA', x: 50, y: 18 },
+    { id: 'gk',  label: 'GOL', x: 50, y: 88 }, { id: 'rb',  label: 'LAT', x: 82, y: 70 },
+    { id: 'cb1', label: 'ZAG', x: 62, y: 70 }, { id: 'cb2', label: 'ZAG', x: 38, y: 70 },
+    { id: 'lb',  label: 'LAT', x: 18, y: 70 }, { id: 'cm1', label: 'MEI', x: 72, y: 50 },
+    { id: 'cm2', label: 'MEI', x: 50, y: 46 }, { id: 'cm3', label: 'MEI', x: 28, y: 50 },
+    { id: 'rw',  label: 'ATA', x: 76, y: 24 }, { id: 'st',  label: 'ATA', x: 50, y: 18 },
     { id: 'lw',  label: 'ATA', x: 24, y: 24 },
   ],
   '4-4-2': [
-    { id: 'gk',  label: 'GOL', x: 50, y: 88 },
-    { id: 'rb',  label: 'LAT', x: 82, y: 70 },
-    { id: 'cb1', label: 'ZAG', x: 62, y: 70 },
-    { id: 'cb2', label: 'ZAG', x: 38, y: 70 },
-    { id: 'lb',  label: 'LAT', x: 18, y: 70 },
-    { id: 'rm',  label: 'MEI', x: 80, y: 50 },
-    { id: 'cm1', label: 'MEI', x: 60, y: 50 },
-    { id: 'cm2', label: 'MEI', x: 40, y: 50 },
-    { id: 'lm',  label: 'MEI', x: 20, y: 50 },
-    { id: 'st1', label: 'ATA', x: 64, y: 22 },
+    { id: 'gk',  label: 'GOL', x: 50, y: 88 }, { id: 'rb',  label: 'LAT', x: 82, y: 70 },
+    { id: 'cb1', label: 'ZAG', x: 62, y: 70 }, { id: 'cb2', label: 'ZAG', x: 38, y: 70 },
+    { id: 'lb',  label: 'LAT', x: 18, y: 70 }, { id: 'rm',  label: 'MEI', x: 80, y: 50 },
+    { id: 'cm1', label: 'MEI', x: 60, y: 50 }, { id: 'cm2', label: 'MEI', x: 40, y: 50 },
+    { id: 'lm',  label: 'MEI', x: 20, y: 50 }, { id: 'st1', label: 'ATA', x: 64, y: 22 },
     { id: 'st2', label: 'ATA', x: 36, y: 22 },
   ],
   '3-5-2': [
-    { id: 'gk',  label: 'GOL', x: 50, y: 88 },
-    { id: 'cb1', label: 'ZAG', x: 70, y: 72 },
-    { id: 'cb2', label: 'ZAG', x: 50, y: 75 },
-    { id: 'cb3', label: 'ZAG', x: 30, y: 72 },
-    { id: 'rb',  label: 'LAT', x: 86, y: 52 },
-    { id: 'cm1', label: 'MEI', x: 68, y: 50 },
-    { id: 'cm2', label: 'MEI', x: 50, y: 46 },
-    { id: 'cm3', label: 'MEI', x: 32, y: 50 },
-    { id: 'lb',  label: 'LAT', x: 14, y: 52 },
-    { id: 'st1', label: 'ATA', x: 64, y: 22 },
+    { id: 'gk',  label: 'GOL', x: 50, y: 88 }, { id: 'cb1', label: 'ZAG', x: 70, y: 72 },
+    { id: 'cb2', label: 'ZAG', x: 50, y: 75 }, { id: 'cb3', label: 'ZAG', x: 30, y: 72 },
+    { id: 'rb',  label: 'LAT', x: 86, y: 52 }, { id: 'cm1', label: 'MEI', x: 68, y: 50 },
+    { id: 'cm2', label: 'MEI', x: 50, y: 46 }, { id: 'cm3', label: 'MEI', x: 32, y: 50 },
+    { id: 'lb',  label: 'LAT', x: 14, y: 52 }, { id: 'st1', label: 'ATA', x: 64, y: 22 },
     { id: 'st2', label: 'ATA', x: 36, y: 22 },
   ],
   '4-2-3-1': [
-    { id: 'gk',  label: 'GOL', x: 50, y: 88 },
-    { id: 'rb',  label: 'LAT', x: 82, y: 70 },
-    { id: 'cb1', label: 'ZAG', x: 62, y: 70 },
-    { id: 'cb2', label: 'ZAG', x: 38, y: 70 },
-    { id: 'lb',  label: 'LAT', x: 18, y: 70 },
-    { id: 'dm1', label: 'MEI', x: 64, y: 57 },
-    { id: 'dm2', label: 'MEI', x: 36, y: 57 },
-    { id: 'rm',  label: 'MEI', x: 76, y: 38 },
-    { id: 'am',  label: 'MEI', x: 50, y: 36 },
-    { id: 'lm',  label: 'MEI', x: 24, y: 38 },
+    { id: 'gk',  label: 'GOL', x: 50, y: 88 }, { id: 'rb',  label: 'LAT', x: 82, y: 70 },
+    { id: 'cb1', label: 'ZAG', x: 62, y: 70 }, { id: 'cb2', label: 'ZAG', x: 38, y: 70 },
+    { id: 'lb',  label: 'LAT', x: 18, y: 70 }, { id: 'dm1', label: 'MEI', x: 64, y: 57 },
+    { id: 'dm2', label: 'MEI', x: 36, y: 57 }, { id: 'rm',  label: 'MEI', x: 76, y: 38 },
+    { id: 'am',  label: 'MEI', x: 50, y: 36 }, { id: 'lm',  label: 'MEI', x: 24, y: 38 },
     { id: 'st',  label: 'ATA', x: 50, y: 18 },
   ],
 };
 
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
+type Jogo = { competicao: string; data_hora: string; mandante: { nome: string; escudo_url: string }; visitante: { nome: string; escudo_url: string } };
 
-// ─── Componente foto sprite ──────────────────────────────────────────────────
 function SpritePhoto({ foto, size }: { foto: string; size: number }) {
   const [hovered, setHovered] = useState(false);
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        width: size, height: size, borderRadius: '50%',
-        backgroundImage: `url(${foto})`,
-        backgroundSize: '200% 100%',
-        backgroundPosition: hovered ? 'right top' : 'left top',
-        backgroundRepeat: 'no-repeat',
-        transition: 'background-position 0.25s ease',
-        flexShrink: 0,
-      }}
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      style={{ width: size, height: size, borderRadius: '50%', backgroundImage: `url(${foto})`, backgroundSize: '200% 100%', backgroundPosition: hovered ? 'right top' : 'left top', backgroundRepeat: 'no-repeat', transition: 'background-position 0.25s ease', flexShrink: 0 }}
     />
   );
 }
 
-// ─── SVG do campo ───────────────────────────────────────────────────────────
 function FieldSvg() {
   return (
     <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
-      {[0,1,2,3,4,5,6].map(i => (
-        <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.04)':'transparent'} />
-      ))}
+      {[0,1,2,3,4,5,6].map(i => <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.04)':'transparent'} />)}
       <rect x="2" y="3" width="64" height="99" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.6" />
       <line x1="2" y1="52.5" x2="66" y2="52.5" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
       <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
@@ -179,95 +115,8 @@ function FieldSvg() {
   );
 }
 
-// ─── Card próximo duelo ──────────────────────────────────────────────────────
-function ProximoDuelo({ jogoIdx, onSelect }: { jogoIdx: number; onSelect: (i: number) => void }) {
-  const jogo = PROXIMOS_JOGOS[jogoIdx];
-  return (
-    <div className="mb-5">
-      {/* Tabs dos jogos */}
-      <div className="flex gap-2 mb-3">
-        {PROXIMOS_JOGOS.map((j, i) => (
-          <button
-            key={i}
-            onClick={() => onSelect(i)}
-            className={`flex-shrink-0 px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
-              jogoIdx === i ? 'bg-yellow-500 text-black' : 'border border-zinc-800 text-zinc-500'
-            }`}
-          >
-            {j.competicao} • {j.data}
-          </button>
-        ))}
-      </div>
-
-      {/* Card do jogo */}
-      <div className="relative overflow-hidden rounded-xl border border-zinc-800" style={{ background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1200 100%)' }}>
-        {/* Badge competição */}
-        <div className="flex items-center justify-between px-4 pt-3 pb-1">
-          <div className="flex items-center gap-2">
-            {jogo.ao_vivo && (
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-red-500 text-[9px] font-black uppercase tracking-widest">Hoje</span>
-              </span>
-            )}
-            <span className="text-zinc-500 text-[9px] font-black uppercase tracking-widest">{jogo.competicao} • {jogo.rodada}</span>
-          </div>
-          <span className="text-zinc-600 text-[9px] font-black uppercase tracking-widest">{jogo.local}</span>
-        </div>
-
-        {/* Confronto */}
-        <div className="flex items-center justify-between px-4 py-4">
-          {/* Mandante */}
-          <div className="flex flex-col items-center gap-2 flex-1">
-            <img
-              src={jogo.escudoMandante}
-              alt={jogo.mandante}
-              className="w-14 h-14 object-contain drop-shadow-lg"
-            />
-            <span className="text-white text-[10px] font-black uppercase text-center">{jogo.mandante}</span>
-          </div>
-
-          {/* Horário */}
-          <div className="flex flex-col items-center gap-1 px-4">
-            <span className="text-yellow-500 text-2xl font-black tracking-tighter">{jogo.horario}</span>
-            <span className="text-zinc-600 text-[9px] font-black uppercase tracking-widest">{jogo.data}</span>
-            <div className="flex items-center gap-1 mt-1">
-              <div className="h-px w-6 bg-zinc-700" />
-              <span className="text-zinc-700 text-[9px] font-black">VS</span>
-              <div className="h-px w-6 bg-zinc-700" />
-            </div>
-          </div>
-
-          {/* Visitante */}
-          <div className="flex flex-col items-center gap-2 flex-1">
-            <img
-              src={jogo.escudoVisitante}
-              alt={jogo.visitante}
-              className="w-14 h-14 object-contain drop-shadow-lg"
-            />
-            <span className="text-yellow-500 text-[10px] font-black uppercase text-center">{jogo.visitante}</span>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="px-4 pb-3">
-          <p className="text-zinc-600 text-[9px] font-black uppercase tracking-widest text-center">
-            Monte sua escalação ideal para este jogo abaixo
-          </p>
-        </div>
-
-        {/* Borda decorativa amarela */}
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent" />
-      </div>
-    </div>
-  );
-}
-
-// ─── Modal de captura de lead ─────────────────────────────────────────────────
-function LeadModal({ onConfirm, onClose }: {
-  onConfirm: (nome: string, whats: string) => void;
-  onClose: () => void;
-}) {
+// ─── Lead Modal ──────────────────────────────────────────────────────────────
+function LeadModal({ onConfirm, onClose }: { onConfirm: () => void; onClose: () => void }) {
   const [nome, setNome] = useState('');
   const [whats, setWhats] = useState('');
   const [loading, setLoading] = useState(false);
@@ -279,7 +128,6 @@ function LeadModal({ onConfirm, onClose }: {
       return;
     }
     setLoading(true);
-    setErro('');
     try {
       await fetch('https://whoglnpvqjbaczgnebbn.supabase.co/rest/v1/leads_escalacao', {
         method: 'POST',
@@ -289,124 +137,86 @@ function LeadModal({ onConfirm, onClose }: {
           'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`,
           'Prefer': 'return=minimal',
         },
-        body: JSON.stringify({
-          nome: nome.trim(),
-          whatsapp: whats.replace(/\D/g,''),
-          origem: 'escalacao',
-          criado_em: new Date().toISOString(),
-        }),
+        body: JSON.stringify({ nome: nome.trim(), whatsapp: whats.replace(/\D/g,''), origem: 'escalacao', criado_em: new Date().toISOString() }),
       });
-    } catch (e) {
-      // Salva mesmo se falhar — não bloqueia o usuário
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
     setLoading(false);
-    onConfirm(nome.trim(), whats);
+    onConfirm();
   };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div
-        style={{ width: '100%', maxWidth: 480, background: '#111', borderRadius: '20px 20px 0 0', padding: '28px 20px 36px', borderTop: '3px solid #F5C400' }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Handle */}
+      <div style={{ width: '100%', maxWidth: 480, background: '#111', borderRadius: '20px 20px 0 0', padding: '28px 20px 36px', borderTop: '3px solid #F5C400' }} onClick={e => e.stopPropagation()}>
         <div style={{ width: 36, height: 4, background: '#333', borderRadius: 2, margin: '0 auto 20px' }} />
-
-        {/* Título */}
         <div className="flex items-center gap-2 mb-1">
           <span className="text-2xl">📸</span>
-          <h2 className="text-white font-black uppercase italic text-xl tracking-tighter">
-            Quase lá, Tigre!
-          </h2>
+          <h2 className="text-white font-black uppercase italic text-xl tracking-tighter">Quase lá, Tigre!</h2>
         </div>
-        <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
-          Deixa seu nome e WhatsApp para baixar o story. Você receberá novidades do Tigre em primeira mão!
-        </p>
-
-        {/* Campos */}
+        <p className="text-zinc-400 text-sm mb-6 leading-relaxed">Deixa seu nome e WhatsApp para baixar o story. Você receberá novidades do Tigre em primeira mão!</p>
         <div className="flex flex-col gap-3 mb-4">
-          <input
-            type="text"
-            name="name"
-            autoComplete="name"
-            placeholder="Seu nome"
-            value={nome}
-            onChange={e => setNome(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors"
-          />
-          <input
-            type="tel"
-            name="tel"
-            autoComplete="tel"
-            placeholder="WhatsApp (DDD + número)"
-            value={whats}
-            onChange={e => setWhats(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors"
-          />
+          <input type="text" name="name" autoComplete="name" placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)}
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors" />
+          <input type="tel" name="tel" autoComplete="tel" placeholder="WhatsApp (DDD + número)" value={whats} onChange={e => setWhats(e.target.value)}
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors" />
           {erro && <p className="text-red-400 text-xs font-bold">{erro}</p>}
         </div>
-
-        {/* Aviso LGPD */}
-        <p className="text-zinc-600 text-[9px] uppercase tracking-widest mb-4 text-center">
-          Seus dados são usados apenas pelo Portal O Novorizontino. Não há spam.
-        </p>
-
-        {/* Botão */}
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="w-full py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-sm rounded-lg active:opacity-80 transition-all"
-        >
+        <p className="text-zinc-600 text-[9px] uppercase tracking-widest mb-4 text-center">Seus dados são usados apenas pelo Portal O Novorizontino.</p>
+        <button onClick={handleSubmit} disabled={loading} className="w-full py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-sm rounded-lg active:opacity-80 transition-all">
           {loading ? 'Salvando...' : 'Baixar meu Story'}
         </button>
       </div>
     </div>
   );
 }
-function StoryCard({ lineup, slots, formation, jogoIdx }: {
+
+// ─── Story Card 9:16 ─────────────────────────────────────────────────────────
+function StoryCard({ lineup, slots, formation, jogo }: {
   lineup: Lineup;
   slots: { id: string; label: string; x: number; y: number }[];
   formation: string;
-  jogoIdx: number;
+  jogo: Jogo | null;
 }) {
-  const jogo = PROXIMOS_JOGOS[jogoIdx];
-  const CW = 540;
-  const CH = 960;
-  const FW = 500;
-  const FH = 620;
+  const CW = 540; const CH = 960;
+  const FW = 500; const FH = 620;
   const FX = (CW - FW) / 2;
-  const FY = 200;
+  const FY = jogo ? 210 : 155;
+
+  const formatHorario = (iso: string) => {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0') === '00' ? '' : String(d.getMinutes()).padStart(2,'0')}`;
+  };
+  const formatData = (iso: string) => {
+    const d = new Date(iso);
+    const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    return `${dias[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+  };
 
   return (
     <div style={{ width: CW, height: CH, background: '#080808', position: 'relative', overflow: 'hidden', fontFamily: 'Impact, Arial Black, sans-serif' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg,#1a1200 0%,#080808 50%,#001a00 100%)', opacity: 0.8 }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg,#1a1200,#080808 50%,#001a00)', opacity: 0.8 }} />
       <div style={{ position: 'absolute', top: 0, left: 18, width: 4, height: '100%', background: '#F5C400', opacity: 0.6 }} />
       <div style={{ position: 'absolute', top: 0, right: 18, width: 4, height: '100%', background: '#F5C400', opacity: 0.6 }} />
 
-      {/* Header: logo + duelo */}
+      {/* Header */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: FY, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 20, padding: '0 40px' }}>
         <img src={LOGO} alt="O Novorizontino" style={{ height: 38, objectFit: 'contain' }} />
-
-        {/* Confronto mini */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <img src={jogo.escudoMandante} alt={jogo.mandante} style={{ width: 44, height: 44, objectFit: 'contain' }} />
-            <span style={{ fontSize: 9, color: '#aaa', fontWeight: 900, textTransform: 'uppercase' }}>{jogo.mandante}</span>
+        {jogo && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              <img src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} style={{ width: 42, height: 42, objectFit: 'contain' }} />
+              <span style={{ fontSize: 8, color: '#aaa', fontWeight: 900, textTransform: 'uppercase' }}>{jogo.mandante.nome}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <span style={{ fontSize: 20, fontWeight: 900, color: '#F5C400' }}>{formatHorario(jogo.data_hora)}</span>
+              <span style={{ fontSize: 8, color: '#555', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{formatData(jogo.data_hora)} • {jogo.competicao}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              <img src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} style={{ width: 42, height: 42, objectFit: 'contain' }} />
+              <span style={{ fontSize: 8, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase' }}>{jogo.visitante.nome}</span>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <span style={{ fontSize: 22, fontWeight: 900, color: '#F5C400' }}>{jogo.horario}</span>
-            <span style={{ fontSize: 8, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{jogo.data} • {jogo.competicao}</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <img src={jogo.escudoVisitante} alt={jogo.visitante} style={{ width: 44, height: 44, objectFit: 'contain' }} />
-            <span style={{ fontSize: 9, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase' }}>{jogo.visitante}</span>
-          </div>
-        </div>
-
-        <span style={{ fontSize: 28, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.02em', lineHeight: 1 }}>
-          MINHA ESCALAÇÃO
-        </span>
+        )}
+        <span style={{ fontSize: 30, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.02em', lineHeight: 1 }}>MINHA ESCALAÇÃO</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ height: 2, width: 24, background: '#F5C400' }} />
           <span style={{ fontSize: 12, fontWeight: 900, color: '#F5C400', fontStyle: 'italic', textTransform: 'uppercase' }}>{formation}</span>
@@ -417,9 +227,7 @@ function StoryCard({ lineup, slots, formation, jogoIdx }: {
       {/* Campo */}
       <div style={{ position: 'absolute', left: FX, top: FY, width: FW, height: FH, borderRadius: 8, overflow: 'hidden', background: '#2d8a2d', zIndex: 10, boxShadow: '0 0 40px rgba(0,0,0,0.8)' }}>
         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
-          {[0,1,2,3,4,5,6].map(i => (
-            <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.06)':'transparent'} />
-          ))}
+          {[0,1,2,3,4,5,6].map(i => <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.06)':'transparent'} />)}
           <rect x="1.5" y="2" width="65" height="101" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
           <line x1="1.5" y1="52.5" x2="66.5" y2="52.5" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
           <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
@@ -447,7 +255,7 @@ function StoryCard({ lineup, slots, formation, jogoIdx }: {
         })}
       </div>
 
-      {/* CTA inferior */}
+      {/* CTA */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: CH - FY - FH, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 20 }}>
         <div style={{ height: 2, width: '75%', background: 'linear-gradient(90deg,transparent,#F5C400,transparent)' }} />
         <span style={{ fontSize: 30, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase' }}>QUAL É A SUA?</span>
@@ -470,7 +278,7 @@ export default function EscalacaoIdeal() {
   const [showCard, setShowCard] = useState(false);
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [fieldWidth, setFieldWidth] = useState(340);
-  const [jogoIdx, setJogoIdx] = useState(0);
+  const [jogoAtual, setJogoAtual] = useState<Jogo | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -483,13 +291,10 @@ export default function EscalacaoIdeal() {
   const fieldHeight = Math.round(fieldWidth * (105 / 68));
   const slotSize = Math.max(32, Math.round(fieldWidth * 0.115));
   const labelSize = Math.max(6, Math.round(fieldWidth * 0.022));
-
   const slots = FORMATIONS[formation];
   const usedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
   const filledCount = Object.values(lineup).filter(Boolean).length;
-  const filteredPlayers = PLAYERS.filter(p =>
-    (filterPos === 'TODOS' || p.pos === filterPos) && !usedIds.includes(p.id)
-  );
+  const filteredPlayers = PLAYERS.filter(p => (filterPos === 'TODOS' || p.pos === filterPos) && !usedIds.includes(p.id));
 
   const placePlayer = (slotId: string, player: Player, from: string) => {
     setLineup(prev => {
@@ -501,56 +306,35 @@ export default function EscalacaoIdeal() {
   };
 
   const handleTapSlot = (slotId: string) => {
-    if (selected) {
-      placePlayer(slotId, selected.player, selected.from);
-      setSelected(null);
-    } else {
-      const p = lineup[slotId];
-      if (p) setSelected({ player: p, from: slotId });
-    }
+    if (selected) { placePlayer(slotId, selected.player, selected.from); setSelected(null); }
+    else { const p = lineup[slotId]; if (p) setSelected({ player: p, from: slotId }); }
   };
 
   const handleDropOnSlot = (slotId: string) => {
     if (!dragging) return;
     placePlayer(slotId, dragging.player, dragging.from);
-    setDragging(null);
-    setDragOver(null);
+    setDragging(null); setDragOver(null);
   };
 
   const handleDropOnBench = () => {
-    if (dragging && dragging.from !== 'bench') {
-      setLineup(prev => ({ ...prev, [dragging.from]: null }));
-    }
-    setDragging(null);
-    setDragOver(null);
+    if (dragging && dragging.from !== 'bench') setLineup(prev => ({ ...prev, [dragging.from]: null }));
+    setDragging(null); setDragOver(null);
   };
 
-  const handleGenerate = async () => {
-    if (filledCount < 11) return;
-    // Abre modal de captura — gera só após confirmar
-    setShowLeadModal(true);
-  };
+  const handleGenerate = () => { if (filledCount < 11) return; setShowLeadModal(true); };
 
   const doGenerate = async () => {
-    setShowLeadModal(false);
-    setGenerating(true);
-    setShowCard(true);
+    setShowLeadModal(false); setGenerating(true); setShowCard(true);
     await new Promise(r => setTimeout(r, 600));
     try {
       const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(cardRef.current!, {
-        scale: 2, useCORS: true, allowTaint: true,
-        backgroundColor: '#080808', logging: false,
-      });
+      const canvas = await html2canvas(cardRef.current!, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#080808', logging: false });
       const link = document.createElement('a');
       link.download = 'escalacao-tigre-novorizontino.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
-    } catch (e) {
-      console.error(e);
-    }
-    setGenerating(false);
-    setShowCard(false);
+    } catch (e) { console.error(e); }
+    setGenerating(false); setShowCard(false);
   };
 
   return (
@@ -560,7 +344,7 @@ export default function EscalacaoIdeal() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <a href="/" className="flex items-center justify-center w-8 h-8 border border-zinc-700 rounded hover:border-yellow-500 transition-colors flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
           </a>
@@ -570,31 +354,22 @@ export default function EscalacaoIdeal() {
           </h1>
         </div>
 
-        {/* Próximo duelo */}
-        <ProximoDuelo jogoIdx={jogoIdx} onSelect={setJogoIdx} />
+        {/* Próximo duelo — dinâmico via Supabase */}
+        <ProximoDuelo onJogoSelect={setJogoAtual} />
 
         {/* Instrução */}
         <p className="text-zinc-500 text-xs mb-3">
-          {selected
-            ? `✅ ${selected.player.name} selecionado — toque na posição no campo`
-            : 'Toque em um jogador, depois toque na posição no campo.'}
+          {selected ? `✅ ${selected.player.name} selecionado — toque na posição no campo` : 'Toque em um jogador, depois toque na posição no campo.'}
         </p>
 
         {/* Formações */}
         <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
           {Object.keys(FORMATIONS).map(f => (
-            <button
-              key={f}
-              onClick={() => { setFormation(f); setLineup({}); setSelected(null); }}
-              className={`flex-shrink-0 px-3 py-1.5 text-xs font-black uppercase tracking-widest transition-all ${
-                formation === f ? 'bg-yellow-500 text-black' : 'border border-zinc-700 text-zinc-400'
-              }`}
-            >{f}</button>
+            <button key={f} onClick={() => { setFormation(f); setLineup({}); setSelected(null); }}
+              className={`flex-shrink-0 px-3 py-1.5 text-xs font-black uppercase tracking-widest transition-all ${formation === f ? 'bg-yellow-500 text-black' : 'border border-zinc-700 text-zinc-400'}`}>{f}</button>
           ))}
-          <button
-            onClick={() => { setLineup({}); setSelected(null); }}
-            className="flex-shrink-0 px-3 py-1.5 text-xs font-black uppercase tracking-widest border border-zinc-800 text-zinc-600 ml-auto"
-          >Limpar</button>
+          <button onClick={() => { setLineup({}); setSelected(null); }}
+            className="flex-shrink-0 px-3 py-1.5 text-xs font-black uppercase tracking-widest border border-zinc-800 text-zinc-600 ml-auto">Limpar</button>
         </div>
 
         {/* Progresso */}
@@ -606,30 +381,16 @@ export default function EscalacaoIdeal() {
         </div>
 
         {/* Campo */}
-        <div
-          style={{ position: 'relative', width: fieldWidth, height: fieldHeight, margin: '0 auto' }}
-          onDragOver={e => e.preventDefault()}
-          onDrop={handleDropOnBench}
-        >
+        <div style={{ position: 'relative', width: fieldWidth, height: fieldHeight, margin: '0 auto' }} onDragOver={e => e.preventDefault()} onDrop={handleDropOnBench}>
           <div style={{ position: 'absolute', inset: 0, borderRadius: 8, overflow: 'hidden', background: '#2a7a2a' }}>
             <FieldSvg />
           </div>
-
           {slots.map(slot => {
             const player = lineup[slot.id];
             const isOver = dragOver === slot.id;
             const isSelFrom = selected?.from === slot.id;
             return (
-              <div
-                key={slot.id}
-                style={{
-                  position: 'absolute',
-                  left: (slot.x/100)*fieldWidth,
-                  top: (slot.y/100)*fieldHeight,
-                  transform: 'translate(-50%,-50%)',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                  zIndex: 10, cursor: 'pointer',
-                }}
+              <div key={slot.id} style={{ position: 'absolute', left: (slot.x/100)*fieldWidth, top: (slot.y/100)*fieldHeight, transform: 'translate(-50%,-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, zIndex: 10, cursor: 'pointer' }}
                 draggable={!!player}
                 onDragStart={() => player && setDragging({ player, from: slot.id })}
                 onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOver(slot.id); }}
@@ -638,24 +399,9 @@ export default function EscalacaoIdeal() {
                 onDoubleClick={() => player && setLineup(prev => ({ ...prev, [slot.id]: null }))}
                 onClick={() => handleTapSlot(slot.id)}
               >
-                <div style={{
-                  width: slotSize, height: slotSize, borderRadius: '50%', overflow: 'hidden', position: 'relative',
-                  border: isSelFrom ? '2.5px solid #fff' : player ? '2.5px solid #F5C400' : selected ? '2px dashed #F5C400' : isOver ? '2px dashed #F5C400' : '2px dashed rgba(255,255,255,0.35)',
-                  background: player ? 'transparent' : selected ? 'rgba(245,196,0,0.15)' : 'rgba(0,0,0,0.4)',
-                  boxShadow: player ? '0 2px 8px rgba(0,0,0,0.7)' : 'none',
-                  transition: 'border 0.15s', flexShrink: 0,
-                }}>
-                  {player
-                    ? <SpritePhoto foto={player.foto} size={slotSize} />
-                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ color: selected ? '#F5C400' : 'rgba(255,255,255,0.35)', fontSize: slotSize*0.4, fontWeight: 900 }}>+</span>
-                      </div>
-                  }
-                  {player && (
-                    <div style={{ position: 'absolute', bottom: -1, right: -1, width: 14, height: 14, borderRadius: '50%', background: '#000', border: '1px solid #F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                      <span style={{ color: '#F5C400', fontSize: 5, fontWeight: 900 }}>{player.num}</span>
-                    </div>
-                  )}
+                <div style={{ width: slotSize, height: slotSize, borderRadius: '50%', overflow: 'hidden', position: 'relative', border: isSelFrom ? '2.5px solid #fff' : player ? '2.5px solid #F5C400' : selected ? '2px dashed #F5C400' : isOver ? '2px dashed #F5C400' : '2px dashed rgba(255,255,255,0.35)', background: player ? 'transparent' : selected ? 'rgba(245,196,0,0.15)' : 'rgba(0,0,0,0.4)', boxShadow: player ? '0 2px 8px rgba(0,0,0,0.7)' : 'none', transition: 'border 0.15s', flexShrink: 0 }}>
+                  {player ? <SpritePhoto foto={player.foto} size={slotSize} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: selected ? '#F5C400' : 'rgba(255,255,255,0.35)', fontSize: slotSize*0.4, fontWeight: 900 }}>+</span></div>}
+                  {player && <div style={{ position: 'absolute', bottom: -1, right: -1, width: 14, height: 14, borderRadius: '50%', background: '#000', border: '1px solid #F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><span style={{ color: '#F5C400', fontSize: 5, fontWeight: 900 }}>{player.num}</span></div>}
                 </div>
                 <span style={{ fontSize: labelSize, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,1)', textTransform: 'uppercase', whiteSpace: 'nowrap', maxWidth: slotSize+10, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {player ? player.short : slot.label}
@@ -670,45 +416,28 @@ export default function EscalacaoIdeal() {
           <div className="flex gap-1.5 mb-3 overflow-x-auto no-scrollbar">
             {['TODOS','GOL','LAT','ZAG','MEI','ATA'].map(p => (
               <button key={p} onClick={() => setFilterPos(p)}
-                className={`flex-shrink-0 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded transition-all ${
-                  filterPos === p ? 'bg-yellow-500 text-black' : 'border border-zinc-800 text-zinc-500'
-                }`}>{p}</button>
+                className={`flex-shrink-0 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded transition-all ${filterPos===p?'bg-yellow-500 text-black':'border border-zinc-800 text-zinc-500'}`}>{p}</button>
             ))}
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
             {filteredPlayers.map(player => {
               const isSel = selected?.player.id === player.id;
               return (
-                <div
-                  key={player.id}
-                  draggable
-                  onDragStart={() => setDragging({ player, from: 'bench' })}
-                  onClick={() => setSelected(isSel ? null : { player, from: 'bench' })}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                    padding: '8px 4px',
-                    border: isSel ? '1.5px solid #F5C400' : '0.5px solid #3f3f46',
-                    background: isSel ? 'rgba(245,196,0,0.1)' : 'rgba(24,24,27,0.5)',
-                    cursor: 'pointer', borderRadius: 6, transition: 'all 0.15s',
-                    userSelect: 'none',
-                  }}
-                >
-                  <div style={{ width: 46, height: 46, borderRadius: '50%', overflow: 'hidden', border: isSel ? '2px solid #F5C400' : '1px solid #3f3f46', flexShrink: 0, position: 'relative' }}>
+                <div key={player.id} draggable onDragStart={() => setDragging({ player, from: 'bench' })} onClick={() => setSelected(isSel ? null : { player, from: 'bench' })}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '8px 4px', border: isSel ? '1.5px solid #F5C400' : '0.5px solid #3f3f46', background: isSel ? 'rgba(245,196,0,0.1)' : 'rgba(24,24,27,0.5)', cursor: 'pointer', borderRadius: 6, transition: 'all 0.15s', userSelect: 'none' }}>
+                  <div style={{ width: 46, height: 46, borderRadius: '50%', overflow: 'hidden', border: isSel?'2px solid #F5C400':'1px solid #3f3f46', flexShrink: 0, position: 'relative' }}>
                     <SpritePhoto foto={player.foto} size={46} />
                     <div style={{ position: 'absolute', bottom: -1, right: -1, width: 16, height: 16, borderRadius: '50%', background: '#F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span style={{ color: '#000', fontSize: 7, fontWeight: 900 }}>{player.num}</span>
                     </div>
                   </div>
-                  <p style={{ color: isSel?'#F5C400':'#fff', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', textAlign: 'center', margin: 0, lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {player.short}
-                  </p>
+                  <p style={{ color: isSel?'#F5C400':'#fff', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', textAlign: 'center', margin: 0, lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.short}</p>
                   <span style={{ fontSize: 8, color: '#52525b', fontWeight: 900, textTransform: 'uppercase' }}>{player.pos}</span>
                 </div>
               );
             })}
             {filteredPlayers.length === 0 && (
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: '#52525b' }}>
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', color: '#52525b' }}>
                 <p style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>Todos escalados!</p>
               </div>
             )}
@@ -718,37 +447,21 @@ export default function EscalacaoIdeal() {
 
       {/* Botão fixo rodapé */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: '#000', borderTop: '1px solid #27272a', padding: '10px 16px 16px' }}>
-        <button
-          onClick={handleGenerate}
-          disabled={filledCount < 11 || generating}
-          className={`w-full py-4 text-sm font-black uppercase tracking-widest transition-all rounded ${
-            filledCount === 11
-              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:opacity-80'
-              : 'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'
-          }`}
-        >
+        <button onClick={handleGenerate} disabled={filledCount < 11 || generating}
+          className={`w-full py-4 text-sm font-black uppercase tracking-widest transition-all rounded ${filledCount===11?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:opacity-80':'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'}`}>
           {generating ? 'Gerando story...' : filledCount===11 ? 'Baixar Story para o Instagram' : `Faltam ${11-filledCount} jogador${11-filledCount>1?'es':''}  •  ${filledCount}/11`}
         </button>
-        {filledCount === 11 && (
-          <p className="text-yellow-500 text-[9px] text-center uppercase tracking-widest mt-1.5">
-            Salva e posta nos stories com #tigredovale!
-          </p>
-        )}
+        {filledCount===11 && <p className="text-yellow-500 text-[9px] text-center uppercase tracking-widest mt-1.5">Salva e posta nos stories com #tigredovale!</p>}
       </div>
 
-      {/* Modal de captura de lead */}
-      {showLeadModal && (
-        <LeadModal
-          onConfirm={() => doGenerate()}
-          onClose={() => setShowLeadModal(false)}
-        />
-      )}
+      {/* Modal lead */}
+      {showLeadModal && <LeadModal onConfirm={doGenerate} onClose={() => setShowLeadModal(false)} />}
 
-      {/* Card oculto para captura */}
+      {/* Card oculto */}
       {showCard && (
         <div style={{ position: 'fixed', top: -9999, left: -9999, zIndex: -1 }}>
           <div ref={cardRef}>
-            <StoryCard lineup={lineup} slots={slots} formation={formation} jogoIdx={jogoIdx} />
+            <StoryCard lineup={lineup} slots={slots} formation={formation} jogo={jogoAtual} />
           </div>
         </div>
       )}
