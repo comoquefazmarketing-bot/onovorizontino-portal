@@ -161,7 +161,7 @@ function LeadModal({ onConfirm, onClose }: { onConfirm: () => void; onClose: () 
           {erro && <p className="text-red-400 text-xs font-bold">{erro}</p>}
         </div>
         <p className="text-zinc-600 text-[9px] uppercase tracking-widest mb-4 text-center">Seus dados são usados apenas pelo Portal O Novorizontino.</p>
-        <button onClick={handleSubmit} disabled={loading} className="w-full py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-sm rounded-lg active:opacity-80 transition-all">
+        <button onClick={handleSubmit} disabled={loading} data-track="escalacao_lead_submit" className="w-full py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-sm rounded-lg active:opacity-80 transition-all">
           {loading ? 'Salvando...' : 'Baixar meu Story'}
         </button>
       </div>
@@ -477,6 +477,8 @@ export default function EscalacaoIdeal() {
         <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
           {Object.keys(FORMATIONS).map(f => (
             <button key={f} onClick={() => { setFormation(f); setLineup({}); setSelected(null); }}
+              data-track="escalacao_formacao"
+              data-track-label={f}
               className={`flex-shrink-0 px-3 py-1.5 text-xs font-black uppercase tracking-widest transition-all ${formation === f ? 'bg-yellow-500 text-black' : 'border border-zinc-700 text-zinc-400'}`}>{f}</button>
           ))}
           <button onClick={() => { setLineup({}); setSelected(null); }}
@@ -599,6 +601,8 @@ export default function EscalacaoIdeal() {
       {/* Botão fixo rodapé */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: '#000', borderTop: '1px solid #27272a', padding: '10px 16px 16px' }}>
         <button onClick={handleGenerate} disabled={filledCount < 11 || generating}
+          data-track="escalacao_baixar_story"
+          data-track-label={`Formação ${formation} - ${filledCount}/11`}
           className={`w-full py-4 text-sm font-black uppercase tracking-widest transition-all rounded ${filledCount===11?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:opacity-80':'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'}`}>
           {generating ? 'Gerando story...' : filledCount===11 ? 'Baixar Story para o Instagram' : `Faltam ${11-filledCount} jogador${11-filledCount>1?'es':''}  •  ${filledCount}/11`}
         </button>
