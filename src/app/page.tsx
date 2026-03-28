@@ -8,6 +8,8 @@ import CTCarousel from '@/components/sections/CTCarousel';
 import Footer from '@/components/layout/Footer';
 import Manifesto from '@/components/sections/Manifesto';
 import GlobalAdBanner from '@/components/ads/GlobalAdBanner';
+import EscalacaoPopup from '@/components/home/EscalacaoPopup';
+import LgpdBanner from '@/components/layout/LgpdBanner';
 
 export default async function Home() {
   return (
@@ -105,6 +107,8 @@ export default async function Home() {
       </div>
 
       <Footer />
+      <EscalacaoPopup />
+      <LgpdBanner />
     </main>
   );
 }
