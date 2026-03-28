@@ -141,6 +141,7 @@ function LeadModal({ onConfirm, onClose }: { onConfirm: () => void; onClose: () 
       });
     } catch (e) { console.error(e); }
     setLoading(false);
+    localStorage.setItem('tigre_lead_ok', '1');
     onConfirm();
   };
 
@@ -347,7 +348,11 @@ export default function EscalacaoIdeal() {
     setDragging(null); setDragOver(null);
   };
 
-  const handleGenerate = () => { if (filledCount < 11) return; setShowLeadModal(true); };
+  const handleGenerate = () => {
+    if (filledCount < 11) return;
+    const jaRegistrado = typeof window !== 'undefined' && localStorage.getItem('tigre_lead_ok');
+    if (jaRegistrado) { doGenerate(); } else { setShowLeadModal(true); }
+  };
 
   const doGenerate = async () => {
     setShowLeadModal(false); setGenerating(true); setShowCard(true);
