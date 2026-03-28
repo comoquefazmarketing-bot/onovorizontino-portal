@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Ticker from '@/components/layout/Ticker';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.onovorizontino.com.br'),
@@ -113,6 +114,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-black antialiased">
         <Ticker />
         {children}
+        <GoogleAnalytics gaId="G-J10P2E3X5X" />
       </body>
     </html>
   );
