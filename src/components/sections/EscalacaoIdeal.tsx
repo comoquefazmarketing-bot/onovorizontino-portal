@@ -5,7 +5,7 @@ const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/LOGO%20-%20O%20NOVORIZONTINO%20(1).png';
 
 // Escudos — Supabase
-const ESCUDO_NOVO   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/LOGO%20-%20O%20NOVORIZONTINO%20(1).png';
+const ESCUDO_NOVO   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
 const ESCUDO_JUVEN  = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/juventude.png';
 
 // Próximos jogos hardcoded — futuro: virar automático via Supabase
