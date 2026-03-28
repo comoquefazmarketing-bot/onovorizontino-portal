@@ -3,6 +3,7 @@ import './globals.css';
 import Ticker from '@/components/layout/Ticker';
 import Script from 'next/script';
 import Analytics from '@/components/layout/Analytics';
+import LgpdBanner from '@/components/layout/LgpdBanner';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.onovorizontino.com.br'),
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Ticker />
         {children}
         <Analytics />
+        <LgpdBanner />
 
         {/* Google Analytics 4 */}
         <Script
