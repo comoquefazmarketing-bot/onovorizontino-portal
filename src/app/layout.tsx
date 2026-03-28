@@ -40,23 +40,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="google-site-verification" content="njrcPMAtFlMQ0Hnc7xZbC5QF-3Ru_nvADZINPMTPTCE" />
 
-        {/* Google Analytics 4 */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-J10P2E3X5X"
-          strategy="afterInteractive"
-        />
-        <Script id="ga4-init" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-J10P2E3X5X', {
-              page_path: window.location.pathname,
-              send_page_view: true
-            });
-          `}
-        </Script>
-
         {/* JSON-LD */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           '@context': 'https://schema.org', '@type': 'NewsMediaOrganization',
@@ -75,8 +58,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-black antialiased">
         <Ticker />
         {children}
-        {/* Rastreamento automático de cliques e scroll */}
         <Analytics />
+
+        {/* Google Analytics 4 */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-J10P2E3X5X"
+          strategy="afterInteractive"
+        />
+        <Script id="ga4-config" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-J10P2E3X5X');
+        `}</Script>
       </body>
     </html>
   );
