@@ -524,8 +524,6 @@ export default function EscalacaoIdeal() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
       {/* Botão fixo rodapé */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: '#000', borderTop: '1px solid #27272a', padding: '10px 16px 16px' }}>
