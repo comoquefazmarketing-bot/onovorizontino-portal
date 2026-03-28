@@ -263,7 +263,107 @@ function ProximoDuelo({ jogoIdx, onSelect }: { jogoIdx: number; onSelect: (i: nu
   );
 }
 
-// ─── Story Card 9:16 ─────────────────────────────────────────────────────────
+// ─── Modal de captura de lead ─────────────────────────────────────────────────
+function LeadModal({ onConfirm, onClose }: {
+  onConfirm: (nome: string, whats: string) => void;
+  onClose: () => void;
+}) {
+  const [nome, setNome] = useState('');
+  const [whats, setWhats] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState('');
+
+  const handleSubmit = async () => {
+    if (!nome.trim() || whats.replace(/\D/g,'').length < 10) {
+      setErro('Preencha nome e WhatsApp válido para continuar.');
+      return;
+    }
+    setLoading(true);
+    setErro('');
+    try {
+      await fetch('https://whoglnpvqjbaczgnebbn.supabase.co/rest/v1/leads_escalacao', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`,
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify({
+          nome: nome.trim(),
+          whatsapp: whats.replace(/\D/g,''),
+          origem: 'escalacao',
+          criado_em: new Date().toISOString(),
+        }),
+      });
+    } catch (e) {
+      // Salva mesmo se falhar — não bloqueia o usuário
+      console.error(e);
+    }
+    setLoading(false);
+    onConfirm(nome.trim(), whats);
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div
+        style={{ width: '100%', maxWidth: 480, background: '#111', borderRadius: '20px 20px 0 0', padding: '28px 20px 36px', borderTop: '3px solid #F5C400' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Handle */}
+        <div style={{ width: 36, height: 4, background: '#333', borderRadius: 2, margin: '0 auto 20px' }} />
+
+        {/* Título */}
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-2xl">📸</span>
+          <h2 className="text-white font-black uppercase italic text-xl tracking-tighter">
+            Quase lá, Tigre!
+          </h2>
+        </div>
+        <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
+          Deixa seu nome e WhatsApp para baixar o story. Você receberá novidades do Tigre em primeira mão!
+        </p>
+
+        {/* Campos */}
+        <div className="flex flex-col gap-3 mb-4">
+          <input
+            type="text"
+            name="name"
+            autoComplete="name"
+            placeholder="Seu nome"
+            value={nome}
+            onChange={e => setNome(e.target.value)}
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors"
+          />
+          <input
+            type="tel"
+            name="tel"
+            autoComplete="tel"
+            placeholder="WhatsApp (DDD + número)"
+            value={whats}
+            onChange={e => setWhats(e.target.value)}
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors"
+          />
+          {erro && <p className="text-red-400 text-xs font-bold">{erro}</p>}
+        </div>
+
+        {/* Aviso LGPD */}
+        <p className="text-zinc-600 text-[9px] uppercase tracking-widest mb-4 text-center">
+          Seus dados são usados apenas pelo Portal O Novorizontino. Não há spam.
+        </p>
+
+        {/* Botão */}
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="w-full py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-sm rounded-lg active:opacity-80 transition-all"
+        >
+          {loading ? 'Salvando...' : 'Baixar meu Story'}
+        </button>
+      </div>
+    </div>
+  );
+}
 function StoryCard({ lineup, slots, formation, jogoIdx }: {
   lineup: Lineup;
   slots: { id: string; label: string; x: number; y: number }[];
@@ -368,6 +468,7 @@ export default function EscalacaoIdeal() {
   const [filterPos, setFilterPos] = useState('TODOS');
   const [generating, setGenerating] = useState(false);
   const [showCard, setShowCard] = useState(false);
+  const [showLeadModal, setShowLeadModal] = useState(false);
   const [fieldWidth, setFieldWidth] = useState(340);
   const [jogoIdx, setJogoIdx] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -426,6 +527,12 @@ export default function EscalacaoIdeal() {
 
   const handleGenerate = async () => {
     if (filledCount < 11) return;
+    // Abre modal de captura — gera só após confirmar
+    setShowLeadModal(true);
+  };
+
+  const doGenerate = async () => {
+    setShowLeadModal(false);
     setGenerating(true);
     setShowCard(true);
     await new Promise(r => setTimeout(r, 600));
@@ -623,6 +730,14 @@ export default function EscalacaoIdeal() {
           </p>
         )}
       </div>
+
+      {/* Modal de captura de lead */}
+      {showLeadModal && (
+        <LeadModal
+          onConfirm={() => doGenerate()}
+          onClose={() => setShowLeadModal(false)}
+        />
+      )}
 
       {/* Card oculto para captura */}
       {showCard && (
