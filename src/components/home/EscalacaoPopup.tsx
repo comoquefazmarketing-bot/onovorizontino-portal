@@ -14,9 +14,7 @@ type Jogo = { id: number; competicao: string; data_hora: string; local: string; 
 
 function formatHorario(iso: string) {
   const d = new Date(iso);
-  const h = String(d.getHours()).padStart(2,'0');
-  const m = String(d.getMinutes()).padStart(2,'0');
-  return `${h}h${m === '00' ? '' : m}`;
+  return `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0') === '00' ? '' : String(d.getMinutes()).padStart(2,'0')}`;
 }
 function formatData(iso: string) {
   const d = new Date(iso);
@@ -34,13 +32,10 @@ export default function EscalacaoPopup() {
   const [jogo, setJogo] = useState<Jogo | null>(null);
 
   useEffect(() => {
-    if (sessionStorage.getItem('popup_escalacao_closed')) return;
-    // Busca próximo jogo da API
+    if (sessionStorage.getItem('popup_escalacao_v3')) return;
     fetch('/api/proximo-jogo')
       .then(r => r.json())
-      .then(({ jogos }) => {
-        if (jogos?.[0]) setJogo(jogos[0]);
-      })
+      .then(({ jogos }) => { if (jogos?.[0]) setJogo(jogos[0]); })
       .catch(() => {});
     const t = setTimeout(() => setVisible(true), 3500);
     return () => clearTimeout(t);
@@ -54,7 +49,7 @@ export default function EscalacaoPopup() {
 
   const close = () => {
     setClosing(true);
-    sessionStorage.setItem('popup_escalacao_closed', '1');
+    sessionStorage.setItem('popup_escalacao_v3', '1');
     setTimeout(() => setVisible(false), 350);
   };
 
@@ -73,20 +68,14 @@ export default function EscalacaoPopup() {
       {/* Overlay */}
       <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', animation: closing ? 'fadeOut 0.35s forwards' : 'fadeIn 0.3s forwards' }} />
 
-      {/* Popup — bottom sheet no mobile, modal centralizado no desktop */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, top: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pointerEvents: 'none' }}>
-        <div style={{ pointerEvents: 'all', width: '100%', maxWidth: 540, animation: closing ? 'slideDown 0.35s forwards' : 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
-        <div style={{ background: 'linear-gradient(160deg,#0f0f0f,#1a1200 60%,#0f1a0f)', borderRadius: '24px 24px 0 0', borderTop: '3px solid #F5C400', overflow: 'hidden', position: 'relative' }}>
+      {/* Popup */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, animation: closing ? 'slideDown 0.35s forwards' : 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
+        <div style={{ background: 'linear-gradient(160deg,#0f0f0f,#1a1200 60%,#0f1a0f)', borderRadius: '24px 24px 0 0', borderTop: '3px solid #F5C400', overflow: 'hidden', maxWidth: 540, margin: '0 auto', position: 'relative' }}>
 
-          {/* Shimmer topo */}
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'linear-gradient(90deg,#F5C400,#fff,#F5C400)', backgroundSize: '200%', animation: 'shimmer 2s linear infinite' }} />
-
-          {/* Fechar */}
           <button onClick={close} data-track="popup_fechar_x" style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: 'none', color: '#666', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>✕</button>
 
           <div style={{ padding: '24px 20px 32px' }}>
-
-            {/* Badge jogo — dinâmico ou fallback */}
             {jogo ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
                 {isHoje(jogo.data_hora) && (
@@ -105,22 +94,16 @@ export default function EscalacaoPopup() {
               </div>
             )}
 
-            {/* Confronto */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-
-              {/* Mandante */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
                 {jogo ? (
                   <img src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} style={{ width: 56, height: 56, objectFit: 'contain', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.6))' }} />
                 ) : (
                   <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#1a1a1a', border: '1px solid #333' }} />
                 )}
-                <span style={{ fontSize: 10, color: '#aaa', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
-                  {jogo?.mandante.nome ?? '...'}
-                </span>
+                <span style={{ fontSize: 10, color: '#aaa', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>{jogo?.mandante.nome ?? '...'}</span>
               </div>
 
-              {/* Centro com mini campo */}
               <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                 <div style={{ width: 80, height: 52, borderRadius: 6, overflow: 'hidden', background: '#2d8a2d', position: 'relative', border: '1.5px solid rgba(255,255,255,0.15)' }}>
                   <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
@@ -136,24 +119,19 @@ export default function EscalacaoPopup() {
                 <span style={{ fontSize: 18, fontWeight: 900, color: '#F5C400' }}>VS</span>
               </div>
 
-              {/* Visitante */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
                 {jogo ? (
                   <img src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} style={{ width: 56, height: 56, objectFit: 'contain', filter: 'drop-shadow(0 4px 8px rgba(245,196,0,0.3))' }} />
                 ) : (
                   <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#1a1a1a', border: '1px solid #333' }} />
                 )}
-                <span style={{ fontSize: 10, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
-                  {jogo?.visitante.nome ?? '...'}
-                </span>
+                <span style={{ fontSize: 10, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>{jogo?.visitante.nome ?? '...'}</span>
               </div>
             </div>
 
-            {/* Headline */}
             <div style={{ textAlign: 'center', marginBottom: 20 }}>
               <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 8 }}>
-                QUAL É SUA<br />
-                <span style={{ color: '#F5C400' }}>ESCALAÇÃO IDEAL?</span>
+                QUAL É SUA<br /><span style={{ color: '#F5C400' }}>ESCALAÇÃO IDEAL?</span>
               </h2>
               <p style={{ fontSize: 13, color: '#777', lineHeight: 1.4 }}>
                 Monte os 11, gere o story e desafie seus amigos.<br />
@@ -161,8 +139,7 @@ export default function EscalacaoPopup() {
               </p>
             </div>
 
-            {/* CTA */}
-            <Link href="/escalacao" onClick={close} data-track="popup_cta_montar" data-track-label="Montar Minha Escalação" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', padding: '16px', background: '#F5C400', color: '#000', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', borderRadius: 12, textDecoration: 'none', boxShadow: '0 8px 24px rgba(245,196,0,0.35)' }}>
+            <Link href="/escalacao" onClick={close} data-track="popup_cta_montar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', padding: '16px', background: '#F5C400', color: '#000', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em', borderRadius: 12, textDecoration: 'none', boxShadow: '0 8px 24px rgba(245,196,0,0.35)' }}>
               <span style={{ fontSize: 20 }}>⚽</span>
               MONTAR MINHA ESCALAÇÃO
             </Link>
@@ -171,7 +148,6 @@ export default function EscalacaoPopup() {
               Agora não
             </button>
           </div>
-        </div>
         </div>
       </div>
     </>
