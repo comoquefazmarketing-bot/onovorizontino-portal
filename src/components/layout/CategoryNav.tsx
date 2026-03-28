@@ -10,7 +10,7 @@ export default function CategoryNav() {
     { name: 'Tigre TV', href: '#videos' },
     { name: 'Ingressos', href: linkWhatsapp, target: '_blank' },
     { name: 'Loja', href: linkWhatsapp, target: '_blank' },
-    { name: 'Sócio', href: '#' },
+    { name: 'Escalação', href: '/escalacao' },
     { name: 'Tabela', href: '#agenda' }
   ];
 
