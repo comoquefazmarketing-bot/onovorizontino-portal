@@ -73,9 +73,10 @@ export default function EscalacaoPopup() {
       {/* Overlay */}
       <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', animation: closing ? 'fadeOut 0.35s forwards' : 'fadeIn 0.3s forwards' }} />
 
-      {/* Popup */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, animation: closing ? 'slideDown 0.35s forwards' : 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
-        <div style={{ background: 'linear-gradient(160deg,#0f0f0f,#1a1200 60%,#0f1a0f)', borderRadius: '24px 24px 0 0', borderTop: '3px solid #F5C400', overflow: 'hidden', maxWidth: 540, margin: '0 auto', position: 'relative' }}>
+      {/* Popup — bottom sheet no mobile, modal centralizado no desktop */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, top: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div style={{ pointerEvents: 'all', width: '100%', maxWidth: 540, animation: closing ? 'slideDown 0.35s forwards' : 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
+        <div style={{ background: 'linear-gradient(160deg,#0f0f0f,#1a1200 60%,#0f1a0f)', borderRadius: '24px 24px 0 0', borderTop: '3px solid #F5C400', overflow: 'hidden', position: 'relative' }}>
 
           {/* Shimmer topo */}
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'linear-gradient(90deg,#F5C400,#fff,#F5C400)', backgroundSize: '200%', animation: 'shimmer 2s linear infinite' }} />
@@ -170,6 +171,7 @@ export default function EscalacaoPopup() {
               Agora não
             </button>
           </div>
+        </div>
         </div>
       </div>
     </>
