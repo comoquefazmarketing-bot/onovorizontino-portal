@@ -211,11 +211,16 @@ function StoryCard({ lineup, slots, formation }: { lineup: Lineup; slots: typeof
       </div>
 
       {/* Faixa CTA inferior */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 148, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 20 }}>
-        <div style={{ height: 2, width: '80%', background: 'linear-gradient(90deg, transparent, #F5C400, transparent)', marginBottom: 4 }} />
-        <span style={{ fontSize: 34, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.01em', lineHeight: 1 }}>QUAL É A SUA?</span>
-        <span style={{ fontSize: 12, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>#tigredovale #novorizontino #serieb2026</span>
-        <span style={{ fontSize: 11, color: '#444', textTransform: 'uppercase', letterSpacing: '0.12em', fontFamily: 'Arial, sans-serif' }}>onovorizontino.com.br</span>
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 148, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, zIndex: 20 }}>
+        <div style={{ height: 2, width: '80%', background: 'linear-gradient(90deg, transparent, #F5C400, transparent)', marginBottom: 2 }} />
+        <span style={{ fontSize: 30, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.01em', lineHeight: 1 }}>QUAL É A SUA?</span>
+        <span style={{ fontSize: 11, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em' }}>#tigredovale #novorizontino #serieb2026</span>
+        {/* Botão viral — quem vê o story sabe exatamente onde ir */}
+        <div style={{ background: '#F5C400', borderRadius: 4, padding: '6px 16px', marginTop: 2 }}>
+          <span style={{ fontSize: 12, fontWeight: 900, color: '#000', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'Arial Black, sans-serif' }}>
+            👉 onovorizontino.com.br/escalacao
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -317,8 +322,78 @@ export default function EscalacaoIdeal() {
     <main className="min-h-screen bg-black text-white pb-28">
       <div className="max-w-lg mx-auto px-4 py-8">
 
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-1">
+        {/* PRÓXIMO DUELO */}
+        <div className="mb-5 rounded-lg overflow-hidden border border-yellow-500/30 bg-zinc-900/80">
+          <div className="bg-yellow-500 px-4 py-1.5 flex items-center justify-between">
+            <span className="text-black font-black text-[10px] uppercase tracking-[0.25em]">⚽ Próximo Duelo — Série B 2026</span>
+            <span className="text-black font-black text-[10px] uppercase">Rd. 2</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-4">
+            {/* Time da casa */}
+            <div className="flex flex-col items-center gap-2 flex-1">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/pt/thumb/4/42/Juventude.png/200px-Juventude.png"
+                alt="Juventude"
+                style={{ width: 48, height: 48, objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
+              />
+              <span className="text-white font-black text-xs uppercase">Juventude</span>
+            </div>
+            {/* Info */}
+            <div className="flex flex-col items-center gap-1 px-2">
+              <span className="text-yellow-500 font-black text-2xl italic">VS</span>
+              <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">31 Mar • 19h</span>
+              <span className="text-zinc-600 text-[9px] uppercase tracking-wider">Alfredo Jaconi</span>
+            </div>
+            {/* Novorizontino */}
+            <div className="flex flex-col items-center gap-2 flex-1">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/pt/thumb/8/89/Gremio_Novorizontino_2010.png/200px-Gremio_Novorizontino_2010.png"
+                alt="Novorizontino"
+                style={{ width: 48, height: 48, objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
+              />
+              <span className="text-white font-black text-xs uppercase">Novorizontino</span>
+            </div>
+          </div>
+          <div className="px-4 pb-3">
+            <p className="text-yellow-500/70 text-[10px] font-bold uppercase tracking-widest text-center">
+              Monte a escalação ideal para esse jogo! 🟡⚫
+            </p>
+          </div>
+        </div>
+
+        {/* PRÓXIMO DUELO */}
+        <div style={{
+          background: 'linear-gradient(135deg, #111 0%, #1a1200 100%)',
+          border: '1px solid #F5C400',
+          borderRadius: 10, padding: '14px 16px', marginBottom: 16,
+        }}>
+          <p style={{ fontSize: 9, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3em', margin: '0 0 10px' }}>
+            ⚡ Próximo Duelo — Série B 2026
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            {/* Novorizontino */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Gr%C3%AAmio_Novorizontino_logo.svg/240px-Gr%C3%AAmio_Novorizontino_logo.svg.png"
+                alt="Novorizontino" style={{ width: 48, height: 48, objectFit: 'contain' }} />
+              <span style={{ fontSize: 9, color: '#fff', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>Novorizontino</span>
+            </div>
+            {/* Info central */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <span style={{ fontSize: 22, fontWeight: 900, color: '#F5C400', fontStyle: 'italic' }}>VS</span>
+              <span style={{ fontSize: 9, color: '#aaa', fontWeight: 700, textAlign: 'center' }}>31/03 • 19h</span>
+              <span style={{ fontSize: 8, color: '#666', fontWeight: 700, textAlign: 'center' }}>Alfredo Jaconi</span>
+            </div>
+            {/* Juventude */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Esporte_Clube_Juventude_logo.svg/240px-Esporte_Clube_Juventude_logo.svg.png"
+                alt="Juventude" style={{ width: 48, height: 48, objectFit: 'contain' }} />
+              <span style={{ fontSize: 9, color: '#fff', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>Juventude</span>
+            </div>
+          </div>
+          <p style={{ fontSize: 9, color: '#555', textAlign: 'center', margin: '10px 0 0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            Monte a escalação ideal para esse jogo 👆
+          </p>
+        </div>
           <div className="w-1 h-7 bg-yellow-500" />
           <h1 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter">
             Monte sua <span className="text-yellow-500">Escalação</span>
@@ -497,9 +572,34 @@ export default function EscalacaoIdeal() {
           {generating ? '⏳ Gerando story...' : filledCount === 11 ? '📸 Baixar Story para o Instagram' : `Faltam ${11-filledCount} jogador${11-filledCount>1?'es':''}  •  ${filledCount}/11`}
         </button>
         {filledCount === 11 && (
-          <p className="text-yellow-500 text-[10px] text-center uppercase tracking-widest mt-1.5">
-            Salva e posta nos stories com #tigredovale!
-          </p>
+          <div className="flex flex-col items-center gap-1.5 mt-2">
+            {/* Ícones sociais */}
+            <div className="flex items-center gap-3">
+              <span className="text-zinc-600 text-[9px] uppercase tracking-widest">Compartilhe em</span>
+              {/* Instagram */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-zinc-400">
+                <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="2"/>
+                <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/>
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+              </svg>
+              {/* WhatsApp */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-zinc-400">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/>
+                <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.95-1.418A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="currentColor" strokeWidth="2" fill="none"/>
+              </svg>
+              {/* X */}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-zinc-400">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              {/* Facebook */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-zinc-400">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </div>
+            <p className="text-yellow-500 text-[9px] uppercase tracking-widest">
+              #tigredovale — Monte a sua em onovorizontino.com.br
+            </p>
+          </div>
         )}
       </div>
 
