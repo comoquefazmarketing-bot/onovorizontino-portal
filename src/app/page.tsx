@@ -7,14 +7,11 @@ import CategoryNav from '@/components/layout/CategoryNav';
 import CTCarousel from '@/components/sections/CTCarousel';
 import Footer from '@/components/layout/Footer';
 import Manifesto from '@/components/sections/Manifesto';
-import GlobalAdBanner from '@/components/layout/GlobalAdBanner';
-import EscalacaoHero from '@/components/home/EscalacaoHero';
-import EscalacaoPopup from '@/components/home/EscalacaoPopup';
+import GlobalAdBanner from '@/components/ads/GlobalAdBanner';
 
 export default async function Home() {
   return (
     <main className="min-h-screen bg-black flex flex-col scroll-smooth">
-      <EscalacaoPopup />
       <HomeHero />
       <CategoryNav />
 
