@@ -124,60 +124,98 @@ function SpritePhoto({ foto, size }: { foto: string; size: number }) {
 
 // Card Instagram Story — proporcao 9:16
 function StoryCard({ lineup, slots, formation }: { lineup: Lineup; slots: typeof FORMATIONS['4-3-3']; formation: string }) {
+  // 9:16 story — campo ocupa 70% da altura
   const CARD_W = 540;
   const CARD_H = 960;
-  const FIELD_W = 320;
-  const FIELD_H = 495;
+  const FIELD_W = 500;
+  const FIELD_H = 670;
   const FIELD_X = (CARD_W - FIELD_W) / 2;
-  const FIELD_Y = 120;
+  const FIELD_Y = 140;
 
   return (
-    <div style={{ width: CARD_W, height: CARD_H, background: '#0a0a0a', position: 'relative', overflow: 'hidden', fontFamily: 'Impact, Arial Black, sans-serif' }}>
+    <div style={{ width: CARD_W, height: CARD_H, background: '#080808', position: 'relative', overflow: 'hidden', fontFamily: 'Impact, Arial Black, sans-serif' }}>
 
-      {/* Topo amarelo */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 110, background: '#F5C400', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-        <span style={{ fontSize: 12, fontWeight: 900, color: '#000', textTransform: 'uppercase', letterSpacing: '0.3em' }}>O NOVORIZONTINO</span>
-        <span style={{ fontSize: 28, fontWeight: 900, color: '#000', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.02em', lineHeight: 1 }}>MINHA ESCALAÇÃO</span>
-        <span style={{ fontSize: 15, fontWeight: 900, color: 'rgba(0,0,0,0.5)', fontStyle: 'italic', textTransform: 'uppercase' }}>Formação {formation}</span>
+      {/* Gradiente de fundo diagonal */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, #1a1200 0%, #080808 50%, #001a00 100%)', opacity: 0.8 }} />
+
+      {/* Linha decorativa esquerda */}
+      <div style={{ position: 'absolute', top: 0, left: 18, width: 4, height: '100%', background: '#F5C400', opacity: 0.6 }} />
+      <div style={{ position: 'absolute', top: 0, left: 26, width: 1, height: '100%', background: '#F5C400', opacity: 0.2 }} />
+
+      {/* Linha decorativa direita */}
+      <div style={{ position: 'absolute', top: 0, right: 18, width: 4, height: '100%', background: '#F5C400', opacity: 0.6 }} />
+      <div style={{ position: 'absolute', top: 0, right: 26, width: 1, height: '100%', background: '#F5C400', opacity: 0.2 }} />
+
+      {/* Topo — header compacto */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 130, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, zIndex: 20 }}>
+        <img
+          src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/LOGO%20-%20O%20NOVORIZONTINO%20(1).png"
+          alt="O Novorizontino"
+          style={{ height: 44, objectFit: 'contain', marginBottom: 2 }}
+        />
+        <span style={{ fontSize: 38, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.03em', lineHeight: 1 }}>MINHA ESCALAÇÃO</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2 }}>
+          <div style={{ height: 2, width: 30, background: '#F5C400' }} />
+          <span style={{ fontSize: 14, fontWeight: 900, color: '#F5C400', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{formation}</span>
+          <div style={{ height: 2, width: 30, background: '#F5C400' }} />
+        </div>
       </div>
 
-      {/* Campo */}
-      <div style={{ position: 'absolute', left: FIELD_X, top: FIELD_Y, width: FIELD_W, height: FIELD_H, borderRadius: 6, overflow: 'hidden', background: '#2a7a2a' }}>
+      {/* Campo grande — full width quase */}
+      <div style={{ position: 'absolute', left: FIELD_X, top: FIELD_Y, width: FIELD_W, height: FIELD_H, borderRadius: 8, overflow: 'hidden', background: '#2d8a2d', zIndex: 10, boxShadow: '0 0 40px rgba(0,0,0,0.8)' }}>
         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
-          {[0,1,2,3,4,5,6].map(i => <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.05)':'transparent'} />)}
-          <rect x="2" y="3" width="64" height="99" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.7" />
-          <line x1="2" y1="52.5" x2="66" y2="52.5" stroke="rgba(255,255,255,0.35)" strokeWidth="0.6" />
-          <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.6" />
-          <rect x="13.84" y="3" width="40.32" height="18.32" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-          <rect x="24.84" y="3" width="18.32" height="5.5" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.5" />
-          <rect x="13.84" y="83.68" width="40.32" height="18.32" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-          <rect x="24.84" y="96.5" width="18.32" height="5.5" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.5" />
+          {[0,1,2,3,4,5,6].map(i => <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.06)':'transparent'} />)}
+          <rect x="1.5" y="2" width="65" height="101" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
+          <line x1="1.5" y1="52.5" x2="66.5" y2="52.5" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
+          <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
+          <circle cx="34" cy="52.5" r="0.8" fill="rgba(255,255,255,0.6)" />
+          <rect x="13.84" y="2" width="40.32" height="18.32" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+          <rect x="24.84" y="2" width="18.32" height="6" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+          <rect x="30" y="0.5" width="8" height="2" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+          <rect x="13.84" y="84.68" width="40.32" height="18.32" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+          <rect x="24.84" y="97" width="18.32" height="6" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+          <rect x="30" y="102.5" width="8" height="2" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+          <circle cx="34" cy="13" r="0.8" fill="rgba(255,255,255,0.5)" />
+          <circle cx="34" cy="92" r="0.8" fill="rgba(255,255,255,0.5)" />
         </svg>
+
         {slots.map(slot => {
           const player = lineup[slot.id];
           if (!player) return null;
+          const pSize = 50;
           return (
-            <div key={slot.id} style={{ position: 'absolute', left: (slot.x/100)*FIELD_W, top: (slot.y/100)*FIELD_H, transform: 'translate(-50%,-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, zIndex: 10 }}>
-              <div style={{ width: 38, height: 38, borderRadius: '50%', border: '2px solid #F5C400', backgroundImage: `url(${player.foto})`, backgroundSize: '200% 100%', backgroundPosition: 'left top', backgroundRepeat: 'no-repeat', boxShadow: '0 2px 8px rgba(0,0,0,0.8)' }} />
-              <span style={{ fontSize: 7, fontWeight: 900, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,1)', textTransform: 'uppercase', whiteSpace: 'nowrap', maxWidth: 44, overflow: 'hidden', textOverflow: 'ellipsis' }}>{player.short}</span>
+            <div key={slot.id} style={{ position: 'absolute', left: (slot.x/100)*FIELD_W, top: (slot.y/100)*FIELD_H, transform: 'translate(-50%,-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, zIndex: 10 }}>
+              {/* Sombra do círculo */}
+              <div style={{ width: pSize + 4, height: pSize + 4, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', position: 'absolute', top: -2, left: -2 }} />
+              <div style={{
+                width: pSize, height: pSize, borderRadius: '50%',
+                border: '2.5px solid #F5C400',
+                backgroundImage: `url(${player.foto})`,
+                backgroundSize: '200% 100%',
+                backgroundPosition: 'left top',
+                backgroundRepeat: 'no-repeat',
+                boxShadow: '0 3px 12px rgba(0,0,0,0.9)',
+                position: 'relative', zIndex: 2,
+              }} />
+              {/* Badge número */}
+              <div style={{ position: 'absolute', top: pSize - 10, right: -6, width: 18, height: 18, borderRadius: '50%', background: '#F5C400', border: '1.5px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
+                <span style={{ color: '#000', fontSize: 7, fontWeight: 900 }}>{player.num}</span>
+              </div>
+              {/* Nome com fundo */}
+              <div style={{ background: 'rgba(0,0,0,0.75)', borderRadius: 3, padding: '2px 5px', position: 'relative', zIndex: 2 }}>
+                <span style={{ fontSize: 9, fontWeight: 900, color: '#fff', textTransform: 'uppercase', whiteSpace: 'nowrap', maxWidth: 58, overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', letterSpacing: '0.02em' }}>{player.short}</span>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Laterais */}
-      <div style={{ position: 'absolute', top: 110, left: 0, width: FIELD_X, height: FIELD_H, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 22, color: '#F5C400', opacity: 0.12, fontStyle: 'italic', fontWeight: 900, textTransform: 'uppercase', writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '0.1em' }}>TIGRE</span>
-      </div>
-      <div style={{ position: 'absolute', top: 110, right: 0, width: FIELD_X, height: FIELD_H, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 22, color: '#F5C400', opacity: 0.12, fontStyle: 'italic', fontWeight: 900, textTransform: 'uppercase', writingMode: 'vertical-rl', letterSpacing: '0.1em' }}>VALE</span>
-      </div>
-
-      {/* CTA inferior */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 225, borderTop: '3px solid #F5C400', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-        <span style={{ fontSize: 28, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase' }}>QUAL É A SUA?</span>
-        <span style={{ fontSize: 13, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>#tigredovale #novorizontino #serieb2026</span>
-        <span style={{ fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'Arial, sans-serif' }}>onovorizontino.com.br</span>
+      {/* Faixa CTA inferior */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 148, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 20 }}>
+        <div style={{ height: 2, width: '80%', background: 'linear-gradient(90deg, transparent, #F5C400, transparent)', marginBottom: 4 }} />
+        <span style={{ fontSize: 34, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.01em', lineHeight: 1 }}>QUAL É A SUA?</span>
+        <span style={{ fontSize: 12, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>#tigredovale #novorizontino #serieb2026</span>
+        <span style={{ fontSize: 11, color: '#444', textTransform: 'uppercase', letterSpacing: '0.12em', fontFamily: 'Arial, sans-serif' }}>onovorizontino.com.br</span>
       </div>
     </div>
   );
@@ -315,7 +353,7 @@ export default function EscalacaoIdeal() {
         {/* CAMPO responsivo */}
         <div
           ref={fieldRef}
-          style={{ position: 'relative', width: fieldWidth, height: fieldHeight, margin: '0 auto', touchAction: 'none' }}
+          style={{ position: 'relative', width: fieldWidth, height: fieldHeight, margin: '0 auto' }}
           onDragOver={e => e.preventDefault()}
           onDrop={handleDropOnBench}
         >
@@ -446,24 +484,23 @@ export default function EscalacaoIdeal() {
           </div>
         </div>
 
-        {/* Botão gerar story */}
-        <div className="mt-6 sticky bottom-4">
-          <button onClick={handleGenerate} disabled={filledCount < 11 || generating}
-            className={`w-full py-4 text-sm font-black uppercase tracking-widest transition-all rounded ${
-              filledCount === 11 ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20' : 'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'
-            }`}>
-            {generating ? 'Gerando story...' : filledCount === 11 ? 'Baixar Story para o Instagram' : `Faltam ${11-filledCount} jogador${11-filledCount>1?'es':''}`}
-          </button>
-          {filledCount === 11 && (
-            <p className="text-yellow-500 text-[10px] text-center uppercase tracking-widest mt-2">
-              Salva e posta nos stories com #tigredovale!
-            </p>
-          )}
-          <p className="text-zinc-700 text-[9px] text-center uppercase tracking-widest mt-1">
-            Duplo clique no campo para remover jogador
-          </p>
-        </div>
+        {/* Espaço para o botão fixo não cobrir conteúdo */}
+        <div className="h-24" />
+      </div>
 
+      {/* Botão FIXO no rodapé — nunca sobrepõe campo */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: '#000', borderTop: '1px solid #27272a', padding: '10px 16px 14px' }}>
+        <button onClick={handleGenerate} disabled={filledCount < 11 || generating}
+          className={`w-full py-4 text-sm font-black uppercase tracking-widest transition-all rounded ${
+            filledCount === 11 ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:opacity-80' : 'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'
+          }`}>
+          {generating ? '⏳ Gerando story...' : filledCount === 11 ? '📸 Baixar Story para o Instagram' : `Faltam ${11-filledCount} jogador${11-filledCount>1?'es':''}  •  ${filledCount}/11`}
+        </button>
+        {filledCount === 11 && (
+          <p className="text-yellow-500 text-[10px] text-center uppercase tracking-widest mt-1.5">
+            Salva e posta nos stories com #tigredovale!
+          </p>
+        )}
       </div>
 
       {/* Card escondido para captura */}
