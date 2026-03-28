@@ -1,0 +1,27 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
+
+export async function GET() {
+  const supabase = await createClient();
+
+  const agora = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('jogos')
+    .select(`
+      id, competicao, rodada, data_hora, local,
+      mandante:mandante_slug ( nome, escudo_url, cor_primaria ),
+      visitante:visitante_slug ( nome, escudo_url, cor_primaria )
+    `)
+    .eq('ativo', true)
+    .or(`mandante_slug.eq.novorizontino,visitante_slug.eq.novorizontino`)
+    .gte('data_hora', agora)
+    .order('data_hora', { ascending: true })
+    .limit(3);
+
+  if (error || !data || data.length === 0) {
+    return NextResponse.json({ jogos: [] });
+  }
+
+  return NextResponse.json({ jogos: data });
+}
