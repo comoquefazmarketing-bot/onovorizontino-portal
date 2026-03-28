@@ -478,8 +478,7 @@ export default function EscalacaoIdeal() {
         </div>
 
         {/* Picker de palpite */}
-        {jogoAtual && (
-          <div className="mt-5 rounded-xl border border-zinc-800 overflow-hidden" style={{ background: 'linear-gradient(135deg,#0f0f0f,#1a1200)' }}>
+        <div className="mt-5 rounded-xl border border-zinc-800 overflow-hidden" style={{ background: 'linear-gradient(135deg,#0f0f0f,#1a1200)' }}>
             <div className="flex items-center gap-2 px-4 pt-3 pb-2">
               <span className="text-base">🎯</span>
               <span className="text-white font-black uppercase text-xs tracking-widest">Meu Palpite</span>
@@ -488,8 +487,12 @@ export default function EscalacaoIdeal() {
             <div className="flex items-center justify-between px-4 pb-4 gap-3">
               {/* Mandante */}
               <div className="flex flex-col items-center gap-2 flex-1">
-                <img src={jogoAtual.mandante.escudo_url} alt={jogoAtual.mandante.nome} className="w-10 h-10 object-contain" />
-                <span className="text-white text-[10px] font-black uppercase text-center leading-tight">{jogoAtual.mandante.nome}</span>
+                {jogoAtual ? (
+                  <img src={jogoAtual.mandante.escudo_url} alt={jogoAtual.mandante.nome} className="w-10 h-10 object-contain" />
+                ) : (
+                  <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png" alt="Novorizontino" className="w-10 h-10 object-contain" />
+                )}
+                <span className="text-white text-[10px] font-black uppercase text-center leading-tight">{jogoAtual ? jogoAtual.mandante.nome : 'Novorizontino'}</span>
                 <div className="flex items-center gap-3">
                   <button onClick={() => setPalpite(p => ({ ...p, mandante: Math.max(0, p.mandante - 1) }))}
                     className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">−</button>
@@ -503,8 +506,14 @@ export default function EscalacaoIdeal() {
               </div>
               {/* Visitante */}
               <div className="flex flex-col items-center gap-2 flex-1">
-                <img src={jogoAtual.visitante.escudo_url} alt={jogoAtual.visitante.nome} className="w-10 h-10 object-contain" />
-                <span className="text-yellow-500 text-[10px] font-black uppercase text-center leading-tight">{jogoAtual.visitante.nome}</span>
+                {jogoAtual ? (
+                  <img src={jogoAtual.visitante.escudo_url} alt={jogoAtual.visitante.nome} className="w-10 h-10 object-contain" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center">
+                    <span className="text-zinc-500 text-[9px] font-black uppercase text-center leading-tight">Opon.</span>
+                  </div>
+                )}
+                <span className="text-yellow-500 text-[10px] font-black uppercase text-center leading-tight">{jogoAtual ? jogoAtual.visitante.nome : 'Adversário'}</span>
                 <div className="flex items-center gap-3">
                   <button onClick={() => setPalpite(p => ({ ...p, visitante: Math.max(0, p.visitante - 1) }))}
                     className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">−</button>
@@ -515,7 +524,7 @@ export default function EscalacaoIdeal() {
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Botão fixo rodapé */}
