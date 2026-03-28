@@ -8,6 +8,7 @@ import CTCarousel from '@/components/sections/CTCarousel';
 import Footer from '@/components/layout/Footer';
 import Manifesto from '@/components/sections/Manifesto';
 import GlobalAdBanner from '@/components/layout/GlobalAdBanner';
+import EscalacaoHero from '@/components/home/EscalacaoHero';
 
 export default async function Home() {
   return (
