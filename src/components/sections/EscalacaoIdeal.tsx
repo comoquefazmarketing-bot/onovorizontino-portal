@@ -103,34 +103,25 @@ const FORMATIONS: Record<string, { id: string; label: string; x: number; y: numb
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 
-// Componente da foto do jogador com efeito sprite hover
-function PlayerPhoto({ foto, size = 42, className = '' }: { foto: string; size?: number; className?: string }) {
+// Foto com efeito sprite via background-image — muito mais confiável
+function SpritePhoto({ foto, size }: { foto: string; size: number }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
-      className={`overflow-hidden rounded-full ${className}`}
-      style={{ width: size, height: size, position: 'relative' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-    >
-      {/* A imagem tem 2 poses lado a lado — mostramos metade por vez */}
-      <img
-        src={foto}
-        alt=""
-        draggable={false}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: hovered ? '-100%' : '0%',
-          width: '200%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: 'top',
-          transition: 'left 0.25s ease',
-          pointerEvents: 'none',
-        }}
-      />
-    </div>
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        backgroundImage: `url(${foto})`,
+        backgroundSize: '200% 100%',
+        backgroundPosition: hovered ? 'right top' : 'left top',
+        backgroundRepeat: 'no-repeat',
+        transition: 'background-position 0.25s ease',
+        flexShrink: 0,
+      }}
+    />
   );
 }
 
@@ -145,19 +136,15 @@ export default function EscalacaoIdeal() {
   const slots = FORMATIONS[formation];
   const usedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
   const filledCount = Object.values(lineup).filter(Boolean).length;
-
-  const filteredPlayers = PLAYERS.filter(p => {
-    if (filterPos !== 'TODOS' && p.pos !== filterPos) return false;
-    return !usedIds.includes(p.id);
-  });
+  const filteredPlayers = PLAYERS.filter(p =>
+    (filterPos === 'TODOS' || p.pos === filterPos) && !usedIds.includes(p.id)
+  );
 
   const handleDropOnSlot = (slotId: string) => {
     if (!dragging) return;
     const newLineup = { ...lineup };
     const { player, from } = dragging;
-    if (from !== 'bench') {
-      newLineup[from] = newLineup[slotId] || null;
-    }
+    if (from !== 'bench') newLineup[from] = newLineup[slotId] || null;
     newLineup[slotId] = player;
     setLineup(newLineup);
     setDragging(null);
@@ -174,22 +161,15 @@ export default function EscalacaoIdeal() {
 
   const handleShare = () => {
     if (filledCount < 11) return;
-    const lines = slots.map(s => {
-      const p = lineup[s.id];
-      return p ? `${s.label}: ${p.name} (${p.num})` : '';
-    }).filter(Boolean);
+    const lines = slots.map(s => lineup[s.id] ? `${s.label}: ${lineup[s.id]!.name} (${lineup[s.id]!.num})` : '').filter(Boolean);
     const text = `🟡⚫ MINHA ESCALAÇÃO IDEAL DO NOVORIZONTINO\n\nFormação: ${formation}\n\n${lines.join('\n')}\n\nMonte a sua em onovorizontino.com.br\n#Novorizontino #TigreDoVale #SerieB2026`;
-    navigator.clipboard.writeText(text).then(() => {
-      setShared(true);
-      setTimeout(() => setShared(false), 3000);
-    });
+    navigator.clipboard.writeText(text).then(() => { setShared(true); setTimeout(() => setShared(false), 3000); });
   };
 
   return (
     <main className="min-h-screen bg-black text-white pb-24">
-      <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="max-w-5xl mx-auto px-4 py-12">
 
-        {/* Header */}
         <div className="flex items-center gap-3 mb-2">
           <div className="w-1 h-8 bg-yellow-500" />
           <h1 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter">
@@ -198,7 +178,6 @@ export default function EscalacaoIdeal() {
         </div>
         <p className="text-zinc-400 text-sm mb-6 ml-4">Arraste os jogadores para o campo. Passe o mouse para ver a segunda pose.</p>
 
-        {/* Formação */}
         <div className="flex gap-2 mb-6 flex-wrap ml-4">
           {Object.keys(FORMATIONS).map(f => (
             <button key={f} onClick={() => { setFormation(f); setLineup({}); setShared(false); }}
@@ -212,16 +191,14 @@ export default function EscalacaoIdeal() {
           </button>
         </div>
 
-        {/* Layout principal */}
-        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
 
-          {/* CAMPO */}
+          {/* CAMPO — dimensões fixas proporção real */}
           <div
             style={{ position: 'relative', width: 360, height: 557, flexShrink: 0 }}
             onDragOver={e => e.preventDefault()}
             onDrop={handleDropOnBench}
           >
-            {/* Fundo */}
             <div style={{ position: 'absolute', inset: 0, borderRadius: 8, overflow: 'hidden', background: '#2a7a2a' }}>
               <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
                 {[0,1,2,3,4,5,6].map(i => (
@@ -242,26 +219,19 @@ export default function EscalacaoIdeal() {
               </svg>
             </div>
 
-            {/* Slots */}
             {slots.map(slot => {
               const player = lineup[slot.id];
               const isOver = dragOver === slot.id;
-              const left = (slot.x / 100) * 360;
-              const top = (slot.y / 100) * 557;
               return (
                 <div
                   key={slot.id}
                   style={{
                     position: 'absolute',
-                    left,
-                    top,
+                    left: (slot.x / 100) * 360,
+                    top: (slot.y / 100) * 557,
                     transform: 'translate(-50%, -50%)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 3,
-                    zIndex: 10,
-                    cursor: player ? 'grab' : 'default',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                    zIndex: 10, cursor: player ? 'grab' : 'default',
                   }}
                   draggable={!!player}
                   onDragStart={() => player && setDragging({ player, from: slot.id })}
@@ -271,28 +241,25 @@ export default function EscalacaoIdeal() {
                   onDoubleClick={() => player && setLineup(prev => ({ ...prev, [slot.id]: null }))}
                 >
                   <div style={{
-                    width: 44, height: 44,
-                    borderRadius: '50%',
-                    overflow: 'hidden',
+                    width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', position: 'relative',
                     border: player ? '2.5px solid #F5C400' : isOver ? '2px dashed #F5C400' : '2px dashed rgba(255,255,255,0.4)',
                     background: player ? 'transparent' : isOver ? 'rgba(245,196,0,0.2)' : 'rgba(0,0,0,0.4)',
-                    position: 'relative',
                     boxShadow: player ? '0 2px 10px rgba(0,0,0,0.7)' : 'none',
                     flexShrink: 0,
                   }}>
-                    {player ? (
-                      <PlayerPhoto foto={player.foto} size={44} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 18, fontWeight: 900 }}>+</span>
-                      </div>
-                    )}
+                    {player
+                      ? <SpritePhoto foto={player.foto} size={44} />
+                      : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 18, fontWeight: 900 }}>+</span>
+                        </div>
+                    }
                     {player && (
                       <div style={{
                         position: 'absolute', bottom: -1, right: -1,
                         width: 16, height: 16, borderRadius: '50%',
                         background: '#000', border: '1px solid #F5C400',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        pointerEvents: 'none',
                       }}>
                         <span style={{ color: '#F5C400', fontSize: 6, fontWeight: 900 }}>{player.num}</span>
                       </div>
@@ -302,8 +269,7 @@ export default function EscalacaoIdeal() {
                     fontSize: 7.5, fontWeight: 900, color: '#fff',
                     textShadow: '0 1px 4px rgba(0,0,0,1)',
                     textTransform: 'uppercase', whiteSpace: 'nowrap',
-                    letterSpacing: '0.03em', maxWidth: 54,
-                    overflow: 'hidden', textOverflow: 'ellipsis',
+                    maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
                     {player ? player.short : slot.label}
                   </span>
@@ -312,8 +278,8 @@ export default function EscalacaoIdeal() {
             })}
           </div>
 
-          {/* BANCO */}
-          <div style={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* BANCO — largura fixa 240px */}
+          <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
 
             {/* Progresso */}
             <div className="bg-zinc-900 border border-zinc-800 p-3 rounded">
@@ -322,19 +288,15 @@ export default function EscalacaoIdeal() {
                 <span className={`text-sm font-black ${filledCount === 11 ? 'text-green-400' : 'text-white'}`}>{filledCount}/11</span>
               </div>
               <div className="h-1 bg-zinc-800 rounded overflow-hidden">
-                <div style={{
-                  height: '100%', borderRadius: 4, transition: 'width 0.3s',
-                  width: `${(filledCount/11)*100}%`,
-                  background: filledCount === 11 ? '#4ade80' : '#F5C400'
-                }} />
+                <div style={{ height: '100%', borderRadius: 4, transition: 'width 0.3s', width: `${(filledCount/11)*100}%`, background: filledCount === 11 ? '#4ade80' : '#F5C400' }} />
               </div>
             </div>
 
             {/* Filtro */}
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="flex gap-1 flex-wrap">
               {['TODOS','GOL','LAT','ZAG','MEI','ATA'].map(p => (
                 <button key={p} onClick={() => setFilterPos(p)}
-                  className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
+                  className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
                     filterPos === p ? 'bg-yellow-500 text-black' : 'border border-zinc-800 text-zinc-500 hover:border-zinc-600'
                   }`}>{p}</button>
               ))}
@@ -342,7 +304,7 @@ export default function EscalacaoIdeal() {
 
             {/* Lista */}
             <div
-              style={{ maxHeight: 360, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}
+              style={{ maxHeight: 340, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}
               onDragOver={e => e.preventDefault()}
               onDrop={handleDropOnBench}
             >
@@ -351,36 +313,38 @@ export default function EscalacaoIdeal() {
                   key={player.id}
                   draggable
                   onDragStart={() => setDragging({ player, from: 'bench' })}
-                  className="flex items-center gap-2 px-2.5 py-2 border border-zinc-800 hover:border-zinc-600 bg-zinc-900/50 cursor-grab select-none transition-all"
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', border: '0.5px solid #3f3f46', background: 'rgba(24,24,27,0.5)', cursor: 'grab' }}
                 >
-                  <div style={{ width: 38, height: 38, borderRadius: '50%', overflow: 'hidden', border: '1px solid #3f3f46', flexShrink: 0 }}>
-                    <PlayerPhoto foto={player.foto} size={38} />
+                  <div style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', border: '1px solid #3f3f46', flexShrink: 0 }}>
+                    <SpritePhoto foto={player.foto} size={34} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p className="text-white text-xs font-black uppercase truncate">{player.name}</p>
+                    <p style={{ color: '#fff', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{player.name}</p>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <span className="text-[9px] text-zinc-600 uppercase font-black">{player.pos}</span>
-                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ color: '#000', fontSize: 8, fontWeight: 900 }}>{player.num}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 8, color: '#52525b', fontWeight: 900, textTransform: 'uppercase' }}>{player.pos}</span>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ color: '#000', fontSize: 7, fontWeight: 900 }}>{player.num}</span>
                     </div>
                   </div>
                 </div>
               ))}
               {filteredPlayers.length === 0 && (
-                <p className="text-zinc-600 text-xs text-center py-6 uppercase font-black">Todos escalados!</p>
+                <p style={{ color: '#52525b', fontSize: 11, textAlign: 'center', padding: '1.5rem 0', textTransform: 'uppercase', fontWeight: 900 }}>Todos escalados!</p>
               )}
             </div>
 
             {/* Compartilhar */}
             <button onClick={handleShare} disabled={filledCount < 11}
-              className={`w-full py-3 text-xs font-black uppercase tracking-widest transition-all ${
-                filledCount === 11 ? 'bg-yellow-500 text-black hover:opacity-90' : 'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'
-              }`}>
+              style={{
+                width: '100%', padding: '12px', border: 'none', fontSize: 11,
+                fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: filledCount === 11 ? 'pointer' : 'not-allowed',
+                background: filledCount === 11 ? '#F5C400' : '#18181b', color: filledCount === 11 ? '#000' : '#52525b',
+              }}>
               {shared ? 'Copiado! Cole no Instagram' : filledCount === 11 ? 'Gerar para o Instagram' : `Faltam ${11-filledCount} jogador${11-filledCount>1?'es':''}`}
             </button>
 
-            <p className="text-zinc-700 text-[9px] text-center uppercase tracking-widest">
+            <p style={{ color: '#3f3f46', fontSize: 9, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Duplo clique no campo para remover
             </p>
           </div>
