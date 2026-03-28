@@ -170,16 +170,126 @@ function LeadModal({ onConfirm, onClose }: { onConfirm: () => void; onClose: () 
 }
 
 // ─── Story Card 9:16 ─────────────────────────────────────────────────────────
-function StoryCard({ lineup, slots, formation, jogo }: {
+function StoryCard({ lineup, slots, formation, jogo, palpite }: {
   lineup: Lineup;
   slots: { id: string; label: string; x: number; y: number }[];
   formation: string;
   jogo: Jogo | null;
+  palpite: { mandante: number; visitante: number };
 }) {
   const CW = 540; const CH = 960;
-  const FW = 500; const FH = 620;
+  const FW = 500; const FH = 520;
   const FX = (CW - FW) / 2;
-  const FY = jogo ? 210 : 155;
+  const FY = 265;
+
+  const formatHorario = (iso: string) => {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0') === '00' ? '' : String(d.getMinutes()).padStart(2,'0')}`;
+  };
+  const formatData = (iso: string) => {
+    const d = new Date(iso);
+    const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    return `${dias[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+  };
+
+  return (
+    <div style={{ width: CW, height: CH, background: '#080808', position: 'relative', overflow: 'hidden', fontFamily: 'Impact, Arial Black, sans-serif' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg,#1a1200,#080808 50%,#001a00)', opacity: 0.8 }} />
+      <div style={{ position: 'absolute', top: 0, left: 18, width: 4, height: '100%', background: '#F5C400', opacity: 0.6 }} />
+      <div style={{ position: 'absolute', top: 0, right: 18, width: 4, height: '100%', background: '#F5C400', opacity: 0.6 }} />
+
+      {/* Header */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: FY, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24, gap: 0, zIndex: 20 }}>
+
+        {/* Logo */}
+        <img src={LOGO} alt="O Novorizontino" style={{ height: 36, objectFit: 'contain', marginBottom: 14 }} />
+
+        {/* Escudos confrontando */}
+        {jogo && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, width: '100%', padding: '0 50px', marginBottom: 10 }}>
+            {/* Mandante */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flex: 1 }}>
+              <img src={jogo.mandante.escudo_url} alt={jogo.mandante.nome}
+                style={{ width: 72, height: 72, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }} />
+              <span style={{ fontSize: 10, color: '#aaa', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{jogo.mandante.nome}</span>
+            </div>
+
+            {/* Centro — horário + palpite */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
+              <span style={{ fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{formatData(jogo.data_hora)}</span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: '#F5C400', letterSpacing: '0.05em' }}>{formatHorario(jogo.data_hora)}</span>
+              {/* Palpite */}
+              <div style={{ background: 'rgba(245,196,0,0.12)', border: '1.5px solid #F5C400', borderRadius: 8, padding: '6px 16px', marginTop: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 11, color: '#aaa', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>PALPITE</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2 }}>
+                  <span style={{ fontSize: 32, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{palpite.mandante}</span>
+                  <span style={{ fontSize: 18, fontWeight: 900, color: '#F5C400' }}>×</span>
+                  <span style={{ fontSize: 32, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{palpite.visitante}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Visitante */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flex: 1 }}>
+              <img src={jogo.visitante.escudo_url} alt={jogo.visitante.nome}
+                style={{ width: 72, height: 72, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(245,196,0,0.25))' }} />
+              <span style={{ fontSize: 10, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{jogo.visitante.nome}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Título + formação */}
+        <span style={{ fontSize: 28, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.02em', lineHeight: 1, marginTop: jogo ? 0 : 16 }}>MINHA ESCALAÇÃO</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+          <div style={{ height: 2, width: 24, background: '#F5C400' }} />
+          <span style={{ fontSize: 12, fontWeight: 900, color: '#F5C400', fontStyle: 'italic', textTransform: 'uppercase' }}>{formation}</span>
+          <div style={{ height: 2, width: 24, background: '#F5C400' }} />
+        </div>
+      </div>
+
+      {/* Campo */}
+      <div style={{ position: 'absolute', left: FX, top: FY, width: FW, height: FH, borderRadius: 8, overflow: 'hidden', background: '#2d8a2d', zIndex: 10, boxShadow: '0 0 40px rgba(0,0,0,0.8)' }}>
+        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
+          {[0,1,2,3,4,5,6].map(i => <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.06)':'transparent'} />)}
+          <rect x="1.5" y="2" width="65" height="101" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
+          <line x1="1.5" y1="52.5" x2="66.5" y2="52.5" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
+          <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
+          <rect x="13.84" y="2" width="40.32" height="18.32" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+          <rect x="24.84" y="2" width="18.32" height="6" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+          <rect x="13.84" y="84.68" width="40.32" height="18.32" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
+          <rect x="24.84" y="97" width="18.32" height="6" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+        </svg>
+        {slots.map(slot => {
+          const player = lineup[slot.id];
+          if (!player) return null;
+          const PS = 42;
+          return (
+            <div key={slot.id} style={{ position: 'absolute', left: (slot.x/100)*FW, top: (slot.y/100)*FH, transform: 'translate(-50%,-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, zIndex: 10 }}>
+              <div style={{ width: PS, height: PS, borderRadius: '50%', border: '2.5px solid #F5C400', backgroundImage: `url(${player.foto})`, backgroundSize: '200% 100%', backgroundPosition: 'left top', backgroundRepeat: 'no-repeat', boxShadow: '0 3px 12px rgba(0,0,0,0.9)', position: 'relative', flexShrink: 0 }}>
+                <div style={{ position: 'absolute', bottom: -2, right: -4, width: 16, height: 16, borderRadius: '50%', background: '#F5C400', border: '1.5px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ color: '#000', fontSize: 6, fontWeight: 900 }}>{player.num}</span>
+                </div>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.75)', borderRadius: 3, padding: '2px 6px' }}>
+                <span style={{ fontSize: 15, fontWeight: 900, color: '#fff', textTransform: 'uppercase', whiteSpace: 'nowrap', display: 'block', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis' }}>{player.short}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* CTA */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: CH - FY - FH, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 7, zIndex: 20 }}>
+        <div style={{ height: 2, width: '75%', background: 'linear-gradient(90deg,transparent,#F5C400,transparent)' }} />
+        <span style={{ fontSize: 28, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase' }}>QUAL É A SUA?</span>
+        <span style={{ fontSize: 11, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>#tigredovale #novorizontino #serieb2026</span>
+        <span style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', letterSpacing: '0.12em', fontStyle: 'italic', fontWeight: 900 }}>onovorizontino.com.br</span>
+      </div>
+    </div>
+  );
+}
 
   const formatHorario = (iso: string) => {
     const d = new Date(iso);
@@ -279,6 +389,7 @@ export default function EscalacaoIdeal() {
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [fieldWidth, setFieldWidth] = useState(340);
   const [jogoAtual, setJogoAtual] = useState<Jogo | null>(null);
+  const [palpite, setPalpite] = useState({ mandante: 0, visitante: 1 });
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -443,6 +554,46 @@ export default function EscalacaoIdeal() {
             )}
           </div>
         </div>
+
+        {/* Picker de palpite */}
+        {jogoAtual && (
+          <div className="mt-5 rounded-xl border border-zinc-800 overflow-hidden" style={{ background: 'linear-gradient(135deg,#0f0f0f,#1a1200)' }}>
+            <div className="flex items-center gap-2 px-4 pt-3 pb-2">
+              <span className="text-base">🎯</span>
+              <span className="text-white font-black uppercase text-xs tracking-widest">Meu Palpite</span>
+              <span className="text-zinc-600 text-[9px] uppercase tracking-widest ml-auto">Aparece no story</span>
+            </div>
+            <div className="flex items-center justify-between px-4 pb-4 gap-3">
+              {/* Mandante */}
+              <div className="flex flex-col items-center gap-2 flex-1">
+                <img src={jogoAtual.mandante.escudo_url} alt={jogoAtual.mandante.nome} className="w-10 h-10 object-contain" />
+                <span className="text-white text-[10px] font-black uppercase text-center leading-tight">{jogoAtual.mandante.nome}</span>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setPalpite(p => ({ ...p, mandante: Math.max(0, p.mandante - 1) }))}
+                    className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">−</button>
+                  <span className="text-yellow-500 font-black text-3xl w-8 text-center">{palpite.mandante}</span>
+                  <button onClick={() => setPalpite(p => ({ ...p, mandante: Math.min(9, p.mandante + 1) }))}
+                    className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">+</button>
+                </div>
+              </div>
+              <div className="flex flex-col items-center justify-center pb-2">
+                <span className="text-zinc-600 font-black text-2xl">×</span>
+              </div>
+              {/* Visitante */}
+              <div className="flex flex-col items-center gap-2 flex-1">
+                <img src={jogoAtual.visitante.escudo_url} alt={jogoAtual.visitante.nome} className="w-10 h-10 object-contain" />
+                <span className="text-yellow-500 text-[10px] font-black uppercase text-center leading-tight">{jogoAtual.visitante.nome}</span>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setPalpite(p => ({ ...p, visitante: Math.max(0, p.visitante - 1) }))}
+                    className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">−</button>
+                  <span className="text-yellow-500 font-black text-3xl w-8 text-center">{palpite.visitante}</span>
+                  <button onClick={() => setPalpite(p => ({ ...p, visitante: Math.min(9, p.visitante + 1) }))}
+                    className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Botão fixo rodapé */}
@@ -461,7 +612,7 @@ export default function EscalacaoIdeal() {
       {showCard && (
         <div style={{ position: 'fixed', top: -9999, left: -9999, zIndex: -1 }}>
           <div ref={cardRef}>
-            <StoryCard lineup={lineup} slots={slots} formation={formation} jogo={jogoAtual} />
+            <StoryCard lineup={lineup} slots={slots} formation={formation} jogo={jogoAtual} palpite={palpite} />
           </div>
         </div>
       )}
