@@ -1,14 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-const BORALA_MOBILE  = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/BORALA%20(320%20x%20100%20px)%20(1).mp4";
-const BORALA_DESKTOP = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/BORALA%20(320%20x%20100%20px).mp4";
+const BORALA_MOBILE  = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/BORALA%20MOBILE%20(320%20x%20100%20px).mp4";
+const BORALA_MOBILE2 = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/BORALA%20MOBILE%202%20(320%20x%20100%20px).mp4";
+const BORALA_DESKTOP = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/BORALA%20(320%20x%20100%20px)%20(1).mp4";
 const JG_DESKTOP     = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JG%20SNEAKERS(1280%20x%20100%20px).mp4";
-const JG_MOBILE      = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JG%20SNEAKERS%20(320%20x%20100%20px).mp4";
+const JG_MOBILE      = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JG%20MOBILE%20(320%20x%20100%20px)%20(1).mp4";
 const JG_WA          = `https://wa.me/5517992659293?text=${encodeURIComponent('Oi! Vi o anúncio da JG Sneakers no Portal O Novorizontino e quero saber mais! 🐯👟')}`;
 
-type Slot = 'borala' | 'jg' | 'cta';
-const SEQUENCE: Slot[] = ['borala', 'jg', 'cta'];
+type Slot = 'borala' | 'borala2' | 'jg' | 'cta';
+const SEQUENCE: Slot[] = ['borala', 'borala2', 'jg', 'cta'];
 const DURATION = 10000; // 10s para todos
 
 export default function GlobalAdBanner() {
@@ -32,7 +33,7 @@ export default function GlobalAdBanner() {
           PUBLICIDADE
         </p>
 
-        <div className="relative w-full overflow-hidden rounded-sm" style={{ height: '100px' }}>
+        <div className="relative w-full overflow-hidden rounded-sm h-40 md:h-[100px]">
 
           {/* ── BoraLá ── */}
           <a
@@ -43,6 +44,19 @@ export default function GlobalAdBanner() {
             style={{ opacity: slot === 'borala' ? 1 : 0, pointerEvents: slot === 'borala' ? 'auto' : 'none' }}
           >
             <video src={BORALA_MOBILE}  autoPlay loop muted playsInline className="w-full h-full object-cover md:hidden" />
+            <video src={BORALA_DESKTOP} autoPlay loop muted playsInline className="w-full h-full object-cover hidden md:block" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
+          </a>
+
+          {/* ── BoraLá 2 ── */}
+          <a
+            href="https://www.borala.app.br/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute inset-0 group cursor-pointer transition-opacity duration-700"
+            style={{ opacity: slot === 'borala2' ? 1 : 0, pointerEvents: slot === 'borala2' ? 'auto' : 'none' }}
+          >
+            <video src={BORALA_MOBILE2} autoPlay loop muted playsInline className="w-full h-full object-cover md:hidden" />
             <video src={BORALA_DESKTOP} autoPlay loop muted playsInline className="w-full h-full object-cover hidden md:block" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
           </a>
