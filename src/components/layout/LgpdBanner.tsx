@@ -1,16 +1,16 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function LgpdBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const ok = localStorage.getItem('tigre_lgpd_ok');
+    const ok = localStorage.getItem('tigre_lgpd_v3');
     if (!ok) setVisible(true);
   }, []);
 
   const aceitar = () => {
-    localStorage.setItem('tigre_lgpd_ok', '1');
+    localStorage.setItem('tigre_lgpd_v3', '1');
     setVisible(false);
   };
 
@@ -21,9 +21,9 @@ export default function LgpdBanner() {
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-4">
         <div className="flex-1">
           <p className="text-white text-xs leading-relaxed">
-            🍪 Utilizamos cookies e coletamos dados (nome e WhatsApp) para personalizar sua experiência, enviar novidades do Tigre e melhorar nosso portal. Ao continuar navegando ou baixar seu story, você concorda com nossa política de privacidade e com a{' '}
+            🍪 Utilizamos cookies e coletamos dados (nome e WhatsApp) para personalizar sua experiência, enviar novidades do Tigre e melhorar nosso portal. Ao continuar navegando você concorda com nossa política de privacidade e com a{' '}
             <span className="text-yellow-500 font-bold">Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018)</span>. Seus dados são usados exclusivamente pelo{' '}
-            <span className="text-yellow-500 font-bold">Portal O Novorizontino</span> e não são compartilhados com terceiros.
+            <span className="text-yellow-500 font-bold">Portal O Novorizontino</span>.
           </p>
         </div>
         <button
