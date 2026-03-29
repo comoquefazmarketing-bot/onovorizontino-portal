@@ -1,9 +1,11 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import ProximoDuelo from '@/components/sections/ProximoDuelo';
 
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/LOGO%20-%20O%20NOVORIZONTINO%20(1).png';
+const TIGRE_FC_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 
 const PLAYERS = [
   { id: 1,  name: 'César Augusto',    short: 'César',      num: 31, pos: 'GOL', foto: BASE + 'CESAR-AUGUSTO.jpg.webp' },
@@ -84,7 +86,7 @@ const FORMATIONS: Record<string, { id: string; label: string; x: number; y: numb
 
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
-type Jogo = { competicao: string; data_hora: string; mandante: { nome: string; escudo_url: string }; visitante: { nome: string; escudo_url: string } };
+type Jogo = { id?: number; competicao: string; data_hora: string; mandante: { nome: string; escudo_url: string }; visitante: { nome: string; escudo_url: string } };
 
 function SpritePhoto({ foto, size }: { foto: string; size: number }) {
   const [hovered, setHovered] = useState(false);
@@ -115,7 +117,7 @@ function FieldSvg() {
   );
 }
 
-// ─── Lead Modal ──────────────────────────────────────────────────────────────
+// ─── Lead Modal ───────────────────────────────────────────────────────────────
 function LeadModal({ onConfirm, onClose }: { onConfirm: () => void; onClose: () => void }) {
   const [nome, setNome] = useState('');
   const [whats, setWhats] = useState('');
@@ -131,12 +133,7 @@ function LeadModal({ onConfirm, onClose }: { onConfirm: () => void; onClose: () 
     try {
       await fetch('https://whoglnpvqjbaczgnebbn.supabase.co/rest/v1/leads_escalacao', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`,
-          'Prefer': 'return=minimal',
-        },
+        headers: { 'Content-Type': 'application/json', 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '', 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ nome: nome.trim(), whatsapp: whats.replace(/\D/g,''), origem: 'escalacao', criado_em: new Date().toISOString() }),
       });
     } catch (e) { console.error(e); }
@@ -155,14 +152,12 @@ function LeadModal({ onConfirm, onClose }: { onConfirm: () => void; onClose: () 
         </div>
         <p className="text-zinc-400 text-sm mb-6 leading-relaxed">Deixa seu nome e WhatsApp para baixar o story. Você receberá novidades do Tigre em primeira mão!</p>
         <div className="flex flex-col gap-3 mb-4">
-          <input type="text" name="name" autoComplete="name" placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors" />
-          <input type="tel" name="tel" autoComplete="tel" placeholder="WhatsApp (DDD + número)" value={whats} onChange={e => setWhats(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors" />
+          <input type="text" placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors" />
+          <input type="tel" placeholder="WhatsApp (DDD + número)" value={whats} onChange={e => setWhats(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white text-sm font-medium placeholder-zinc-600 focus:outline-none focus:border-yellow-500 transition-colors" />
           {erro && <p className="text-red-400 text-xs font-bold">{erro}</p>}
         </div>
         <p className="text-zinc-600 text-[9px] uppercase tracking-widest mb-4 text-center">Seus dados são usados apenas pelo Portal O Novorizontino.</p>
-        <button onClick={handleSubmit} disabled={loading} data-track="escalacao_lead_submit" className="w-full py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-sm rounded-lg active:opacity-80 transition-all">
+        <button onClick={handleSubmit} disabled={loading} className="w-full py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-sm rounded-lg active:opacity-80 transition-all">
           {loading ? 'Salvando...' : 'Baixar meu Story'}
         </button>
       </div>
@@ -170,57 +165,80 @@ function LeadModal({ onConfirm, onClose }: { onConfirm: () => void; onClose: () 
   );
 }
 
-// ─── Story Card 9:16 ─────────────────────────────────────────────────────────
+// ─── Crossover Tigre FC Modal ─────────────────────────────────────────────────
+function TigreFCCrossover({ jogoId, onClose }: { jogoId: number | null; onClose: () => void }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 480, background: 'linear-gradient(160deg,#111,#1a1200)', borderRadius: '24px 24px 0 0', borderTop: '3px solid #F5C400', padding: '28px 20px 40px', position: 'relative', overflow: 'hidden' }}>
+        {/* Brilho top */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,transparent,#F5C400,transparent)' }} />
+        <div style={{ width: 36, height: 4, background: '#333', borderRadius: 2, margin: '0 auto 24px' }} />
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+          <img src={TIGRE_FC_LOGO} alt="Tigre FC" style={{ width: 52, height: 52, objectFit: 'contain', filter: 'drop-shadow(0 0 12px rgba(245,196,0,0.5))' }} />
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: '#F5C400', fontFamily: 'system-ui', letterSpacing: -0.5, textTransform: 'uppercase' }}>Tigre FC</div>
+            <div style={{ fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: 2, fontFamily: 'system-ui' }}>Fantasy League</div>
+          </div>
+        </div>
+
+        {/* Copy */}
+        <p style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.2, marginBottom: 8, fontFamily: 'system-ui', textTransform: 'uppercase', letterSpacing: -0.5 }}>
+          Quer entrar no<br/><span style={{ color: '#F5C400' }}>ranking de verdade?</span>
+        </p>
+        <p style={{ fontSize: 14, color: '#666', lineHeight: 1.6, marginBottom: 28, fontFamily: 'system-ui' }}>
+          Você já montou o time. Agora submete essa escalação no Tigre FC e disputa com os torcedores do interior. É grátis.
+        </p>
+
+        {/* Miniaturas dos jogadores escalados — visual reward */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: -6, marginBottom: 24 }}>
+          <div style={{ fontSize: 11, color: '#444', textTransform: 'uppercase', letterSpacing: 2, fontFamily: 'system-ui', marginRight: 8 }}>Sua escalação já salva</div>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
+        </div>
+
+        {/* Botões */}
+        <Link
+          href={`/tigre-fc/escalar/${jogoId || ''}`}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', padding: '16px', background: '#F5C400', color: '#1a1a1a', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: 1, borderRadius: 12, textDecoration: 'none', marginBottom: 10, fontFamily: 'system-ui' }}
+        >
+          <img src={TIGRE_FC_LOGO} style={{ width: 20, height: 20, objectFit: 'contain' }} />
+          Sim, quero jogar!
+        </Link>
+        <button
+          onClick={onClose}
+          style={{ width: '100%', padding: '12px', background: 'none', border: 'none', color: '#444', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, cursor: 'pointer', fontFamily: 'system-ui' }}
+        >
+          Agora não
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Story Card ───────────────────────────────────────────────────────────────
 function StoryCard({ lineup, slots, formation, jogo, palpite }: {
-  lineup: Lineup;
-  slots: { id: string; label: string; x: number; y: number }[];
-  formation: string;
-  jogo: Jogo | null;
-  palpite: { mandante: number; visitante: number };
+  lineup: Lineup; slots: { id: string; label: string; x: number; y: number }[]; formation: string; jogo: Jogo | null; palpite: { mandante: number; visitante: number };
 }) {
-  const CW = 540; const CH = 960;
-  const FW = 510; const FH = 540;
-  const FX = (CW - FW) / 2;
-  const FY = 255;
-
+  const CW = 540; const CH = 960; const FW = 510; const FH = 540; const FX = (CW - FW) / 2; const FY = 255;
   const ESCUDO_NOVO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-
-  const formatHorario = (iso: string) => {
-    const d = new Date(iso);
-    return `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0') === '00' ? '' : String(d.getMinutes()).padStart(2,'0')}`;
-  };
-  const formatData = (iso: string) => {
-    const d = new Date(iso);
-    const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    return `${dias[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-  };
-
+  const formatHorario = (iso: string) => { const d = new Date(iso); return `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0') === '00' ? '' : String(d.getMinutes()).padStart(2,'0')}`; };
+  const formatData = (iso: string) => { const d = new Date(iso); const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']; return `${dias[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; };
   const mandante = jogo ? jogo.mandante : { nome: 'Novorizontino', escudo_url: ESCUDO_NOVO };
   const visitante = jogo ? jogo.visitante : { nome: 'Adversário', escudo_url: '' };
 
   return (
     <div style={{ width: CW, height: CH, background: '#080808', position: 'relative', overflow: 'hidden', fontFamily: 'Impact, Arial Black, sans-serif' }}>
-      {/* Fundo gradiente */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg,#1a1200,#080808 50%,#001a00)', opacity: 0.9 }} />
-      {/* Linhas laterais douradas */}
       <div style={{ position: 'absolute', top: 0, left: 16, width: 3, height: '100%', background: 'linear-gradient(to bottom,#F5C400,transparent)', opacity: 0.7 }} />
       <div style={{ position: 'absolute', top: 0, right: 16, width: 3, height: '100%', background: 'linear-gradient(to bottom,#F5C400,transparent)', opacity: 0.7 }} />
-
-      {/* ── HEADER ── */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: FY, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 20, gap: 0, zIndex: 20 }}>
-
-        {/* Logo maior */}
         <img src={LOGO} alt="O Novorizontino" style={{ height: 52, objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.8))' }} />
-
-        {/* Confronto — sempre visível */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '0 40px', marginBottom: 8 }}>
-          {/* Mandante */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
             <img src={mandante.escudo_url} alt={mandante.nome} style={{ width: 68, height: 68, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }} />
             <span style={{ fontSize: 11, color: '#ddd', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>{mandante.nome}</span>
           </div>
-
-          {/* Centro — palpite */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1.1 }}>
             {jogo && <span style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{formatData(jogo.data_hora)} • {formatHorario(jogo.data_hora)}</span>}
             <div style={{ background: 'rgba(245,196,0,0.15)', border: '1.5px solid #F5C400', borderRadius: 10, padding: '8px 20px' }}>
@@ -232,30 +250,18 @@ function StoryCard({ lineup, slots, formation, jogo, palpite }: {
               </div>
             </div>
           </div>
-
-          {/* Visitante */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
-            {visitante.escudo_url ? (
-              <img src={visitante.escudo_url} alt={visitante.nome} style={{ width: 68, height: 68, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(245,196,0,0.25))' }} />
-            ) : (
-              <div style={{ width: 68, height: 68, borderRadius: '50%', border: '2px dashed #444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ color: '#444', fontSize: 22, fontWeight: 900 }}>?</span>
-              </div>
-            )}
-            <span style={{ fontSize: 11, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>{visitante.nome}</span>
+            {visitante.escudo_url ? <img src={visitante.escudo_url} alt={visitante.nome} style={{ width: 68, height: 68, objectFit: 'contain' }} /> : <div style={{ width: 68, height: 68, borderRadius: '50%', border: '2px dashed #444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#444', fontSize: 22, fontWeight: 900 }}>?</span></div>}
+            <span style={{ fontSize: 11, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>{visitante.nome}</span>
           </div>
         </div>
-
-        {/* Título + formação */}
-        <span style={{ fontSize: 22, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.01em', lineHeight: 1 }}>MINHA ESCALAÇÃO</span>
+        <span style={{ fontSize: 22, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase' }}>MINHA ESCALAÇÃO</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 }}>
           <div style={{ height: 2, width: 20, background: '#F5C400' }} />
           <span style={{ fontSize: 13, fontWeight: 900, color: '#F5C400', fontStyle: 'italic', textTransform: 'uppercase' }}>{formation}</span>
           <div style={{ height: 2, width: 20, background: '#F5C400' }} />
         </div>
       </div>
-
-      {/* ── CAMPO ── */}
       <div style={{ position: 'absolute', left: FX, top: FY, width: FW, height: FH, borderRadius: 8, overflow: 'hidden', background: '#2d8a2d', zIndex: 10, boxShadow: '0 0 50px rgba(0,0,0,0.9)' }}>
         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
           {[0,1,2,3,4,5,6].map(i => <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.06)':'transparent'} />)}
@@ -263,9 +269,7 @@ function StoryCard({ lineup, slots, formation, jogo, palpite }: {
           <line x1="1.5" y1="52.5" x2="66.5" y2="52.5" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
           <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
           <rect x="13.84" y="2" width="40.32" height="18.32" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
-          <rect x="24.84" y="2" width="18.32" height="6" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
           <rect x="13.84" y="84.68" width="40.32" height="18.32" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="0.6" />
-          <rect x="24.84" y="97" width="18.32" height="6" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
         </svg>
         {slots.map(slot => {
           const player = lineup[slot.id];
@@ -278,16 +282,13 @@ function StoryCard({ lineup, slots, formation, jogo, palpite }: {
                   <span style={{ color: '#000', fontSize: 6, fontWeight: 900 }}>{player.num}</span>
                 </div>
               </div>
-              {/* Label mais leve */}
-              <div style={{ background: 'rgba(0,0,0,0.55)', borderRadius: 3, padding: '2px 5px', backdropFilter: 'blur(4px)' }}>
+              <div style={{ background: 'rgba(0,0,0,0.55)', borderRadius: 3, padding: '2px 5px' }}>
                 <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', textTransform: 'uppercase', whiteSpace: 'nowrap', display: 'block', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{player.short}</span>
               </div>
             </div>
           );
         })}
       </div>
-
-      {/* ── RODAPÉ ── */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: CH - FY - FH, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, zIndex: 20 }}>
         <div style={{ height: 2, width: '70%', background: 'linear-gradient(90deg,transparent,#F5C400,transparent)' }} />
         <span style={{ fontSize: 30, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase' }}>QUAL É A SUA?</span>
@@ -310,6 +311,7 @@ export default function EscalacaoIdeal() {
   const [showCard, setShowCard] = useState(false);
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showTigreFC, setShowTigreFC] = useState(false); // ← CROSSOVER
   const generatedBlob = useRef<Blob | null>(null);
   const [fieldWidth, setFieldWidth] = useState(340);
   const [jogoAtual, setJogoAtual] = useState<Jogo | null>(null);
@@ -332,12 +334,7 @@ export default function EscalacaoIdeal() {
   const filteredPlayers = PLAYERS.filter(p => (filterPos === 'TODOS' || p.pos === filterPos) && !usedIds.includes(p.id));
 
   const placePlayer = (slotId: string, player: Player, from: string) => {
-    setLineup(prev => {
-      const next = { ...prev };
-      if (from !== 'bench') next[from] = next[slotId] ?? null;
-      next[slotId] = player;
-      return next;
-    });
+    setLineup(prev => { const next = { ...prev }; if (from !== 'bench') next[from] = next[slotId] ?? null; next[slotId] = player; return next; });
   };
 
   const handleTapSlot = (slotId: string) => {
@@ -362,22 +359,19 @@ export default function EscalacaoIdeal() {
     if (jaRegistrado) { doGenerate(); } else { setShowLeadModal(true); }
   };
 
-  // Gera a imagem e abre menu de compartilhamento
   const doGenerate = async () => {
     setShowLeadModal(false); setGenerating(true); setShowCard(true);
     await new Promise(r => setTimeout(r, 600));
     try {
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(cardRef.current!, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#080808', logging: false });
-      // Pré-gera o blob e armazena na ref
       const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/png'));
       generatedBlob.current = blob;
     } catch (e) { console.error(e); }
     setGenerating(false); setShowCard(false);
-    setShowShare(true); // Abre menu APÓS geração completa
+    setShowShare(true);
   };
 
-  // Compartilha usando o blob já gerado — chamado diretamente pelo gesto do usuário
   const doShare = async (tipo: 'download' | 'whatsapp' | 'instagram') => {
     const blob = generatedBlob.current;
     const texto = 'Essa é minha escalação ideal! 🐯⚫🟡\nMonte a sua em onovorizontino.com.br\n#TigreDoVale #Novorizontino';
@@ -388,39 +382,33 @@ export default function EscalacaoIdeal() {
       link.download = 'escalacao-tigre-novorizontino.png';
       link.href = URL.createObjectURL(blob);
       link.click();
-      setShowShare(false);
-      return;
+    } else {
+      const file = new File([blob], 'escalacao-tigre.png', { type: 'image/png' });
+      try {
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], text: texto });
+        } else {
+          const link = document.createElement('a');
+          link.download = 'escalacao-tigre-novorizontino.png';
+          link.href = URL.createObjectURL(blob);
+          link.click();
+        }
+      } catch (e) { console.log('Share cancelado:', e); }
     }
 
-    const file = new File([blob], 'escalacao-tigre.png', { type: 'image/png' });
-
-    try {
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], text: texto });
-      } else {
-        // Fallback: baixa a imagem
-        const link = document.createElement('a');
-        link.download = 'escalacao-tigre-novorizontino.png';
-        link.href = URL.createObjectURL(blob);
-        link.click();
-      }
-    } catch (e) {
-      // Usuário cancelou ou erro — fallback silencioso
-      console.log('Share cancelado:', e);
-    }
     setShowShare(false);
+
+    // ← CROSSOVER: aparece APÓS compartilhar, com delay de 800ms
+    setTimeout(() => setShowTigreFC(true), 800);
   };
 
   return (
     <main className="min-h-screen bg-black text-white" style={{ paddingBottom: 90 }}>
       <div className="max-w-lg mx-auto px-4 py-8">
 
-        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <a href="/" className="flex items-center justify-center w-8 h-8 border border-zinc-700 rounded hover:border-yellow-500 transition-colors flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </a>
           <div className="w-1 h-7 bg-yellow-500" />
           <h1 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter">
@@ -428,27 +416,19 @@ export default function EscalacaoIdeal() {
           </h1>
         </div>
 
-        {/* Próximo duelo — dinâmico via Supabase */}
         <ProximoDuelo onJogoSelect={setJogoAtual} />
 
-        {/* Instrução */}
         <p className="text-zinc-500 text-xs mb-3">
           {selected ? `✅ ${selected.player.name} selecionado — toque na posição no campo` : 'Toque em um jogador, depois toque na posição no campo.'}
         </p>
 
-        {/* Formações */}
         <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
           {Object.keys(FORMATIONS).map(f => (
-            <button key={f} onClick={() => { setFormation(f); setLineup({}); setSelected(null); }}
-              data-track="escalacao_formacao"
-              data-track-label={f}
-              className={`flex-shrink-0 px-3 py-1.5 text-xs font-black uppercase tracking-widest transition-all ${formation === f ? 'bg-yellow-500 text-black' : 'border border-zinc-700 text-zinc-400'}`}>{f}</button>
+            <button key={f} onClick={() => { setFormation(f); setLineup({}); setSelected(null); }} className={`flex-shrink-0 px-3 py-1.5 text-xs font-black uppercase tracking-widest transition-all ${formation === f ? 'bg-yellow-500 text-black' : 'border border-zinc-700 text-zinc-400'}`}>{f}</button>
           ))}
-          <button onClick={() => { setLineup({}); setSelected(null); }}
-            className="flex-shrink-0 px-3 py-1.5 text-xs font-black uppercase tracking-widest border border-zinc-800 text-zinc-600 ml-auto">Limpar</button>
+          <button onClick={() => { setLineup({}); setSelected(null); }} className="flex-shrink-0 px-3 py-1.5 text-xs font-black uppercase tracking-widest border border-zinc-800 text-zinc-600 ml-auto">Limpar</button>
         </div>
 
-        {/* Progresso */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 h-1.5 bg-zinc-800 rounded overflow-hidden">
             <div style={{ width: `${(filledCount/11)*100}%`, background: filledCount===11?'#4ade80':'#F5C400', height: '100%', transition: 'width 0.3s', borderRadius: 4 }} />
@@ -456,11 +436,8 @@ export default function EscalacaoIdeal() {
           <span className={`text-xs font-black ${filledCount===11?'text-green-400':'text-zinc-400'}`}>{filledCount}/11</span>
         </div>
 
-        {/* Campo */}
         <div style={{ position: 'relative', width: fieldWidth, height: fieldHeight, margin: '0 auto' }} onDragOver={e => e.preventDefault()} onDrop={handleDropOnBench}>
-          <div style={{ position: 'absolute', inset: 0, borderRadius: 8, overflow: 'hidden', background: '#2a7a2a' }}>
-            <FieldSvg />
-          </div>
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 8, overflow: 'hidden', background: '#2a7a2a' }}><FieldSvg /></div>
           {slots.map(slot => {
             const player = lineup[slot.id];
             const isOver = dragOver === slot.id;
@@ -475,9 +452,9 @@ export default function EscalacaoIdeal() {
                 onDoubleClick={() => player && setLineup(prev => ({ ...prev, [slot.id]: null }))}
                 onClick={() => handleTapSlot(slot.id)}
               >
-                <div style={{ width: slotSize, height: slotSize, borderRadius: '50%', overflow: 'hidden', position: 'relative', border: isSelFrom ? '2.5px solid #fff' : player ? '2.5px solid #F5C400' : selected ? '2px dashed #F5C400' : isOver ? '2px dashed #F5C400' : '2px dashed rgba(255,255,255,0.35)', background: player ? 'transparent' : selected ? 'rgba(245,196,0,0.15)' : 'rgba(0,0,0,0.4)', boxShadow: player ? '0 2px 8px rgba(0,0,0,0.7)' : 'none', transition: 'border 0.15s', flexShrink: 0 }}>
+                <div style={{ width: slotSize, height: slotSize, borderRadius: '50%', overflow: 'hidden', position: 'relative', border: isSelFrom ? '2.5px solid #fff' : player ? '2.5px solid #F5C400' : selected ? '2px dashed #F5C400' : isOver ? '2px dashed #F5C400' : '2px dashed rgba(255,255,255,0.35)', background: player ? 'transparent' : selected ? 'rgba(245,196,0,0.15)' : 'rgba(0,0,0,0.4)', flexShrink: 0 }}>
                   {player ? <SpritePhoto foto={player.foto} size={slotSize} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: selected ? '#F5C400' : 'rgba(255,255,255,0.35)', fontSize: slotSize*0.4, fontWeight: 900 }}>+</span></div>}
-                  {player && <div style={{ position: 'absolute', bottom: -1, right: -1, width: 14, height: 14, borderRadius: '50%', background: '#000', border: '1px solid #F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><span style={{ color: '#F5C400', fontSize: 5, fontWeight: 900 }}>{player.num}</span></div>}
+                  {player && <div style={{ position: 'absolute', bottom: -1, right: -1, width: 14, height: 14, borderRadius: '50%', background: '#000', border: '1px solid #F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#F5C400', fontSize: 5, fontWeight: 900 }}>{player.num}</span></div>}
                 </div>
                 <span style={{ fontSize: labelSize, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,1)', textTransform: 'uppercase', whiteSpace: 'nowrap', maxWidth: slotSize+10, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {player ? player.short : slot.label}
@@ -487,12 +464,10 @@ export default function EscalacaoIdeal() {
           })}
         </div>
 
-        {/* Banco */}
         <div className="mt-5">
           <div className="flex gap-1.5 mb-3 overflow-x-auto no-scrollbar">
             {['TODOS','GOL','LAT','ZAG','MEI','ATA'].map(p => (
-              <button key={p} onClick={() => setFilterPos(p)}
-                className={`flex-shrink-0 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded transition-all ${filterPos===p?'bg-yellow-500 text-black':'border border-zinc-800 text-zinc-500'}`}>{p}</button>
+              <button key={p} onClick={() => setFilterPos(p)} className={`flex-shrink-0 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded transition-all ${filterPos===p?'bg-yellow-500 text-black':'border border-zinc-800 text-zinc-500'}`}>{p}</button>
             ))}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
@@ -507,75 +482,50 @@ export default function EscalacaoIdeal() {
                       <span style={{ color: '#000', fontSize: 7, fontWeight: 900 }}>{player.num}</span>
                     </div>
                   </div>
-                  <p style={{ color: isSel?'#F5C400':'#fff', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', textAlign: 'center', margin: 0, lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.short}</p>
+                  <p style={{ color: isSel?'#F5C400':'#fff', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', textAlign: 'center', margin: 0, lineHeight: 1.2 }}>{player.short}</p>
                   <span style={{ fontSize: 8, color: '#52525b', fontWeight: 900, textTransform: 'uppercase' }}>{player.pos}</span>
                 </div>
               );
             })}
-            {filteredPlayers.length === 0 && (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', color: '#52525b' }}>
-                <p style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>Todos escalados!</p>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Picker de palpite */}
         <div className="mt-5 rounded-xl border border-zinc-800 overflow-hidden" style={{ background: 'linear-gradient(135deg,#0f0f0f,#1a1200)' }}>
-            <div className="flex items-center gap-2 px-4 pt-3 pb-2">
-              <span className="text-base">🎯</span>
-              <span className="text-white font-black uppercase text-xs tracking-widest">Meu Palpite</span>
-              <span className="text-zinc-600 text-[9px] uppercase tracking-widest ml-auto">Aparece no story</span>
+          <div className="flex items-center gap-2 px-4 pt-3 pb-2">
+            <span className="text-base">🎯</span>
+            <span className="text-white font-black uppercase text-xs tracking-widest">Meu Palpite</span>
+            <span className="text-zinc-600 text-[9px] uppercase tracking-widest ml-auto">Aparece no story</span>
+          </div>
+          <div className="flex items-center justify-between px-4 pb-4 gap-3">
+            <div className="flex flex-col items-center gap-2 flex-1">
+              {jogoAtual ? <img src={jogoAtual.mandante.escudo_url} alt={jogoAtual.mandante.nome} className="w-10 h-10 object-contain" /> : <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png" alt="Novorizontino" className="w-10 h-10 object-contain" />}
+              <span className="text-white text-[10px] font-black uppercase text-center leading-tight">{jogoAtual ? jogoAtual.mandante.nome : 'Novorizontino'}</span>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setPalpite(p => ({ ...p, mandante: Math.max(0, p.mandante - 1) }))} className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center">−</button>
+                <span className="text-yellow-500 font-black text-3xl w-8 text-center">{palpite.mandante}</span>
+                <button onClick={() => setPalpite(p => ({ ...p, mandante: Math.min(9, p.mandante + 1) }))} className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center">+</button>
+              </div>
             </div>
-            <div className="flex items-center justify-between px-4 pb-4 gap-3">
-              {/* Mandante */}
-              <div className="flex flex-col items-center gap-2 flex-1">
-                {jogoAtual ? (
-                  <img src={jogoAtual.mandante.escudo_url} alt={jogoAtual.mandante.nome} className="w-10 h-10 object-contain" />
-                ) : (
-                  <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png" alt="Novorizontino" className="w-10 h-10 object-contain" />
-                )}
-                <span className="text-white text-[10px] font-black uppercase text-center leading-tight">{jogoAtual ? jogoAtual.mandante.nome : 'Novorizontino'}</span>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setPalpite(p => ({ ...p, mandante: Math.max(0, p.mandante - 1) }))}
-                    className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">−</button>
-                  <span className="text-yellow-500 font-black text-3xl w-8 text-center">{palpite.mandante}</span>
-                  <button onClick={() => setPalpite(p => ({ ...p, mandante: Math.min(9, p.mandante + 1) }))}
-                    className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">+</button>
-                </div>
-              </div>
-              <div className="flex flex-col items-center justify-center pb-2">
-                <span className="text-zinc-600 font-black text-2xl">×</span>
-              </div>
-              {/* Visitante */}
-              <div className="flex flex-col items-center gap-2 flex-1">
-                {jogoAtual ? (
-                  <img src={jogoAtual.visitante.escudo_url} alt={jogoAtual.visitante.nome} className="w-10 h-10 object-contain" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center">
-                    <span className="text-zinc-500 text-[9px] font-black uppercase text-center leading-tight">Opon.</span>
-                  </div>
-                )}
-                <span className="text-yellow-500 text-[10px] font-black uppercase text-center leading-tight">{jogoAtual ? jogoAtual.visitante.nome : 'Adversário'}</span>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setPalpite(p => ({ ...p, visitante: Math.max(0, p.visitante - 1) }))}
-                    className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">−</button>
-                  <span className="text-yellow-500 font-black text-3xl w-8 text-center">{palpite.visitante}</span>
-                  <button onClick={() => setPalpite(p => ({ ...p, visitante: Math.min(9, p.visitante + 1) }))}
-                    className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center active:bg-zinc-800 transition-colors">+</button>
-                </div>
+            <div className="flex flex-col items-center justify-center pb-2"><span className="text-zinc-600 font-black text-2xl">×</span></div>
+            <div className="flex flex-col items-center gap-2 flex-1">
+              {jogoAtual ? <img src={jogoAtual.visitante.escudo_url} alt={jogoAtual.visitante.nome} className="w-10 h-10 object-contain" /> : <div className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center"><span className="text-zinc-500 text-[9px] font-black uppercase">Opon.</span></div>}
+              <span className="text-yellow-500 text-[10px] font-black uppercase text-center leading-tight">{jogoAtual ? jogoAtual.visitante.nome : 'Adversário'}</span>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setPalpite(p => ({ ...p, visitante: Math.max(0, p.visitante - 1) }))} className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center">−</button>
+                <span className="text-yellow-500 font-black text-3xl w-8 text-center">{palpite.visitante}</span>
+                <button onClick={() => setPalpite(p => ({ ...p, visitante: Math.min(9, p.visitante + 1) }))} className="w-9 h-9 rounded-full border border-zinc-700 text-white font-black text-lg flex items-center justify-center">+</button>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
       {/* Botão fixo rodapé */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: '#000', borderTop: '1px solid #27272a', padding: '10px 16px 16px' }}>
         {!showShare ? (
           <>
             <button onClick={handleGenerate} disabled={filledCount < 11 || generating}
-              data-track="escalacao_compartilhar"
-              data-track-label={`Formação ${formation} - ${filledCount}/11`}
               className={`w-full py-4 text-sm font-black uppercase tracking-widest transition-all rounded ${filledCount===11?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:opacity-80':'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'}`}>
               {generating ? 'Gerando...' : filledCount===11 ? '🐯 Compartilhar Escalação' : `Faltam ${11-filledCount} jogador${11-filledCount>1?'es':''}  •  ${filledCount}/11`}
             </button>
@@ -585,43 +535,30 @@ export default function EscalacaoIdeal() {
           <div>
             <p className="text-zinc-500 text-[9px] uppercase tracking-widest text-center mb-2">Compartilhar via</p>
             <div className="grid grid-cols-3 gap-2 mb-2">
-
-              <button onClick={() => doShare('whatsapp')}
-                data-track="escalacao_share_whatsapp"
-                style={{ background: '#25D366', boxShadow: '0 4px 16px rgba(37,211,102,0.3)' }}
-                className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80 transition-all">
+              <button onClick={() => doShare('whatsapp')} style={{ background: '#25D366' }} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" width={28} height={28} style={{ filter: 'brightness(0) invert(1)' }} />
                 <span className="text-white font-black text-[10px] uppercase tracking-widest">WhatsApp</span>
               </button>
-
-              <button onClick={() => doShare('instagram')}
-                data-track="escalacao_share_nativo"
-                style={{ background: 'linear-gradient(135deg,#405DE6,#5851DB,#833AB4,#C13584,#E1306C,#FD1D1D,#F56040,#F77737,#FCAF45,#FFDC80)', boxShadow: '0 4px 16px rgba(193,53,132,0.35)' }}
-                className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80 transition-all">
+              <button onClick={() => doShare('instagram')} style={{ background: 'linear-gradient(135deg,#405DE6,#833AB4,#E1306C,#FCAF45)' }} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" alt="Instagram" width={28} height={28} style={{ filter: 'brightness(0) invert(1)' }} />
                 <span className="text-white font-black text-[10px] uppercase tracking-widest">Instagram</span>
               </button>
-
-              <button onClick={() => doShare('download')}
-                data-track="escalacao_baixar_story"
-                style={{ background: '#18181b', border: '1px solid #3f3f46' }}
-                className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80 transition-all">
+              <button onClick={() => doShare('download')} style={{ background: '#18181b', border: '1px solid #3f3f46' }} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl active:opacity-80">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span className="text-zinc-400 font-black text-[10px] uppercase tracking-widest">Baixar</span>
               </button>
-
             </div>
-            <button onClick={() => setShowShare(false)} className="w-full text-zinc-600 text-[10px] uppercase tracking-widest font-black py-1">
-              Cancelar
-            </button>
+            <button onClick={() => setShowShare(false)} className="w-full text-zinc-600 text-[10px] uppercase tracking-widest font-black py-1">Cancelar</button>
           </div>
         )}
       </div>
 
-      {/* Modal lead */}
+      {/* Modais */}
       {showLeadModal && <LeadModal onConfirm={() => { setShowLeadModal(false); doGenerate(); }} onClose={() => setShowLeadModal(false)} />}
 
-      {/* Card oculto */}
+      {/* ← CROSSOVER TIGRE FC — aparece após compartilhar */}
+      {showTigreFC && <TigreFCCrossover jogoId={jogoAtual?.id ?? null} onClose={() => setShowTigreFC(false)} />}
+
       {showCard && (
         <div style={{ position: 'fixed', top: -9999, left: -9999, zIndex: -1 }}>
           <div ref={cardRef}>
