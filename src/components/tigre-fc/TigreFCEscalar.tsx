@@ -89,7 +89,7 @@ const FORMATIONS: Record<string, { id: string; label: string; x: number; y: numb
 
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
-type Step = 'login' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
+type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [step, setStep] = useState<Step>('login');
