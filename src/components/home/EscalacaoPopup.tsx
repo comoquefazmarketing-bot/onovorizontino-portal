@@ -32,7 +32,6 @@ export default function EscalacaoPopup() {
   const [jogo, setJogo] = useState<Jogo | null>(null);
 
   useEffect(() => {
-    if (sessionStorage.getItem('popup_escalacao_v3')) return;
     fetch('/api/proximo-jogo')
       .then(r => r.json())
       .then(({ jogos }) => { if (jogos?.[0]) setJogo(jogos[0]); })
@@ -49,7 +48,6 @@ export default function EscalacaoPopup() {
 
   const close = () => {
     setClosing(true);
-    sessionStorage.setItem('popup_escalacao_v3', '1');
     setTimeout(() => setVisible(false), 350);
   };
 
