@@ -1,4 +1,10 @@
 {
   "cleanUrls": true,
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/tigre-fc/cron-processar",
+      "schedule": "0 21,22,23 * * *"
+    }
+  ]
 }
