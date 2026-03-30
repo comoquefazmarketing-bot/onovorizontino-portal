@@ -3,6 +3,10 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
+// Importando o novo componente que o Claude sugeriu (Certifique-se de criar este arquivo)
+// Se ainda não criou, o código abaixo mantém a lógica integrada mas organizada
+import TigreFCPerfilXP from '@/components/tigre-fc/TigreFCPerfilXP';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -10,23 +14,15 @@ const supabase = createClient(
 
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 
-const NIVEL_ICON: Record<string,string> = { Novato:'🌱', Fiel:'⚡', Garra:'🔥', Lenda:'🐯' };
-const NIVEL_NEXT: Record<string,{nome:string;pts:number}> = {
-  Novato: { nome:'Fiel', pts:100 },
-  Fiel:   { nome:'Garra', pts:300 },
-  Garra:  { nome:'Lenda', pts:600 },
-  Lenda:  { nome:'Lenda', pts:600 },
-};
-
 const BADGE_INFO: Record<string,{emoji:string;label:string;desc:string}> = {
   craque_rodada:  { emoji:'🏆', label:'Craque da Rodada',    desc:'Maior pontuação em uma rodada' },
-  hat_trick:      { emoji:'🎩', label:'Hat-trick',           desc:'3 acertos seguidos de placar' },
+  hat_trick:      { emoji:'🎩', label:'Hat-trick',            desc:'3 acertos seguidos de placar' },
   streak_3:       { emoji:'🔥', label:'Sequência de Fogo',   desc:'Escalou em 3 jogos seguidos' },
   cravou_placar:  { emoji:'🎯', label:'Cravou o Placar',     desc:'Acertou o placar exato' },
-  tigre_do_vale:  { emoji:'🐯', label:'Tigre do Vale',       desc:'Atingiu o nível Lenda' },
-  podio_top3:     { emoji:'👑', label:'Pódio Top 3',         desc:'Ficou entre os 3 melhores da rodada' },
-  heroi_certeiro: { emoji:'⭐', label:'Herói Certeiro',      desc:'Acertou o herói da partida' },
-  garra_total:    { emoji:'💪', label:'Garra Total',         desc:'Jogou todas as rodadas da temporada' },
+  tigre_do_vale:  { emoji:'🐯', label:'Tigre do Vale',        desc:'Atingiu o nível Lenda' },
+  podio_top3:     { emoji:'👑', label:'Pódio Top 3',          desc:'Ficou entre os 3 melhores da rodada' },
+  heroi_certeiro: { emoji:'⭐', label:'Herói Certeiro',       desc:'Acertou o herói da partida' },
+  garra_total:    { emoji:'💪', label:'Garra Total',          desc:'Jogou todas as rodadas da temporada' },
 };
 
 type Usuario = {
@@ -58,212 +54,162 @@ export default function TigreFCPerfil() {
       if (!u) { setLoading(false); return; }
       setUsuario(u);
 
-      // Badges
-      const { data: b } = await supabase
-        .from('tigre_fc_badges').select('tipo,ganho_em,jogo_id')
-        .eq('usuario_id', u.id).order('ganho_em', { ascending: false });
-      setBadges(b || []);
+      // Chamadas em paralelo para performance
+      const [resBadges, resHistorico, resRank] = await Promise.all([
+        supabase.from('tigre_fc_badges').select('*').eq('usuario_id', u.id).order('ganho_em', { ascending: false }),
+        supabase.from('tigre_fc_pontuacoes').select('*').eq('usuario_id', u.id).order('criado_em', { ascending: false }).limit(20),
+        supabase.from('tigre_fc_usuarios').select('id', { count: 'exact' }).gt('pontos_total', u.pontos_total)
+      ]);
 
-      // Histórico de pontuações
-      const { data: h } = await supabase
-        .from('tigre_fc_pontuacoes').select('*')
-        .eq('usuario_id', u.id).order('criado_em', { ascending: false }).limit(20);
-      setHistorico(h || []);
-
-      // Posição no ranking geral
-      const { data: rank } = await supabase
-        .from('tigre_fc_usuarios')
-        .select('id', { count: 'exact' })
-        .gt('pontos_total', u.pontos_total);
-      setPosicao((rank?.length ?? 0) + 1);
-
+      setBadges(resBadges.data || []);
+      setHistorico(resHistorico.data || []);
+      setPosicao((resRank.count ?? 0) + 1);
       setLoading(false);
     });
   }, []);
 
   if (loading) return (
     <main style={{ minHeight:'100vh', background:'#080808', display:'flex', alignItems:'center', justifyContent:'center' }}>
-      <div style={{ color:'#555', fontSize:13 }}>Carregando perfil...</div>
+      <div className="animate-pulse" style={{ color:'#F5C400', fontSize:14, fontWeight:900 }}>CARREGANDO PERFIL DO TIGRE...</div>
     </main>
   );
 
   if (!usuario) return (
     <main style={{ minHeight:'100vh', background:'#080808', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:24, textAlign:'center' }}>
-      <img src={LOGO} style={{ width:64, marginBottom:16 }} />
-      <div style={{ fontSize:18, fontWeight:900, color:'#fff', marginBottom:8 }}>Você não está logado</div>
-      <p style={{ fontSize:13, color:'#555', marginBottom:24 }}>Entre no Tigre FC para ver seu perfil</p>
-      <Link href="/tigre-fc" style={{ background:'#F5C400', color:'#111', fontWeight:900, fontSize:14, padding:'14px 28px', borderRadius:12, textDecoration:'none', textTransform:'uppercase', letterSpacing:1 }}>
+      <img src={LOGO} style={{ width:80, marginBottom:24 }} />
+      <div style={{ fontSize:22, fontWeight:900, color:'#fff', marginBottom:8 }}>VOCÊ AINDA NÃO ENTROU NO JOGO</div>
+      <p style={{ fontSize:14, color:'#555', marginBottom:32, maxWidth:300 }}>Faça login para salvar sua escalação e subir no ranking!</p>
+      <Link href="/tigre-fc" style={{ background:'#F5C400', color:'#111', fontWeight:900, fontSize:14, padding:'16px 32px', borderRadius:12, textDecoration:'none', textTransform:'uppercase', letterSpacing:1, boxShadow:'0 4px 15px rgba(245, 196, 0, 0.3)' }}>
         Entrar no Tigre FC
       </Link>
     </main>
   );
-
-  const nivel = usuario.nivel;
-  const proximoNivel = NIVEL_NEXT[nivel];
-  const progressoPct = nivel === 'Lenda' ? 100 :
-    nivel === 'Garra' ? Math.min(100, ((usuario.pontos_total - 300) / 300) * 100) :
-    nivel === 'Fiel'  ? Math.min(100, ((usuario.pontos_total - 100) / 200) * 100) :
-    Math.min(100, (usuario.pontos_total / 100) * 100);
 
   const totalRodadas = historico.length;
   const mediaRodada = totalRodadas ? Math.round(historico.reduce((s,h) => s + h.pts_total, 0) / totalRodadas) : 0;
   const melhorRodada = historico.length ? Math.max(...historico.map(h => h.pts_total)) : 0;
 
   return (
-    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', fontFamily:'system-ui', paddingBottom:80 }}>
-
-      {/* Header */}
-      <div style={{ background:'#F5C400', padding:'14px 20px', display:'flex', alignItems:'center', gap:12 }}>
-        <Link href="/tigre-fc" style={{ color:'#1a1a1a', textDecoration:'none', fontWeight:900, fontSize:20 }}>←</Link>
-        <img src={LOGO} style={{ width:28, objectFit:'contain' }} />
-        <div style={{ fontWeight:900, fontSize:16, color:'#1a1a1a' }}>MEU PERFIL</div>
+    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', fontFamily:'system-ui', paddingBottom:100 }}>
+      
+      {/* Header com botão de voltar dinâmico */}
+      <div style={{ background:'#F5C400', padding:'16px 20px', display:'flex', alignItems:'center', gap:12, position:'sticky', top:0, zIndex:10, boxShadow:'0 2px 10px rgba(0,0,0,0.5)' }}>
+        <Link href="/tigre-fc" style={{ color:'#111', textDecoration:'none', fontWeight:900, fontSize:22 }}>✕</Link>
+        <img src={LOGO} style={{ width:24, objectFit:'contain' }} />
+        <div style={{ fontWeight:900, fontSize:14, color:'#111', textTransform:'uppercase', letterSpacing:1 }}>Meu Perfil</div>
       </div>
 
       <div style={{ maxWidth:480, margin:'0 auto', padding:'20px 16px' }}>
 
-        {/* Card do perfil */}
-        <div style={{ background:'linear-gradient(135deg,#111,#1a1200)', border:'1px solid #F5C40030', borderRadius:16, padding:24, marginBottom:16, position:'relative', overflow:'hidden' }}>
-          <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#F5C400,transparent)' }} />
+        {/* COMPONENTE DE PERFIL E XP (GAMIFICADO) */}
+        <TigreFCPerfilXP 
+          nivel={usuario.nivel} 
+          pontos={usuario.pontos_total} 
+          apelido={usuario.apelido || usuario.nome} 
+          avatarUrl={usuario.avatar_url} 
+          posicao={posicao || 0} 
+        />
 
-          <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:20 }}>
-            {usuario.avatar_url ? (
-              <img src={usuario.avatar_url} style={{ width:64, height:64, borderRadius:'50%', border:'2px solid #F5C400', objectFit:'cover' }} />
-            ) : (
-              <div style={{ width:64, height:64, borderRadius:'50%', background:'#F5C400', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#111' }}>
-                {(usuario.apelido||usuario.nome).charAt(0)}
-              </div>
-            )}
-            <div>
-              <div style={{ fontSize:20, fontWeight:900, color:'#fff', letterSpacing:-0.5 }}>{usuario.apelido || usuario.nome}</div>
-              <div style={{ fontSize:13, color:'#F5C400', fontWeight:700, marginTop:2 }}>
-                {NIVEL_ICON[nivel]} {nivel}
-              </div>
-              <div style={{ fontSize:10, color:'#555', marginTop:2, textTransform:'uppercase', letterSpacing:1 }}>
-                #{posicao}º no ranking geral
-              </div>
+        {/* Stats Rápidas */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:20 }}>
+          {[
+            ['Pontos', usuario.pontos_total],
+            ['Rodadas', totalRodadas],
+            ['Média', mediaRodada],
+            ['Recorde', melhorRodada],
+          ].map(([l,v]) => (
+            <div key={l as string} style={{ background:'#111', border:'1px solid #1a1a1a', borderRadius:12, padding:'12px 4px', textAlign:'center' }}>
+              <div style={{ fontSize:18, fontWeight:900, color: l === 'Recorde' ? '#F5C400' : '#fff' }}>{v}</div>
+              <div style={{ fontSize:8, color:'#555', textTransform:'uppercase', letterSpacing:1, marginTop:4 }}>{l as string}</div>
             </div>
-          </div>
-
-          {/* Barra de progresso do nível */}
-          {nivel !== 'Lenda' && (
-            <div style={{ marginBottom:20 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                <span style={{ fontSize:10, color:'#555', textTransform:'uppercase', letterSpacing:1 }}>{nivel}</span>
-                <span style={{ fontSize:10, color:'#F5C400', textTransform:'uppercase', letterSpacing:1 }}>{proximoNivel.nome}</span>
-              </div>
-              <div style={{ height:4, background:'#1a1a1a', borderRadius:2, overflow:'hidden' }}>
-                <div style={{ width:`${progressoPct}%`, height:'100%', background:'#F5C400', borderRadius:2, transition:'width 1s' }} />
-              </div>
-              <div style={{ fontSize:10, color:'#555', marginTop:4, textAlign:'right' }}>
-                {usuario.pontos_total} / {proximoNivel.pts} pts para {proximoNivel.nome}
-              </div>
-            </div>
-          )}
-
-          {/* Stats */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
-            {[
-              ['Pontos', usuario.pontos_total],
-              ['Rodadas', totalRodadas],
-              ['Média', mediaRodada],
-              ['Recorde', melhorRodada],
-            ].map(([l,v]) => (
-              <div key={l} style={{ background:'rgba(0,0,0,0.3)', borderRadius:8, padding:'10px 6px', textAlign:'center' }}>
-                <div style={{ fontSize:18, fontWeight:900, color:'#F5C400' }}>{v}</div>
-                <div style={{ fontSize:9, color:'#555', textTransform:'uppercase', letterSpacing:1, marginTop:2 }}>{l}</div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
 
-        {/* Streak */}
+        {/* Streak / Sequência */}
         {usuario.streak > 0 && (
-          <div style={{ background:'#111', border:'1px solid #1a1a1a', borderRadius:12, padding:'12px 16px', marginBottom:16, display:'flex', alignItems:'center', gap:12 }}>
-            <div style={{ fontSize:28 }}>🔥</div>
+          <div style={{ background:'linear-gradient(90deg, #111, #1a1200)', border:'1px solid #F5C40030', borderRadius:16, padding:'16px', marginBottom:20, display:'flex', alignItems:'center', gap:16 }}>
+            <div style={{ fontSize:32, filter: 'drop-shadow(0 0 8px #F5C400)' }}>🔥</div>
             <div>
-              <div style={{ fontSize:14, fontWeight:900, color:'#fff' }}>{usuario.streak} jogos seguidos</div>
-              <div style={{ fontSize:11, color:'#555' }}>Continue escalando para manter a sequência!</div>
+              <div style={{ fontSize:15, fontWeight:900, color:'#fff' }}>{usuario.streak} jogos seguidos!</div>
+              <div style={{ fontSize:11, color:'#F5C400', fontWeight:600 }}>Você está imparável na arquibancada digital.</div>
             </div>
           </div>
         )}
 
-        {/* Tabs */}
-        <div style={{ display:'flex', background:'#111', borderRadius:8, padding:4, marginBottom:16 }}>
+        {/* Abas de Conteúdo */}
+        <div style={{ display:'flex', background:'#111', borderRadius:12, padding:6, marginBottom:20, border:'1px solid #1a1a1a' }}>
           {(['badges','historico'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              style={{ flex:1, padding:'10px', fontSize:12, fontWeight:900, textTransform:'uppercase', letterSpacing:1, border:'none', borderRadius:6, cursor:'pointer', background: tab===t?'#F5C400':'transparent', color: tab===t?'#111':'#555' }}>
-              {t === 'badges' ? `🏅 Badges (${badges.length})` : '📋 Histórico'}
+              style={{ flex:1, padding:'12px', fontSize:11, fontWeight:900, textTransform:'uppercase', letterSpacing:1, border:'none', borderRadius:8, cursor:'pointer', transition:'all 0.2s', background: tab===t?'#F5C400':'transparent', color: tab===t?'#111':'#555' }}>
+              {t === 'badges' ? `🏆 Pins (${badges.length})` : '📜 Histórico'}
             </button>
           ))}
         </div>
 
-        {/* BADGES */}
-        {tab === 'badges' && (
-          badges.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'40px 20px' }}>
-              <div style={{ fontSize:40, marginBottom:12 }}>🎯</div>
-              <div style={{ fontSize:14, color:'#555', fontWeight:700 }}>Nenhum badge ainda</div>
-              <div style={{ fontSize:12, color:'#333', marginTop:4 }}>Continue jogando para desbloquear conquistas!</div>
-            </div>
-          ) : (
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              {badges.map((b, i) => {
-                const info = BADGE_INFO[b.tipo] || { emoji:'🏅', label: b.tipo, desc:'' };
-                return (
-                  <div key={i} style={{ background:'linear-gradient(135deg,#111,#1a1200)', border:'1px solid #F5C40030', borderRadius:12, padding:'16px 12px', textAlign:'center' }}>
-                    <div style={{ fontSize:32, marginBottom:8 }}>{info.emoji}</div>
-                    <div style={{ fontSize:11, fontWeight:900, color:'#F5C400', textTransform:'uppercase', letterSpacing:0.5, marginBottom:4 }}>{info.label}</div>
-                    <div style={{ fontSize:10, color:'#555', lineHeight:1.4 }}>{info.desc}</div>
-                    <div style={{ fontSize:9, color:'#333', marginTop:8 }}>
-                      {new Date(b.ganho_em).toLocaleDateString('pt-BR')}
+        {/* CONTEÚDO DAS ABAS */}
+        <div style={{ minHeight: 300 }}>
+          {tab === 'badges' && (
+            badges.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'60px 20px', background:'#111', borderRadius:20, border:'1px dotted #333' }}>
+                <div style={{ fontSize:40, marginBottom:16, opacity:0.3 }}>🏅</div>
+                <div style={{ fontSize:14, color:'#fff', fontWeight:900, textTransform:'uppercase' }}>Nenhum Pin conquistado</div>
+                <div style={{ fontSize:12, color:'#555', marginTop:8 }}>Escale seu time para desbloquear medalhas exclusivas do Tigre!</div>
+              </div>
+            ) : (
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                {badges.map((b, i) => {
+                  const info = BADGE_INFO[b.tipo] || { emoji:'🏅', label: b.tipo, desc:'' };
+                  return (
+                    <div key={i} style={{ background:'#111', border:'1px solid #1a1a1a', borderRadius:16, padding:'20px 12px', textAlign:'center', position:'relative' }}>
+                      <div style={{ fontSize:32, marginBottom:12 }}>{info.emoji}</div>
+                      <div style={{ fontSize:11, fontWeight:900, color:'#fff', textTransform:'uppercase', marginBottom:4 }}>{info.label}</div>
+                      <div style={{ fontSize:10, color:'#555', lineHeight:1.4, minHeight:28 }}>{info.desc}</div>
+                      <div style={{ fontSize:8, color:'#333', marginTop:12, fontWeight:700 }}>
+                        GANHO EM {new Date(b.ganho_em).toLocaleDateString('pt-BR')}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )
-        )}
+                  );
+                })}
+              </div>
+            )
+          )}
 
-        {/* HISTÓRICO */}
-        {tab === 'historico' && (
-          historico.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'40px 20px' }}>
-              <div style={{ fontSize:40, marginBottom:12 }}>📋</div>
-              <div style={{ fontSize:14, color:'#555', fontWeight:700 }}>Nenhuma rodada ainda</div>
-              <Link href="/tigre-fc" style={{ display:'inline-block', marginTop:16, background:'#F5C400', color:'#111', fontWeight:900, fontSize:12, padding:'10px 20px', borderRadius:8, textDecoration:'none', textTransform:'uppercase' }}>
-                Escalar agora
-              </Link>
-            </div>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:1, background:'#111' }}>
-              {historico.map((h, i) => (
-                <Link key={i} href={`/tigre-fc/resultado/${h.jogo_id}`}
-                  style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', background:'#080808', textDecoration:'none' }}>
-                  <div>
-                    <div style={{ fontSize:13, fontWeight:700, color:'#fff', marginBottom:3 }}>
-                      Rodada {i + 1}
-                      {h.acertou_placar_exato && <span style={{ marginLeft:8, fontSize:10, color:'#4ade80', fontWeight:900 }}>🎯 Placar exato!</span>}
-                      {!h.acertou_placar_exato && h.acertou_resultado && <span style={{ marginLeft:8, fontSize:10, color:'#60a5fa', fontWeight:900 }}>✓ Resultado certo</span>}
+          {tab === 'historico' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {historico.length === 0 ? (
+                <div style={{ textAlign:'center', padding:'60px 20px' }}>
+                  <div style={{ fontSize:14, color:'#555' }}>Nenhuma rodada registrada.</div>
+                </div>
+              ) : (
+                historico.map((h, i) => (
+                  <Link key={i} href={`/tigre-fc/resultado/${h.jogo_id}`}
+                    style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px', background:'#111', borderRadius:16, border:'1px solid #1a1a1a', textDecoration:'none', transition:'transform 0.1s' }}>
+                    <div>
+                      <div style={{ fontSize:14, fontWeight:900, color:'#fff', marginBottom:4 }}>
+                        Rodada {historico.length - i}
+                      </div>
+                      <div style={{ display:'flex', gap:8 }}>
+                        {h.acertou_placar_exato && <span style={{ background:'#4ade8020', color:'#4ade80', fontSize:9, padding:'2px 6px', borderRadius:4, fontWeight:900 }}>🎯 CRAVOU</span>}
+                        <span style={{ color:'#555', fontSize:10, fontWeight:600 }}>{new Date(h.criado_em).toLocaleDateString('pt-BR')}</span>
+                      </div>
                     </div>
-                    <div style={{ display:'flex', gap:12, fontSize:10, color:'#555' }}>
-                      <span>⚽ {h.pts_jogadores}pts</span>
-                      <span>🎯 {h.pts_palpite}pts</span>
-                      {h.pts_heroi > 0 && <span>⭐ {h.pts_heroi}pts</span>}
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:24, fontWeight:900, color:'#F5C400', lineHeight:1 }}>{h.pts_total}</div>
+                      <div style={{ fontSize:9, color:'#555', fontWeight:700, textTransform:'uppercase' }}>PONTOS</div>
                     </div>
-                  </div>
-                  <div style={{ textAlign:'right' }}>
-                    <div style={{ fontSize:22, fontWeight:900, color:'#F5C400' }}>{h.pts_total}</div>
-                    <div style={{ fontSize:9, color:'#555', textTransform:'uppercase' }}>pts</div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))
+              )}
             </div>
-          )
-        )}
+          )}
+        </div>
 
-        <Link href="/tigre-fc" style={{ display:'block', marginTop:24, textAlign:'center', color:'#444', fontSize:11, fontWeight:900, textTransform:'uppercase', letterSpacing:2, textDecoration:'none' }}>
-          ← Voltar ao jogo
-        </Link>
+        {/* Rodapé de navegação */}
+        <div style={{ marginTop:40, textAlign:'center' }}>
+          <Link href="/tigre-fc" style={{ color:'#555', fontSize:12, fontWeight:900, textDecoration:'none', textTransform:'uppercase', letterSpacing:1 }}>
+            ← Voltar para a Arena
+          </Link>
+        </div>
       </div>
     </main>
   );
