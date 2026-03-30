@@ -1,188 +1,183 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // service role para bypass RLS
-);
+// Sofascore team ID do Novorizontino
+const NOVO_TEAM_ID = 36745;
 
-const PTS = {
-  gol: 8,
-  assist: 5,
-  titular: 2,
-  clean_sheet: 5,
-  amarelo: -2,
-  vermelho: -5,
-  placar_exato: 15,
-  resultado_certo: 5,
-  heroi: 10,
+// Mapa Sofascore player name → nosso player ID
+// Preenchido com os jogadores que temos
+const PLAYER_MAP: Record<string, number> = {
+  'César Augusto': 1, 'Jordi': 2, 'João Scapin': 3, 'Lucas Ribeiro': 4,
+  'Lora': 5, 'Castrillón': 6, 'Arthur Barbosa': 7, 'Mayk': 8, 'Maykon Jesus': 9,
+  'Dantas': 10, 'Eduardo Brock': 11, 'Patrick': 12, 'Gabriel Bahia': 13,
+  'Carlinhos': 14, 'Alemão': 15, 'Renato Palm': 16, 'Alvariño': 17, 'Bruno Santana': 18,
+  'Luís Oyama': 19, 'Léo Naldi': 20, 'Rômulo': 21, 'Matheus Bianqui': 22,
+  'Juninho': 23, 'Tavinho': 24, 'Diego Galo': 25, 'Marlon': 26,
+  'Hector Bianchi': 27, 'Nogueira': 28, 'Luiz Gabriel': 29, 'Jhones Kauê': 30,
+  'Robson': 31, 'Vinícius Paiva': 32, 'Hélio Borges': 33, 'Jardiel': 34,
+  'Nicolas Careca': 35, 'Titi Ortiz': 36, 'Diego Mathias': 37,
+  'Carlão': 38, 'Ronald Barcellos': 39,
 };
 
-export async function POST(req: NextRequest) {
-  // Proteção por secret header
-  const secret = req.headers.get('x-admin-secret');
-  if (secret !== process.env.ADMIN_SECRET) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+const HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'Accept': 'application/json',
+  'Accept-Language': 'pt-BR,pt;q=0.9',
+  'Referer': 'https://www.sofascore.com/',
+  'Cache-Control': 'no-cache',
+};
+
+function findPlayerId(name: string): number | null {
+  // Busca exata
+  if (PLAYER_MAP[name]) return PLAYER_MAP[name];
+  // Busca parcial por sobrenome
+  const lower = name.toLowerCase();
+  for (const [k, v] of Object.entries(PLAYER_MAP)) {
+    if (k.toLowerCase().includes(lower) || lower.includes(k.toLowerCase().split(' ')[0].toLowerCase())) {
+      return v;
+    }
   }
+  return null;
+}
 
-  const body = await req.json();
-  const { jogo_id, gols_mandante, gols_visitante, heroi_id, eventos } = body;
-  // eventos: [{ player_id, tipo: 'gol'|'assist'|'amarelo'|'vermelho'|'titular'|'clean_sheet' }]
+// GET /api/tigre-fc/buscar-resultado?jogo_id=X
+// Busca o resultado mais recente do Novorizontino no Sofascore
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const jogoIdParam = searchParams.get('jogo_id');
 
-  if (!jogo_id || gols_mandante === undefined || gols_visitante === undefined) {
-    return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
-  }
+  try {
+    // 1. Busca os eventos recentes do Novorizontino
+    const eventsRes = await fetch(
+      `https://api.sofascore.com/api/v1/team/${NOVO_TEAM_ID}/events/last/0`,
+      { headers: HEADERS, next: { revalidate: 0 } }
+    );
 
-  // 1. Salva resultado
-  const { error: errRes } = await supabase.from('tigre_fc_resultados').upsert({
-    jogo_id, gols_mandante, gols_visitante, heroi_id, eventos, processado: false
-  }, { onConflict: 'jogo_id' });
-
-  if (errRes) return NextResponse.json({ error: errRes.message }, { status: 500 });
-
-  // 2. Busca todas as escalações do jogo
-  const { data: escalacoes } = await supabase
-    .from('tigre_fc_escalacoes')
-    .select('id, usuario_id, lineup, capitao_id, heroi_id')
-    .eq('jogo_id', jogo_id);
-
-  // 3. Busca todos os palpites do jogo
-  const { data: palpites } = await supabase
-    .from('tigre_fc_palpites')
-    .select('usuario_id, gols_mandante, gols_visitante')
-    .eq('jogo_id', jogo_id);
-
-  if (!escalacoes?.length) {
-    return NextResponse.json({ message: 'Nenhuma escalação para processar', processados: 0 });
-  }
-
-  // Monta mapa de pontos por player_id a partir dos eventos
-  const playerPoints: Record<number, number> = {};
-  for (const ev of (eventos || [])) {
-    if (!playerPoints[ev.player_id]) playerPoints[ev.player_id] = 0;
-    playerPoints[ev.player_id] += PTS[ev.tipo as keyof typeof PTS] ?? 0;
-  }
-
-  // Determina resultado real
-  const resultadoReal = gols_mandante > gols_visitante ? 'mandante' :
-    gols_visitante > gols_mandante ? 'visitante' : 'empate';
-
-  const pontuacoesParaInserir = [];
-  const badgesParaInserir: any[] = [];
-  const rankingRodada: { usuario_id: string; pts: number }[] = [];
-
-  for (const esc of escalacoes) {
-    const lineupObj = esc.lineup as Record<string, { id: number } | null>;
-    const jogadoresEscalados = Object.values(lineupObj).filter(Boolean) as { id: number }[];
-
-    // Pontos dos jogadores
-    let ptsJogadores = 0;
-    for (const j of jogadoresEscalados) {
-      const ptsBrutos = playerPoints[j.id] ?? 0;
-      const ehCapitao = j.id === esc.capitao_id;
-      ptsJogadores += ehCapitao ? ptsBrutos * 2 : ptsBrutos;
+    if (!eventsRes.ok) {
+      return NextResponse.json({ error: 'Sofascore indisponível. Tente novamente.' }, { status: 503 });
     }
 
-    // Pontos do palpite
-    const palpiteUser = palpites?.find(p => p.usuario_id === esc.usuario_id);
-    let ptsPalpite = 0;
-    let acertouPlacar = false;
-    let acertouResultado = false;
+    const eventsData = await eventsRes.json();
+    const events = eventsData.events || [];
 
-    if (palpiteUser) {
-      const pResultado = palpiteUser.gols_mandante > palpiteUser.gols_visitante ? 'mandante' :
-        palpiteUser.gols_visitante > palpiteUser.gols_mandante ? 'visitante' : 'empate';
+    // 2. Pega o jogo mais recente finalizado
+    const ultimoJogo = events
+      .filter((e: any) => e.status?.type === 'finished')
+      .sort((a: any, b: any) => b.startTimestamp - a.startTimestamp)[0];
 
-      if (palpiteUser.gols_mandante === gols_mandante && palpiteUser.gols_visitante === gols_visitante) {
-        ptsPalpite += PTS.placar_exato;
-        acertouPlacar = true;
-        acertouResultado = true;
-        badgesParaInserir.push({ usuario_id: esc.usuario_id, tipo: 'cravou_placar', jogo_id });
-      } else if (pResultado === resultadoReal) {
-        ptsPalpite += PTS.resultado_certo;
-        acertouResultado = true;
+    if (!ultimoJogo) {
+      return NextResponse.json({ error: 'Nenhum jogo finalizado encontrado.' }, { status: 404 });
+    }
+
+    const sfEventId = ultimoJogo.id;
+    const isHome = ultimoJogo.homeTeam?.id === NOVO_TEAM_ID;
+
+    const gols_mandante = ultimoJogo.homeScore?.current ?? 0;
+    const gols_visitante = ultimoJogo.awayScore?.current ?? 0;
+
+    const mandante_nome = ultimoJogo.homeTeam?.name || '';
+    const visitante_nome = ultimoJogo.awayTeam?.name || '';
+    const data = new Date(ultimoJogo.startTimestamp * 1000).toISOString();
+
+    // 3. Busca incidentes (gols, cartões)
+    const incRes = await fetch(
+      `https://api.sofascore.com/api/v1/event/${sfEventId}/incidents`,
+      { headers: HEADERS, next: { revalidate: 0 } }
+    );
+
+    const incData = await incRes.json();
+    const incidents = incData.incidents || [];
+
+    const eventos: { player_id: number; tipo: string; nome: string }[] = [];
+    let heroiId: number | null = null;
+    let heroiNome = '';
+    let maxGolsEvento = 0;
+
+    for (const inc of incidents) {
+      const isNovoPlayer = isHome
+        ? inc.isHome === true
+        : inc.isHome === false;
+
+      if (!isNovoPlayer) continue;
+
+      const playerName = inc.player?.name || inc.playerName || '';
+      const playerId = findPlayerId(playerName);
+
+      if (inc.incidentType === 'goal' || inc.incidentType === 'penalty') {
+        if (playerId) {
+          eventos.push({ player_id: playerId, tipo: 'gol', nome: playerName });
+          // Herói = jogador com mais gols
+          const count = eventos.filter(e => e.player_id === playerId && e.tipo === 'gol').length;
+          if (count > maxGolsEvento) { maxGolsEvento = count; heroiId = playerId; heroiNome = playerName; }
+        }
+      }
+
+      if (inc.incidentType === 'card') {
+        if (playerId) {
+          const tipo = inc.cardType === 'yellow' ? 'amarelo' : 'vermelho';
+          eventos.push({ player_id: playerId, tipo, nome: playerName });
+        }
       }
     }
 
-    // Pontos do herói
-    let ptsHeroi = 0;
-    let acertouHeroi = false;
-    if (heroi_id && esc.heroi_id === heroi_id) {
-      ptsHeroi = PTS.heroi;
-      acertouHeroi = true;
-      badgesParaInserir.push({ usuario_id: esc.usuario_id, tipo: 'heroi_certeiro', jogo_id });
+    // 4. Busca lineups (titulares)
+    const lineupRes = await fetch(
+      `https://api.sofascore.com/api/v1/event/${sfEventId}/lineups`,
+      { headers: HEADERS, next: { revalidate: 0 } }
+    );
+
+    const lineupData = await lineupRes.json();
+    const novoLineup = isHome ? lineupData.home : lineupData.away;
+
+    const titulares: string[] = [];
+    if (novoLineup?.players) {
+      for (const p of novoLineup.players) {
+        if (p.substitute === false) {
+          const name = p.player?.name || '';
+          const pid = findPlayerId(name);
+          if (pid) {
+            eventos.push({ player_id: pid, tipo: 'titular', nome: name });
+            titulares.push(name);
+          }
+        }
+      }
     }
 
-    const ptsTotal = ptsJogadores + ptsPalpite + ptsHeroi;
+    // 5. Herói final = jogador com maior avaliação do Sofascore
+    if (novoLineup?.players) {
+      let maxRating = 0;
+      for (const p of novoLineup.players) {
+        const rating = p.statistics?.rating || 0;
+        if (rating > maxRating) {
+          maxRating = rating;
+          const name = p.player?.name || '';
+          const pid = findPlayerId(name);
+          if (pid) { heroiId = pid; heroiNome = name; }
+        }
+      }
+    }
 
-    pontuacoesParaInserir.push({
-      usuario_id: esc.usuario_id,
-      jogo_id,
-      pts_jogadores: ptsJogadores,
-      pts_palpite: ptsPalpite,
-      pts_heroi: ptsHeroi,
-      pts_total: ptsTotal,
-      acertou_resultado: acertouResultado,
-      acertou_placar_exato: acertouPlacar,
-      acertou_heroi: acertouHeroi,
+    return NextResponse.json({
+      encontrado: true,
+      sofascore_event_id: sfEventId,
+      mandante: mandante_nome,
+      visitante: visitante_nome,
+      gols_mandante,
+      gols_visitante,
+      data,
+      heroi_id: heroiId,
+      heroi_nome: heroiNome,
+      eventos: eventos.map(({ player_id, tipo }) => ({ player_id, tipo })),
+      eventos_detalhados: eventos,
+      titulares,
+      aviso: eventos.filter(e => !e.player_id).length > 0
+        ? `${eventos.filter(e => !e.player_id).length} jogador(es) não identificado(s) — verifique manualmente`
+        : null,
     });
 
-    rankingRodada.push({ usuario_id: esc.usuario_id, pts: ptsTotal });
+  } catch (err: any) {
+    return NextResponse.json({
+      error: 'Erro ao buscar dados do Sofascore',
+      detalhe: err?.message || 'Erro desconhecido'
+    }, { status: 500 });
   }
-
-  // 4. Insere pontuações
-  await supabase.from('tigre_fc_pontuacoes').upsert(pontuacoesParaInserir, { onConflict: 'usuario_id,jogo_id' });
-
-  // 5. Atualiza pontos_total dos usuários
-  for (const p of pontuacoesParaInserir) {
-    await supabase.rpc('incrementar_pontos_tigre_fc', {
-      p_usuario_id: p.usuario_id,
-      p_pontos: p.pts_total
-    });
-  }
-
-  // 6. Craque da rodada (maior pontuação)
-  rankingRodada.sort((a, b) => b.pts - a.pts);
-  if (rankingRodada[0]) {
-    badgesParaInserir.push({ usuario_id: rankingRodada[0].usuario_id, tipo: 'craque_rodada', jogo_id });
-  }
-
-  // Pódio top 3
-  for (let i = 0; i < Math.min(3, rankingRodada.length); i++) {
-    badgesParaInserir.push({ usuario_id: rankingRodada[i].usuario_id, tipo: 'podio_top3', jogo_id });
-  }
-
-  // 7. Insere badges
-  if (badgesParaInserir.length) {
-    await supabase.from('tigre_fc_badges').upsert(badgesParaInserir, { onConflict: 'usuario_id,tipo,jogo_id', ignoreDuplicates: true });
-  }
-
-  // 8. Marca resultado como processado
-  await supabase.from('tigre_fc_resultados').update({ processado: true }).eq('jogo_id', jogo_id);
-
-  // 9. Atualiza streaks e níveis
-  for (const esc of escalacoes) {
-    await atualizarNivel(esc.usuario_id);
-  }
-
-  return NextResponse.json({
-    message: 'Resultado processado com sucesso!',
-    processados: pontuacoesParaInserir.length,
-    badges_gerados: badgesParaInserir.length,
-    craque: rankingRodada[0],
-  });
-}
-
-async function atualizarNivel(usuario_id: string) {
-  const { data: user } = await supabase
-    .from('tigre_fc_usuarios')
-    .select('pontos_total')
-    .eq('id', usuario_id)
-    .single();
-
-  if (!user) return;
-  const pts = user.pontos_total;
-  const nivel = pts >= 600 ? 'Lenda' : pts >= 300 ? 'Garra' : pts >= 100 ? 'Fiel' : 'Novato';
-
-  await supabase.from('tigre_fc_usuarios').update({ nivel }).eq('id', usuario_id);
 }
