@@ -5,6 +5,7 @@ import Script from 'next/script';
 import Analytics from '@/components/layout/Analytics';
 import LgpdBanner from '@/components/layout/LgpdBanner';
 import TigreFCButton from '@/components/tigre-fc/TigreFCButton';
+import ModoDesespero from '@/components/tigre-fc/ModoDesespero';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.onovorizontino.com.br'),
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Analytics />
         <LgpdBanner />
         <TigreFCButton />
+        <ModoDesespero />
 
         {/* Google Analytics 4 */}
         <Script
