@@ -35,9 +35,9 @@ const PLAYERS = [
   { id: 20, name: 'Léo Naldi',         short: 'L.Naldi',     num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
   { id: 21, name: 'Rômulo',            short: 'Rômulo',      num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
   { id: 22, name: 'Matheus Bianqui',  short: 'Bianqui',     num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  { id: 23, name: 'Juninho',          short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
-  { id: 24, name: 'Tavinho',          short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
-  { id: 25, name: 'Diego Galo',        short: 'D.Galo',      num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
+  { id: 23, name: 'Juninho',           short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
+  { id: 24, name: 'Tavinho',           short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
+  { id: 25, name: 'Diego Galo',         short: 'D.Galo',      num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
   { id: 26, name: 'Marlon',            short: 'Marlon',      num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
   { id: 27, name: 'Hector Bianchi',    short: 'Hector',      num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
   { id: 28, name: 'Nogueira',          short: 'Nogueira',    num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
@@ -46,7 +46,7 @@ const PLAYERS = [
   { id: 31, name: 'Robson',            short: 'Robson',      num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
   { id: 32, name: 'Vinícius Paiva',    short: 'V.Paiva',     num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
   { id: 33, name: 'Hélio Borges',      short: 'H.Borges',    num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
-  { id: 34, name: 'Jardiel',          short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
+  { id: 34, name: 'Jardiel',           short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
   { id: 35, name: 'Nicolas Careca',    short: 'N.Careca',    num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
   { id: 36, name: 'Titi Ortiz',        short: 'T.Ortiz',     num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
   { id: 37, name: 'Diego Mathias',     short: 'D.Mathias',   num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
@@ -107,7 +107,7 @@ const FORMATIONS: Record<string, { id: string; label: string; x: number; y: numb
 
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
-type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
+type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo' | 'perfil';
 
 function PlayerCard({ player, size, isCapitao, isHeroi, isList }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean, isList?: boolean }) {
   const containerClass = isList ? "player-card-container-list" : "player-card-container";
@@ -177,6 +177,7 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isList }: { player: Play
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [mounted, setMounted]         = useState(false);
   const [step, setStep]                = useState<Step>('login');
+  const [prevStep, setPrevStep]        = useState<Step | null>(null);
   const [usuario, setUsuario]          = useState<any>(null);
   const [apelido, setApelido]          = useState('');
   const [formation, setFormation]      = useState('4-3-3');
@@ -189,6 +190,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [jogo, setJogo]                = useState<any>(null);
   const [saving, setSaving]            = useState(false);
   const [fieldWidth, setFieldWidth]   = useState(340);
+  const [perfilUsuario, setPerfilUsuario] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -329,8 +331,27 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     </main>
   );
 
+  // NOVO: Render do Modal de Perfil/Cornetar com alta prioridade de Z-Index
+  if (step === 'perfil') return (
+    <div style={{ position:'fixed', inset:0, background:'#080808', zIndex: 9999, padding: 20, display:'flex', flexDirection:'column' }}>
+       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20 }}>
+          <h2 style={{ color:'#F5C400', fontWeight: 900 }}>PERFIL DO TORCEDOR</h2>
+          <button onClick={() => setStep(prevStep || 'escalar')} style={{ background: '#F5C400', border:'none', borderRadius: 8, padding: '8px 16px', fontWeight: 900 }}>FECHAR</button>
+       </div>
+       <div style={{ flex: 1, overflowY: 'auto', textAlign:'center' }}>
+          <div style={{ fontSize: 40 }}>🐯</div>
+          <h1 style={{ fontSize: 24, fontWeight: 900, margin: '10px 0' }}>{perfilUsuario?.apelido}</h1>
+          <p style={{ color: '#666' }}>Bora cornetar a escalação?</p>
+          {/* Adicione aqui os detalhes da escalação do outro usuário */}
+          <div style={{ marginTop: 40, padding: 20, border: '1px dashed #333', borderRadius: 16 }}>
+             EM BREVE: CORNETÔMETRO 🎺
+          </div>
+       </div>
+    </div>
+  );
+
   return (
-    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom:120 }}>
+    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom: 150 }}>
       {/* Header */}
       <div style={{ background:'#F5C400', padding:16, display:'flex', alignItems:'center', justifyContent:'space-between', position: 'sticky', top:0, zIndex: 100 }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -490,8 +511,9 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         )}
       </div>
 
+      {/* Botões de Navegação Flutuantes Internos (Z-Index Ajustado) */}
       {['escalar','capitao','heroi','palpite','confirmar'].includes(step) && (
-        <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)', zIndex:100 }}>
+        <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)', zIndex: 1000 }}>
           <button 
             onClick={() => {
               if (step==='escalar' && filledCount===11) setStep('capitao');
