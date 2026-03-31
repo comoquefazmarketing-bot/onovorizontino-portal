@@ -34,7 +34,9 @@ export const metadata: Metadata = {
     images: ['/assets/logos/LOGO - O NOVORIZONTINO.png'],
   },
   alternates: { canonical: 'https://www.onovorizontino.com.br' },
-  verification: { google: 'njrcPMAtFlMQ0Hnc7xZbC5QF-3Ru_nvADZINPMTPTCE' },
+  verification: { 
+    google: 'njrcPMAtFlMQ0Hnc7xZbC5QF-3Ru_nvADZINPMTPTCE',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -42,8 +44,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR">
       <head>
         <meta name="google-site-verification" content="njrcPMAtFlMQ0Hnc7xZbC5QF-3Ru_nvADZINPMTPTCE" />
+        
+        {/* Tag Meta do Google AdSense para conexão do site */}
+        <meta name="google-adsense-account" content="ca-pub-8594673486819604" />
 
-        {/* Google AdSense - Inserido no Head conforme solicitado */}
+        {/* Script do Google AdSense */}
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8594673486819604"
@@ -58,12 +63,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           logo: { '@type': 'ImageObject', url: 'https://www.onovorizontino.com.br/assets/logos/LOGO - O NOVORIZONTINO.png' },
           description: 'Portal de notícias do Grêmio Novorizontino — Tigre do Vale.',
           address: { '@type': 'PostalAddress', addressLocality: 'Novo Horizonte', addressRegion: 'SP', addressCountry: 'BR' },
-        })}} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          '@context': 'https://schema.org', '@type': 'SportsTeam',
-          name: 'Grêmio Novorizontino', alternateName: ['Novorizontino', 'Tigre do Vale'],
-          sport: 'Futebol', url: 'https://www.gremionovorizontino.com.br',
-          location: { '@type': 'Place', name: 'Estádio Doutor Jorge Ismael de Biasi', address: 'Novo Horizonte, SP, Brasil' },
         })}} />
       </head>
       <body className="bg-black antialiased">
