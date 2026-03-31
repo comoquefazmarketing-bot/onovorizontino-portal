@@ -79,7 +79,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
   
   const CAMPO_W = 280;
   const CAMPO_H = Math.round(CAMPO_W * (105/68));
-  const SLOT_SZ = Math.round(CAMPO_W * 0.20); 
+  const SLOT_SZ = Math.round(CAMPO_W * 0.18); 
   const isMe = meuId === targetUserId;
 
   useEffect(() => {
@@ -89,14 +89,13 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
         setPerfil(userData);
 
         if (jogoId) {
-          const [esc, coms] = await Promise.all([
-            supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle(),
-            supabase.from('tigre_fc_comentarios').select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
+          const { data: escData } = await supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle();
+          const { data: comsData } = await supabase.from('tigre_fc_comentarios').select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
               .eq('escalacao_usuario_id', targetUserId).eq('jogo_id', jogoId)
-              .order('criado_em', { ascending: true })
-          ]);
-          setEscalacao(esc.data);
-          setComentarios(coms.data || []);
+              .order('criado_em', { ascending: true });
+          
+          setEscalacao(escData);
+          setComentarios(comsData || []);
         }
       } catch (err) {
         console.error("Erro ao carregar perfil:", err);
@@ -199,10 +198,9 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               </div>
 
-              {/* Tactical Field */}
+              {/* Tactical Field - CORREÇÃO DE LÓGICA DE ID */}
               <div style={{ padding:'20px 0', background:'#080808', display:'flex', flexDirection:'column', alignItems:'center', borderBottom:'1px solid #111' }}>
                 <div style={{ position:'relative', width:CAMPO_W, height:CAMPO_H, borderRadius:8, overflow:'hidden', background:'#0f2d0f', border:'2px solid #1a1a1a' }}>
-                  {/* Gramado */}
                   <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
                     {[0,1,2,3,4,5,6].map(i => <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.02)':'transparent'} />)}
                     <rect x="2" y="3" width="64" height="99" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
@@ -210,10 +208,12 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                     <circle cx="34" cy="52.5" r="9" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
                   </svg>
 
-                  {/* Renderização dos Jogadores nos Slots */}
                   {escalacao ? slots.map(slot => {
-                    const pId = lineup[slot.id];
-                    const player = pId ? PLAYERS[pId] : null;
+                    const slotData = lineup[slot.id];
+                    // Tenta pegar o ID seja ele um número direto ou um objeto {id: X}
+                    const pId = typeof slotData === 'object' ? slotData?.id : slotData;
+                    const player = pId ? PLAYERS[Number(pId)] : null;
+
                     if (!player) return null;
 
                     return (
@@ -228,14 +228,14 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                         <TigreFCPlayerCard 
                           player={player} 
                           size={SLOT_SZ} 
-                          isCapitao={Number(player.id) === Number(capitaoId)}
+                          isCapitao={Number(pId) === Number(capitaoId)}
                         />
                         <div style={{ 
                           marginTop: 2, 
                           fontSize: 8, 
                           fontWeight: 900, 
                           color: '#fff', 
-                          background: 'rgba(0,0,0,0.6)',
+                          background: 'rgba(0,0,0,0.7)',
                           padding: '1px 4px',
                           borderRadius: 4,
                           whiteSpace: 'nowrap'
@@ -272,7 +272,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                   ) : comentarios.map((c, idx) => (
                     <div key={idx} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
                       {c.autor?.avatar_url ? (
-                        <img src={c.autor.avatar_url} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #222' }} />
+                        <img src={c.autor.avatar_url} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #222' }} alt="" />
                       ) : (
                         <div style={{ width:32, height:32, borderRadius:'50%', background:'#111', border:'1px solid #222', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#555' }}>
                           {(c.autor?.apelido || '?').charAt(0)}
