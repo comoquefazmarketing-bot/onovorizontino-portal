@@ -31,7 +31,7 @@ const PLAYERS = [
   { id: 16, name: 'Renato Palm',       short: 'R.Palm',      num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
   { id: 17, name: 'Alvariño',          short: 'Alvariño',    num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
   { id: 18, name: 'Bruno Santana',     short: 'B.Santana',   num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
-  { id: 19, name: 'Luís Oyama',         short: 'Oyama',        num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
+  { id: 19, name: 'Luís Oyama',         short: 'Oyama',         num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
   { id: 20, name: 'Léo Naldi',         short: 'L.Naldi',     num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
   { id: 21, name: 'Rômulo',            short: 'Rômulo',      num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
   { id: 22, name: 'Matheus Bianqui',  short: 'Bianqui',     num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
@@ -109,9 +109,7 @@ type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
 
-// --- COMPONENTE DO CARD COM CORREÇÃO DE ALINHAMENTO ---
 function PlayerCard({ player, size, isCapitao, isHeroi, isList }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean, isList?: boolean }) {
-  // Define o container: se for lista, remove efeitos de hover e drop-shadow
   const containerClass = isList ? "player-card-container-list" : "player-card-container";
 
   return (
@@ -134,23 +132,20 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isList }: { player: Play
         position: 'relative',
         cursor: 'pointer'
       }}>
-        {/* Camada da Imagem Sprite */}
         <div className="sprite-image" style={{
           width: '100%',
           height: '100%',
           backgroundImage: `url(${player.foto})`,
           backgroundSize: '200% 100%', 
-          backgroundPosition: 'left center', // O segredo está aqui: alinhar à esquerda
+          backgroundPosition: 'left center',
           backgroundRepeat: 'no-repeat',
           position: 'absolute',
           top: 0,
           left: 0,
-          // Remove a transição se for lista para evitar bugs visuais ao rolar
           transition: isList ? 'none' : 'background-position 0s steps(1)' 
         }} />
       </div>
 
-      {/* Tarja com Nome */}
       <div style={{ 
         background: isList ? 'rgba(255,255,255,0.1)' : '#F5C400', 
         color: isList ? '#fff' : '#000', 
@@ -169,15 +164,10 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isList }: { player: Play
         {player.short}
       </div>
 
-      {/* Aplica hover apenas se NÃO for lista */}
       {!isList && (
         <style jsx>{`
-          .player-card-container:hover .sprite-image {
-            background-position: right center;
-          }
-          .player-card-container:active .sprite-image {
-            background-position: right center;
-          }
+          .player-card-container:hover .sprite-image { background-position: right center; }
+          .player-card-container:active .sprite-image { background-position: right center; }
         `}</style>
       )}
     </div>
@@ -266,10 +256,30 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const handleSalvar = async () => {
     if (!isMercadoAberto() || saving) return;
     setSaving(true);
-    await supabase.from('tigre_fc_escalacoes').upsert({ usuario_id: usuario.id, jogo_id: jogoId, formacao: formation, lineup, capitao_id: capitao?.id, heroi_id: heroi?.id }, { onConflict: 'usuario_id,jogo_id' });
-    await supabase.from('tigre_fc_palpites').upsert({ usuario_id: usuario.id, jogo_id: jogoId, gols_mandante: palpite.mandante, gols_visitante: palpite.visitante }, { onConflict: 'usuario_id,jogo_id' });
-    setStep('salvo');
-    setSaving(false);
+    try {
+        await supabase.from('tigre_fc_escalacoes').upsert({ 
+            usuario_id: usuario.id, 
+            jogo_id: jogoId, 
+            formacao: formation, 
+            lineup, 
+            capitao_id: capitao?.id, 
+            heroi_id: heroi?.id 
+        }, { onConflict: 'usuario_id,jogo_id' });
+
+        await supabase.from('tigre_fc_palpites').upsert({ 
+            usuario_id: usuario.id, 
+            jogo_id: jogoId, 
+            gols_mandante: palpite.mandante, 
+            gols_visitante: palpite.visitante 
+        }, { onConflict: 'usuario_id,jogo_id' });
+
+        setStep('salvo');
+    } catch (err) {
+        console.error("Erro ao salvar:", err);
+        alert("Erro ao salvar sua escalação. Tente novamente.");
+    } finally {
+        setSaving(false);
+    }
   };
 
   const placePlayer = (slotId: string, player: Player, from: string) => {
@@ -339,7 +349,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               ))}
             </div>
 
-            {/* CAMPO */}
             <div style={{ perspective: '1200px', marginBottom: 30, display:'flex', justifyContent:'center' }}>
               <div style={{ 
                 position:'relative', width:fieldWidth, height:fieldWidth * 1.4, 
@@ -374,7 +383,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
-            {/* BANCO */}
             <div style={{ background:'#111', borderRadius:16, padding:16, marginBottom:20, border:'1px solid #222' }}>
               <div style={{ fontSize:10, fontWeight:900, color:'#F5C400', letterSpacing:1, marginBottom:12 }}>BANCO DE RESERVAS</div>
               <div style={{ display:'flex', justifyContent:'space-between' }}>
@@ -392,7 +400,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
-            {/* LISTA DE JOGADORES PARA ESCOLHER */}
             <div style={{ display:'flex', gap:8, marginBottom:12, overflowX:'auto', paddingBottom:4 }}>
               {['TODOS','GOL','LAT','ZAG','MEI','ATA'].map(pos => (
                 <button key={pos} onClick={() => setFilterPos(pos)} style={{ flexShrink:0, padding:'6px 12px', borderRadius:20, border:'none', background: filterPos===pos?'#fff':'#111', color: filterPos===pos?'#000':'#555', fontSize:10, fontWeight:900 }}>{pos}</button>
@@ -403,7 +410,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                 <div key={p.id} onClick={() => setSelected({ player:p, from:'bench' })} style={{ 
                   background:'#111', borderRadius:12, padding:8, textAlign:'center', border: selected?.player.id===p.id?'2px solid #F5C400':'1px solid #1a1a1a'
                 }}>
-                  {/* Passa a prop isList como true aqui */}
                   <PlayerCard player={p} size={50} isList />
                 </div>
               ))}
@@ -411,14 +417,14 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </>
         )}
 
-        {/* ETAPAS POST-ESCALAÇÃO */}
         {step === 'capitao' && (
           <div style={{ textAlign:'center', padding:20 }}>
             <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Quem é o Capitão? 👑</div>
+            <p style={{ fontSize: 12, color: '#666' }}>O capitão pontua dobrado!</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:24 }}>
               {escalados.map(p => (
-                <div key={p.id} onClick={() => setCapitao(p)} style={{ padding:12, borderRadius:12, background: capitao?.id===p.id?'#F5C400':'#111', color: capitao?.id===p.id?'#000':'#fff' }}>
-                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} alt={p.short} />
+                <div key={p.id} onClick={() => setCapitao(p)} style={{ padding:12, borderRadius:12, background: capitao?.id===p.id?'#F5C400':'#111', color: capitao?.id===p.id?'#000':'#fff', cursor: 'pointer', transition: '0.2s' }}>
+                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8, border: capitao?.id===p.id ? '2px solid #000' : 'none' }} alt={p.short} />
                   <div style={{ fontSize:10, fontWeight:900 }}>{p.short}</div>
                 </div>
               ))}
@@ -429,10 +435,11 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         {step === 'heroi' && (
           <div style={{ textAlign:'center', padding:20 }}>
             <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Quem é o seu Herói? ⭐</div>
+            <p style={{ fontSize: 12, color: '#666' }}>Ganha bônus fixo se não negativar!</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:24 }}>
               {escalados.map(p => (
-                <div key={p.id} onClick={() => setHeroi(p)} style={{ padding:12, borderRadius:12, background: heroi?.id===p.id?'#F5C400':'#111', color: heroi?.id===p.id?'#000':'#fff' }}>
-                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} alt={p.short} />
+                <div key={p.id} onClick={() => setHeroi(p)} style={{ padding:12, borderRadius:12, background: heroi?.id===p.id?'#F5C400':'#111', color: heroi?.id===p.id?'#000':'#fff', cursor: 'pointer', transition: '0.2s' }}>
+                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8, border: heroi?.id===p.id ? '2px solid #000' : 'none' }} alt={p.short} />
                   <div style={{ fontSize:10, fontWeight:900 }}>{p.short}</div>
                 </div>
               ))}
@@ -446,12 +453,12 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
             <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:20 }}>
               <div>
                 <div style={{ fontSize:10, fontWeight:900, marginBottom:8 }}>NOVORIZONTINO</div>
-                <input type="number" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', background:'#111', border:'1px solid #333', color:'#fff', fontSize:24, borderRadius:12, fontWeight:900 }} />
+                <input type="number" min="0" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Math.max(0, Number(e.target.value))})} style={{ width:60, height:60, textAlign:'center', background:'#111', border:'1px solid #333', color:'#fff', fontSize:24, borderRadius:12, fontWeight:900 }} />
               </div>
               <div style={{ fontSize:20, fontWeight:900, color:'#333', marginTop:20 }}>X</div>
               <div>
                 <div style={{ fontSize:10, fontWeight:900, marginBottom:8 }}>VISITANTE</div>
-                <input type="number" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', background:'#111', border:'1px solid #333', color:'#fff', fontSize:24, borderRadius:12, fontWeight:900 }} />
+                <input type="number" min="0" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Math.max(0, Number(e.target.value))})} style={{ width:60, height:60, textAlign:'center', background:'#111', border:'1px solid #333', color:'#fff', fontSize:24, borderRadius:12, fontWeight:900 }} />
               </div>
             </div>
           </div>
@@ -460,16 +467,29 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         {step === 'confirmar' && (
           <div style={{ textAlign:'center', padding:20 }}>
             <div style={{ fontSize:24, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Tudo pronto?</div>
-            <div style={{ background:'#111', padding:16, borderRadius:16, textAlign:'left', border:'1px solid #222', marginTop: 24 }}>
-              <div style={{ fontWeight:900, marginBottom:12 }}>Capitão: {capitao?.name}</div>
-              <div style={{ fontWeight:900, marginBottom:12 }}>Herói: {heroi?.name}</div>
-              <div style={{ fontWeight:900 }}>Placar: {palpite.mandante} x {palpite.visitante}</div>
+            <p style={{ color: '#888', marginBottom: 24 }}>Confira os detalhes antes de salvar</p>
+            <div style={{ background:'#111', padding:20, borderRadius:16, textAlign:'left', border:'1px solid #222' }}>
+              <div style={{ marginBottom:16, display:'flex', justifyContent:'space-between' }}>
+                <span style={{ color: '#666', fontWeight: 700 }}>FORMAÇÃO:</span>
+                <span style={{ fontWeight: 900 }}>{formation}</span>
+              </div>
+              <div style={{ marginBottom:16, display:'flex', justifyContent:'space-between' }}>
+                <span style={{ color: '#666', fontWeight: 700 }}>CAPITÃO:</span>
+                <span style={{ fontWeight: 900, color: '#F5C400' }}>{capitao?.short}</span>
+              </div>
+              <div style={{ marginBottom:16, display:'flex', justifyContent:'space-between' }}>
+                <span style={{ color: '#666', fontWeight: 700 }}>HERÓI:</span>
+                <span style={{ fontWeight: 900, color: '#F5C400' }}>{heroi?.short}</span>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between' }}>
+                <span style={{ color: '#666', fontWeight: 700 }}>PLACAR:</span>
+                <span style={{ fontWeight: 900 }}>NOV {palpite.mandante} x {palpite.visitante} VIS</span>
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Botão de Ação */}
       {['escalar','capitao','heroi','palpite','confirmar'].includes(step) && (
         <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)', zIndex:100 }}>
           <button 
@@ -480,10 +500,29 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               else if (step==='palpite') setStep('confirmar');
               else if (step==='confirmar') handleSalvar();
             }}
-            disabled={!mercadoAberto || (step==='escalar' && filledCount<11)}
-            style={{ width:'100%', padding:18, borderRadius:16, border:'none', background: mercadoAberto?'#F5C400':'#1a1a1a', color:'#000', fontWeight:900, textTransform:'uppercase' }}>
+            disabled={!mercadoAberto || (step==='escalar' && filledCount<11) || (step==='capitao' && !capitao) || (step==='heroi' && !heroi) || saving}
+            style={{ 
+                width:'100%', padding:18, borderRadius:16, border:'none', 
+                background: (mercadoAberto && !saving) ? '#F5C400' : '#1a1a1a', 
+                color:'#000', fontWeight:900, textTransform:'uppercase',
+                opacity: (step==='escalar' && filledCount < 11) ? 0.5 : 1
+            }}>
             {!mercadoAberto ? 'MERCADO FECHADO' : step==='escalar' ? (filledCount<11 ? `FALTAM ${11-filledCount} JOGADORES` : 'ESCOLHER CAPITÃO →') : step==='confirmar' ? (saving ? 'SALVANDO...' : 'CONFIRMAR TUDO 🐯') : 'PRÓXIMO →'}
           </button>
+          
+          {step !== 'escalar' && (
+              <button 
+                onClick={() => {
+                    if(step === 'capitao') setStep('escalar');
+                    if(step === 'heroi') setStep('capitao');
+                    if(step === 'palpite') setStep('heroi');
+                    if(step === 'confirmar') setStep('palpite');
+                }}
+                style={{ width: '100%', background: 'transparent', border: 'none', color: '#666', marginTop: 12, fontWeight: 700, fontSize: 12 }}
+              >
+                ← VOLTAR ETAPA
+              </button>
+          )}
         </div>
       )}
     </main>
