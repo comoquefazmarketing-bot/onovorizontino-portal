@@ -43,6 +43,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="google-site-verification" content="njrcPMAtFlMQ0Hnc7xZbC5QF-3Ru_nvADZINPMTPTCE" />
 
+        {/* Google AdSense */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8594673486819604"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+
         {/* JSON-LD */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           '@context': 'https://schema.org', '@type': 'NewsMediaOrganization',
