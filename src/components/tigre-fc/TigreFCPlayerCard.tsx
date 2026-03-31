@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 type Player = {
   id: number;
   name: string;
@@ -34,28 +36,30 @@ export default function TigreFCPlayerCard({
     bg: 'rgba(0,0,0,0.6)'
   };
 
-  const getBorderColor = () => {
-    if (selected) return colors.selected;
-    if (isCapitao) return colors.capitao;
-    if (isHeroi) return colors.heroi;
-    if (isTopGoleador) return colors.goleador;
-    return colors.default;
-  };
+  const borderColor = selected 
+    ? colors.selected 
+    : isCapitao 
+      ? colors.capitao 
+      : isHeroi 
+        ? colors.heroi 
+        : isTopGoleador 
+          ? colors.goleador 
+          : colors.default;
 
   return (
     <>
       <style>{`
-        @keyframes capitao-pulse { 
-          0%, 100% { box-shadow: 0 0 12px rgba(255,215,0,0.4); border-color: ${colors.capitao}; } 
-          50% { box-shadow: 0 0 20px rgba(255,215,0,0.8); border-color: #fff; } 
+        @keyframes capitao-pulse {
+          0%, 100% { box-shadow: 0 0 12px rgba(255,215,0,0.4); border-color: ${colors.capitao}; }
+          50% { box-shadow: 0 0 20px rgba(255,215,0,0.8); border-color: #fff; }
         }
-        @keyframes heroi-pulse { 
-          0%, 100% { box-shadow: 0 0 12px rgba(96,165,250,0.4); border-color: ${colors.heroi}; } 
-          50% { box-shadow: 0 0 20px rgba(96,165,250,0.8); border-color: #fff; } 
+        @keyframes heroi-pulse {
+          0%, 100% { box-shadow: 0 0 12px rgba(96,165,250,0.4); border-color: ${colors.heroi}; }
+          50% { box-shadow: 0 0 20px rgba(96,165,250,0.8); border-color: #fff; }
         }
-        @keyframes card-shimmer { 
-          0% { transform: translateX(-150%) skewX(-25deg); } 
-          100% { transform: translateX(150%) skewX(-25deg); } 
+        @keyframes card-shimmer {
+          0% { transform: translateX(-150%) skewX(-25deg); }
+          100% { transform: translateX(150%) skewX(-25deg); }
         }
         .cap-glow { animation: capitao-pulse 2s ease-in-out infinite; }
         .heroi-glow { animation: heroi-pulse 2s ease-in-out infinite; }
@@ -73,8 +77,8 @@ export default function TigreFCPlayerCard({
           transition: 'transform 0.2s ease',
           transform: selected ? 'scale(1.05)' : 'scale(1)',
           width: size + 10
-        }}>
-
+        }}
+      >
         {/* Badge Status (C ou H) */}
         {(isCapitao || isHeroi) && (
           <div style={{
@@ -90,7 +94,7 @@ export default function TigreFCPlayerCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: badgeSize * 0.6,
+            fontSize: Math.max(8, badgeSize * 0.5),
             fontWeight: 900,
             color: isCapitao ? '#111' : '#fff',
             boxShadow: '0 2px 8px rgba(0,0,0,0.5)'
@@ -107,13 +111,13 @@ export default function TigreFCPlayerCard({
             height: size,
             borderRadius: '50%',
             overflow: 'hidden',
-            border: `${selected || isCapitao || isHeroi ? '3px' : '2px'} solid ${getBorderColor()}`,
+            border: `${selected || isCapitao || isHeroi ? '3px' : '2px'} solid ${borderColor}`,
             position: 'relative',
             background: colors.bg,
             transition: 'all 0.3s ease',
             flexShrink: 0
-          }}>
-          
+          }}
+        >
           <img 
             src={player.foto} 
             alt={player.name}
@@ -144,18 +148,18 @@ export default function TigreFCPlayerCard({
             position: 'absolute',
             bottom: 2,
             right: 2,
-            minWidth: 18,
-            height: 18,
+            minWidth: 16,
+            height: 16,
             padding: '0 4px',
             borderRadius: 10,
             background: '#000',
-            border: `1.5px solid ${getBorderColor()}`,
+            border: `1.5px solid ${borderColor}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 20
           }}>
-            <span style={{ color: getBorderColor(), fontSize: 9, fontWeight: 900 }}>
+            <span style={{ color: borderColor, fontSize: 8, fontWeight: 900 }}>
               {player.num}
             </span>
           </div>
