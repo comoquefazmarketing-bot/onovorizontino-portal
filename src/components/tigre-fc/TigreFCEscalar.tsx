@@ -1,8 +1,7 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import TigreFCLogin from '@/components/tigre-fc/TigreFCLogin';
-import TigreFCShare from '@/components/tigre-fc/TigreFCShare';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -86,10 +85,10 @@ type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
 
-// --- COMPONENTE DO CARD COM EFEITO SPRITE (GIF) ---
+// --- COMPONENTE DO CARD COM EFEITO DE REAÇÃO (HOVER) ---
 function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean }) {
   return (
-    <div style={{ width: size, textAlign: 'center', position: 'relative', filter: 'drop-shadow(0 5px 15px rgba(0,0,0,0.5))' }}>
+    <div className="player-card-container" style={{ width: size, textAlign: 'center', position: 'relative' }}>
       {isCapitao && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>👑</div>}
       {isHeroi && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>⭐</div>}
       
@@ -100,24 +99,25 @@ function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size
         overflow: 'hidden', 
         border: '2px solid #F5C400',
         background: '#111',
-        position: 'relative'
+        position: 'relative',
+        cursor: 'pointer'
       }}>
-        {/* Camada da imagem com animação Sprite */}
-        <div style={{
+        {/* Imagem do Jogador (Sprite) */}
+        <div className="sprite-image" style={{
           width: '100%',
-          height: '200%', // Comporta as duas imagens (cima/baixo)
+          height: '200%',
           backgroundImage: `url(${player.foto})`,
           backgroundSize: '100% 50%',
           backgroundRepeat: 'no-repeat',
-          animation: 'spriteAnim 0.7s steps(1) infinite',
           position: 'absolute',
           top: 0,
-          left: 0
+          left: 0,
+          transition: 'transform 0.1s steps(1)' 
         }} />
       </div>
 
       <div style={{ 
-        background: '#F5C400', color: '#000', fontSize: size * 0.18, fontWeight: 900, 
+        background: '#F5C400', color: '#000', fontSize: Math.max(size * 0.18, 10), fontWeight: 900, 
         borderRadius: 4, marginTop: -8, position: 'relative', zIndex: 2, 
         padding: '2px 4px', whiteSpace: 'nowrap', overflow: 'hidden', textTransform: 'uppercase'
       }}>
@@ -125,10 +125,13 @@ function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size
       </div>
 
       <style jsx>{`
-        @keyframes spriteAnim {
-          0% { transform: translateY(0); }
-          50% { transform: translateY(-50%); }
-          100% { transform: translateY(0); }
+        /* Ao passar o mouse, a imagem sobe para revelar a segunda metade (reação) */
+        .player-card-container:hover .sprite-image {
+          transform: translateY(-50%);
+        }
+        /* Efeito para Mobile (Toque) */
+        .player-card-container:active .sprite-image {
+          transform: translateY(-50%);
         }
       `}</style>
     </div>
@@ -272,7 +275,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
   return (
     <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom:120 }}>
-      {/* Header */}
+      {/* Header Fixo */}
       <div style={{ background:'#F5C400', padding:16, display:'flex', alignItems:'center', justifyContent:'space-between', position: 'sticky', top:0, zIndex: 100 }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <img src={LOGO} style={{ width:28 }} alt="Logo" />
@@ -290,7 +293,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               ))}
             </div>
 
-            {/* CAMPO 3D REALISTA */}
+            {/* CAMPO 3D */}
             <div style={{ perspective: '1200px', marginBottom: 30, display:'flex', justifyContent:'center' }}>
               <div style={{ 
                 position:'relative', width:fieldWidth, height:fieldWidth * 1.4, 
@@ -301,31 +304,19 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                 border: '3px solid #fff',
                 overflow: 'hidden'
               }}>
-                {/* SVG Marcações Oficiais */}
                 <svg viewBox="0 0 68 105" preserveAspectRatio="none" style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', opacity: 0.6 }}>
                   <g fill="none" stroke="#fff" strokeWidth="0.6">
                     <line x1="0" y1="52.5" x2="68" y2="52.5" />
                     <circle cx="34" cy="52.5" r="9.15" />
-                    <circle cx="34" cy="52.5" r="0.4" fill="#fff" />
-                    {/* Área Cima */}
                     <rect x="13.8" y="0" width="40.3" height="16.5" />
-                    <rect x="24.8" y="0" width="18.3" height="5.5" />
-                    <path d="M 28 16.5 A 9.15 9.15 0 0 0 40 16.5" />
-                    {/* Área Baixo */}
                     <rect x="13.8" y="88.5" width="40.3" height="16.5" />
-                    <rect x="24.8" y="99.5" width="18.3" height="5.5" />
-                    <path d="M 28 88.5 A 9.15 9.15 0 0 1 40 88.5" />
-                    {/* Escanteios */}
-                    <circle cx="0" cy="0" r="2" /> <circle cx="68" cy="0" r="2" />
-                    <circle cx="0" cy="105" r="2" /> <circle cx="68" cy="105" r="2" />
                   </g>
                 </svg>
 
                 {slots.map(slot => {
                   const p = lineup[slot.id];
-                  const zIdx = Math.round(slot.y);
                   return (
-                    <div key={slot.id} onClick={() => handleTapSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%) translateZ(40px)', cursor:'pointer', zIndex: zIdx }}>
+                    <div key={slot.id} onClick={() => handleTapSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%) translateZ(40px)', cursor:'pointer', zIndex: Math.round(slot.y) }}>
                       {p ? (
                         <PlayerCard player={p} size={fieldWidth * 0.17} isCapitao={capitao?.id===p.id} isHeroi={heroi?.id===p.id} />
                       ) : (
@@ -355,7 +346,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
-            {/* FILTROS E LISTA */}
+            {/* LISTA DE JOGADORES */}
             <div style={{ display:'flex', gap:8, marginBottom:12, overflowX:'auto', paddingBottom:4 }}>
               {['TODOS','GOL','LAT','ZAG','MEI','ATA'].map(pos => (
                 <button key={pos} onClick={() => setFilterPos(pos)} style={{ flexShrink:0, padding:'6px 12px', borderRadius:20, border:'none', background: filterPos===pos?'#fff':'#111', color: filterPos===pos?'#000':'#555', fontSize:10, fontWeight:900 }}>{pos}</button>
@@ -369,7 +360,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                   <div style={{ width:50, height:50, margin:'0 auto 8px', borderRadius:'50%', overflow:'hidden', border:'2px solid #222' }}>
                     <img src={p.foto} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                   </div>
-                  <div style={{ fontSize:10, fontWeight:900, color:'#fff', whiteSpace:'nowrap', overflow:'hidden' }}>{p.short}</div>
+                  <div style={{ fontSize:10, fontWeight:900, color:'#fff' }}>{p.short}</div>
                   <div style={{ fontSize:8, color:'#444', fontWeight:800 }}>{p.pos}</div>
                 </div>
               ))}
@@ -377,6 +368,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </>
         )}
 
+        {/* ETAPAS POST-ESCALAÇÃO */}
         {step === 'capitao' && (
           <div style={{ textAlign:'center', padding:20 }}>
             <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Quem é o Capitão? 👑</div>
@@ -434,7 +426,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         )}
       </div>
 
-      {/* Botão de Ação Fixo */}
+      {/* Botão de Ação Inferior */}
       {['escalar','capitao','heroi','palpite','confirmar'].includes(step) && (
         <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)', zIndex:100 }}>
           <button 
@@ -447,7 +439,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
             }}
             disabled={!mercadoAberto || (step==='escalar' && filledCount<11)}
             style={{ width:'100%', padding:18, borderRadius:16, border:'none', background: mercadoAberto?'#F5C400':'#1a1a1a', color:'#000', fontWeight:900, textTransform:'uppercase' }}>
-            {!mercadoAberto ? 'MERCADO FECHADO' : step==='escalar' ? (filledCount<11 ? `ESCALA MAIS ${11-filledCount}` : 'ESCOLHER CAPITÃO →') : step==='confirmar' ? (saving ? 'SALVANDO...' : 'CONFIRMAR ESCALAÇÃO 🐯') : 'PRÓXIMO →'}
+            {!mercadoAberto ? 'MERCADO FECHADO' : step==='escalar' ? (filledCount<11 ? `FALTAM ${11-filledCount} JOGADORES` : 'ESCOLHER CAPITÃO →') : step==='confirmar' ? (saving ? 'SALVANDO...' : 'CONFIRMAR TUDO 🐯') : 'PRÓXIMO →'}
           </button>
         </div>
       )}
