@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import Link from 'next/link' // Importação correta
+import Link from 'next/link'
 
 export default function NewsGrid() {
   const [posts, setPosts] = useState<any[]>([])
@@ -10,13 +10,12 @@ export default function NewsGrid() {
     fetch("/api/noticias")
       .then(res => res.json())
       .then(data => setPosts(data))
-      .catch(err => console.error("Erro ao buscar notícias:", err))
+      .catch(err => console.error("Erro ao buscar noticias:", err))
   }, [])
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {posts.map((post: any) => (
-        /* O Link deve envolver o conteúdo para ser clicável e não dar erro de build */
         <Link 
           key={post.id} 
           href={`/noticias/${post.slug || post.id}`} 
@@ -25,9 +24,9 @@ export default function NewsGrid() {
           <div className="relative aspect-video bg-zinc-900 rounded-lg overflow-hidden">
             <Image
               src={post.imagem_capa || "/jorjao.webp"}
-              alt={post.titulo || "Notícia do Tigre"}
+              alt={post.titulo || "Notícia Tigre"}
               fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              sizes="(max-width: 768px) 50vw, 33vw"
               className="object-cover group-hover:scale-105 transition duration-300"
             />
           </div>
