@@ -85,29 +85,33 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
 
   useEffect(() => {
     const load = async () => {
-      // Ajuste de tipagem para 'any[]' para evitar erro de compatibilidade entre Supabase e Promise nativa
-      const promises: any[] = [
-        supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single(),
-      ];
+      try {
+        const promises: any[] = [
+          supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single(),
+        ];
 
-      if (jogoId) {
-        promises.push(
-          supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).single(),
-          supabase.from('tigre_fc_palpites').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).single(),
-          supabase.from('tigre_fc_comentarios').select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
-            .eq('escalacao_usuario_id', targetUserId).eq('jogo_id', jogoId)
-            .order('criado_em', { ascending: true }),
-        );
-      }
+        if (jogoId) {
+          promises.push(
+            supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).single(),
+            supabase.from('tigre_fc_palpites').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).single(),
+            supabase.from('tigre_fc_comentarios').select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
+              .eq('escalacao_usuario_id', targetUserId).eq('jogo_id', jogoId)
+              .order('criado_em', { ascending: true }),
+          );
+        }
 
-      const results = await Promise.all(promises);
-      setPerfil(results[0]?.data || null);
-      if (jogoId) {
-        setEscalacao(results[1]?.data || null);
-        setPalpite(results[2]?.data || null);
-        setComentarios(results[3]?.data || []);
+        const results = await Promise.all(promises);
+        setPerfil(results[0]?.data || null);
+        if (jogoId) {
+          setEscalacao(results[1]?.data || null);
+          setPalpite(results[2]?.data || null);
+          setComentarios(results[3]?.data || []);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar perfil:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     load();
 
@@ -168,24 +172,24 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
             <>
               {/* Perfil */}
               <div style={{ padding:'20px 16px', display:'flex', alignItems:'center', gap:14, borderBottom:'1px solid #111' }}>
-                {perfil.avatar_url ? (
-                  <img src={perfil.avatar_url} style={{ width:56, height:56, borderRadius:'50%', border:`2px solid ${NIVEL_COLOR[perfil.nivel]}`, objectFit:'cover' }} alt="Avatar" />
+                {perfil?.avatar_url ? (
+                  <img src={perfil.avatar_url} style={{ width:56, height:56, borderRadius:'50%', border:`2px solid ${NIVEL_COLOR[perfil.nivel] || '#555'}`, objectFit:'cover' }} alt="Avatar" />
                 ) : (
                   <div style={{ width:56, height:56, borderRadius:'50%', background:'#F5C400', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:'#111' }}>
-                    {(perfil.apelido||perfil.nome||'?').charAt(0)}
+                    {(perfil?.apelido || perfil?.nome || '?').charAt(0)}
                   </div>
                 )}
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>
-                    {perfil.apelido || perfil.nome}
+                    {perfil?.apelido || perfil?.nome}
                     {isMe && <span style={{ fontSize:11, color:'#F5C400', marginLeft:8 }}>(você)</span>}
                   </div>
-                  <div style={{ fontSize:13, color: NIVEL_COLOR[perfil.nivel], fontWeight:700, marginTop:2 }}>
-                    {NIVEL_ICON[perfil.nivel]} {perfil.nivel}
+                  <div style={{ fontSize:13, color: NIVEL_COLOR[perfil?.nivel] || '#555', fontWeight:700, marginTop:2 }}>
+                    {NIVEL_ICON[perfil?.nivel] || ''} {perfil?.nivel || 'Novato'}
                   </div>
                 </div>
                 <div style={{ textAlign:'right' }}>
-                  <div style={{ fontSize:22, fontWeight:900, color:'#F5C400' }}>{perfil.pontos_total}</div>
+                  <div style={{ fontSize:22, fontWeight:900, color:'#F5C400' }}>{perfil?.pontos_total || 0}</div>
                   <div style={{ fontSize:9, color:'#555', textTransform:'uppercase' }}>pts totais</div>
                 </div>
               </div>
@@ -231,4 +235,62 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
               )}
 
               {/* Corneta */}
-              <div style={{ padding:'
+              <div style={{ padding:'0 16px 16px', borderTop:'1px solid #111', marginTop:8 }}>
+                <div style={{ fontSize:11, color:'#F5C400', fontWeight:900, textTransform:'uppercase', letterSpacing:2, margin:'16px 0 12px' }}>
+                  📣 Corneta ({comentarios?.length || 0})
+                </div>
+                {(!comentarios || comentarios.length === 0) ? (
+                  <div style={{ padding:'20px 0', textAlign:'center', color:'#333', fontSize:13 }}>
+                    {isMe ? 'Ninguém te cornetou ainda.' : 'Ninguém cornetou ainda. Seja o primeiro!'}
+                  </div>
+                ) : (
+                  <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:16 }}>
+                    {comentarios.map((c: any) => {
+                      const autor = c?.autor;
+                      const cor = NIVEL_COLOR[autor?.nivel] || '#555';
+                      return (
+                        <div key={c.id} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+                          {autor?.avatar_url ? (
+                            <img src={autor.avatar_url} style={{ width:32, height:32, borderRadius:'50%', border:`1.5px solid ${cor}`, objectFit:'cover', flexShrink:0 }} alt="Avatar" />
+                          ) : (
+                            <div style={{ width:32, height:32, borderRadius:'50%', background:cor, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:900, color:'#111', flexShrink:0 }}>
+                              {(autor?.apelido || autor?.nome || '?').charAt(0)}
+                            </div>
+                          )}
+                          <div style={{ flex:1, background:'#111', borderRadius:'0 10px 10px 10px', padding:'8px 12px' }}>
+                            <div style={{ fontSize:11, fontWeight:900, color: cor, marginBottom:4 }}>
+                              {NIVEL_ICON[autor?.nivel] || ''} {autor?.apelido || autor?.nome}
+                            </div>
+                            <div style={{ fontSize:13, color:'#ccc', lineHeight:1.5 }}>{c.texto}</div>
+                            <div style={{ fontSize:9, color:'#333', marginTop:4 }}>
+                              {c.criado_em ? new Date(c.criado_em).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : ''}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div ref={comentEndRef} />
+                  </div>
+                )}
+                {meuId && !isMe && jogoId ? (
+                  <div style={{ display:'flex', gap:8 }}>
+                    <input value={novoComent} onChange={e => setNovoComent(e.target.value.slice(0,280))}
+                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && enviarComentario()}
+                      placeholder="Cornete essa escalação... 📣"
+                      style={{ flex:1, padding:'10px 14px', background:'#111', border:'1px solid #222', borderRadius:10, color:'#fff', fontSize:14, outline:'none' }} />
+                    <button onClick={enviarComentario} disabled={!novoComent.trim() || enviando}
+                      style={{ padding:'10px 16px', background: novoComent.trim()?'#F5C400':'#1a1a1a', color: novoComent.trim()?'#111':'#444', border:'none', borderRadius:10, fontWeight:900, fontSize:13, cursor: novoComent.trim()?'pointer':'not-allowed' }}>
+                      {enviando ? '...' : '📣'}
+                    </button>
+                  </div>
+                ) : !meuId ? (
+                  <div style={{ textAlign:'center', fontSize:12, color:'#555' }}>Entre para cornetar!</div>
+                ) : null}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
