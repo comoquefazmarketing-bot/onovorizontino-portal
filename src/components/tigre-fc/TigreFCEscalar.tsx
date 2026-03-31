@@ -88,7 +88,7 @@ type Lineup = Record<string, Player | null>;
 type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted]         = useState(false);
   const [step, setStep]               = useState<Step>('login');
   const [usuario, setUsuario]         = useState<any>(null);
   const [apelido, setApelido]         = useState('');
@@ -103,7 +103,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [saving, setSaving]           = useState(false);
   const [fieldWidth, setFieldWidth]   = useState(340);
 
-  // 1. OBRIGATÓRIO: Garante que o cliente montou para evitar Hydration Error
+  // 1. Garantir que o cliente montou para evitar erro de hidratação
   useEffect(() => {
     setMounted(true);
     const update = () => setFieldWidth(Math.min(window.innerWidth - 32, 450));
@@ -113,22 +113,23 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   }, []);
 
   const isMercadoAberto = () => {
-    if (!jogo?.data_hora) return true;
+    if (!jogo?.data_inicio) return true;
     const agora = new Date();
-    // Normaliza para Safari e navegadores mobile
-    const dataISO = jogo.data_hora.replace(' ', 'T');
+    // Correção para Safari (Substitui espaço por T se necessário)
+    const dataISO = jogo.data_inicio.replace(' ', 'T');
     const limite = new Date(new Date(dataISO).getTime() - (MINUTOS_ANTECEDENCIA * 60 * 1000));
     return agora < limite;
   };
 
   useEffect(() => {
     fetch('/api/proximo-jogo').then(r => r.json()).then(({ jogos }) => {
-      const j = jogos?.find((j: any) => j.id === jogoId) || jogos?.[0];
+      const j = jogos?.find((j: any) => j.id === Number(jogoId)) || jogos?.[0];
       setJogo(j);
     });
   }, [jogoId]);
 
   useEffect(() => {
+    if (!mounted) return;
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) return;
       const { data: existing } = await supabase.from('tigre_fc_usuarios').select('*').eq('google_id', session.user.id).single();
@@ -141,20 +142,26 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         setStep('apelido');
       }
     });
-  }, [jogoId]);
+  }, [jogoId, mounted]);
 
   const recuperarEscalacao = async (uid: string) => {
-    const res = await fetch(`/api/tigre-fc/minha-escalacao?usuario_id=${uid}&jogo_id=${jogoId}`);
-    const { escalacao, palpite: pal } = await res.json();
-    if (escalacao) {
-      setFormation(escalacao.formacao || '4-3-3');
-      const l: Lineup = {};
-      Object.entries(escalacao.lineup || {}).forEach(([k, v]: any) => { if(v?.id) l[k] = PLAYERS.find(p => p.id === v.id) || null; });
-      setLineup(l);
-      if (escalacao.capitao_id) setCapitao(PLAYERS.find(p => p.id === escalacao.capitao_id) || null);
-      if (escalacao.heroi_id)   setHeroi(PLAYERS.find(p => p.id === escalacao.heroi_id) || null);
+    try {
+      const res = await fetch(`/api/tigre-fc/minha-escalacao?usuario_id=${uid}&jogo_id=${jogoId}`);
+      const { escalacao, palpite: pal } = await res.json();
+      if (escalacao) {
+        setFormation(escalacao.formacao || '4-3-3');
+        const l: Lineup = {};
+        Object.entries(escalacao.lineup || {}).forEach(([k, v]: any) => { 
+          if(v?.id) l[k] = PLAYERS.find(p => p.id === v.id) || null; 
+        });
+        setLineup(l);
+        if (escalacao.capitao_id) setCapitao(PLAYERS.find(p => p.id === escalacao.capitao_id) || null);
+        if (escalacao.heroi_id)   setHeroi(PLAYERS.find(p => p.id === escalacao.heroi_id) || null);
+      }
+      if (pal) setPalpite({ mandante: pal.gols_mandante, visitante: pal.gols_visitante });
+    } catch (e) {
+      console.error("Erro ao carregar dados", e);
     }
-    if (pal) setPalpite({ mandante: pal.gols_mandante, visitante: pal.gols_visitante });
   };
 
   const handleSalvarApelido = async () => {
@@ -166,9 +173,13 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const handleSalvar = async () => {
     if (!isMercadoAberto() || saving) return;
     setSaving(true);
-    await supabase.from('tigre_fc_escalacoes').upsert({ usuario_id: usuario.id, jogo_id: jogoId, formacao: formation, lineup, capitao_id: capitao?.id, heroi_id: heroi?.id }, { onConflict: 'usuario_id,jogo_id' });
-    await supabase.from('tigre_fc_palpites').upsert({ usuario_id: usuario.id, jogo_id: jogoId, gols_mandante: palpite.mandante, gols_visitante: palpite.visitante }, { onConflict: 'usuario_id,jogo_id' });
-    setStep('salvo');
+    try {
+      await supabase.from('tigre_fc_escalacoes').upsert({ usuario_id: usuario.id, jogo_id: jogoId, formacao: formation, lineup, capitao_id: capitao?.id, heroi_id: heroi?.id }, { onConflict: 'usuario_id,jogo_id' });
+      await supabase.from('tigre_fc_palpites').upsert({ usuario_id: usuario.id, jogo_id: jogoId, gols_mandante: palpite.mandante, gols_visitante: palpite.visitante }, { onConflict: 'usuario_id,jogo_id' });
+      setStep('salvo');
+    } catch (err) {
+      alert("Erro ao salvar. Tente novamente.");
+    }
     setSaving(false);
   };
 
@@ -192,16 +203,19 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     if (resSlot) setFilterPos(resSlot.pos);
 
     if (selected) placePlayer(slotId, selected.player, selected.from);
-    else { const p = lineup[slotId]; if (p) setSelected({ player: p, from: slotId }); }
+    else { 
+      const p = lineup[slotId]; 
+      if (p) setSelected({ player: p, from: slotId }); 
+    }
   };
 
-  const slots = FORMATIONS[formation];
+  if (!mounted) return <div style={{ background: '#080808', minHeight: '100vh' }} />;
+
+  const slots = FORMATIONS[formation] || FORMATIONS['4-3-3'];
   const usedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
   const filledCount = Object.keys(lineup).filter(k => !k.startsWith('res_') && lineup[k]).length;
   const escalados = Object.values(lineup).filter(Boolean) as Player[];
-
-  // 2. Trava de segurança para não quebrar a hidratação
-  if (!mounted) return <div style={{ background: '#080808', minHeight: '100vh' }} />;
+  const mercadoAberto = isMercadoAberto();
 
   if (step === 'login') return <TigreFCLogin jogoId={jogoId} onSuccess={(u) => { setUsuario(u); setStep(u.apelido ? 'escalar' : 'apelido'); if(u.apelido) recuperarEscalacao(u.id); }} />;
 
@@ -223,18 +237,17 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   );
 
   return (
-    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom:120, position:'relative' }}>
+    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom:120 }}>
       {/* Header */}
       <div style={{ background:'#F5C400', padding:16, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          <img src={LOGO} style={{ width:28 }} />
+          <img src={LOGO} style={{ width:28 }} alt="Logo" />
           <span style={{ fontWeight:900, color:'#1a1a1a' }}>TIGRE FC</span>
         </div>
-        {!isMercadoAberto() && <span style={{ fontSize:10, fontWeight:900, background:'#000', color:'#fff', padding:'4px 8px', borderRadius:4 }}>🔒 FECHADO</span>}
+        {!mercadoAberto && <span style={{ fontSize:10, fontWeight:900, background:'#000', color:'#fff', padding:'4px 8px', borderRadius:4 }}>🔒 FECHADO</span>}
       </div>
 
       <div style={{ maxWidth:480, margin:'0 auto', padding:16 }}>
-        
         {step === 'escalar' && (
           <>
             <div style={{ display:'flex', gap:6, marginBottom:20, overflowX:'auto' }}>
@@ -261,7 +274,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                 {slots.map(slot => {
                   const p = lineup[slot.id];
                   return (
-                    <div key={slot.id} onClick={() => handleTapSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%) translateZ(20px)', cursor:'pointer', zIndex:10 }}>
+                    <div key={slot.id} onClick={() => handleTapSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%) translateZ(25px)', cursor:'pointer', zIndex:10 }}>
                       {p ? (
                         <TigreFCPlayerCard player={p} size={fieldWidth * 0.14} isCapitao={capitao?.id===p.id} isHeroi={heroi?.id===p.id} />
                       ) : (
@@ -293,7 +306,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
-            {/* LISTA DE JOGADORES */}
+            {/* FILTROS E LISTA */}
             <div style={{ display:'flex', gap:8, marginBottom:12, overflowX:'auto', paddingBottom:4 }}>
               {['TODOS','GOL','LAT','ZAG','MEI','ATA'].map(pos => (
                 <button key={pos} onClick={() => setFilterPos(pos)} style={{ flexShrink:0, padding:'6px 12px', borderRadius:20, border:'none', background: filterPos===pos?'#fff':'#111', color: filterPos===pos?'#000':'#555', fontSize:10, fontWeight:900 }}>{pos}</button>
@@ -303,10 +316,10 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               {PLAYERS.filter(p => (filterPos==='TODOS' || p.pos===filterPos) && !usedIds.includes(p.id)).map(p => (
                 <div key={p.id} onClick={() => setSelected({ player:p, from:'bench' })} style={{ 
                   background:'#111', borderRadius:12, padding:8, textAlign:'center', border: selected?.player.id===p.id?'2px solid #F5C400':'1px solid #1a1a1a',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)', transition:'transform 0.2s'
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
                 }}>
                   <div style={{ width:50, height:50, margin:'0 auto 8px', borderRadius:'50%', overflow:'hidden', border:'2px solid #222' }}>
-                    <img src={p.foto} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    <img src={p.foto} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt={p.name} />
                   </div>
                   <div style={{ fontSize:10, fontWeight:900, color:'#fff', whiteSpace:'nowrap', overflow:'hidden' }}>{p.short}</div>
                   <div style={{ fontSize:8, color:'#444', fontWeight:800 }}>{p.pos}</div>
@@ -316,6 +329,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </>
         )}
 
+        {/* Passo do Capitão */}
         {step === 'capitao' && (
           <div style={{ textAlign:'center', padding:20 }}>
             <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Quem é o Capitão? 👑</div>
@@ -323,28 +337,79 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
               {escalados.map(p => (
                 <div key={p.id} onClick={() => setCapitao(p)} style={{ padding:12, borderRadius:12, background: capitao?.id===p.id?'#F5C400':'#111', color: capitao?.id===p.id?'#000':'#fff' }}>
-                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} />
+                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} alt={p.short} />
                   <div style={{ fontSize:10, fontWeight:900 }}>{p.short}</div>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {/* Passo do Herói */}
+        {step === 'heroi' && (
+          <div style={{ textAlign:'center', padding:20 }}>
+            <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Quem é o seu Herói? ⚡</div>
+            <div style={{ fontSize:12, color:'#555', marginBottom:24 }}>O Herói ganha bônus por scout decisivo.</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+              {escalados.map(p => (
+                <div key={p.id} onClick={() => setHeroi(p)} style={{ padding:12, borderRadius:12, background: heroi?.id===p.id?'#F5C400':'#111', color: heroi?.id===p.id?'#000':'#fff' }}>
+                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} alt={p.short} />
+                  <div style={{ fontSize:10, fontWeight:900 }}>{p.short}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Passo do Palpite */}
+        {step === 'palpite' && (
+          <div style={{ textAlign:'center', padding:20 }}>
+            <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:32 }}>Qual o placar do jogo? 🐯</div>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:20 }}>
+              <div style={{ textAlign:'center' }}>
+                <div style={{ fontSize:10, fontWeight:900, marginBottom:8 }}>NOVORIZONTINO</div>
+                <input type="number" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', background:'#111', border:'1px solid #333', color:'#fff', fontSize:24, borderRadius:12, fontWeight:900 }} />
+              </div>
+              <div style={{ fontSize:20, fontWeight:900, color:'#333', marginTop:20 }}>X</div>
+              <div style={{ textAlign:'center' }}>
+                <div style={{ fontSize:10, fontWeight:900, marginBottom:8 }}>VISITANTE</div>
+                <input type="number" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', background:'#111', border:'1px solid #333', color:'#fff', fontSize:24, borderRadius:12, fontWeight:900 }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Passo de Confirmação Final */}
+        {step === 'confirmar' && (
+          <div style={{ textAlign:'center', padding:20 }}>
+            <div style={{ fontSize:24, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Tudo pronto?</div>
+            <div style={{ fontSize:14, color:'#555', marginBottom:32 }}>Confira sua escalação antes de entrar em campo.</div>
+            <div style={{ background:'#111', padding:16, borderRadius:16, textAlign:'left', border:'1px solid #222' }}>
+              <div style={{ fontSize:10, color:'#444', fontWeight:900, marginBottom:4 }}>CAPITÃO</div>
+              <div style={{ fontWeight:900, marginBottom:12 }}>{capitao?.name}</div>
+              <div style={{ fontSize:10, color:'#444', fontWeight:900, marginBottom:4 }}>HERÓI</div>
+              <div style={{ fontWeight:900, marginBottom:12 }}>{heroi?.name}</div>
+              <div style={{ fontSize:10, color:'#444', fontWeight:900, marginBottom:4 }}>PALPITE</div>
+              <div style={{ fontWeight:900 }}>Novorizontino {palpite.mandante} x {palpite.visitante} Visitante</div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Botão de Próximo Fixo */}
+      {/* Botão de Ação Fixo */}
       {['escalar','capitao','heroi','palpite','confirmar'].includes(step) && (
         <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)', zIndex:100 }}>
           <button 
             onClick={() => {
               if (step==='escalar' && filledCount===11) setStep('capitao');
               else if (step==='capitao' && capitao) setStep('heroi');
+              else if (step==='heroi' && heroi) setStep('palpite');
+              else if (step==='palpite') setStep('confirmar');
               else if (step==='confirmar') handleSalvar();
-              else setStep('confirmar');
             }}
-            disabled={!isMercadoAberto()}
-            style={{ width:'100%', padding:18, borderRadius:16, border:'none', background: isMercadoAberto()?'#F5C400':'#1a1a1a', color:'#000', fontWeight:900, textTransform:'uppercase' }}>
-            {!isMercadoAberto() ? 'MERCADO FECHADO' : step==='escalar' ? (filledCount<11 ? `ESCALA MAIS ${11-filledCount}` : 'ESCOLHER CAPITÃO →') : 'PRÓXIMO →'}
+            disabled={!mercadoAberto || (step==='escalar' && filledCount<11)}
+            style={{ width:'100%', padding:18, borderRadius:16, border:'none', background: mercadoAberto?'#F5C400':'#1a1a1a', color:'#000', fontWeight:900, textTransform:'uppercase' }}>
+            {!mercadoAberto ? 'MERCADO FECHADO' : step==='escalar' ? (filledCount<11 ? `ESCALA MAIS ${11-filledCount}` : 'ESCOLHER CAPITÃO →') : step==='confirmar' ? (saving ? 'SALVANDO...' : 'CONFIRMAR ESCALAÇÃO 🐯') : 'PRÓXIMO →'}
           </button>
         </div>
       )}
