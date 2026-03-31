@@ -25,12 +25,20 @@ export default function TigreFCPerfilXP({ nivel, pontos, apelido, avatarUrl, pos
     : Math.min(100, Math.round(((pontos - cfg.ptsMin) / (cfg.ptsMeta - cfg.ptsMin)) * 100));
 
   useEffect(() => {
-    if (leveledup && !confettiRef.current) {
+    // Só dispara se estiver no navegador e houver level up
+    if (typeof window !== 'undefined' && leveledup && !confettiRef.current) {
       confettiRef.current = true;
-      import('canvas-confetti').then(({ default: confetti }) => {
-        confetti({ particleCount: 120, spread: 90, colors: ['#F5C400', '#ffffff', '#1a1a1a'], origin: { y: 0.6 } });
-        setTimeout(() => confetti({ particleCount: 60, spread: 60, colors: ['#F5C400', '#fff'], origin: { y: 0.5 } }), 500);
-      }).catch(() => {});
+      
+      // Import dinâmico protegido
+      import('canvas-confetti')
+        .then((module) => {
+          const confetti = module.default;
+          if (confetti) {
+            confetti({ particleCount: 120, spread: 90, colors: ['#F5C400', '#ffffff', '#1a1a1a'], origin: { y: 0.6 } });
+            setTimeout(() => confetti({ particleCount: 60, spread: 60, colors: ['#F5C400', '#fff'], origin: { y: 0.5 } }), 500);
+          }
+        })
+        .catch(err => console.warn("Confetti não carregado:", err));
     }
   }, [leveledup]);
 
@@ -40,7 +48,6 @@ export default function TigreFCPerfilXP({ nivel, pontos, apelido, avatarUrl, pos
         @keyframes lenda-fire { 0%,100%{box-shadow:0 0 20px #F5C400,0 0 40px #F5C400} 50%{box-shadow:0 0 30px #F5C400,0 0 60px rgba(245,196,0,.6)} }
         @keyframes garra-glow { 0%,100%{box-shadow:0 0 8px #F5C400} 50%{box-shadow:0 0 16px #F5C400} }
         @keyframes bar-fill { from{width:0} to{width:${pct}%} }
-        @keyframes xp-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
         .nivel-lenda { animation: lenda-fire 2s ease-in-out infinite; }
         .nivel-garra { animation: garra-glow 2s ease-in-out infinite; }
         .bar-animated { animation: bar-fill 1.2s cubic-bezier(.16,1,.3,1) forwards; }
@@ -53,15 +60,13 @@ export default function TigreFCPerfilXP({ nivel, pontos, apelido, avatarUrl, pos
       }}
         className={nivel === 'Lenda' ? 'nivel-lenda' : nivel === 'Garra' ? 'nivel-garra' : ''}>
 
-        {/* Brilho topo para Lenda */}
         {nivel === 'Lenda' && (
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,transparent,#F5C400,transparent)' }} />
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-          {/* Avatar */}
           {avatarUrl ? (
-            <img src={avatarUrl} style={{ width: 52, height: 52, borderRadius: '50%', border: `2px solid ${cfg.color}`, objectFit: 'cover', flexShrink: 0 }} />
+            <img src={avatarUrl} alt={apelido} style={{ width: 52, height: 52, borderRadius: '50%', border: `2px solid ${cfg.color}`, objectFit: 'cover', flexShrink: 0 }} />
           ) : (
             <div style={{ width: 52, height: 52, borderRadius: '50%', background: cfg.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: '#111', flexShrink: 0 }}>
               {(apelido || '?').charAt(0)}
@@ -87,7 +92,6 @@ export default function TigreFCPerfilXP({ nivel, pontos, apelido, avatarUrl, pos
           </div>
         </div>
 
-        {/* Barra de XP */}
         {nivel !== 'Lenda' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -103,12 +107,8 @@ export default function TigreFCPerfilXP({ nivel, pontos, apelido, avatarUrl, pos
                   height: '100%', background: cfg.color, borderRadius: 3,
                   width: `${pct}%`, position: 'relative',
                 }}>
-                {/* Brilho na ponta da barra */}
-                <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 8, background: 'rgba(255,255,255,.5)', borderRadius: 3 }} />
+                <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 8, background: 'rgba(255,255,255,.3)', borderRadius: 3 }} />
               </div>
-            </div>
-            <div style={{ fontSize: 10, color: '#333', marginTop: 4, textAlign: 'right' }}>
-              {pontos} / {cfg.ptsMeta} pts · {pct}%
             </div>
           </div>
         )}
