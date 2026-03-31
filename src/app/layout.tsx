@@ -65,13 +65,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           address: { '@type': 'PostalAddress', addressLocality: 'Novo Horizonte', addressRegion: 'SP', addressCountry: 'BR' },
         })}} />
       </head>
-      <body className="bg-black antialiased">
+      <body className="bg-black antialiased flex flex-col min-h-screen">
         <Ticker />
-        {children}
+        
+        {/* Main wrapper para empurrar o footer para baixo */}
+        <main className="flex-grow">
+          {children}
+        </main>
+
         <Analytics />
         <LgpdBanner />
         <TigreFCButton />
         <ModoDesespero />
+
+        {/* --- RODAPÉ DE COMPLIANCE (ESSENCIAL PARA ADSENSE E REGULAÇÃO) --- */}
+        <footer className="bg-zinc-950 text-zinc-500 py-10 px-6 border-t border-zinc-900 mt-10">
+          <div className="max-w-5xl mx-auto text-center space-y-4">
+            <h3 className="text-zinc-300 font-bold tracking-widest text-xs uppercase">Informativo Tigre FC</h3>
+            <p className="text-[11px] leading-relaxed max-w-3xl mx-auto">
+              O **Tigre FC** é um Fantasy Game de escalação com fins exclusivamente recreativos e informativos, focado no Grêmio Novorizontino. 
+              <span className="text-yellow-600 block mt-1 font-medium"> 
+                NÃO somos uma plataforma de apostas (BET). Não há transações financeiras, depósitos ou premiações em dinheiro. 
+              </span>
+              Este portal é um veículo de notícias independente. O jogo baseia-se puramente em habilidades de análise tática e desempenho esportivo real dos atletas.
+            </p>
+            <div className="pt-4 border-t border-zinc-900 text-[10px]">
+              <p>© 2026 Portal O Novorizontino | Idealizado por <strong>Felipe Makarios</strong></p>
+            </div>
+          </div>
+        </footer>
 
         {/* Google Analytics 4 */}
         <Script
