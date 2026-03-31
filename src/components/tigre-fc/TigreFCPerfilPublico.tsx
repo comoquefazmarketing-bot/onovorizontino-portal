@@ -10,45 +10,45 @@ const supabase = createClient(
 
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const PLAYERS: Record<number, any> = {
-  1:  { id:1,  name:'César Augusto',   short:'César',      num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
+  1:  { id:1,  name:'César Augusto',  short:'César',     num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
   2:  { id:2,  name:'Jordi',            short:'Jordi',      num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
   3:  { id:3,  name:'João Scapin',      short:'Scapin',     num:12, pos:'GOL', foto:BASE+'JOAO-SCAPIN.jpg.webp' },
   4:  { id:4,  name:'Lucas Ribeiro',    short:'Lucas',      num:1,  pos:'GOL', foto:BASE+'LUCAS-RIBEIRO.jpg.webp' },
-  5:  { id:5,  name:'Lora',             short:'Lora',       num:2,  pos:'LAT', foto:BASE+'LORA.jpg.webp' },
+  5:  { id:5,  name:'Lora',             short:'Lora',        num:2,  pos:'LAT', foto:BASE+'LORA.jpg.webp' },
   6:  { id:6,  name:'Castrillón',       short:'Castrillón', num:6,  pos:'LAT', foto:BASE+'CASTRILLON.jpg.webp' },
   7:  { id:7,  name:'Arthur Barbosa',   short:'A.Barbosa',  num:22, pos:'LAT', foto:BASE+'ARTHUR-BARBOSA.jpg.webp' },
-  8:  { id:8,  name:'Mayk',             short:'Mayk',       num:26, pos:'LAT', foto:BASE+'MAYK.jpg.webp' },
-  9:  { id:9,  name:'Maykon Jesus',     short:'Maykon',     num:27, pos:'LAT', foto:BASE+'MAYKON-JESUS.jpg.webp' },
-  10: { id:10, name:'Dantas',           short:'Dantas',     num:3,  pos:'ZAG', foto:BASE+'DANTAAS.jpg.webp' },
+  8:  { id:8,  name:'Mayk',             short:'Mayk',        num:26, pos:'LAT', foto:BASE+'MAYK.jpg.webp' },
+  9:  { id:9,  name:'Maykon Jesus',     short:'Maykon',      num:27, pos:'LAT', foto:BASE+'MAYKON-JESUS.jpg.webp' },
+  10: { id:10, name:'Dantas',           short:'Dantas',      num:3,  pos:'ZAG', foto:BASE+'DANTAAS.jpg.webp' },
   11: { id:11, name:'Eduardo Brock',    short:'E.Brock',    num:5,  pos:'ZAG', foto:BASE+'EDUARDO-BROCK.jpg.webp' },
   12: { id:12, name:'Patrick',          short:'Patrick',    num:4,  pos:'ZAG', foto:BASE+'PATRICK.jpg.webp' },
   13: { id:13, name:'Gabriel Bahia',    short:'G.Bahia',    num:14, pos:'ZAG', foto:BASE+'GABRIEL-BAHIA.jpg.webp' },
   14: { id:14, name:'Carlinhos',        short:'Carlinhos',  num:25, pos:'ZAG', foto:BASE+'CARLINHOS.jpg.webp' },
-  15: { id:15, name:'Alemão',           short:'Alemão',     num:28, pos:'ZAG', foto:BASE+'ALEMAO.jpg.webp' },
-  16: { id:16, name:'Renato Palm',      short:'R.Palm',     num:24, pos:'ZAG', foto:BASE+'RENATO-PALM.jpg.webp' },
+  15: { id:15, name:'Alemão',           short:'Alemão',      num:28, pos:'ZAG', foto:BASE+'ALEMAO.jpg.webp' },
+  16: { id:16, name:'Renato Palm',      short:'R.Palm',      num:24, pos:'ZAG', foto:BASE+'RENATO-PALM.jpg.webp' },
   17: { id:17, name:'Alvariño',         short:'Alvariño',   num:35, pos:'ZAG', foto:BASE+'IVAN-ALVARINO.jpg.webp' },
   18: { id:18, name:'Bruno Santana',    short:'B.Santana',  num:33, pos:'ZAG', foto:BASE+'BRUNO-SANTANA.jpg.webp' },
   19: { id:19, name:'Luís Oyama',       short:'Oyama',      num:8,  pos:'MEI', foto:BASE+'LUIS-OYAMA.jpg.webp' },
   20: { id:20, name:'Léo Naldi',        short:'L.Naldi',    num:7,  pos:'MEI', foto:BASE+'LEO-NALDI.jpg.webp' },
-  21: { id:21, name:'Rômulo',           short:'Rômulo',     num:10, pos:'MEI', foto:BASE+'ROMULO.jpg.webp' },
+  21: { id:21, name:'Rômulo',           short:'Rômulo',      num:10, pos:'MEI', foto:BASE+'ROMULO.jpg.webp' },
   22: { id:22, name:'Matheus Bianqui',  short:'Bianqui',    num:11, pos:'MEI', foto:BASE+'MATHEUS-BIANQUI.jpg.webp' },
   23: { id:23, name:'Juninho',          short:'Juninho',    num:20, pos:'MEI', foto:BASE+'JUNINHO.jpg.webp' },
   24: { id:24, name:'Tavinho',          short:'Tavinho',    num:17, pos:'MEI', foto:BASE+'TAVINHO.jpg.webp' },
-  25: { id:25, name:'Diego Galo',       short:'D.Galo',     num:29, pos:'MEI', foto:BASE+'DIEGO-GALO.jpg.webp' },
-  26: { id:26, name:'Marlon',           short:'Marlon',     num:30, pos:'MEI', foto:BASE+'MARLON.jpg.webp' },
-  27: { id:27, name:'Hector Bianchi',   short:'Hector',     num:16, pos:'MEI', foto:BASE+'HECTOR-BIACHI.jpg.webp' },
+  25: { id:25, name:'Diego Galo',       short:'D.Galo',      num:29, pos:'MEI', foto:BASE+'DIEGO-GALO.jpg.webp' },
+  26: { id:26, name:'Marlon',           short:'Marlon',      num:30, pos:'MEI', foto:BASE+'MARLON.jpg.webp' },
+  27: { id:27, name:'Hector Bianchi',   short:'Hector',      num:16, pos:'MEI', foto:BASE+'HECTOR-BIACHI.jpg.webp' },
   28: { id:28, name:'Nogueira',         short:'Nogueira',   num:36, pos:'MEI', foto:BASE+'NOGUEIRA.jpg.webp' },
   29: { id:29, name:'Luiz Gabriel',     short:'L.Gabriel',  num:37, pos:'MEI', foto:BASE+'LUIZ-GABRIEL.jpg.webp' },
-  30: { id:30, name:'Jhones Kauê',      short:'J.Kauê',     num:50, pos:'MEI', foto:BASE+'JHONES-KAUE.jpg.webp' },
-  31: { id:31, name:'Robson',           short:'Robson',     num:9,  pos:'ATA', foto:BASE+'ROBSON.jpg.webp' },
+  30: { id:30, name:'Jhones Kauê',      short:'J.Kauê',      num:50, pos:'MEI', foto:BASE+'JHONES-KAUE.jpg.webp' },
+  31: { id:31, name:'Robson',           short:'Robson',      num:9,  pos:'ATA', foto:BASE+'ROBSON.jpg.webp' },
   32: { id:32, name:'Vinícius Paiva',   short:'V.Paiva',    num:13, pos:'ATA', foto:BASE+'VINICIUS-PAIVA.jpg.webp' },
-  33: { id:33, name:'Hélio Borges',     short:'H.Borges',   num:18, pos:'ATA', foto:BASE+'HELIO-BORGES.jpg.webp' },
+  33: { id:33, name:'Hélio Borges',     short:'H.Borges',    num:18, pos:'ATA', foto:BASE+'HELIO-BORGES.jpg.webp' },
   34: { id:34, name:'Jardiel',          short:'Jardiel',    num:19, pos:'ATA', foto:BASE+'JARDIEL.jpg.webp' },
-  35: { id:35, name:'Nicolas Careca',   short:'N.Careca',   num:21, pos:'ATA', foto:BASE+'NICOLAS-CARECA.jpg.webp' },
+  35: { id:35, name:'Nicolas Careca',   short:'N.Careca',    num:21, pos:'ATA', foto:BASE+'NICOLAS-CARECA.jpg.webp' },
   36: { id:36, name:'Titi Ortiz',       short:'T.Ortiz',    num:15, pos:'ATA', foto:BASE+'TITI-ORTIZ.jpg.webp' },
   37: { id:37, name:'Diego Mathias',    short:'D.Mathias',  num:41, pos:'ATA', foto:BASE+'DIEGO-MATHIAS.jpg.webp' },
-  38: { id:38, name:'Carlão',           short:'Carlão',     num:90, pos:'ATA', foto:BASE+'CARLAO.jpg.webp' },
-  39: { id:39, name:'Ronald Barcellos', short:'Ronald',     num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
+  38: { id:38, name:'Carlão',           short:'Carlão',      num:90, pos:'ATA', foto:BASE+'CARLAO.jpg.webp' },
+  39: { id:39, name:'Ronald Barcellos', short:'Ronald',      num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 };
 
 const SLOTS: Record<string, { id:string; x:number; y:number }[]> = {
@@ -63,7 +63,7 @@ const NIVEL_COLOR: Record<string,string> = { Novato:'#6b7280', Fiel:'#F5C400', G
 
 type Props = {
   targetUserId: string;
-  jogoId: number | null;
+  jogoId: number | null; 
   meuId?: string | null;
   onClose: () => void;
 };
@@ -85,7 +85,8 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
 
   useEffect(() => {
     const load = async () => {
-      const promises: Promise<any>[] = [
+      // Ajuste de tipagem para 'any[]' para evitar erro de compatibilidade entre Supabase e Promise nativa
+      const promises: any[] = [
         supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single(),
       ];
 
@@ -129,32 +130,18 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
   const enviarComentario = async () => {
     if (!novoComent.trim() || !meuId || !jogoId || enviando) return;
     setEnviando(true);
-    try {
-      // 1. Insere o comentário
-      await supabase.from('tigre_fc_comentarios').insert({
-        escalacao_usuario_id: targetUserId, 
-        jogo_id: jogoId,
-        autor_id: meuId, 
-        texto: novoComent.trim(),
-      });
-
-      // 2. Insere a notificação (sem .catch para evitar erro de build, o erro morre no try/catch abaixo)
-      if (!isMe) {
-        await supabase.from('tigre_fc_notificacoes').insert({
-          usuario_id: targetUserId, 
-          tipo: 'corneta',
-          de_usuario_id: meuId, 
-          jogo_id: jogoId,
-          mensagem: 'cornetou sua escalação!',
-        });
-      }
-      
-      setNovoComent('');
-    } catch (error) {
-      console.error("Erro ao enviar comentário:", error);
-    } finally {
-      setEnviando(false);
+    await supabase.from('tigre_fc_comentarios').insert({
+      escalacao_usuario_id: targetUserId, jogo_id: jogoId,
+      autor_id: meuId, texto: novoComent.trim(),
+    });
+    if (!isMe) {
+      await supabase.from('tigre_fc_notificacoes').insert({
+        usuario_id: targetUserId, tipo: 'corneta',
+        de_usuario_id: meuId, jogo_id: jogoId,
+        mensagem: 'cornetou sua escalação!',
+      }).catch(() => {});
     }
+    setNovoComent(''); setEnviando(false);
   };
 
   const slots = SLOTS[escalacao?.formacao || '4-3-3'] || SLOTS['4-3-3'];
@@ -179,9 +166,10 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
             <div style={{ padding:40, textAlign:'center', color:'#555' }}>Perfil não encontrado</div>
           ) : (
             <>
+              {/* Perfil */}
               <div style={{ padding:'20px 16px', display:'flex', alignItems:'center', gap:14, borderBottom:'1px solid #111' }}>
                 {perfil.avatar_url ? (
-                  <img src={perfil.avatar_url} style={{ width:56, height:56, borderRadius:'50%', border:`2px solid ${NIVEL_COLOR[perfil.nivel]}`, objectFit:'cover' }} />
+                  <img src={perfil.avatar_url} style={{ width:56, height:56, borderRadius:'50%', border:`2px solid ${NIVEL_COLOR[perfil.nivel]}`, objectFit:'cover' }} alt="Avatar" />
                 ) : (
                   <div style={{ width:56, height:56, borderRadius:'50%', background:'#F5C400', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:'#111' }}>
                     {(perfil.apelido||perfil.nome||'?').charAt(0)}
@@ -202,6 +190,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               </div>
 
+              {/* Palpite */}
               {palpite && (
                 <div style={{ margin:'16px 16px 0', padding:'12px 16px', background:'#111', border:'1px solid #1a1a1a', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                   <div style={{ fontSize:11, color:'#555', textTransform:'uppercase', letterSpacing:1 }}>Palpite</div>
@@ -211,6 +200,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               )}
 
+              {/* Campo */}
               {escalacao ? (
                 <div style={{ padding:'16px 0', display:'flex', justifyContent:'center' }}>
                   <div style={{ position:'relative', width:CAMPO_W, height:CAMPO_H, borderRadius:8, overflow:'hidden', background:'#2a7a2a' }}>
@@ -240,63 +230,5 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               )}
 
-              <div style={{ padding:'0 16px 16px', borderTop:'1px solid #111', marginTop:8 }}>
-                <div style={{ fontSize:11, color:'#F5C400', fontWeight:900, textTransform:'uppercase', letterSpacing:2, margin:'16px 0 12px' }}>
-                  📣 Corneta ({comentarios.length})
-                </div>
-                {comentarios.length === 0 ? (
-                  <div style={{ padding:'20px 0', textAlign:'center', color:'#333', fontSize:13 }}>
-                    {isMe ? 'Ninguém te cornetou ainda.' : 'Ninguém cornetou ainda. Seja o primeiro!'}
-                  </div>
-                ) : (
-                  <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:16 }}>
-                    {comentarios.map((c: any) => {
-                      const autor = c.autor;
-                      const cor = NIVEL_COLOR[autor?.nivel] || '#555';
-                      return (
-                        <div key={c.id} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-                          {autor?.avatar_url ? (
-                            <img src={autor.avatar_url} style={{ width:32, height:32, borderRadius:'50%', border:`1.5px solid ${cor}`, objectFit:'cover', flexShrink:0 }} />
-                          ) : (
-                            <div style={{ width:32, height:32, borderRadius:'50%', background:cor, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:900, color:'#111', flexShrink:0 }}>
-                              {(autor?.apelido||autor?.nome||'?').charAt(0)}
-                            </div>
-                          )}
-                          <div style={{ flex:1, background:'#111', borderRadius:'0 10px 10px 10px', padding:'8px 12px' }}>
-                            <div style={{ fontSize:11, fontWeight:900, color: cor, marginBottom:4 }}>
-                              {NIVEL_ICON[autor?.nivel]} {autor?.apelido || autor?.nome}
-                            </div>
-                            <div style={{ fontSize:13, color:'#ccc', lineHeight:1.5 }}>{c.texto}</div>
-                            <div style={{ fontSize:9, color:'#333', marginTop:4 }}>
-                              {new Date(c.criado_em).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div ref={comentEndRef} />
-                  </div>
-                )}
-                
-                {meuId && !isMe && jogoId ? (
-                  <div style={{ display:'flex', gap:8 }}>
-                    <input value={novoComent} onChange={e => setNovoComent(e.target.value.slice(0,280))}
-                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && enviarComentario()}
-                      placeholder="Cornete essa escalação... 📣"
-                      style={{ flex:1, padding:'10px 14px', background:'#111', border:'1px solid #222', borderRadius:10, color:'#fff', fontSize:14, outline:'none' }} />
-                    <button onClick={enviarComentario} disabled={!novoComent.trim() || enviando}
-                      style={{ padding:'10px 16px', background: novoComent.trim()?'#F5C400':'#1a1a1a', color: novoComent.trim()?'#111':'#444', border:'none', borderRadius:10, fontWeight:900, fontSize:13, cursor: novoComent.trim()?'pointer':'not-allowed' }}>
-                      {enviando ? '...' : '📣'}
-                    </button>
-                  </div>
-                ) : !meuId ? (
-                  <div style={{ textAlign:'center', fontSize:12, color:'#555' }}>Entre para cornetar!</div>
-                ) : null}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+              {/* Corneta */}
+              <div style={{ padding:'
