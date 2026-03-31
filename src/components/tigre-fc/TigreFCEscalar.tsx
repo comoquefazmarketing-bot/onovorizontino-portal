@@ -13,45 +13,45 @@ const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/
 const MINUTOS_ANTECEDENCIA = 90; 
 
 const PLAYERS = [
-  { id: 1,  name: 'César Augusto',    short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
-  { id: 2,  name: 'Jordi',            short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
-  { id: 3,  name: 'João Scapin',      short: 'Scapin',     num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
-  { id: 4,  name: 'Lucas Ribeiro',    short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
-  { id: 5,  name: 'Lora',             short: 'Lora',        num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
-  { id: 6,  name: 'Castrillón',       short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
-  { id: 7,  name: 'Arthur Barbosa',   short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
-  { id: 8,  name: 'Mayk',             short: 'Mayk',        num: 26, pos: 'LAT', foto: BASE+'MAYK.jpg.webp' },
+  { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
+  { id: 2,  name: 'Jordi',             short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
+  { id: 3,  name: 'João Scapin',       short: 'Scapin',      num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
+  { id: 4,  name: 'Lucas Ribeiro',     short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
+  { id: 5,  name: 'Lora',              short: 'Lora',         num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
+  { id: 6,  name: 'Castrillón',        short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
+  { id: 7,  name: 'Arthur Barbosa',    short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
+  { id: 8,  name: 'Sander',            short: 'Sander',     num: 33, pos: 'LAT', foto: BASE+'SANDER.jpg.webp' }, // ADICIONADO
   { id: 9,  name: 'Maykon Jesus',      short: 'Maykon',      num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
-  { id: 10, name: 'Dantas',           short: 'Dantas',      num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
-  { id: 11, name: 'Eduardo Brock',    short: 'E.Brock',     num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
-  { id: 12, name: 'Patrick',          short: 'Patrick',     num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
-  { id: 13, name: 'Gabriel Bahia',    short: 'G.Bahia',     num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
-  { id: 14, name: 'Carlinhos',        short: 'Carlinhos',   num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
-  { id: 15, name: 'Alemão',           short: 'Alemão',      num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
-  { id: 16, name: 'Renato Palm',      short: 'R.Palm',      num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
-  { id: 17, name: 'Alvariño',         short: 'Alvariño',    num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
-  { id: 18, name: 'Bruno Santana',    short: 'B.Santana',   num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
-  { id: 19, name: 'Luís Oyama',        short: 'Oyama',       num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
-  { id: 20, name: 'Léo Naldi',        short: 'L.Naldi',     num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
-  { id: 21, name: 'Rômulo',           short: 'Rômulo',      num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
-  { id: 22, name: 'Matheus Bianqui',  short: 'Bianqui',     num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  { id: 23, name: 'Juninho',          short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
-  { id: 24, name: 'Tavinho',          short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
-  { id: 25, name: 'Diego Galo',        short: 'D.Galo',      num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
-  { id: 26, name: 'Marlon',           short: 'Marlon',      num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
-  { id: 27, name: 'Hector Bianchi',   short: 'Hector',      num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
-  { id: 28, name: 'Nogueira',         short: 'Nogueira',    num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
-  { id: 29, name: 'Luiz Gabriel',     short: 'L.Gabriel',   num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
-  { id: 30, name: 'Jhones Kauê',      short: 'J.Kauê',      num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
-  { id: 31, name: 'Robson',           short: 'Robson',      num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
-  { id: 32, name: 'Vinícius Paiva',   short: 'V.Paiva',     num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
-  { id: 33, name: 'Hélio Borges',     short: 'H.Borges',    num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
-  { id: 34, name: 'Jardiel',          short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
-  { id: 35, name: 'Nicolas Careca',   short: 'N.Careca',    num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
-  { id: 36, name: 'Titi Ortiz',       short: 'T.Ortiz',     num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
-  { id: 37, name: 'Diego Mathias',    short: 'D.Mathias',   num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
-  { id: 38, name: 'Carlão',           short: 'Carlão',      num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
-  { id: 39, name: 'Ronald Barcellos', short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
+  { id: 10, name: 'Dantas',            short: 'Dantas',      num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
+  { id: 11, name: 'Eduardo Brock',     short: 'E.Brock',     num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
+  { id: 12, name: 'Patrick',           short: 'Patrick',     num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
+  { id: 13, name: 'Gabriel Bahia',     short: 'G.Bahia',     num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
+  { id: 14, name: 'Carlinhos',         short: 'Carlinhos',   num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
+  { id: 15, name: 'Alemão',            short: 'Alemão',      num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
+  { id: 16, name: 'Renato Palm',       short: 'R.Palm',      num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
+  { id: 17, name: 'Alvariño',          short: 'Alvariño',    num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
+  { id: 18, name: 'Bruno Santana',     short: 'B.Santana',   num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
+  { id: 19, name: 'Luís Oyama',         short: 'Oyama',        num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
+  { id: 20, name: 'Léo Naldi',         short: 'L.Naldi',     num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
+  { id: 21, name: 'Rômulo',            short: 'Rômulo',      num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
+  { id: 22, name: 'Matheus Bianqui',   short: 'Bianqui',     num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
+  { id: 23, name: 'Juninho',           short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
+  { id: 24, name: 'Tavinho',           short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
+  { id: 25, name: 'Diego Galo',         short: 'D.Galo',      num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
+  { id: 26, name: 'Marlon',            short: 'Marlon',      num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
+  { id: 27, name: 'Hector Bianchi',    short: 'Hector',      num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
+  { id: 28, name: 'Nogueira',          short: 'Nogueira',    num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
+  { id: 29, name: 'Luiz Gabriel',      short: 'L.Gabriel',   num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
+  { id: 30, name: 'Jhones Kauê',       short: 'J.Kauê',      num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
+  { id: 31, name: 'Robson',            short: 'Robson',      num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
+  { id: 32, name: 'Vinícius Paiva',    short: 'V.Paiva',     num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
+  { id: 33, name: 'Hélio Borges',      short: 'H.Borges',    num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
+  { id: 34, name: 'Jardiel',           short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
+  { id: 35, name: 'Nicolas Careca',    short: 'N.Careca',    num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
+  { id: 36, name: 'Titi Ortiz',        short: 'T.Ortiz',     num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
+  { id: 37, name: 'Diego Mathias',     short: 'D.Mathias',   num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
+  { id: 38, name: 'Carlão',            short: 'Carlão',      num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
+  { id: 39, name: 'Ronald Barcellos',  short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
 const RESERVA_SLOTS = [
@@ -79,14 +79,49 @@ const FORMATIONS: Record<string, { id: string; label: string; x: number; y: numb
     { id:'lm',  label:'MEI', x:20, y:48 }, { id:'st1', label:'ATA', x:65, y:20 },
     { id:'st2', label:'ATA', x:35, y:20 },
   ],
+  '4-2-3-1': [
+    { id:'gk',  label:'GOL', x:50, y:88 }, { id:'rb',  label:'LAT', x:82, y:68 },
+    { id:'cb1', label:'ZAG', x:62, y:72 }, { id:'cb2', label:'ZAG', x:38, y:72 },
+    { id:'lb',  label:'LAT', x:18, y:68 }, { id:'dm1', label:'MEI', x:62, y:55 },
+    { id:'dm2', label:'MEI', x:38, y:55 }, { id:'am1', label:'MEI', x:80, y:35 },
+    { id:'am2', label:'MEI', x:50, y:32 }, { id:'am3', label:'MEI', x:20, y:35 },
+    { id:'st',  label:'ATA', x:50, y:15 },
+  ],
+  '3-5-2': [
+    { id:'gk',  label:'GOL', x:50, y:88 }, { id:'cb1', label:'ZAG', x:50, y:72 },
+    { id:'cb2', label:'ZAG', x:72, y:70 }, { id:'cb3', label:'ZAG', x:28, y:70 },
+    { id:'rm',  label:'LAT', x:85, y:48 }, { id:'lm',  label:'LAT', x:15, y:48 },
+    { id:'cm1', label:'MEI', x:50, y:50 }, { id:'cm2', label:'MEI', x:68, y:38 },
+    { id:'cm3', label:'MEI', x:32, y:38 }, { id:'st1', label:'ATA', x:60, y:18 },
+    { id:'st2', label:'ATA', x:40, y:18 },
+  ],
+  '3-4-3': [
+    { id:'gk',  label:'GOL', x:50, y:88 }, { id:'cb1', label:'ZAG', x:50, y:72 },
+    { id:'cb2', label:'ZAG', x:72, y:70 }, { id:'cb3', label:'ZAG', x:28, y:70 },
+    { id:'rm',  label:'MEI', x:82, y:48 }, { id:'cm1', label:'MEI', x:60, y:48 },
+    { id:'cm2', label:'MEI', x:40, y:48 }, { id:'lm',  label:'MEI', x:18, y:48 },
+    { id:'rw',  label:'ATA', x:80, y:22 }, { id:'st',  label:'ATA', x:50, y:15 },
+    { id:'lw',  label:'ATA', x:20, y:22 },
+  ]
 };
 
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
 
-// --- COMPONENTE DO CARD COM TRANSIÇÃO PERFEITA (SPRITE LADO A LADO) ---
-function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean }) {
+function PlayerCard({ player, size, isCapitao, isHeroi, isList }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean, isList?: boolean }) {
+  if (isList) {
+    return (
+      <div style={{ width: '100%', textAlign: 'center' }}>
+        <div style={{ width: size, height: size, margin: '0 auto 8px', borderRadius: '50%', overflow: 'hidden', border: '2px solid #222', background: '#111' }}>
+          <img src={player.foto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={player.short} />
+        </div>
+        <div style={{ fontSize: 10, fontWeight: 900, color: '#fff' }}>{player.short}</div>
+        <div style={{ fontSize: 8, color: '#F5C400', fontWeight: 800 }}>{player.pos}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="player-card-container" style={{ width: size, textAlign: 'center', position: 'relative' }}>
       {isCapitao && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>👑</div>}
@@ -102,7 +137,6 @@ function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size
         position: 'relative',
         cursor: 'pointer'
       }}>
-        {/* A imagem ocupa 200% da largura da div circular */}
         <div className="sprite-image" style={{
           width: '100%',
           height: '100%',
@@ -117,7 +151,6 @@ function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size
         }} />
       </div>
 
-      {/* Tarja do Nome */}
       <div style={{ 
         background: '#F5C400', color: '#000', fontSize: Math.max(size * 0.18, 10), fontWeight: 900, 
         borderRadius: 4, marginTop: -10, position: 'relative', zIndex: 2, 
@@ -128,14 +161,8 @@ function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size
       </div>
 
       <style jsx>{`
-        /* Troca instantânea para o lado direito ao passar o mouse */
-        .player-card-container:hover .sprite-image {
-          background-position: right center;
-        }
-        /* Mobile: troca ao tocar */
-        .player-card-container:active .sprite-image {
-          background-position: right center;
-        }
+        .player-card-container:hover .sprite-image { background-position: right center; }
+        .player-card-container:active .sprite-image { background-position: right center; }
       `}</style>
     </div>
   );
@@ -143,18 +170,18 @@ function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [mounted, setMounted]         = useState(false);
-  const [step, setStep]               = useState<Step>('login');
-  const [usuario, setUsuario]         = useState<any>(null);
-  const [apelido, setApelido]         = useState('');
-  const [formation, setFormation]     = useState('4-3-3');
-  const [lineup, setLineup]           = useState<Lineup>({});
-  const [selected, setSelected]       = useState<{ player: Player; from: string } | null>(null);
-  const [filterPos, setFilterPos]     = useState('TODOS');
-  const [capitao, setCapitao]         = useState<Player | null>(null);
-  const [heroi, setHeroi]             = useState<Player | null>(null);
-  const [palpite, setPalpite]         = useState({ mandante: 1, visitante: 0 });
-  const [jogo, setJogo]               = useState<any>(null);
-  const [saving, setSaving]           = useState(false);
+  const [step, setStep]                = useState<Step>('login');
+  const [usuario, setUsuario]          = useState<any>(null);
+  const [apelido, setApelido]          = useState('');
+  const [formation, setFormation]      = useState('4-3-3');
+  const [lineup, setLineup]            = useState<Lineup>({});
+  const [selected, setSelected]        = useState<{ player: Player; from: string } | null>(null);
+  const [filterPos, setFilterPos]      = useState('TODOS');
+  const [capitao, setCapitao]          = useState<Player | null>(null);
+  const [heroi, setHeroi]              = useState<Player | null>(null);
+  const [palpite, setPalpite]          = useState({ mandante: 1, visitante: 0 });
+  const [jogo, setJogo]                = useState<any>(null);
+  const [saving, setSaving]            = useState(false);
   const [fieldWidth, setFieldWidth]   = useState(340);
 
   useEffect(() => {
@@ -349,7 +376,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
-            {/* LISTA */}
+            {/* LISTA DE JOGADORES PARA ESCOLHER */}
             <div style={{ display:'flex', gap:8, marginBottom:12, overflowX:'auto', paddingBottom:4 }}>
               {['TODOS','GOL','LAT','ZAG','MEI','ATA'].map(pos => (
                 <button key={pos} onClick={() => setFilterPos(pos)} style={{ flexShrink:0, padding:'6px 12px', borderRadius:20, border:'none', background: filterPos===pos?'#fff':'#111', color: filterPos===pos?'#000':'#555', fontSize:10, fontWeight:900 }}>{pos}</button>
@@ -360,11 +387,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                 <div key={p.id} onClick={() => setSelected({ player:p, from:'bench' })} style={{ 
                   background:'#111', borderRadius:12, padding:8, textAlign:'center', border: selected?.player.id===p.id?'2px solid #F5C400':'1px solid #1a1a1a'
                 }}>
-                  <div style={{ width:50, height:50, margin:'0 auto 8px', borderRadius:'50%', overflow:'hidden', border:'2px solid #222' }}>
-                    <img src={p.foto} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                  </div>
-                  <div style={{ fontSize:10, fontWeight:900, color:'#fff' }}>{p.short}</div>
-                  <div style={{ fontSize:8, color:'#444', fontWeight:800 }}>{p.pos}</div>
+                  <PlayerCard player={p} size={50} isList />
                 </div>
               ))}
             </div>
@@ -378,7 +401,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:24 }}>
               {escalados.map(p => (
                 <div key={p.id} onClick={() => setCapitao(p)} style={{ padding:12, borderRadius:12, background: capitao?.id===p.id?'#F5C400':'#111', color: capitao?.id===p.id?'#000':'#fff' }}>
-                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} />
+                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} alt={p.short} />
                   <div style={{ fontSize:10, fontWeight:900 }}>{p.short}</div>
                 </div>
               ))}
@@ -392,7 +415,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:24 }}>
               {escalados.map(p => (
                 <div key={p.id} onClick={() => setHeroi(p)} style={{ padding:12, borderRadius:12, background: heroi?.id===p.id?'#F5C400':'#111', color: heroi?.id===p.id?'#000':'#fff' }}>
-                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} />
+                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} alt={p.short} />
                   <div style={{ fontSize:10, fontWeight:900 }}>{p.short}</div>
                 </div>
               ))}
