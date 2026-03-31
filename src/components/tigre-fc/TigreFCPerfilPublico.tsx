@@ -10,7 +10,7 @@ const supabase = createClient(
 
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const PLAYERS: Record<number, any> = {
-  1:  { id:1,  name:'César Augusto',    short:'César',      num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
+  1:  { id:1,  name:'César Augusto',   short:'César',      num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
   2:  { id:2,  name:'Jordi',            short:'Jordi',      num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
   3:  { id:3,  name:'João Scapin',      short:'Scapin',     num:12, pos:'GOL', foto:BASE+'JOAO-SCAPIN.jpg.webp' },
   4:  { id:4,  name:'Lucas Ribeiro',    short:'Lucas',      num:1,  pos:'GOL', foto:BASE+'LUCAS-RIBEIRO.jpg.webp' },
@@ -52,9 +52,9 @@ const PLAYERS: Record<number, any> = {
 };
 
 const SLOTS: Record<string, { id:string; x:number; y:number }[]> = {
-  '4-3-3':   [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'cm1',x:72,y:50},{id:'cm2',x:50,y:46},{id:'cm3',x:28,y:50},{id:'rw',x:76,y:24},{id:'st',x:50,y:18},{id:'lw',x:24,y:24}],
-  '4-4-2':   [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'rm',x:80,y:50},{id:'cm1',x:60,y:50},{id:'cm2',x:40,y:50},{id:'lm',x:20,y:50},{id:'st1',x:64,y:22},{id:'st2',x:36,y:22}],
-  '3-5-2':   [{id:'gk',x:50,y:88},{id:'cb1',x:70,y:72},{id:'cb2',x:50,y:75},{id:'cb3',x:30,y:72},{id:'rb',x:86,y:52},{id:'cm1',x:68,y:50},{id:'cm2',x:50,y:46},{id:'cm3',x:32,y:50},{id:'lb',x:14,y:52},{id:'st1',x:64,y:22},{id:'st2',x:36,y:22}],
+  '4-3-3':    [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'cm1',x:72,y:50},{id:'cm2',x:50,y:46},{id:'cm3',x:28,y:50},{id:'rw',x:76,y:24},{id:'st',x:50,y:18},{id:'lw',x:24,y:24}],
+  '4-4-2':    [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'rm',x:80,y:50},{id:'cm1',x:60,y:50},{id:'cm2',x:40,y:50},{id:'lm',x:20,y:50},{id:'st1',x:64,y:22},{id:'st2',x:36,y:22}],
+  '3-5-2':    [{id:'gk',x:50,y:88},{id:'cb1',x:70,y:72},{id:'cb2',x:50,y:75},{id:'cb3',x:30,y:72},{id:'rb',x:86,y:52},{id:'cm1',x:68,y:50},{id:'cm2',x:50,y:46},{id:'cm3',x:32,y:50},{id:'lb',x:14,y:52},{id:'st1',x:64,y:22},{id:'st2',x:36,y:22}],
   '4-2-3-1': [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'dm1',x:64,y:57},{id:'dm2',x:36,y:57},{id:'rm',x:76,y:38},{id:'am',x:50,y:36},{id:'lm',x:24,y:38},{id:'st',x:50,y:18}],
 };
 
@@ -85,50 +85,40 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
-      try {
-        // Chamada individual do perfil para evitar erro de tipo no array de promises
-        const { data: user } = await supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single();
-        setPerfil(user || null);
+      const promises: Promise<any>[] = [
+        supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single(),
+      ];
 
-        if (jogoId) {
-          // Chamadas paralelas para escalação, palpite e comentários
-          const [resEsc, resPal, resCom] = await Promise.all([
-            supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle(),
-            supabase.from('tigre_fc_palpites').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle(),
-            supabase.from('tigre_fc_comentarios').select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
-              .eq('escalacao_usuario_id', targetUserId).eq('jogo_id', jogoId)
-              .order('criado_em', { ascending: true })
-          ]);
-
-          setEscalacao(resEsc?.data || null);
-          setPalpite(resPal?.data || null);
-          setComentarios(resCom?.data || []);
-        }
-      } catch (e) {
-        console.error("Erro ao carregar dados do perfil:", e);
-      } finally {
-        setLoading(false);
+      if (jogoId) {
+        promises.push(
+          supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).single(),
+          supabase.from('tigre_fc_palpites').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).single(),
+          supabase.from('tigre_fc_comentarios').select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
+            .eq('escalacao_usuario_id', targetUserId).eq('jogo_id', jogoId)
+            .order('criado_em', { ascending: true }),
+        );
       }
+
+      const results = await Promise.all(promises);
+      setPerfil(results[0]?.data || null);
+      if (jogoId) {
+        setEscalacao(results[1]?.data || null);
+        setPalpite(results[2]?.data || null);
+        setComentarios(results[3]?.data || []);
+      }
+      setLoading(false);
     };
-    
     load();
 
     if (!jogoId) return;
-
     const channel = supabase.channel(`coments-${targetUserId}-${jogoId}`)
-      .on('postgres_changes', { 
-        event:'INSERT', 
-        schema:'public', 
-        table:'tigre_fc_comentarios',
-        filter: `escalacao_usuario_id=eq.${targetUserId}` 
-      }, (payload) => {
+      .on('postgres_changes', { event:'INSERT', schema:'public', table:'tigre_fc_comentarios',
+        filter: `escalacao_usuario_id=eq.${targetUserId}` }, (payload) => {
         supabase.from('tigre_fc_comentarios')
           .select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
           .eq('id', payload.new.id).single()
           .then(({ data }) => { if (data) setComentarios(prev => [...prev, data]); });
       }).subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [targetUserId, jogoId]);
 
@@ -140,6 +130,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
     if (!novoComent.trim() || !meuId || !jogoId || enviando) return;
     setEnviando(true);
     try {
+      // 1. Insere o comentário
       await supabase.from('tigre_fc_comentarios').insert({
         escalacao_usuario_id: targetUserId, 
         jogo_id: jogoId,
@@ -147,6 +138,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
         texto: novoComent.trim(),
       });
 
+      // 2. Insere a notificação (sem .catch para evitar erro de build, o erro morre no try/catch abaixo)
       if (!isMe) {
         await supabase.from('tigre_fc_notificacoes').insert({
           usuario_id: targetUserId, 
@@ -154,9 +146,12 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
           de_usuario_id: meuId, 
           jogo_id: jogoId,
           mensagem: 'cornetou sua escalação!',
-        }).catch(() => {});
+        });
       }
+      
       setNovoComent('');
+    } catch (error) {
+      console.error("Erro ao enviar comentário:", error);
     } finally {
       setEnviando(false);
     }
@@ -184,7 +179,6 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
             <div style={{ padding:40, textAlign:'center', color:'#555' }}>Perfil não encontrado</div>
           ) : (
             <>
-              {/* Perfil Header */}
               <div style={{ padding:'20px 16px', display:'flex', alignItems:'center', gap:14, borderBottom:'1px solid #111' }}>
                 {perfil.avatar_url ? (
                   <img src={perfil.avatar_url} style={{ width:56, height:56, borderRadius:'50%', border:`2px solid ${NIVEL_COLOR[perfil.nivel]}`, objectFit:'cover' }} />
@@ -208,7 +202,6 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               </div>
 
-              {/* Palpite */}
               {palpite && (
                 <div style={{ margin:'16px 16px 0', padding:'12px 16px', background:'#111', border:'1px solid #1a1a1a', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                   <div style={{ fontSize:11, color:'#555', textTransform:'uppercase', letterSpacing:1 }}>Palpite</div>
@@ -218,7 +211,6 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               )}
 
-              {/* Campo Visual */}
               {escalacao ? (
                 <div style={{ padding:'16px 0', display:'flex', justifyContent:'center' }}>
                   <div style={{ position:'relative', width:CAMPO_W, height:CAMPO_H, borderRadius:8, overflow:'hidden', background:'#2a7a2a' }}>
@@ -248,7 +240,6 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               )}
 
-              {/* Área de Comentários (Corneta) */}
               <div style={{ padding:'0 16px 16px', borderTop:'1px solid #111', marginTop:8 }}>
                 <div style={{ fontSize:11, color:'#F5C400', fontWeight:900, textTransform:'uppercase', letterSpacing:2, margin:'16px 0 12px' }}>
                   📣 Corneta ({comentarios.length})
