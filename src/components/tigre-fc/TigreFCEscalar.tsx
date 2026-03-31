@@ -88,35 +88,38 @@ type Lineup = Record<string, Player | null>;
 type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
-  const [step, setStep]             = useState<Step>('login');
-  const [usuario, setUsuario]       = useState<any>(null);
-  const [apelido, setApelido]       = useState('');
-  const [formation, setFormation]   = useState('4-3-3');
-  const [lineup, setLineup]         = useState<Lineup>({});
-  const [selected, setSelected]     = useState<{ player: Player; from: string } | null>(null);
-  const [filterPos, setFilterPos]   = useState('TODOS');
-  const [capitao, setCapitao]       = useState<Player | null>(null);
-  const [heroi, setHeroi]           = useState<Player | null>(null);
-  const [palpite, setPalpite]       = useState({ mandante: 1, visitante: 0 });
-  const [jogo, setJogo]             = useState<any>(null);
-  const [saving, setSaving]         = useState(false);
-  const [fieldWidth, setFieldWidth] = useState(340);
-  const [showShare, setShowShare]   = useState(false);
-  const autoSaveTimer               = useRef<NodeJS.Timeout | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [step, setStep]               = useState<Step>('login');
+  const [usuario, setUsuario]         = useState<any>(null);
+  const [apelido, setApelido]         = useState('');
+  const [formation, setFormation]     = useState('4-3-3');
+  const [lineup, setLineup]           = useState<Lineup>({});
+  const [selected, setSelected]       = useState<{ player: Player; from: string } | null>(null);
+  const [filterPos, setFilterPos]     = useState('TODOS');
+  const [capitao, setCapitao]         = useState<Player | null>(null);
+  const [heroi, setHeroi]             = useState<Player | null>(null);
+  const [palpite, setPalpite]         = useState({ mandante: 1, visitante: 0 });
+  const [jogo, setJogo]               = useState<any>(null);
+  const [saving, setSaving]           = useState(false);
+  const [fieldWidth, setFieldWidth]   = useState(340);
 
-  const isMercadoAberto = () => {
-    if (!jogo?.data_inicio) return true;
-    const agora = new Date();
-    const limite = new Date(new Date(jogo.data_inicio).getTime() - (MINUTOS_ANTECEDENCIA * 60 * 1000));
-    return agora < limite;
-  };
-
+  // 1. OBRIGATÓRIO: Garante que o cliente montou para evitar Hydration Error
   useEffect(() => {
+    setMounted(true);
     const update = () => setFieldWidth(Math.min(window.innerWidth - 32, 450));
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
+
+  const isMercadoAberto = () => {
+    if (!jogo?.data_hora) return true;
+    const agora = new Date();
+    // Normaliza para Safari e navegadores mobile
+    const dataISO = jogo.data_hora.replace(' ', 'T');
+    const limite = new Date(new Date(dataISO).getTime() - (MINUTOS_ANTECEDENCIA * 60 * 1000));
+    return agora < limite;
+  };
 
   useEffect(() => {
     fetch('/api/proximo-jogo').then(r => r.json()).then(({ jogos }) => {
@@ -171,7 +174,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
   const placePlayer = (slotId: string, player: Player, from: string) => {
     if (!isMercadoAberto()) return;
-    // Validação de posição para reserva
     const resSlot = RESERVA_SLOTS.find(s => s.id === slotId);
     if (resSlot && player.pos !== resSlot.pos) return;
 
@@ -187,7 +189,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const handleTapSlot = (slotId: string) => {
     if (!isMercadoAberto()) return;
     const resSlot = RESERVA_SLOTS.find(s => s.id === slotId);
-    if (resSlot) setFilterPos(resSlot.pos); // Filtra automático no banco
+    if (resSlot) setFilterPos(resSlot.pos);
 
     if (selected) placePlayer(slotId, selected.player, selected.from);
     else { const p = lineup[slotId]; if (p) setSelected({ player: p, from: slotId }); }
@@ -197,6 +199,9 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const usedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
   const filledCount = Object.keys(lineup).filter(k => !k.startsWith('res_') && lineup[k]).length;
   const escalados = Object.values(lineup).filter(Boolean) as Player[];
+
+  // 2. Trava de segurança para não quebrar a hidratação
+  if (!mounted) return <div style={{ background: '#080808', minHeight: '100vh' }} />;
 
   if (step === 'login') return <TigreFCLogin jogoId={jogoId} onSuccess={(u) => { setUsuario(u); setStep(u.apelido ? 'escalar' : 'apelido'); if(u.apelido) recuperarEscalacao(u.id); }} />;
 
@@ -218,7 +223,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   );
 
   return (
-    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom:120 }}>
+    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom:120, position:'relative' }}>
       {/* Header */}
       <div style={{ background:'#F5C400', padding:16, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -270,7 +275,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
             {/* BANCO DE RESERVAS */}
             <div style={{ background:'#111', borderRadius:16, padding:16, marginBottom:20, border:'1px solid #222' }}>
-              <div style={{ fontSize:10, fontWeight:900, color:'#F5C400', letterSpacing:1, marginBottom:12 }}>BANCO DE RESERVAS (GAMIFICADO)</div>
+              <div style={{ fontSize:10, fontWeight:900, color:'#F5C400', letterSpacing:1, marginBottom:12 }}>BANCO DE RESERVAS</div>
               <div style={{ display:'flex', justifyContent:'space-between' }}>
                 {RESERVA_SLOTS.map(slot => {
                   const p = lineup[slot.id];
@@ -288,7 +293,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
-            {/* LISTA DE JOGADORES (CARDS 3D) */}
+            {/* LISTA DE JOGADORES */}
             <div style={{ display:'flex', gap:8, marginBottom:12, overflowX:'auto', paddingBottom:4 }}>
               {['TODOS','GOL','LAT','ZAG','MEI','ATA'].map(pos => (
                 <button key={pos} onClick={() => setFilterPos(pos)} style={{ flexShrink:0, padding:'6px 12px', borderRadius:20, border:'none', background: filterPos===pos?'#fff':'#111', color: filterPos===pos?'#000':'#555', fontSize:10, fontWeight:900 }}>{pos}</button>
@@ -311,7 +316,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </>
         )}
 
-        {/* Steps de Capitão, Herói e Palpite mantidos com estilo minimalista */}
         {step === 'capitao' && (
           <div style={{ textAlign:'center', padding:20 }}>
             <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Quem é o Capitão? 👑</div>
@@ -326,20 +330,17 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
             </div>
           </div>
         )}
-
-        {/* Repetir lógica para Herói e Palpite seguindo o padrão... */}
       </div>
 
       {/* Botão de Próximo Fixo */}
-      {['escalar','capitao','heroi','palpite'].includes(step) && (
-        <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)' }}>
+      {['escalar','capitao','heroi','palpite','confirmar'].includes(step) && (
+        <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)', zIndex:100 }}>
           <button 
             onClick={() => {
               if (step==='escalar' && filledCount===11) setStep('capitao');
               else if (step==='capitao' && capitao) setStep('heroi');
-              else if (step==='heroi' && heroi) setStep('palpite');
-              else if (step==='palpite') setStep('confirmar');
               else if (step==='confirmar') handleSalvar();
+              else setStep('confirmar');
             }}
             disabled={!isMercadoAberto()}
             style={{ width:'100%', padding:18, borderRadius:16, border:'none', background: isMercadoAberto()?'#F5C400':'#1a1a1a', color:'#000', fontWeight:900, textTransform:'uppercase' }}>
