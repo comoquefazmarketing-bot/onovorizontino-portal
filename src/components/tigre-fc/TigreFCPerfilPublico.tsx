@@ -10,7 +10,7 @@ const supabase = createClient(
 
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 const NIVEL_ICON: Record<string,string> = { Novato:'🌱', Fiel:'⚡', Garra:'🔥', Lenda:'🐯' };
-const MEDAL = ['🥇','🥈','🥉'];
+const MEDAL = ['🥇', '🥈', '🥉'];
 
 type RankUser = {
   posicao: number; id: string; apelido: string; avatar_url: string | null;
@@ -18,26 +18,22 @@ type RankUser = {
 };
 
 export default function TigreFCRankingPage() {
-  const [tab, setTab]             = useState<'temporada'|'rodada'>('temporada');
-  const [ranking, setRanking]     = useState<RankUser[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [jogoId, setJogoId]       = useState<number | null>(null);
+  const [tab, setTab] = useState<'temporada' | 'rodada'>('temporada');
+  const [ranking, setRanking] = useState<RankUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [jogoId, setJogoId] = useState<number | null>(null);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
-
-  // FIX 1: meuId agora é o tigre_fc_usuarios.id, não o auth UID
-  const [meuId, setMeuId]         = useState<string | null>(null);
+  const [meuId, setMeuId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Busca o tigre_fc_usuarios.id do usuário logado
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) return;
       const { data: u } = await supabase
         .from('tigre_fc_usuarios').select('id')
         .eq('google_id', session.user.id).single();
-      if (u) setMeuId(u.id); // ← UUID da tabela, não auth UID
+      if (u) setMeuId(u.id);
     });
 
-    // Busca o último jogo processado
     supabase.from('tigre_fc_resultados').select('jogo_id')
       .eq('processado', true)
       .order('criado_em', { ascending: false })
@@ -69,7 +65,6 @@ export default function TigreFCRankingPage() {
   return (
     <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', fontFamily:'system-ui', paddingBottom:60 }}>
 
-      {/* Header */}
       <div style={{ background:'#F5C400', padding:'16px 20px', display:'flex', alignItems:'center', gap:12 }}>
         <a href="/tigre-fc" style={{ color:'#1a1a1a', textDecoration:'none', fontWeight:900, fontSize:20 }}>←</a>
         <img src={LOGO} style={{ width:32, objectFit:'contain' }} alt="Logo" />
@@ -78,9 +73,8 @@ export default function TigreFCRankingPage() {
 
       <div style={{ maxWidth:480, margin:'0 auto', padding:'20px 16px' }}>
 
-        {/* Tabs */}
         <div style={{ display:'flex', background:'#111', borderRadius:8, padding:4, marginBottom:20 }}>
-          {(['temporada','rodada'] as const).map(t => (
+          {(['temporada', 'rodada'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               style={{ flex:1, padding:'10px', fontSize:12, fontWeight:900, textTransform:'uppercase', letterSpacing:1, border:'none', borderRadius:6, cursor:'pointer', background: tab===t?'#F5C400':'transparent', color: tab===t?'#111':'#555' }}>
               {t === 'temporada' ? '🏆 Temporada' : '⚡ Última Rodada'}
@@ -88,7 +82,6 @@ export default function TigreFCRankingPage() {
           ))}
         </div>
 
-        {/* TOP 3 pódio */}
         {!loading && ranking.length >= 3 && (
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:20 }}>
             {[ranking[1], ranking[0], ranking[2]].map((u, i) => {
@@ -116,7 +109,6 @@ export default function TigreFCRankingPage() {
           </div>
         )}
 
-        {/* Lista */}
         {loading ? (
           <div style={{ textAlign:'center', padding:40, color:'#555' }}>Carregando ranking...</div>
         ) : ranking.length === 0 ? (
@@ -128,9 +120,7 @@ export default function TigreFCRankingPage() {
           <div style={{ display:'flex', flexDirection:'column', gap:1, background:'#111' }}>
             {ranking.slice(3).map((u) => (
               <div key={u.id} onClick={() => setPerfilAberto(u.id)}
-                style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', background:'#080808', cursor:'pointer', transition:'background .15s' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#0f0f0f')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#080808')}>
+                style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', background:'#080808', cursor:'pointer' }}>
                 <div style={{ width:32, textAlign:'center', fontSize:13, fontWeight:900, color:'#333' }}>{u.posicao}º</div>
                 {u.avatar_url ? (
                   <img src={u.avatar_url} style={{ width:36, height:36, borderRadius:'50%', objectFit:'cover', border:'1px solid #1a1a1a' }} />
@@ -162,12 +152,12 @@ export default function TigreFCRankingPage() {
         </a>
       </div>
 
-      {/* FIX 2: jogoId pode ser null — só abre modal se tiver jogoId */}
+      {/* MODAL AJUSTADO PARA O BUILD */}
       {perfilAberto && (
         <TigreFCPerfilPublico
           targetUserId={perfilAberto}
-          jogoId={jogoId ?? 0}
-          meuId={meuId}
+          jogoId={jogoId || 0}
+          meuId={meuId || ''} 
           onClose={() => setPerfilAberto(null)}
         />
       )}
