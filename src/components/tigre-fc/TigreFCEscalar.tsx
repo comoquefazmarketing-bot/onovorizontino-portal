@@ -20,7 +20,7 @@ const PLAYERS = [
   { id: 5,  name: 'Lora',              short: 'Lora',         num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
   { id: 6,  name: 'Castrillón',        short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
   { id: 7,  name: 'Arthur Barbosa',    short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
-  { id: 8,  name: 'Sander',            short: 'Sander',     num: 33, pos: 'LAT', foto: BASE+'SANDER.jpg.webp' }, // ADICIONADO
+  { id: 8,  name: 'Sander',            short: 'Sander',     num: 33, pos: 'LAT', foto: BASE+'SANDER.jpg.webp' },
   { id: 9,  name: 'Maykon Jesus',      short: 'Maykon',      num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
   { id: 10, name: 'Dantas',            short: 'Dantas',      num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
   { id: 11, name: 'Eduardo Brock',     short: 'E.Brock',     num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
@@ -34,10 +34,10 @@ const PLAYERS = [
   { id: 19, name: 'Luís Oyama',         short: 'Oyama',        num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
   { id: 20, name: 'Léo Naldi',         short: 'L.Naldi',     num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
   { id: 21, name: 'Rômulo',            short: 'Rômulo',      num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
-  { id: 22, name: 'Matheus Bianqui',   short: 'Bianqui',     num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  { id: 23, name: 'Juninho',           short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
-  { id: 24, name: 'Tavinho',           short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
-  { id: 25, name: 'Diego Galo',         short: 'D.Galo',      num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
+  { id: 22, name: 'Matheus Bianqui',  short: 'Bianqui',     num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
+  { id: 23, name: 'Juninho',          short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
+  { id: 24, name: 'Tavinho',          short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
+  { id: 25, name: 'Diego Galo',        short: 'D.Galo',      num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
   { id: 26, name: 'Marlon',            short: 'Marlon',      num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
   { id: 27, name: 'Hector Bianchi',    short: 'Hector',      num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
   { id: 28, name: 'Nogueira',          short: 'Nogueira',    num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
@@ -46,7 +46,7 @@ const PLAYERS = [
   { id: 31, name: 'Robson',            short: 'Robson',      num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
   { id: 32, name: 'Vinícius Paiva',    short: 'V.Paiva',     num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
   { id: 33, name: 'Hélio Borges',      short: 'H.Borges',    num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
-  { id: 34, name: 'Jardiel',           short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
+  { id: 34, name: 'Jardiel',          short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
   { id: 35, name: 'Nicolas Careca',    short: 'N.Careca',    num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
   { id: 36, name: 'Titi Ortiz',        short: 'T.Ortiz',     num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
   { id: 37, name: 'Diego Mathias',     short: 'D.Mathias',   num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
@@ -109,61 +109,77 @@ type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
 
+// --- COMPONENTE DO CARD COM CORREÇÃO DE ALINHAMENTO ---
 function PlayerCard({ player, size, isCapitao, isHeroi, isList }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean, isList?: boolean }) {
-  if (isList) {
-    return (
-      <div style={{ width: '100%', textAlign: 'center' }}>
-        <div style={{ width: size, height: size, margin: '0 auto 8px', borderRadius: '50%', overflow: 'hidden', border: '2px solid #222', background: '#111' }}>
-          <img src={player.foto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={player.short} />
-        </div>
-        <div style={{ fontSize: 10, fontWeight: 900, color: '#fff' }}>{player.short}</div>
-        <div style={{ fontSize: 8, color: '#F5C400', fontWeight: 800 }}>{player.pos}</div>
-      </div>
-    );
-  }
+  // Define o container: se for lista, remove efeitos de hover e drop-shadow
+  const containerClass = isList ? "player-card-container-list" : "player-card-container";
 
   return (
-    <div className="player-card-container" style={{ width: size, textAlign: 'center', position: 'relative' }}>
-      {isCapitao && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>👑</div>}
-      {isHeroi && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>⭐</div>}
+    <div className={containerClass} style={{ 
+      width: size, 
+      textAlign: 'center', 
+      position: 'relative',
+      filter: isList ? 'none' : 'drop-shadow(0 5px 15px rgba(0,0,0,0.5))'
+    }}>
+      {!isList && isCapitao && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>👑</div>}
+      {!isList && isHeroi && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>⭐</div>}
       
       <div style={{ 
         width: size, 
         height: size, 
         borderRadius: '50%', 
         overflow: 'hidden', 
-        border: '2px solid #F5C400',
+        border: `2px solid ${isList ? '#222' : '#F5C400'}`,
         background: '#111',
         position: 'relative',
         cursor: 'pointer'
       }}>
+        {/* Camada da Imagem Sprite */}
         <div className="sprite-image" style={{
           width: '100%',
           height: '100%',
           backgroundImage: `url(${player.foto})`,
           backgroundSize: '200% 100%', 
-          backgroundPosition: 'left center', 
+          backgroundPosition: 'left center', // O segredo está aqui: alinhar à esquerda
           backgroundRepeat: 'no-repeat',
           position: 'absolute',
           top: 0,
           left: 0,
-          transition: 'background-position 0s steps(1)' 
+          // Remove a transição se for lista para evitar bugs visuais ao rolar
+          transition: isList ? 'none' : 'background-position 0s steps(1)' 
         }} />
       </div>
 
+      {/* Tarja com Nome */}
       <div style={{ 
-        background: '#F5C400', color: '#000', fontSize: Math.max(size * 0.18, 10), fontWeight: 900, 
-        borderRadius: 4, marginTop: -10, position: 'relative', zIndex: 2, 
-        padding: '2px 4px', whiteSpace: 'nowrap', overflow: 'hidden', textTransform: 'uppercase',
-        border: '1px solid #000', boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+        background: isList ? 'rgba(255,255,255,0.1)' : '#F5C400', 
+        color: isList ? '#fff' : '#000', 
+        fontSize: Math.max(size * (isList ? 0.16 : 0.18), isList ? 8 : 10), 
+        fontWeight: 900, 
+        borderRadius: 4, 
+        marginTop: -10, 
+        position: 'relative', 
+        zIndex: 2, 
+        padding: isList ? '1px 3px' : '2px 4px', 
+        whiteSpace: 'nowrap', 
+        overflow: 'hidden', 
+        textTransform: 'uppercase',
+        border: isList ? 'none' : '1px solid #000'
       }}>
         {player.short}
       </div>
 
-      <style jsx>{`
-        .player-card-container:hover .sprite-image { background-position: right center; }
-        .player-card-container:active .sprite-image { background-position: right center; }
-      `}</style>
+      {/* Aplica hover apenas se NÃO for lista */}
+      {!isList && (
+        <style jsx>{`
+          .player-card-container:hover .sprite-image {
+            background-position: right center;
+          }
+          .player-card-container:active .sprite-image {
+            background-position: right center;
+          }
+        `}</style>
+      )}
     </div>
   );
 }
@@ -387,6 +403,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                 <div key={p.id} onClick={() => setSelected({ player:p, from:'bench' })} style={{ 
                   background:'#111', borderRadius:12, padding:8, textAlign:'center', border: selected?.player.id===p.id?'2px solid #F5C400':'1px solid #1a1a1a'
                 }}>
+                  {/* Passa a prop isList como true aqui */}
                   <PlayerCard player={p} size={50} isList />
                 </div>
               ))}
