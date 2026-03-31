@@ -28,12 +28,6 @@ const PLAYER_MAP: Record<string, number> = {
   'Carlão': 38, 'Ronald Barcellos': 39,
 };
 
-const PTS = {
-  gol: 8, assist: 5, titular: 2, clean_sheet: 5,
-  amarelo: -2, vermelho: -5, placar_exato: 15,
-  resultado_certo: 5, heroi: 10,
-};
-
 function findPlayerId(name: string): number | null {
   if (PLAYER_MAP[name]) return PLAYER_MAP[name];
   const lower = name.toLowerCase();
@@ -44,7 +38,6 @@ function findPlayerId(name: string): number | null {
   return null;
 }
 
-// Vercel chama esse endpoint via cron — protegido por CRON_SECRET
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization');
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -55,12 +48,11 @@ export async function GET(req: NextRequest) {
   log.push(`🕐 Cron iniciado: ${new Date().toISOString()}`);
 
   try {
-    // 1. Busca jogos ativos que ainda não foram processados
     const { data: jogosAtivos } = await supabase
       .from('jogos')
       .select('id, competicao, data_hora, mandante_slug, visitante_slug')
       .eq('ativo', true)
-      .lt('data_hora', new Date().toISOString()) // já passou
+      .lt('data_hora', new Date().toISOString())
       .order('data_hora', { ascending: false })
       .limit(5);
 
@@ -69,7 +61,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ log });
     }
 
-    // 2. Filtra jogos que têm escalações mas não têm resultado processado
     for (const jogo of jogosAtivos) {
       const { count: escalacoes } = await supabase
         .from('tigre_fc_escalacoes')
@@ -92,7 +83,6 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      // Aguarda 90 minutos após o horário do jogo antes de buscar
       const inicio = new Date(jogo.data_hora);
       const agora = new Date();
       const minutosDecorridos = (agora.getTime() - inicio.getTime()) / 60000;
@@ -104,7 +94,6 @@ export async function GET(req: NextRequest) {
 
       log.push(`🔍 Buscando resultado do jogo ${jogo.id} no Sofascore...`);
 
-      // 3. Busca eventos recentes do Novorizontino no Sofascore
       const eventsRes = await fetch(
         `https://api.sofascore.com/api/v1/team/${NOVO_TEAM_ID}/events/last/0`,
         { headers: HEADERS }
@@ -118,7 +107,6 @@ export async function GET(req: NextRequest) {
       const eventsData = await eventsRes.json();
       const sfJogos = (eventsData.events || []).filter((e: any) => e.status?.type === 'finished');
 
-      // Tenta casar o jogo do Supabase com o do Sofascore por data (+/- 4h)
       const jogoData = new Date(jogo.data_hora);
       const sfJogo = sfJogos.find((e: any) => {
         const sfData = new Date(e.startTimestamp * 1000);
@@ -138,7 +126,6 @@ export async function GET(req: NextRequest) {
 
       log.push(`⚽ Placar: ${sfJogo.homeTeam?.name} ${gols_mandante} × ${gols_visitante} ${sfJogo.awayTeam?.name}`);
 
-      // 4. Busca incidentes
       const incRes = await fetch(
         `https://api.sofascore.com/api/v1/event/${sfEventId}/incidents`,
         { headers: HEADERS }
@@ -163,7 +150,6 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // 5. Busca lineups
       const lineupRes = await fetch(
         `https://api.sofascore.com/api/v1/event/${sfEventId}/lineups`,
         { headers: HEADERS }
@@ -177,7 +163,6 @@ export async function GET(req: NextRequest) {
             const pid = findPlayerId(p.player?.name || '');
             if (pid) eventos.push({ player_id: pid, tipo: 'titular' });
           }
-          // Herói = maior rating
           const rating = p.statistics?.rating || 0;
           if (rating > maxRating) {
             const pid = findPlayerId(p.player?.name || '');
@@ -186,11 +171,10 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // 6. Clean sheet
       const novoGolsSofridos = isHome ? gols_visitante : gols_mandante;
       if (novoGolsSofridos === 0) {
         const gols = novoLineup?.players?.filter((p: any) => p.substitute === false) || [];
-        for (const p of gols.slice(0, 5)) { // goleiro + zagueiros
+        for (const p of gols.slice(0, 5)) {
           const pid = findPlayerId(p.player?.name || '');
           if (pid) eventos.push({ player_id: pid, tipo: 'clean_sheet' });
         }
@@ -198,7 +182,6 @@ export async function GET(req: NextRequest) {
 
       log.push(`📊 ${eventos.length} eventos coletados · Herói ID: ${heroiId}`);
 
-      // 7. Chama a engine de pontuação
       const processRes = await fetch(
         `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.onovorizontino.com.br'}/api/tigre-fc/processar-resultado`,
         {
@@ -223,11 +206,15 @@ export async function GET(req: NextRequest) {
 
   log.push(`🏁 Cron finalizado: ${new Date().toISOString()}`);
 
-  // Salva log no Supabase para auditoria
-  await supabase.from('tigre_fc_cron_logs').upsert({
-    executado_em: new Date().toISOString(),
-    log: log.join('\n'),
-  }).catch(() => {});
+  // CORREÇÃO AQUI: Salvando log sem quebrar o build
+  try {
+    await supabase.from('tigre_fc_cron_logs').upsert({
+      executado_em: new Date().toISOString(),
+      log: log.join('\n'),
+    });
+  } catch (e) {
+    console.error("Falha ao salvar log da cron:", e);
+  }
 
   return NextResponse.json({ log, ok: true });
 }
