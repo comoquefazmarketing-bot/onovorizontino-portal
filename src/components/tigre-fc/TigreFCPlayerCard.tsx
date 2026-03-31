@@ -14,7 +14,7 @@ type Props = {
   size: number;
   isCapitao?: boolean;
   isHeroi?: boolean;
-  isTopGoleador?: boolean; // top 3 gols da temporada
+  isTopGoleador?: boolean;
   selected?: boolean;
   onClick?: () => void;
 };
@@ -22,92 +22,158 @@ type Props = {
 export default function TigreFCPlayerCard({
   player, size, isCapitao, isHeroi, isTopGoleador, selected, onClick
 }: Props) {
-  const labelSize = Math.max(8, Math.round(size * 0.2));
+  const labelSize = Math.max(9, Math.round(size * 0.18));
+  const badgeSize = Math.max(16, Math.round(size * 0.25));
 
-  // Define borda e efeito baseado no status
+  const colors = {
+    capitao: '#FFD700',
+    heroi: '#60a5fa',
+    goleador: '#4ade80',
+    default: '#F5C400',
+    selected: '#FFFFFF',
+    bg: 'rgba(0,0,0,0.6)'
+  };
+
   const getBorderColor = () => {
-    if (isCapitao) return '#FFD700';
-    if (isHeroi) return '#60a5fa';
-    if (isTopGoleador) return '#4ade80';
-    if (selected) return '#fff';
-    return '#F5C400';
+    if (selected) return colors.selected;
+    if (isCapitao) return colors.capitao;
+    if (isHeroi) return colors.heroi;
+    if (isTopGoleador) return colors.goleador;
+    return colors.default;
   };
-
-  const getGlow = () => {
-    if (isCapitao) return '0 0 12px rgba(255,215,0,.8), 0 0 24px rgba(255,215,0,.4)';
-    if (isHeroi) return '0 0 12px rgba(96,165,250,.8), 0 0 24px rgba(96,165,250,.4)';
-    if (isTopGoleador) return '0 0 8px rgba(74,222,128,.6)';
-    return 'none';
-  };
-
-  const getBorderWidth = () => (isCapitao || isHeroi) ? '3px' : '2.5px';
 
   return (
     <>
       <style>{`
-        @keyframes capitao-pulse { 0%,100%{box-shadow:0 0 10px rgba(255,215,0,.6),0 0 20px rgba(255,215,0,.3)} 50%{box-shadow:0 0 16px rgba(255,215,0,.9),0 0 32px rgba(255,215,0,.5)} }
-        @keyframes heroi-pulse { 0%,100%{box-shadow:0 0 10px rgba(96,165,250,.6),0 0 20px rgba(96,165,250,.3)} 50%{box-shadow:0 0 16px rgba(96,165,250,.9),0 0 32px rgba(96,165,250,.5)} }
-        @keyframes card-shimmer { 0%{background-position:-200% top} 100%{background-position:200% top} }
-        .cap-glow { animation: capitao-pulse 1.5s ease-in-out infinite !important; }
-        .heroi-glow { animation: heroi-pulse 1.5s ease-in-out infinite !important; }
+        @keyframes capitao-pulse { 
+          0%, 100% { box-shadow: 0 0 12px rgba(255,215,0,0.4); border-color: ${colors.capitao}; } 
+          50% { box-shadow: 0 0 20px rgba(255,215,0,0.8); border-color: #fff; } 
+        }
+        @keyframes heroi-pulse { 
+          0%, 100% { box-shadow: 0 0 12px rgba(96,165,250,0.4); border-color: ${colors.heroi}; } 
+          50% { box-shadow: 0 0 20px rgba(96,165,250,0.8); border-color: #fff; } 
+        }
+        @keyframes card-shimmer { 
+          0% { transform: translateX(-150%) skewX(-25deg); } 
+          100% { transform: translateX(150%) skewX(-25deg); } 
+        }
+        .cap-glow { animation: capitao-pulse 2s ease-in-out infinite; }
+        .heroi-glow { animation: heroi-pulse 2s ease-in-out infinite; }
       `}</style>
 
       <div
         onClick={onClick}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: onClick ? 'pointer' : 'default', position: 'relative' }}>
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 6,
+          cursor: onClick ? 'pointer' : 'default',
+          position: 'relative',
+          transition: 'transform 0.2s ease',
+          transform: selected ? 'scale(1.05)' : 'scale(1)',
+          width: size + 10
+        }}>
 
-        {/* Badge flutuante */}
-        {isCapitao && (
-          <div style={{ position: 'absolute', top: -6, right: -6, zIndex: 20, width: 18, height: 18, borderRadius: '50%', background: '#FFD700', border: '2px solid #111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#111', boxShadow: '0 0 8px rgba(255,215,0,.8)' }}>
-            C
+        {/* Badge Status (C ou H) */}
+        {(isCapitao || isHeroi) && (
+          <div style={{
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            zIndex: 30,
+            width: badgeSize,
+            height: badgeSize,
+            borderRadius: '50%',
+            background: isCapitao ? colors.capitao : colors.heroi,
+            border: '2px solid #111',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: badgeSize * 0.6,
+            fontWeight: 900,
+            color: isCapitao ? '#111' : '#fff',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.5)'
+          }}>
+            {isCapitao ? 'C' : 'H'}
           </div>
         )}
-        {isHeroi && !isCapitao && (
-          <div style={{ position: 'absolute', top: -6, right: -6, zIndex: 20, width: 18, height: 18, borderRadius: '50%', background: '#60a5fa', border: '2px solid #111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#fff', boxShadow: '0 0 8px rgba(96,165,250,.8)' }}>
-            H
-          </div>
-        )}
 
-        {/* Foto */}
+        {/* Container da Foto */}
         <div
           className={isCapitao ? 'cap-glow' : isHeroi ? 'heroi-glow' : ''}
           style={{
-            width: size, height: size, borderRadius: '50%', overflow: 'hidden',
-            border: `${getBorderWidth()} solid ${getBorderColor()}`,
-            boxShadow: !isCapitao && !isHeroi ? getGlow() : undefined,
-            position: 'relative', flexShrink: 0,
-            background: 'rgba(0,0,0,0.4)',
+            width: size,
+            height: size,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            border: `${selected || isCapitao || isHeroi ? '3px' : '2px'} solid ${getBorderColor()}`,
+            position: 'relative',
+            background: colors.bg,
+            transition: 'all 0.3s ease',
+            flexShrink: 0
           }}>
-          <div style={{
-            width: '100%', height: '100%',
-            backgroundImage: `url(${player.foto})`,
-            backgroundSize: '200% 100%',
-            backgroundPosition: 'left top',
-            backgroundRepeat: 'no-repeat',
-          }} />
+          
+          <img 
+            src={player.foto} 
+            alt={player.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block'
+            }}
+          />
 
-          {/* Shimmer dourado no capitão */}
+          {/* Shimmer Effect para Capitão */}
           {isCapitao && (
             <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(105deg, transparent 40%, rgba(255,215,0,.25) 50%, transparent 60%)',
-              backgroundSize: '200% 100%',
-              animation: 'card-shimmer 2s linear infinite',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+              animation: 'card-shimmer 2.5s infinite',
+              zIndex: 10
             }} />
           )}
 
-          {/* Número */}
-          <div style={{ position: 'absolute', bottom: -1, right: -1, width: 14, height: 14, borderRadius: '50%', background: '#000', border: `1px solid ${getBorderColor()}`, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-            <span style={{ color: getBorderColor(), fontSize: 5, fontWeight: 900 }}>{player.num}</span>
+          {/* Número do Jogador */}
+          <div style={{
+            position: 'absolute',
+            bottom: 2,
+            right: 2,
+            minWidth: 18,
+            height: 18,
+            padding: '0 4px',
+            borderRadius: 10,
+            background: '#000',
+            border: `1.5px solid ${getBorderColor()}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 20
+          }}>
+            <span style={{ color: getBorderColor(), fontSize: 9, fontWeight: 900 }}>
+              {player.num}
+            </span>
           </div>
         </div>
 
-        {/* Nome */}
+        {/* Nome/Abrev. */}
         <span style={{
-          fontSize: labelSize, fontWeight: 900, color: isCapitao ? '#FFD700' : isHeroi ? '#60a5fa' : '#fff',
-          textShadow: isCapitao ? '0 0 8px rgba(255,215,0,.8)' : isHeroi ? '0 0 8px rgba(96,165,250,.8)' : '0 1px 4px rgba(0,0,0,1)',
-          textTransform: 'uppercase', whiteSpace: 'nowrap',
-          maxWidth: size + 10, overflow: 'hidden', textOverflow: 'ellipsis',
+          fontSize: labelSize,
+          fontWeight: 800,
+          color: isCapitao ? colors.capitao : isHeroi ? colors.heroi : '#fff',
+          textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+          textTransform: 'uppercase',
+          textAlign: 'center',
+          width: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          letterSpacing: '0.5px'
         }}>
           {player.short}
         </span>
