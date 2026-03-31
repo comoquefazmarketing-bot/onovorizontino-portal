@@ -77,6 +77,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
   const [enviando, setEnviando]       = useState(false);
   const [loading, setLoading]         = useState(true);
   const comentEndRef                  = useRef<HTMLDivElement>(null);
+  
   const CAMPO_W = 280;
   const CAMPO_H = Math.round(CAMPO_W * (105/68));
   const SLOT_SZ = Math.round(CAMPO_W * 0.1);
@@ -87,13 +88,13 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
     const load = async () => {
       try {
         const promises: any[] = [
-          supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single(),
+          supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).maybeSingle(),
         ];
 
         if (jogoId) {
           promises.push(
-            supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).single(),
-            supabase.from('tigre_fc_palpites').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).single(),
+            supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle(),
+            supabase.from('tigre_fc_palpites').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle(),
             supabase.from('tigre_fc_comentarios').select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
               .eq('escalacao_usuario_id', targetUserId).eq('jogo_id', jogoId)
               .order('criado_em', { ascending: true }),
@@ -102,7 +103,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
 
         const results = await Promise.all(promises);
         setPerfil(results[0]?.data || null);
-        if (jogoId) {
+        if (jogoId && results.length > 1) {
           setEscalacao(results[1]?.data || null);
           setPalpite(results[2]?.data || null);
           setComentarios(results[3]?.data || []);
@@ -134,18 +135,35 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
   const enviarComentario = async () => {
     if (!novoComent.trim() || !meuId || !jogoId || enviando) return;
     setEnviando(true);
-    await supabase.from('tigre_fc_comentarios').insert({
-      escalacao_usuario_id: targetUserId, jogo_id: jogoId,
-      autor_id: meuId, texto: novoComent.trim(),
-    });
-    if (!isMe) {
-      await supabase.from('tigre_fc_notificacoes').insert({
-        usuario_id: targetUserId, tipo: 'corneta',
-        de_usuario_id: meuId, jogo_id: jogoId,
-        mensagem: 'cornetou sua escalação!',
-      }).catch(() => {});
+    
+    try {
+      await supabase.from('tigre_fc_comentarios').insert({
+        escalacao_usuario_id: targetUserId, 
+        jogo_id: jogoId,
+        autor_id: meuId, 
+        texto: novoComent.trim(),
+      });
+
+      if (!isMe) {
+        // Enviar notificação de forma segura sem quebrar o build
+        try {
+          await supabase.from('tigre_fc_notificacoes').insert({
+            usuario_id: targetUserId, 
+            tipo: 'corneta',
+            de_usuario_id: meuId, 
+            jogo_id: jogoId,
+            mensagem: 'cornetou sua escalação!',
+          });
+        } catch (e) {
+          console.error("Erro ao notificar:", e);
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao comentar:", err);
+    } finally {
+      setNovoComent(''); 
+      setEnviando(false);
     }
-    setNovoComent(''); setEnviando(false);
   };
 
   const slots = SLOTS[escalacao?.formacao || '4-3-3'] || SLOTS['4-3-3'];
@@ -170,7 +188,6 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
             <div style={{ padding:40, textAlign:'center', color:'#555' }}>Perfil não encontrado</div>
           ) : (
             <>
-              {/* Perfil */}
               <div style={{ padding:'20px 16px', display:'flex', alignItems:'center', gap:14, borderBottom:'1px solid #111' }}>
                 {perfil?.avatar_url ? (
                   <img src={perfil.avatar_url} style={{ width:56, height:56, borderRadius:'50%', border:`2px solid ${NIVEL_COLOR[perfil.nivel] || '#555'}`, objectFit:'cover' }} alt="Avatar" />
@@ -194,7 +211,6 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               </div>
 
-              {/* Palpite */}
               {palpite && (
                 <div style={{ margin:'16px 16px 0', padding:'12px 16px', background:'#111', border:'1px solid #1a1a1a', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                   <div style={{ fontSize:11, color:'#555', textTransform:'uppercase', letterSpacing:1 }}>Palpite</div>
@@ -204,7 +220,6 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               )}
 
-              {/* Campo */}
               {escalacao ? (
                 <div style={{ padding:'16px 0', display:'flex', justifyContent:'center' }}>
                   <div style={{ position:'relative', width:CAMPO_W, height:CAMPO_H, borderRadius:8, overflow:'hidden', background:'#2a7a2a' }}>
@@ -234,7 +249,6 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 </div>
               )}
 
-              {/* Corneta */}
               <div style={{ padding:'0 16px 16px', borderTop:'1px solid #111', marginTop:8 }}>
                 <div style={{ fontSize:11, color:'#F5C400', fontWeight:900, textTransform:'uppercase', letterSpacing:2, margin:'16px 0 12px' }}>
                   📣 Corneta ({comentarios?.length || 0})
@@ -247,7 +261,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                   <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:16 }}>
                     {comentarios.map((c: any) => {
                       const autor = c?.autor;
-                      const cor = NIVEL_COLOR[autor?.nivel] || '#555';
+                      const cor = autor?.nivel ? (NIVEL_COLOR[autor.nivel] || '#555') : '#555';
                       return (
                         <div key={c.id} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
                           {autor?.avatar_url ? (
@@ -259,7 +273,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                           )}
                           <div style={{ flex:1, background:'#111', borderRadius:'0 10px 10px 10px', padding:'8px 12px' }}>
                             <div style={{ fontSize:11, fontWeight:900, color: cor, marginBottom:4 }}>
-                              {NIVEL_ICON[autor?.nivel] || ''} {autor?.apelido || autor?.nome}
+                              {autor?.nivel ? (NIVEL_ICON[autor.nivel] || '') : ''} {autor?.apelido || autor?.nome || 'Usuário'}
                             </div>
                             <div style={{ fontSize:13, color:'#ccc', lineHeight:1.5 }}>{c.texto}</div>
                             <div style={{ fontSize:9, color:'#333', marginTop:4 }}>
