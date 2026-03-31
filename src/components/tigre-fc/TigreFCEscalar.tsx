@@ -17,41 +17,41 @@ const PLAYERS = [
   { id: 2,  name: 'Jordi',            short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
   { id: 3,  name: 'João Scapin',      short: 'Scapin',     num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
   { id: 4,  name: 'Lucas Ribeiro',    short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
-  { id: 5,  name: 'Lora',             short: 'Lora',       num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
+  { id: 5,  name: 'Lora',             short: 'Lora',        num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
   { id: 6,  name: 'Castrillón',       short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
   { id: 7,  name: 'Arthur Barbosa',   short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
-  { id: 8,  name: 'Mayk',             short: 'Mayk',       num: 26, pos: 'LAT', foto: BASE+'MAYK.jpg.webp' },
-  { id: 9,  name: 'Maykon Jesus',     short: 'Maykon',     num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
-  { id: 10, name: 'Dantas',           short: 'Dantas',     num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
-  { id: 11, name: 'Eduardo Brock',    short: 'E.Brock',    num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
-  { id: 12, name: 'Patrick',          short: 'Patrick',    num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
-  { id: 13, name: 'Gabriel Bahia',    short: 'G.Bahia',    num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
-  { id: 14, name: 'Carlinhos',        short: 'Carlinhos',  num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
-  { id: 15, name: 'Alemão',           short: 'Alemão',     num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
-  { id: 16, name: 'Renato Palm',      short: 'R.Palm',     num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
-  { id: 17, name: 'Alvariño',         short: 'Alvariño',   num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
-  { id: 18, name: 'Bruno Santana',    short: 'B.Santana',  num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
-  { id: 19, name: 'Luís Oyama',       short: 'Oyama',      num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
-  { id: 20, name: 'Léo Naldi',        short: 'L.Naldi',    num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
-  { id: 21, name: 'Rômulo',           short: 'Rômulo',     num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
-  { id: 22, name: 'Matheus Bianqui',  short: 'Bianqui',    num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  { id: 23, name: 'Juninho',          short: 'Juninho',    num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
-  { id: 24, name: 'Tavinho',          short: 'Tavinho',    num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
-  { id: 25, name: 'Diego Galo',       short: 'D.Galo',     num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
-  { id: 26, name: 'Marlon',           short: 'Marlon',     num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
-  { id: 27, name: 'Hector Bianchi',   short: 'Hector',     num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
-  { id: 28, name: 'Nogueira',         short: 'Nogueira',   num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
-  { id: 29, name: 'Luiz Gabriel',     short: 'L.Gabriel',  num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
-  { id: 30, name: 'Jhones Kauê',      short: 'J.Kauê',     num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
-  { id: 31, name: 'Robson',           short: 'Robson',     num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
-  { id: 32, name: 'Vinícius Paiva',   short: 'V.Paiva',    num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
-  { id: 33, name: 'Hélio Borges',     short: 'H.Borges',   num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
-  { id: 34, name: 'Jardiel',          short: 'Jardiel',    num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
-  { id: 35, name: 'Nicolas Careca',   short: 'N.Careca',   num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
-  { id: 36, name: 'Titi Ortiz',       short: 'T.Ortiz',    num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
-  { id: 37, name: 'Diego Mathias',    short: 'D.Mathias',  num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
-  { id: 38, name: 'Carlão',           short: 'Carlão',     num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
-  { id: 39, name: 'Ronald Barcellos', short: 'Ronald',     num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
+  { id: 8,  name: 'Mayk',             short: 'Mayk',        num: 26, pos: 'LAT', foto: BASE+'MAYK.jpg.webp' },
+  { id: 9,  name: 'Maykon Jesus',      short: 'Maykon',      num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
+  { id: 10, name: 'Dantas',           short: 'Dantas',      num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
+  { id: 11, name: 'Eduardo Brock',    short: 'E.Brock',     num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
+  { id: 12, name: 'Patrick',          short: 'Patrick',     num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
+  { id: 13, name: 'Gabriel Bahia',    short: 'G.Bahia',     num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
+  { id: 14, name: 'Carlinhos',        short: 'Carlinhos',   num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
+  { id: 15, name: 'Alemão',           short: 'Alemão',      num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
+  { id: 16, name: 'Renato Palm',      short: 'R.Palm',      num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
+  { id: 17, name: 'Alvariño',         short: 'Alvariño',    num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
+  { id: 18, name: 'Bruno Santana',    short: 'B.Santana',   num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
+  { id: 19, name: 'Luís Oyama',        short: 'Oyama',       num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
+  { id: 20, name: 'Léo Naldi',        short: 'L.Naldi',     num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
+  { id: 21, name: 'Rômulo',           short: 'Rômulo',      num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
+  { id: 22, name: 'Matheus Bianqui',  short: 'Bianqui',     num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
+  { id: 23, name: 'Juninho',          short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
+  { id: 24, name: 'Tavinho',          short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
+  { id: 25, name: 'Diego Galo',        short: 'D.Galo',      num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
+  { id: 26, name: 'Marlon',           short: 'Marlon',      num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
+  { id: 27, name: 'Hector Bianchi',   short: 'Hector',      num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
+  { id: 28, name: 'Nogueira',         short: 'Nogueira',    num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
+  { id: 29, name: 'Luiz Gabriel',     short: 'L.Gabriel',   num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
+  { id: 30, name: 'Jhones Kauê',      short: 'J.Kauê',      num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
+  { id: 31, name: 'Robson',           short: 'Robson',      num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
+  { id: 32, name: 'Vinícius Paiva',   short: 'V.Paiva',     num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
+  { id: 33, name: 'Hélio Borges',     short: 'H.Borges',    num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
+  { id: 34, name: 'Jardiel',          short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
+  { id: 35, name: 'Nicolas Careca',   short: 'N.Careca',    num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
+  { id: 36, name: 'Titi Ortiz',       short: 'T.Ortiz',     num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
+  { id: 37, name: 'Diego Mathias',    short: 'D.Mathias',   num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
+  { id: 38, name: 'Carlão',           short: 'Carlão',      num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
+  { id: 39, name: 'Ronald Barcellos', short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
 const RESERVA_SLOTS = [
@@ -85,7 +85,7 @@ type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
 
-// --- COMPONENTE DO CARD COM EFEITO DE REAÇÃO (HOVER) ---
+// --- COMPONENTE DO CARD COM TRANSIÇÃO PERFEITA (SPRITE LADO A LADO) ---
 function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean }) {
   return (
     <div className="player-card-container" style={{ width: size, textAlign: 'center', position: 'relative' }}>
@@ -102,36 +102,39 @@ function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size
         position: 'relative',
         cursor: 'pointer'
       }}>
-        {/* Imagem do Jogador (Sprite) */}
+        {/* A imagem ocupa 200% da largura da div circular */}
         <div className="sprite-image" style={{
           width: '100%',
-          height: '200%',
+          height: '100%',
           backgroundImage: `url(${player.foto})`,
-          backgroundSize: '100% 50%',
+          backgroundSize: '200% 100%', 
+          backgroundPosition: 'left center', 
           backgroundRepeat: 'no-repeat',
           position: 'absolute',
           top: 0,
           left: 0,
-          transition: 'transform 0.1s steps(1)' 
+          transition: 'background-position 0s steps(1)' 
         }} />
       </div>
 
+      {/* Tarja do Nome */}
       <div style={{ 
         background: '#F5C400', color: '#000', fontSize: Math.max(size * 0.18, 10), fontWeight: 900, 
-        borderRadius: 4, marginTop: -8, position: 'relative', zIndex: 2, 
-        padding: '2px 4px', whiteSpace: 'nowrap', overflow: 'hidden', textTransform: 'uppercase'
+        borderRadius: 4, marginTop: -10, position: 'relative', zIndex: 2, 
+        padding: '2px 4px', whiteSpace: 'nowrap', overflow: 'hidden', textTransform: 'uppercase',
+        border: '1px solid #000', boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
       }}>
         {player.short}
       </div>
 
       <style jsx>{`
-        /* Ao passar o mouse, a imagem sobe para revelar a segunda metade (reação) */
+        /* Troca instantânea para o lado direito ao passar o mouse */
         .player-card-container:hover .sprite-image {
-          transform: translateY(-50%);
+          background-position: right center;
         }
-        /* Efeito para Mobile (Toque) */
+        /* Mobile: troca ao tocar */
         .player-card-container:active .sprite-image {
-          transform: translateY(-50%);
+          background-position: right center;
         }
       `}</style>
     </div>
@@ -275,7 +278,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
   return (
     <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom:120 }}>
-      {/* Header Fixo */}
+      {/* Header */}
       <div style={{ background:'#F5C400', padding:16, display:'flex', alignItems:'center', justifyContent:'space-between', position: 'sticky', top:0, zIndex: 100 }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <img src={LOGO} style={{ width:28 }} alt="Logo" />
@@ -293,7 +296,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               ))}
             </div>
 
-            {/* CAMPO 3D */}
+            {/* CAMPO */}
             <div style={{ perspective: '1200px', marginBottom: 30, display:'flex', justifyContent:'center' }}>
               <div style={{ 
                 position:'relative', width:fieldWidth, height:fieldWidth * 1.4, 
@@ -328,7 +331,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
-            {/* BANCO DE RESERVAS */}
+            {/* BANCO */}
             <div style={{ background:'#111', borderRadius:16, padding:16, marginBottom:20, border:'1px solid #222' }}>
               <div style={{ fontSize:10, fontWeight:900, color:'#F5C400', letterSpacing:1, marginBottom:12 }}>BANCO DE RESERVAS</div>
               <div style={{ display:'flex', justifyContent:'space-between' }}>
@@ -346,7 +349,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
-            {/* LISTA DE JOGADORES */}
+            {/* LISTA */}
             <div style={{ display:'flex', gap:8, marginBottom:12, overflowX:'auto', paddingBottom:4 }}>
               {['TODOS','GOL','LAT','ZAG','MEI','ATA'].map(pos => (
                 <button key={pos} onClick={() => setFilterPos(pos)} style={{ flexShrink:0, padding:'6px 12px', borderRadius:20, border:'none', background: filterPos===pos?'#fff':'#111', color: filterPos===pos?'#000':'#555', fontSize:10, fontWeight:900 }}>{pos}</button>
@@ -426,7 +429,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         )}
       </div>
 
-      {/* Botão de Ação Inferior */}
+      {/* Botão de Ação */}
       {['escalar','capitao','heroi','palpite','confirmar'].includes(step) && (
         <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)', zIndex:100 }}>
           <button 
