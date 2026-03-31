@@ -16,6 +16,7 @@ type Jogo = {
 };
 
 export default function TigreFCPage() {
+  const [mounted, setMounted] = useState(false);
   const [jogo, setJogo] = useState<Jogo | null>(null);
   const [ranking, setRanking] = useState<any[]>([]);
   const [meuId, setMeuId] = useState<string | null>(null);
@@ -24,12 +25,19 @@ export default function TigreFCPage() {
 
   const { count: notifCount, marcarLidas } = useTigreFCNotificacoes(meuId);
 
-  // Cronômetro Robusto (FIFA Style)
+  // 1. Corrige o erro de "client-side exception" garantindo que o componente montou
   useEffect(() => {
-    if (!jogo) return;
+    setMounted(true);
+  }, []);
+
+  // 2. Cronômetro Robusto (FIFA Style) - Protegido contra Erro de Hidratação
+  useEffect(() => {
+    if (!jogo || !mounted) return;
+    
     const interval = setInterval(() => {
       const dataISO = jogo.data_hora.replace(' ', 'T');
-      const diff = new Date(dataISO).getTime() - (90 * 60 * 1000) - Date.now(); // 1h30 antes
+      // Fechamento 1h30 antes (90 min)
+      const diff = new Date(dataISO).getTime() - (90 * 60 * 1000) - Date.now(); 
       
       if (diff <= 0) {
         setTimeLeft({ h: '00', m: '00', s: '00' });
@@ -43,9 +51,11 @@ export default function TigreFCPage() {
         s: String(Math.floor((diff % 60000) / 1000)).padStart(2, '0')
       });
     }, 1000);
+    
     return () => clearInterval(interval);
-  }, [jogo]);
+  }, [jogo, mounted]);
 
+  // 3. Busca de Dados
   useEffect(() => {
     fetch('/api/proximo-jogo').then(r => r.json()).then(({ jogos }) => { if (jogos?.[0]) setJogo(jogos[0]); });
     
@@ -65,6 +75,9 @@ export default function TigreFCPage() {
     .then(r => r.json()).then(data => { if (Array.isArray(data)) setRanking(data); });
   }, []);
 
+  // Enquanto não monta no navegador, retornamos um esqueleto simples para evitar o crash
+  if (!mounted) return <main style={{ minHeight: '100vh', background: '#050505' }} />;
+
   return (
     <main style={{ minHeight: '100vh', background: '#050505', color: '#fff', paddingBottom: 100, fontFamily: 'sans-serif' }}>
       
@@ -74,16 +87,17 @@ export default function TigreFCPage() {
         
         <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <img src={LOGO} style={{ width: 42, height: 42, objectFit: 'contain' }} />
+            {/* Logo sem distorção */}
+            <img src={LOGO} style={{ width: 42, height: 42, objectFit: 'contain' }} alt="Tigre FC" />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 24, fontWeight: 900, color: '#000', fontStyle: 'italic', textTransform: 'uppercase', lineHeight: 0.8 }}>TIGRE FC</span>
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#000', opacity: 0.6, textTransform: 'uppercase', letterSpacing: 1 }}>Season 2026</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: '#000', opacity: 0.6, textTransform: 'uppercase', letterSpacing: 1 }}>Ultimate Team 26</span>
             </div>
           </div>
           
           {notifCount > 0 && (
             <div onClick={marcarLidas} style={{ background: '#000', color: '#F5C400', padding: '6px 12px', borderRadius: 4, fontSize: 10, fontWeight: 900, cursor: 'pointer', transform: 'skewX(-10deg)' }}>
-              <div style={{ transform: 'skewX(10deg)' }}>{notifCount} NOTIFICAÇÕES</div>
+              <div style={{ transform: 'skewX(10deg)' }}>{notifCount} ALERTAS</div>
             </div>
           )}
         </div>
@@ -91,7 +105,7 @@ export default function TigreFCPage() {
 
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '0 16px' }}>
         
-        {/* HERO CARD: PRÓXIMO JOGO */}
+        {/* HERO CARD: PRÓXIMO JOGO (Estilo Evento FIFA) */}
         {jogo && (
           <section style={{ marginTop: 24, position: 'relative' }}>
             <div style={{ 
@@ -99,11 +113,10 @@ export default function TigreFCPage() {
               borderRadius: 12, border: '1px solid #333', padding: '24px 16px',
               boxShadow: '0 10px 30px rgba(0,0,0,0.5)', position: 'relative', overflow: 'hidden'
             }}>
-              {/* Badge Mercado */}
               <div style={{ 
                 position: 'absolute', top: 0, left: 0, background: '#F5C400', color: '#000', 
                 padding: '4px 12px', fontSize: 10, fontWeight: 900, textTransform: 'uppercase',
-                borderBottomRightRadius: 12, fontStyle: 'italic'
+                borderBottomRightRadius: 12, fontStyle: 'italic', zIndex: 2
               }}>
                 Mercado Aberto
               </div>
@@ -112,7 +125,7 @@ export default function TigreFCPage() {
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#666', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Fecha em</div>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
                   {['h', 'm', 's'].map(unit => (
-                    <div key={unit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div key={unit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 45 }}>
                       <span style={{ fontSize: 32, fontWeight: 900, color: '#fff', fontStyle: 'italic', fontFamily: 'monospace' }}>{timeLeft[unit as keyof typeof timeLeft]}</span>
                       <span style={{ fontSize: 8, fontWeight: 900, color: '#F5C400', textTransform: 'uppercase' }}>{unit === 'h' ? 'Horas' : unit === 'm' ? 'Min' : 'Seg'}</span>
                     </div>
@@ -121,13 +134,13 @@ export default function TigreFCPage() {
 
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 30, marginBottom: 24 }}>
                   <div style={{ textAlign: 'center' }}>
-                    <img src={jogo.mandante.escudo_url} style={{ width: 64, height: 64, objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.1))' }} />
-                    <div style={{ fontSize: 12, fontWeight: 900, color: '#fff', marginTop: 8 }}>{jogo.mandante.sigla || 'TIG'}</div>
+                    <img src={jogo.mandante.escudo_url} style={{ width: 64, height: 64, objectFit: 'contain' }} />
+                    <div style={{ fontSize: 12, fontWeight: 900, color: '#fff', marginTop: 8 }}>{jogo.mandante.sigla || 'MAND'}</div>
                   </div>
-                  <span style={{ fontSize: 24, fontWeight: 900, color: '#333', fontStyle: 'italic' }}>VS</span>
+                  <span style={{ fontSize: 24, fontWeight: 900, color: '#222', fontStyle: 'italic' }}>VS</span>
                   <div style={{ textAlign: 'center' }}>
                     <img src={jogo.visitante.escudo_url} style={{ width: 64, height: 64, objectFit: 'contain' }} />
-                    <div style={{ fontSize: 12, fontWeight: 900, color: '#fff', marginTop: 8 }}>{jogo.visitante.sigla || 'OPP'}</div>
+                    <div style={{ fontSize: 12, fontWeight: 900, color: '#fff', marginTop: 8 }}>{jogo.visitante.sigla || 'VISI'}</div>
                   </div>
                 </div>
 
@@ -136,7 +149,7 @@ export default function TigreFCPage() {
                   borderRadius: 8, fontWeight: 900, textDecoration: 'none', textTransform: 'uppercase',
                   fontSize: 14, fontStyle: 'italic', letterSpacing: 1, boxShadow: '0 4px 15px rgba(245,196,0,0.3)'
                 }}>
-                  Escalar meu Squad →
+                  Escalar Squad Pro →
                 </Link>
               </div>
             </div>
@@ -146,8 +159,8 @@ export default function TigreFCPage() {
         {/* RANKING LEADERBOARD */}
         <section style={{ marginTop: 32 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase' }}>Top 10 Global</h2>
-            <span style={{ fontSize: 10, fontWeight: 800, color: '#F5C400' }}>RANKING GERAL</span>
+            <h2 style={{ fontSize: 16, fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', margin: 0 }}>Top 10 Global</h2>
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#F5C400' }}>SEASON 1</span>
           </div>
           
           <div style={{ background: '#111', borderRadius: 12, border: '1px solid #222', overflow: 'hidden' }}>
@@ -158,7 +171,7 @@ export default function TigreFCPage() {
                 style={{ 
                   display: 'flex', alignItems: 'center', padding: '14px 16px', 
                   borderBottom: '1px solid #1a1a1a', cursor: 'pointer',
-                  background: user.id === meuId ? 'rgba(245,196,0,0.05)' : 'transparent'
+                  background: user.id === meuId ? 'rgba(245,196,0,0.1)' : 'transparent'
                 }}
               >
                 <span style={{ width: 28, fontSize: 12, fontWeight: 900, color: i < 3 ? '#F5C400' : '#444', fontStyle: 'italic' }}>#{i + 1}</span>
@@ -170,7 +183,7 @@ export default function TigreFCPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', color: '#fff' }}>{user.apelido || user.nome}</div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: '#555' }}>{user.nivel.toUpperCase()}</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#555' }}>{user.nivel?.toUpperCase() || 'PLAYER'}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 16, fontWeight: 900, color: '#F5C400', fontStyle: 'italic' }}>{user.pontos_total}</div>
@@ -181,9 +194,9 @@ export default function TigreFCPage() {
           </div>
         </section>
 
-        {/* CHAT INTEGRADO */}
+        {/* VESTIÁRIO (CHAT) */}
         <section style={{ marginTop: 32, marginBottom: 40 }}>
-          <div style={{ fontSize: 14, fontWeight: 900, fontStyle: 'italic', marginBottom: 12, textTransform: 'uppercase', color: '#fff' }}>Vestiário / Chat</div>
+          <div style={{ fontSize: 14, fontWeight: 900, fontStyle: 'italic', marginBottom: 12, textTransform: 'uppercase', color: '#fff' }}>Vestiário em Tempo Real</div>
           <div style={{ height: 450, borderRadius: 12, overflow: 'hidden', border: '1px solid #222', background: '#0a0a0a' }}>
             <TigreFCChat usuarioId={meuId} />
           </div>
