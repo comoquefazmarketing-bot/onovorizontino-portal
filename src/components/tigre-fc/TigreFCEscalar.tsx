@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import TigreFCLogin from '@/components/tigre-fc/TigreFCLogin';
-import TigreFCPlayerCard from '@/components/tigre-fc/TigreFCPlayerCard';
 import TigreFCShare from '@/components/tigre-fc/TigreFCShare';
 
 const supabase = createClient(
@@ -66,26 +65,75 @@ const RESERVA_SLOTS = [
 
 const FORMATIONS: Record<string, { id: string; label: string; x: number; y: number }[]> = {
   '4-3-3': [
-    { id:'gk',  label:'GOL', x:50, y:85 }, { id:'rb',  label:'LAT', x:85, y:65 },
-    { id:'cb1', label:'ZAG', x:65, y:65 }, { id:'cb2', label:'ZAG', x:35, y:65 },
-    { id:'lb',  label:'LAT', x:15, y:65 }, { id:'cm1', label:'MEI', x:75, y:45 },
-    { id:'cm2', label:'MEI', x:50, y:42 }, { id:'cm3', label:'MEI', x:25, y:45 },
-    { id:'rw',  label:'ATA', x:80, y:20 }, { id:'st',  label:'ATA', x:50, y:15 },
-    { id:'lw',  label:'ATA', x:20, y:20 },
+    { id:'gk',  label:'GOL', x:50, y:88 }, { id:'rb',  label:'LAT', x:82, y:68 },
+    { id:'cb1', label:'ZAG', x:62, y:72 }, { id:'cb2', label:'ZAG', x:38, y:72 },
+    { id:'lb',  label:'LAT', x:18, y:68 }, { id:'cm1', label:'MEI', x:75, y:48 },
+    { id:'cm2', label:'MEI', x:50, y:45 }, { id:'cm3', label:'MEI', x:25, y:48 },
+    { id:'rw',  label:'ATA', x:80, y:22 }, { id:'st',  label:'ATA', x:50, y:15 },
+    { id:'lw',  label:'ATA', x:20, y:22 },
   ],
   '4-4-2': [
-    { id:'gk',  label:'GOL', x:50, y:85 }, { id:'rb',  label:'LAT', x:85, y:65 },
-    { id:'cb1', label:'ZAG', x:65, y:65 }, { id:'cb2', label:'ZAG', x:35, y:65 },
-    { id:'lb',  label:'LAT', x:15, y:65 }, { id:'rm',  label:'MEI', x:80, y:45 },
-    { id:'cm1', label:'MEI', x:60, y:45 }, { id:'cm2', label:'MEI', x:40, y:45 },
-    { id:'lm',  label:'MEI', x:20, y:45 }, { id:'st1', label:'ATA', x:65, y:18 },
-    { id:'st2', label:'ATA', x:35, y:18 },
+    { id:'gk',  label:'GOL', x:50, y:88 }, { id:'rb',  label:'LAT', x:82, y:68 },
+    { id:'cb1', label:'ZAG', x:62, y:72 }, { id:'cb2', label:'ZAG', x:38, y:72 },
+    { id:'lb',  label:'LAT', x:18, y:68 }, { id:'rm',  label:'MEI', x:80, y:48 },
+    { id:'cm1', label:'MEI', x:60, y:48 }, { id:'cm2', label:'MEI', x:40, y:48 },
+    { id:'lm',  label:'MEI', x:20, y:48 }, { id:'st1', label:'ATA', x:65, y:20 },
+    { id:'st2', label:'ATA', x:35, y:20 },
   ],
 };
 
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 type Step = 'login' | 'apelido' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'salvo';
+
+// --- COMPONENTE DO CARD COM EFEITO SPRITE (GIF) ---
+function PlayerCard({ player, size, isCapitao, isHeroi }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean }) {
+  return (
+    <div style={{ width: size, textAlign: 'center', position: 'relative', filter: 'drop-shadow(0 5px 15px rgba(0,0,0,0.5))' }}>
+      {isCapitao && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>👑</div>}
+      {isHeroi && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>⭐</div>}
+      
+      <div style={{ 
+        width: size, 
+        height: size, 
+        borderRadius: '50%', 
+        overflow: 'hidden', 
+        border: '2px solid #F5C400',
+        background: '#111',
+        position: 'relative'
+      }}>
+        {/* Camada da imagem com animação Sprite */}
+        <div style={{
+          width: '100%',
+          height: '200%', // Comporta as duas imagens (cima/baixo)
+          backgroundImage: `url(${player.foto})`,
+          backgroundSize: '100% 50%',
+          backgroundRepeat: 'no-repeat',
+          animation: 'spriteAnim 0.7s steps(1) infinite',
+          position: 'absolute',
+          top: 0,
+          left: 0
+        }} />
+      </div>
+
+      <div style={{ 
+        background: '#F5C400', color: '#000', fontSize: size * 0.18, fontWeight: 900, 
+        borderRadius: 4, marginTop: -8, position: 'relative', zIndex: 2, 
+        padding: '2px 4px', whiteSpace: 'nowrap', overflow: 'hidden', textTransform: 'uppercase'
+      }}>
+        {player.short}
+      </div>
+
+      <style jsx>{`
+        @keyframes spriteAnim {
+          0% { transform: translateY(0); }
+          50% { transform: translateY(-50%); }
+          100% { transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [mounted, setMounted]         = useState(false);
@@ -103,7 +151,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [saving, setSaving]           = useState(false);
   const [fieldWidth, setFieldWidth]   = useState(340);
 
-  // 1. Garantir que o cliente montou para evitar erro de hidratação
   useEffect(() => {
     setMounted(true);
     const update = () => setFieldWidth(Math.min(window.innerWidth - 32, 450));
@@ -115,7 +162,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const isMercadoAberto = () => {
     if (!jogo?.data_inicio) return true;
     const agora = new Date();
-    // Correção para Safari (Substitui espaço por T se necessário)
     const dataISO = jogo.data_inicio.replace(' ', 'T');
     const limite = new Date(new Date(dataISO).getTime() - (MINUTOS_ANTECEDENCIA * 60 * 1000));
     return agora < limite;
@@ -159,9 +205,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         if (escalacao.heroi_id)   setHeroi(PLAYERS.find(p => p.id === escalacao.heroi_id) || null);
       }
       if (pal) setPalpite({ mandante: pal.gols_mandante, visitante: pal.gols_visitante });
-    } catch (e) {
-      console.error("Erro ao carregar dados", e);
-    }
+    } catch (e) { console.error(e); }
   };
 
   const handleSalvarApelido = async () => {
@@ -173,21 +217,15 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const handleSalvar = async () => {
     if (!isMercadoAberto() || saving) return;
     setSaving(true);
-    try {
-      await supabase.from('tigre_fc_escalacoes').upsert({ usuario_id: usuario.id, jogo_id: jogoId, formacao: formation, lineup, capitao_id: capitao?.id, heroi_id: heroi?.id }, { onConflict: 'usuario_id,jogo_id' });
-      await supabase.from('tigre_fc_palpites').upsert({ usuario_id: usuario.id, jogo_id: jogoId, gols_mandante: palpite.mandante, gols_visitante: palpite.visitante }, { onConflict: 'usuario_id,jogo_id' });
-      setStep('salvo');
-    } catch (err) {
-      alert("Erro ao salvar. Tente novamente.");
-    }
+    await supabase.from('tigre_fc_escalacoes').upsert({ usuario_id: usuario.id, jogo_id: jogoId, formacao: formation, lineup, capitao_id: capitao?.id, heroi_id: heroi?.id }, { onConflict: 'usuario_id,jogo_id' });
+    await supabase.from('tigre_fc_palpites').upsert({ usuario_id: usuario.id, jogo_id: jogoId, gols_mandante: palpite.mandante, gols_visitante: palpite.visitante }, { onConflict: 'usuario_id,jogo_id' });
+    setStep('salvo');
     setSaving(false);
   };
 
   const placePlayer = (slotId: string, player: Player, from: string) => {
-    if (!isMercadoAberto()) return;
     const resSlot = RESERVA_SLOTS.find(s => s.id === slotId);
     if (resSlot && player.pos !== resSlot.pos) return;
-
     setLineup(prev => {
       const next = { ...prev };
       if (from !== 'bench') next[from] = next[slotId] ?? null;
@@ -201,15 +239,11 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     if (!isMercadoAberto()) return;
     const resSlot = RESERVA_SLOTS.find(s => s.id === slotId);
     if (resSlot) setFilterPos(resSlot.pos);
-
     if (selected) placePlayer(slotId, selected.player, selected.from);
-    else { 
-      const p = lineup[slotId]; 
-      if (p) setSelected({ player: p, from: slotId }); 
-    }
+    else { const p = lineup[slotId]; if (p) setSelected({ player: p, from: slotId }); }
   };
 
-  if (!mounted) return <div style={{ background: '#080808', minHeight: '100vh' }} />;
+  if (!mounted) return null;
 
   const slots = FORMATIONS[formation] || FORMATIONS['4-3-3'];
   const usedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
@@ -239,7 +273,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   return (
     <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom:120 }}>
       {/* Header */}
-      <div style={{ background:'#F5C400', padding:16, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+      <div style={{ background:'#F5C400', padding:16, display:'flex', alignItems:'center', justifyContent:'space-between', position: 'sticky', top:0, zIndex: 100 }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <img src={LOGO} style={{ width:28 }} alt="Logo" />
           <span style={{ fontWeight:900, color:'#1a1a1a' }}>TIGRE FC</span>
@@ -250,35 +284,52 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
       <div style={{ maxWidth:480, margin:'0 auto', padding:16 }}>
         {step === 'escalar' && (
           <>
-            <div style={{ display:'flex', gap:6, marginBottom:20, overflowX:'auto' }}>
+            <div style={{ display:'flex', gap:6, marginBottom:20, overflowX:'auto', paddingBottom: 4 }}>
               {Object.keys(FORMATIONS).map(f => (
-                <button key={f} onClick={() => { setFormation(f); setLineup({}); }} style={{ padding:'8px 16px', borderRadius:8, border:'none', background: formation===f?'#F5C400':'#1a1a1a', color: formation===f?'#000':'#555', fontWeight:900, fontSize:12 }}>{f}</button>
+                <button key={f} onClick={() => { setFormation(f); setLineup({}); }} style={{ flexShrink:0, padding:'8px 16px', borderRadius:8, border:'none', background: formation===f?'#F5C400':'#1a1a1a', color: formation===f?'#000':'#555', fontWeight:900, fontSize:12 }}>{f}</button>
               ))}
             </div>
 
-            {/* CAMPO 3D */}
-            <div style={{ perspective: '1000px', marginBottom: 30 }}>
+            {/* CAMPO 3D REALISTA */}
+            <div style={{ perspective: '1200px', marginBottom: 30, display:'flex', justifyContent:'center' }}>
               <div style={{ 
-                position:'relative', width:fieldWidth, height:fieldWidth * 1.3, margin:'0 auto', 
-                background:'#1a4a1a', borderRadius:8, overflow:'hidden',
-                transform: 'rotateX(25deg)', transformStyle: 'preserve-3d',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-                border: '4px solid rgba(255,255,255,0.1)'
+                position:'relative', width:fieldWidth, height:fieldWidth * 1.4, 
+                background:'#1a4a1a', borderRadius:4,
+                transform: 'rotateX(20deg)', transformStyle: 'preserve-3d',
+                transformOrigin: 'bottom center',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+                border: '3px solid #fff',
+                overflow: 'hidden'
               }}>
-                <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.3 }} viewBox="0 0 68 105" preserveAspectRatio="none">
-                   <rect x="0" y="0" width="68" height="105" fill="none" stroke="#fff" strokeWidth="0.5" />
-                   <line x1="0" y1="52.5" x2="68" y2="52.5" stroke="#fff" strokeWidth="0.5" />
-                   <circle cx="34" cy="52.5" r="9" fill="none" stroke="#fff" strokeWidth="0.5" />
+                {/* SVG Marcações Oficiais */}
+                <svg viewBox="0 0 68 105" preserveAspectRatio="none" style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', opacity: 0.6 }}>
+                  <g fill="none" stroke="#fff" strokeWidth="0.6">
+                    <line x1="0" y1="52.5" x2="68" y2="52.5" />
+                    <circle cx="34" cy="52.5" r="9.15" />
+                    <circle cx="34" cy="52.5" r="0.4" fill="#fff" />
+                    {/* Área Cima */}
+                    <rect x="13.8" y="0" width="40.3" height="16.5" />
+                    <rect x="24.8" y="0" width="18.3" height="5.5" />
+                    <path d="M 28 16.5 A 9.15 9.15 0 0 0 40 16.5" />
+                    {/* Área Baixo */}
+                    <rect x="13.8" y="88.5" width="40.3" height="16.5" />
+                    <rect x="24.8" y="99.5" width="18.3" height="5.5" />
+                    <path d="M 28 88.5 A 9.15 9.15 0 0 1 40 88.5" />
+                    {/* Escanteios */}
+                    <circle cx="0" cy="0" r="2" /> <circle cx="68" cy="0" r="2" />
+                    <circle cx="0" cy="105" r="2" /> <circle cx="68" cy="105" r="2" />
+                  </g>
                 </svg>
 
                 {slots.map(slot => {
                   const p = lineup[slot.id];
+                  const zIdx = Math.round(slot.y);
                   return (
-                    <div key={slot.id} onClick={() => handleTapSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%) translateZ(25px)', cursor:'pointer', zIndex:10 }}>
+                    <div key={slot.id} onClick={() => handleTapSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%) translateZ(40px)', cursor:'pointer', zIndex: zIdx }}>
                       {p ? (
-                        <TigreFCPlayerCard player={p} size={fieldWidth * 0.14} isCapitao={capitao?.id===p.id} isHeroi={heroi?.id===p.id} />
+                        <PlayerCard player={p} size={fieldWidth * 0.17} isCapitao={capitao?.id===p.id} isHeroi={heroi?.id===p.id} />
                       ) : (
-                        <div style={{ width:40, height:40, borderRadius:'50%', border:'2px dashed rgba(255,255,255,0.2)', background:'rgba(0,0,0,0.2)', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)', fontWeight:900, fontSize:10 }}>{slot.label}</div>
+                        <div style={{ width:38, height:38, borderRadius:'50%', border:'2px dashed rgba(255,255,255,0.4)', background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:10 }}>{slot.label}</div>
                       )}
                     </div>
                   );
@@ -294,9 +345,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                   const p = lineup[slot.id];
                   return (
                     <div key={slot.id} onClick={() => handleTapSlot(slot.id)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                       {p ? (
-                         <TigreFCPlayerCard player={p} size={42} />
-                       ) : (
+                       {p ? ( <PlayerCard player={p} size={42} /> ) : (
                          <div style={{ width:42, height:42, borderRadius:'50%', border:'1px dashed #333', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'#444', fontWeight:800 }}>{slot.label}</div>
                        )}
                        <span style={{ fontSize:7, color:'#333', fontWeight:900 }}>RESERVA</span>
@@ -315,11 +364,10 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
               {PLAYERS.filter(p => (filterPos==='TODOS' || p.pos===filterPos) && !usedIds.includes(p.id)).map(p => (
                 <div key={p.id} onClick={() => setSelected({ player:p, from:'bench' })} style={{ 
-                  background:'#111', borderRadius:12, padding:8, textAlign:'center', border: selected?.player.id===p.id?'2px solid #F5C400':'1px solid #1a1a1a',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+                  background:'#111', borderRadius:12, padding:8, textAlign:'center', border: selected?.player.id===p.id?'2px solid #F5C400':'1px solid #1a1a1a'
                 }}>
                   <div style={{ width:50, height:50, margin:'0 auto 8px', borderRadius:'50%', overflow:'hidden', border:'2px solid #222' }}>
-                    <img src={p.foto} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt={p.name} />
+                    <img src={p.foto} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                   </div>
                   <div style={{ fontSize:10, fontWeight:900, color:'#fff', whiteSpace:'nowrap', overflow:'hidden' }}>{p.short}</div>
                   <div style={{ fontSize:8, color:'#444', fontWeight:800 }}>{p.pos}</div>
@@ -329,15 +377,13 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </>
         )}
 
-        {/* Passo do Capitão */}
         {step === 'capitao' && (
           <div style={{ textAlign:'center', padding:20 }}>
             <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Quem é o Capitão? 👑</div>
-            <div style={{ fontSize:12, color:'#555', marginBottom:24 }}>Pontos dobrados para o escolhido.</div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:24 }}>
               {escalados.map(p => (
                 <div key={p.id} onClick={() => setCapitao(p)} style={{ padding:12, borderRadius:12, background: capitao?.id===p.id?'#F5C400':'#111', color: capitao?.id===p.id?'#000':'#fff' }}>
-                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} alt={p.short} />
+                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} />
                   <div style={{ fontSize:10, fontWeight:900 }}>{p.short}</div>
                 </div>
               ))}
@@ -345,15 +391,13 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </div>
         )}
 
-        {/* Passo do Herói */}
         {step === 'heroi' && (
           <div style={{ textAlign:'center', padding:20 }}>
-            <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Quem é o seu Herói? ⚡</div>
-            <div style={{ fontSize:12, color:'#555', marginBottom:24 }}>O Herói ganha bônus por scout decisivo.</div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+            <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Quem é o seu Herói? ⭐</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:24 }}>
               {escalados.map(p => (
                 <div key={p.id} onClick={() => setHeroi(p)} style={{ padding:12, borderRadius:12, background: heroi?.id===p.id?'#F5C400':'#111', color: heroi?.id===p.id?'#000':'#fff' }}>
-                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} alt={p.short} />
+                  <img src={p.foto} style={{ width:40, height:40, borderRadius:'50%', marginBottom:8 }} />
                   <div style={{ fontSize:10, fontWeight:900 }}>{p.short}</div>
                 </div>
               ))}
@@ -361,17 +405,16 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </div>
         )}
 
-        {/* Passo do Palpite */}
         {step === 'palpite' && (
           <div style={{ textAlign:'center', padding:20 }}>
             <div style={{ fontSize:20, fontWeight:900, color:'#F5C400', marginBottom:32 }}>Qual o placar do jogo? 🐯</div>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:20 }}>
-              <div style={{ textAlign:'center' }}>
+              <div>
                 <div style={{ fontSize:10, fontWeight:900, marginBottom:8 }}>NOVORIZONTINO</div>
                 <input type="number" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', background:'#111', border:'1px solid #333', color:'#fff', fontSize:24, borderRadius:12, fontWeight:900 }} />
               </div>
               <div style={{ fontSize:20, fontWeight:900, color:'#333', marginTop:20 }}>X</div>
-              <div style={{ textAlign:'center' }}>
+              <div>
                 <div style={{ fontSize:10, fontWeight:900, marginBottom:8 }}>VISITANTE</div>
                 <input type="number" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', background:'#111', border:'1px solid #333', color:'#fff', fontSize:24, borderRadius:12, fontWeight:900 }} />
               </div>
@@ -379,18 +422,13 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </div>
         )}
 
-        {/* Passo de Confirmação Final */}
         {step === 'confirmar' && (
           <div style={{ textAlign:'center', padding:20 }}>
             <div style={{ fontSize:24, fontWeight:900, color:'#F5C400', marginBottom:8 }}>Tudo pronto?</div>
-            <div style={{ fontSize:14, color:'#555', marginBottom:32 }}>Confira sua escalação antes de entrar em campo.</div>
-            <div style={{ background:'#111', padding:16, borderRadius:16, textAlign:'left', border:'1px solid #222' }}>
-              <div style={{ fontSize:10, color:'#444', fontWeight:900, marginBottom:4 }}>CAPITÃO</div>
-              <div style={{ fontWeight:900, marginBottom:12 }}>{capitao?.name}</div>
-              <div style={{ fontSize:10, color:'#444', fontWeight:900, marginBottom:4 }}>HERÓI</div>
-              <div style={{ fontWeight:900, marginBottom:12 }}>{heroi?.name}</div>
-              <div style={{ fontSize:10, color:'#444', fontWeight:900, marginBottom:4 }}>PALPITE</div>
-              <div style={{ fontWeight:900 }}>Novorizontino {palpite.mandante} x {palpite.visitante} Visitante</div>
+            <div style={{ background:'#111', padding:16, borderRadius:16, textAlign:'left', border:'1px solid #222', marginTop: 24 }}>
+              <div style={{ fontWeight:900, marginBottom:12 }}>Capitão: {capitao?.name}</div>
+              <div style={{ fontWeight:900, marginBottom:12 }}>Herói: {heroi?.name}</div>
+              <div style={{ fontWeight:900 }}>Placar: {palpite.mandante} x {palpite.visitante}</div>
             </div>
           </div>
         )}
