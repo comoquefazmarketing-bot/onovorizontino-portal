@@ -3,11 +3,15 @@
 export default function DestaquesFifa({ capitao, heroi }: { capitao: any, heroi: any }) {
   const CardUT26 = ({ j, tipo }: { j: any, tipo: 'CAPITÃO' | 'HERÓI' }) => {
     const isCap = tipo === 'CAPITÃO';
-    const color = isCap ? '#F5C400' : '#00E5FF'; // Amarelo Tigre ou Cyan Neon
+    const color = isCap ? '#F5C400' : '#00E5FF'; 
     
+    // CORREÇÃO: O banco envia 'pontos_ganhos', mas o código esperava 'pontos'
+    // CORREÇÃO: O objeto do jogador usa 'foto', mas o código esperava 'foto_url'
+    const exibicaoPontos = j.pontos_ganhos || j.pontos || 0;
+    const fotoExibicao = j.foto || j.foto_url;
+
     return (
       <div className="relative group animate-in fade-in zoom-in duration-1000">
-        {/* Glow de Fundo (Aura) */}
         <div className={`absolute -inset-1 blur-xl opacity-30 group-hover:opacity-60 transition duration-1000`} 
              style={{ backgroundColor: color }} />
         
@@ -18,14 +22,12 @@ export default function DestaquesFifa({ capitao, heroi }: { capitao: any, heroi:
                boxShadow: `inset 0 0 20px ${color}33`
              }}>
           
-          {/* Efeito de Reflexo Dinâmico (Shimmer) */}
           <div className="absolute inset-0 z-0 opacity-30 bg-gradient-to-tr from-transparent via-white to-transparent -translate-x-full animate-[shimmer_4s_infinite]" />
 
-          {/* Badge de Pontos */}
           <div className="relative z-10 p-3">
             <div className="flex flex-col">
               <span className="text-3xl font-[1000] text-white italic leading-none drop-shadow-md">
-                {j.pontos?.toFixed(1)}
+                {Number(exibicaoPontos).toFixed(1)}
               </span>
               <span className="text-[7px] font-black uppercase tracking-widest" style={{ color }}>RATING</span>
             </div>
@@ -35,15 +37,14 @@ export default function DestaquesFifa({ capitao, heroi }: { capitao: any, heroi:
             </div>
           </div>
 
-          {/* Jogador com Sombra Projetada */}
           <div className="relative z-10 w-full h-32 flex justify-center mt-[-5px]">
-            <img src={j.foto_url} className="h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.9)] scale-110 group-hover:scale-125 transition-transform duration-500" />
+            {/* CORREÇÃO AQUI: j.foto em vez de j.foto_url */}
+            <img src={fotoExibicao} alt={j.nome} className="h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.9)] scale-110 group-hover:scale-125 transition-transform duration-500" />
           </div>
 
-          {/* Nome e Rodapé */}
           <div className="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/90 to-transparent pb-4 text-center px-2 z-10">
             <p className="text-white font-[1000] text-[11px] uppercase italic truncate tracking-tight">
-              {j.nome}
+              {j.nome || j.short}
             </p>
             <div className="h-[1.5px] w-10 mx-auto my-1.5 rounded-full opacity-60" style={{ backgroundColor: color }} />
             <p className="text-[6px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Tigre FC Special</p>
@@ -60,6 +61,8 @@ export default function DestaquesFifa({ capitao, heroi }: { capitao: any, heroi:
       </div>
     );
   };
+
+  if (!capitao && !heroi) return null; // Não mostra nada se não houver dados
 
   return (
     <section className="my-12 flex flex-col items-center">
