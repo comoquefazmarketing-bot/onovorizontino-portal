@@ -26,7 +26,6 @@ export default function TigreFCRankingPage() {
   const [meuId, setMeuId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Busca sessão e ID interno do usuário
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) return;
       const { data: u } = await supabase
@@ -35,7 +34,7 @@ export default function TigreFCRankingPage() {
       if (u) setMeuId(u.id);
     });
 
-    // Busca o último jogo processado para a aba "Rodada"
+    // Busca o último jogo para garantir que o Lobby sempre tenha dados de transparência
     supabase.from('tigre_fc_resultados').select('jogo_id')
       .eq('processado', true)
       .order('criado_em', { ascending: false })
@@ -69,7 +68,6 @@ export default function TigreFCRankingPage() {
 
   return (
     <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: 'system-ui', paddingBottom: 60 }}>
-      {/* Header */}
       <div style={{ background: '#F5C400', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <a href="/tigre-fc" style={{ color: '#1a1a1a', textDecoration: 'none', fontWeight: 900, fontSize: 20 }}>←</a>
         <img src={LOGO} style={{ width: 32, objectFit: 'contain' }} alt="Tigre FC Logo" />
@@ -77,7 +75,6 @@ export default function TigreFCRankingPage() {
       </div>
 
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '20px 16px' }}>
-        {/* Tabs */}
         <div style={{ display: 'flex', background: '#111', borderRadius: 8, padding: 4, marginBottom: 20 }}>
           {(['temporada', 'rodada'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
@@ -87,48 +84,16 @@ export default function TigreFCRankingPage() {
           ))}
         </div>
 
-        {/* Podium (Top 3) */}
-        {!loading && ranking.length >= 3 && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr 1fr', gap: 8, marginBottom: 24, alignItems: 'flex-end' }}>
-            {[ranking[1], ranking[0], ranking[2]].map((u, i) => {
-              if (!u) return <div key={i} />;
-              const isCenter = i === 1;
-              const medalIdx = isCenter ? 0 : i === 0 ? 1 : 2;
-              return (
-                <div key={u.id} onClick={() => setPerfilAberto(u.id)}
-                  style={{ background: isCenter ? 'linear-gradient(135deg,#1a1200,#111)' : '#0e0e0e', border: isCenter ? '1px solid #F5C400' : '1px solid #1a1a1a', borderRadius: 12, padding: '16px 8px', textAlign: 'center', position: 'relative', cursor: 'pointer', transition: '0.2s' }}>
-                  <div style={{ fontSize: isCenter ? 28 : 22, marginBottom: 6 }}>{MEDAL[medalIdx]}</div>
-                  <div style={{ position: 'relative', width: isCenter ? 56 : 44, height: isCenter ? 56 : 44, margin: '0 auto 8px' }}>
-                    {u.avatar_url ? (
-                      <img src={u.avatar_url} alt={u.apelido} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isCenter ? '#F5C400' : '#333'}` }} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isCenter ? 18 : 15, fontWeight: 900, color: '#111' }}>
-                        {(u.apelido || '?').charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 10, fontWeight: 900, color: isCenter ? '#F5C400' : '#fff', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.apelido}</div>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: '#F5C400', marginTop: 4 }}>{u.pontos_total} <span style={{ fontSize: 9, color: '#555' }}>pts</span></div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* List (4th+) */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#555' }}>Carregando ranking...</div>
-        ) : ranking.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🐯</div>
-            <div style={{ fontSize: 14, color: '#555', fontWeight: 700 }}>Nenhuma pontuação ainda</div>
-          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, background: '#111', borderRadius: 12, overflow: 'hidden' }}>
-            {ranking.slice(3).map((u) => (
+            {ranking.map((u) => (
               <div key={u.id} onClick={() => setPerfilAberto(u.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#080808', cursor: 'pointer' }}>
-                <div style={{ width: 28, fontSize: 13, fontWeight: 900, color: '#444' }}>{u.posicao}º</div>
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#080808', borderBottom: '1px solid #111', cursor: 'pointer' }}>
+                <div style={{ width: 28, fontSize: 13, fontWeight: 900, color: u.posicao <= 3 ? '#F5C400' : '#444' }}>
+                  {u.posicao <= 3 ? MEDAL[u.posicao - 1] : `${u.posicao}º`}
+                </div>
                 {u.avatar_url ? (
                   <img src={u.avatar_url} alt={u.apelido} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid #222' }} />
                 ) : (
@@ -137,8 +102,8 @@ export default function TigreFCRankingPage() {
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{NIVEL_ICON[u.nivel]} {u.apelido}</div>
-                  <div style={{ fontSize: 10, color: '#555' }}>{u.nivel}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{u.apelido}</div>
+                  <div style={{ fontSize: 10, color: '#555' }}>{NIVEL_ICON[u.nivel]} {u.nivel}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 18, fontWeight: 900, color: '#F5C400' }}>{u.pontos_total}</div>
@@ -148,16 +113,13 @@ export default function TigreFCRankingPage() {
             ))}
           </div>
         )}
-
-        <a href="/tigre-fc" style={{ display: 'block', marginTop: 32, textAlign: 'center', color: '#F5C400', fontSize: 13, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, textDecoration: 'none' }}>
-          → Jogar agora
-        </a>
       </div>
 
+      {/* MODAL DE PERFIL COM TRANSPARÊNCIA FORÇADA */}
       {perfilAberto && (
         <TigreFCPerfilPublico
           targetUserId={perfilAberto}
-          jogoId={tab === 'rodada' ? jogoId : null}
+          jogoId={jogoId} // Passamos o jogoId sempre (independente da tab) para mostrar as notas
           meuId={meuId}
           onClose={() => setPerfilAberto(null)}
         />
