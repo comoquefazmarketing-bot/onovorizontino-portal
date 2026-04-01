@@ -90,10 +90,11 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: 
   const lineup = escalacao?.lineup || {};
   const capitaoId = Number(escalacao?.capitao_id);
 
+  // Extração segura de IDs e Scores
   const playerScores = Object.values(lineup).map((val: any) => {
     const id = Number(typeof val === 'object' ? val.id : val);
     return { id, score: (pontuacoes[id] || 0) as number };
-  });
+  }).filter(p => p.id > 0);
 
   const heroiId = playerScores.length > 0 
     ? playerScores.reduce((prev, current) => (prev.score > current.score) ? prev : current).id 
@@ -210,10 +211,13 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: 
                   })}
                 </div>
 
-                <button style={{ 
-                  width:'100%', marginTop:25, background:'#fff', color:'#000', border:'none', padding:'16px', borderRadius:16, 
-                  fontWeight:1000, textTransform:'uppercase', fontSize:13, cursor:'pointer', letterSpacing:1
-                }}>
+                <button 
+                  onClick={() => alert('Em breve!')}
+                  style={{ 
+                    width:'100%', marginTop:25, background:'#fff', color:'#000', border:'none', padding:'16px', borderRadius:16, 
+                    fontWeight:1000, textTransform:'uppercase', fontSize:13, cursor:'pointer', letterSpacing:1
+                  }}
+                >
                   Compartilhar Resenha 🐯
                 </button>
               </div>
