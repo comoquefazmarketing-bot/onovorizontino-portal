@@ -7,7 +7,7 @@ export default function DestaquesFifa({ capitao, heroi }: { capitao: any, heroi:
   const CardFifa = ({ jogador, tipo }: { jogador: any, tipo: 'CAPITÃO' | 'HERÓI' }) => {
     const isCap = tipo === 'CAPITÃO';
     const color = isCap ? '#F5C400' : '#2ecc71';
-    const shadowColor = isCap ? 'rgba(245, 196, 0, 0.5)' : 'rgba(46, 204, 113, 0.5)';
+    const shadowColor = isCap ? 'rgba(245, 196, 0, 0.6)' : 'rgba(46, 204, 113, 0.6)';
 
     return (
       <div 
@@ -17,44 +17,41 @@ export default function DestaquesFifa({ capitao, heroi }: { capitao: any, heroi:
           width: 160,
           height: 230,
           background: '#000',
-          borderRadius: '12px 12px 45px 12px',
+          borderRadius: '15px 15px 50px 15px',
           border: `2px solid ${color}`,
-          boxShadow: `0 0 25px ${shadowColor}`,
+          boxShadow: `0 0 25px ${shadowColor}, inset 0 0 15px ${shadowColor}33`,
           overflow: 'hidden'
         }}
       >
-        {/* Efeito de Brilho de Fundo */}
-        <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity"
-             style={{ background: `radial-gradient(circle at top, ${color} 0%, transparent 70%)` }} />
+        <div className="absolute inset-0 opacity-30"
+             style={{ background: `radial-gradient(circle at 50% 0%, ${color}44 0%, transparent 75%)` }} />
 
-        {/* Info Superior */}
         <div className="relative z-10 p-3 flex justify-between items-start">
-          <div className="flex flex-col">
-            <span className="text-2xl font-black text-white italic leading-none">
-              {jogador.pontos?.toFixed(1) || '0.0'}
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-black text-white italic leading-none drop-shadow-lg">
+              {jogador.pontos?.toFixed(1)}
             </span>
-            <span className="text-[6px] font-black uppercase" style={{ color }}>PONTOS</span>
+            <span className="text-[7px] font-black" style={{ color }}>PONTOS</span>
           </div>
-          <div className="px-2 py-0.5 rounded-sm text-[7px] font-black text-black italic" style={{ background: color }}>
+          <div className="px-2 py-0.5 rounded text-[8px] font-black text-black italic uppercase" style={{ background: color }}>
             {tipo}
           </div>
         </div>
 
-        {/* Imagem do Craque */}
-        <div className="relative z-10 w-full h-28 flex justify-center mt-[-5px]">
+        <div className="relative z-10 w-full h-32 flex justify-center mt-[-10px]">
           <img 
-            src={jogador.foto_url || 'https://via.placeholder.com/150'} 
-            className="h-full object-contain drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)]" 
+            src={jogador.foto_url} 
+            className="h-full object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.9)]" 
             alt={jogador.nome}
           />
         </div>
 
-        {/* Nome do Jogador */}
-        <div className="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/90 to-transparent pb-3 text-center px-1 z-10">
-          <p className="text-white font-black text-[10px] uppercase italic truncate">
+        <div className="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/95 to-transparent pb-4 text-center px-2 z-10">
+          <p className="text-white font-black text-[11px] uppercase italic truncate tracking-tight">
             {jogador.nome}
           </p>
-          <p className="text-[6px] text-zinc-500 font-bold uppercase mt-1 tracking-widest">UT26 SPECIAL</p>
+          <div className="h-[1px] w-10 mx-auto my-1 opacity-50" style={{ background: color }} />
+          <p className="text-[7px] text-zinc-400 font-bold uppercase tracking-widest">Ultimate Team 26</p>
         </div>
       </div>
     );
@@ -62,27 +59,40 @@ export default function DestaquesFifa({ capitao, heroi }: { capitao: any, heroi:
 
   return (
     <section className="my-10 px-4">
-      <div className="flex items-center justify-center gap-2 mb-6">
-        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/20" />
-        <h2 className="text-[9px] font-black text-white uppercase tracking-[0.3em] italic opacity-80">
-          Destaques da Rodada
+      <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="h-0.5 flex-1 bg-gradient-to-r from-transparent to-yellow-500/50" />
+        <h2 className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic whitespace-nowrap">
+          Craques da Rodada
         </h2>
-        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/20" />
+        <div className="h-0.5 flex-1 bg-gradient-to-l from-transparent to-yellow-500/50" />
       </div>
 
-      <div className="flex justify-center gap-4">
+      <div className="flex justify-center gap-6">
         {capitao && <CardFifa jogador={capitao} tipo="CAPITÃO" />}
         {heroi && <CardFifa jogador={heroi} tipo="HERÓI" />}
       </div>
 
-      {/* MODAL SIMPLIFICADO */}
       {modalAtivo && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" onClick={() => setModalAtivo(null)}>
-          <div className="bg-[#111] w-full max-w-xs rounded-3xl border border-white/10 p-6 text-center animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-            <img src={modalAtivo.foto_url} className="w-24 h-24 mx-auto mb-4" />
-            <h3 className="text-white font-black text-xl italic uppercase">{modalAtivo.nome}</h3>
-            <p className="text-yellow-500 font-black text-3xl my-2">{modalAtivo.pontos.toFixed(1)}</p>
-            <button onClick={() => setModalAtivo(null)} className="w-full mt-4 bg-white/10 text-white py-3 rounded-xl font-bold uppercase text-xs">Fechar</button>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md" onClick={() => setModalAtivo(null)}>
+          <div className="bg-[#0a0a0a] w-full max-w-sm rounded-[32px] border border-white/10 p-8 relative overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 blur-[80px] opacity-20" 
+                 style={{ background: modalAtivo.tipo === 'CAPITÃO' ? '#F5C400' : '#2ecc71' }} />
+            
+            <div className="text-center relative z-10">
+              <img src={modalAtivo.foto_url} className="w-32 h-32 mx-auto object-contain mb-4" />
+              <h3 className="text-white font-black text-2xl italic uppercase mb-6">{modalAtivo.nome}</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 p-4 rounded-2xl">
+                  <p className="text-[8px] text-zinc-500 font-black uppercase mb-1">Nota</p>
+                  <p className="text-2xl font-black italic text-white">{modalAtivo.pontos.toFixed(1)}</p>
+                </div>
+                <div className="bg-white/5 p-4 rounded-2xl">
+                  <p className="text-[8px] text-zinc-500 font-black uppercase mb-1">Status</p>
+                  <p className="text-xs font-black italic text-yellow-500 uppercase mt-2">Mito ✅</p>
+                </div>
+              </div>
+              <button onClick={() => setModalAtivo(null)} className="w-full mt-8 bg-white text-black py-4 rounded-2xl font-black uppercase italic text-sm">Fechar</button>
+            </div>
           </div>
         </div>
       )}
