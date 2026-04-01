@@ -1,70 +1,59 @@
 'use client';
-import { useState, useEffect } from 'react';
 
 export default function DestaquesFifa({ capitao, heroi }: { capitao: any, heroi: any }) {
-  const [modalAtivo, setModalAtivo] = useState<any>(null);
-
-  const CardFifa = ({ jogador, tipo }: { jogador: any, tipo: 'CAPITÃO' | 'HERÓI' }) => {
+  const CardUT26 = ({ j, tipo }: { j: any, tipo: 'CAPITÃO' | 'HERÓI' }) => {
     const isCap = tipo === 'CAPITÃO';
-    const color = isCap ? '#F5C400' : '#2ecc71';
+    const color = isCap ? '#F5C400' : '#00E5FF'; // Amarelo Tigre ou Cyan Neon
     
     return (
-      <div 
-        onClick={() => setModalAtivo({ ...jogador, tipo })}
-        className="relative cursor-pointer transition-all duration-500 hover:scale-110 active:scale-95 group"
-        style={{
-          width: 160,
-          height: 235,
-          background: '#000',
-          borderRadius: '15px 15px 50px 15px',
-          border: `2px solid ${color}`,
-          boxShadow: `0 0 20px ${color}66`,
-          overflow: 'hidden'
-        }}
-      >
-        {/* Efeito Shine Animado */}
-        <div className="absolute inset-0 z-0 opacity-20 bg-gradient-to-tr from-transparent via-white to-transparent -translate-x-full animate-[shimmer_5s_infinite]" 
-             style={{ backgroundSize: '200% 100%' }} />
+      <div className="relative group animate-in fade-in zoom-in duration-1000">
+        {/* Glow de Fundo (Aura) */}
+        <div className={`absolute -inset-1 blur-xl opacity-30 group-hover:opacity-60 transition duration-1000`} 
+             style={{ backgroundColor: color }} />
+        
+        <div className="relative w-[155px] h-[230px] bg-black overflow-hidden border-2"
+             style={{ 
+               borderColor: color,
+               borderRadius: '12px 12px 45px 12px',
+               boxShadow: `inset 0 0 20px ${color}33`
+             }}>
+          
+          {/* Efeito de Reflexo Dinâmico (Shimmer) */}
+          <div className="absolute inset-0 z-0 opacity-30 bg-gradient-to-tr from-transparent via-white to-transparent -translate-x-full animate-[shimmer_4s_infinite]" />
 
-        {/* Glow de Fundo */}
-        <div className="absolute top-0 left-0 w-full h-full opacity-40 z-0"
-             style={{ background: `radial-gradient(circle at top, ${color}33 0%, transparent 70%)` }} />
-
-        {/* Info Superior */}
-        <div className="relative z-10 p-3 flex justify-between items-start">
-          <div className="flex flex-col">
-            <span className="text-2xl font-black text-white italic leading-none drop-shadow-md">
-              {jogador.pontos?.toFixed(1)}
-            </span>
-            <span className="text-[6px] font-black uppercase tracking-tighter" style={{ color }}>PONTOS</span>
+          {/* Badge de Pontos */}
+          <div className="relative z-10 p-3">
+            <div className="flex flex-col">
+              <span className="text-3xl font-[1000] text-white italic leading-none drop-shadow-md">
+                {j.pontos?.toFixed(1)}
+              </span>
+              <span className="text-[7px] font-black uppercase tracking-widest" style={{ color }}>RATING</span>
+            </div>
+            <div className="absolute top-3 right-3 px-1.5 py-0.5 rounded-sm text-[7px] font-black text-black uppercase italic" 
+                 style={{ backgroundColor: color }}>
+              {tipo}
+            </div>
           </div>
-          <div className="px-2 py-0.5 rounded-sm text-[8px] font-black text-black italic uppercase" style={{ background: color }}>
-            {tipo}
+
+          {/* Jogador com Sombra Projetada */}
+          <div className="relative z-10 w-full h-32 flex justify-center mt-[-5px]">
+            <img src={j.foto_url} className="h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.9)] scale-110 group-hover:scale-125 transition-transform duration-500" />
           </div>
-        </div>
 
-        {/* Imagem do Jogador com Drop Shadow Pesado */}
-        <div className="relative z-10 w-full h-32 flex justify-center mt-[-8px]">
-          <img 
-            src={jogador.foto_url} 
-            className="h-full object-contain drop-shadow-[0_12px_12px_rgba(0,0,0,0.9)] group-hover:drop-shadow-[0_15px_15px_rgba(0,0,0,1)] transition-all" 
-            alt={jogador.nome}
-          />
-        </div>
-
-        {/* Footer com Gradiente */}
-        <div className="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/90 to-transparent pb-4 text-center px-2 z-10">
-          <p className="text-white font-black text-[11px] uppercase italic truncate">
-            {jogador.nome}
-          </p>
-          <div className="h-[2px] w-10 mx-auto my-1 rounded-full" style={{ background: color }} />
-          <p className="text-[7px] text-zinc-500 font-bold uppercase tracking-widest">Tigre FC Edition</p>
+          {/* Nome e Rodapé */}
+          <div className="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/90 to-transparent pb-4 text-center px-2 z-10">
+            <p className="text-white font-[1000] text-[11px] uppercase italic truncate tracking-tight">
+              {j.nome}
+            </p>
+            <div className="h-[1.5px] w-10 mx-auto my-1.5 rounded-full opacity-60" style={{ backgroundColor: color }} />
+            <p className="text-[6px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Tigre FC Special</p>
+          </div>
         </div>
 
         <style jsx>{`
           @keyframes shimmer {
             0% { transform: translateX(-150%) skewX(-20deg); }
-            20% { transform: translateX(150%) skewX(-20deg); }
+            40% { transform: translateX(150%) skewX(-20deg); }
             100% { transform: translateX(150%) skewX(-20deg); }
           }
         `}</style>
@@ -73,47 +62,16 @@ export default function DestaquesFifa({ capitao, heroi }: { capitao: any, heroi:
   };
 
   return (
-    <section className="my-10 px-4">
-      <div className="flex items-center justify-center gap-3 mb-8">
-        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-yellow-500" />
-        <h2 className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic whitespace-nowrap">
-          Craques da Rodada
-        </h2>
-        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-yellow-500/50 to-yellow-500" />
+    <section className="my-12 flex flex-col items-center">
+      <div className="flex items-center gap-4 mb-8 w-full">
+        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-yellow-500/30" />
+        <h2 className="text-[10px] font-black text-white uppercase tracking-[0.5em] italic opacity-80">Destaques da Rodada</h2>
+        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-yellow-500/30" />
       </div>
-
-      <div className="flex justify-center gap-6 sm:gap-10">
-        {capitao && <CardFifa jogador={capitao} tipo="CAPITÃO" />}
-        {heroi && <CardFifa jogador={heroi} tipo="HERÓI" />}
+      <div className="flex justify-center gap-4">
+        {capitao && <CardUT26 j={capitao} tipo="CAPITÃO" />}
+        {heroi && <CardUT26 j={heroi} tipo="HERÓI" />}
       </div>
-
-      {/* Modal Scout SofaScore Style */}
-      {modalAtivo && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl" onClick={() => setModalAtivo(null)}>
-          <div className="bg-[#0a0a0a] w-full max-w-sm rounded-[40px] border border-white/10 p-8 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,1)]" onClick={e => e.stopPropagation()}>
-             <div className="absolute top-0 left-0 w-full h-32 opacity-20" style={{ background: `linear-gradient(to b, ${modalAtivo.tipo === 'CAPITÃO' ? '#F5C400' : '#2ecc71'}, transparent)` }} />
-             
-             <img src={modalAtivo.foto_url} className="w-32 h-32 mx-auto relative z-10 drop-shadow-2xl mb-4" />
-             <h3 className="text-white text-center font-black text-2xl italic uppercase mb-2 leading-none">{modalAtivo.nome}</h3>
-             <p className="text-center text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-6">Desempenho Elite</p>
-
-             <div className="grid grid-cols-2 gap-3 mb-8">
-                <div className="bg-zinc-900/50 p-4 rounded-3xl border border-white/5 text-center">
-                  <p className="text-[8px] text-zinc-500 font-black uppercase">Nota Sofa</p>
-                  <p className="text-3xl font-black italic text-white mt-1">{modalAtivo.pontos.toFixed(1)}</p>
-                </div>
-                <div className="bg-zinc-900/50 p-4 rounded-3xl border border-white/5 text-center">
-                  <p className="text-[8px] text-zinc-500 font-black uppercase">Impacto</p>
-                  <p className="text-sm font-black italic text-yellow-500 mt-3 uppercase">Decisivo</p>
-                </div>
-             </div>
-
-             <button onClick={() => setModalAtivo(null)} className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase italic text-sm active:scale-95 transition-transform">
-               Fechar Análise
-             </button>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
