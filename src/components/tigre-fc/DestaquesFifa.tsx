@@ -6,13 +6,15 @@ export default function DestaquesFifa() {
   const capitao = {
     nome: 'César Augusto',
     pontos: 7.3,
-    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/CESAR-AUGUSTO.jpg.webp'
+    // FOTO ATUALIZADA (DESTAQUE)
+    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CESAR%20AUGUSTO%20DESTAQUE.png'
   };
 
   const heroi = {
     nome: 'Patrick',
     pontos: 7.3,
-    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/PATRICK.jpg.webp'
+    // FOTO ATUALIZADA (DESTAQUE)
+    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/PATRICK%20DESTAQUE.png'
   };
 
   const CardUT26 = ({ j, tipo }: { j: any, tipo: 'CAPITÃO' | 'HERÓI' }) => {
@@ -47,15 +49,15 @@ export default function DestaquesFifa() {
               </span>
             </div>
             <div className="absolute top-4 right-0 px-2 py-0.5 text-[8px] font-black text-black uppercase italic" 
-                 style={{ backgroundColor: color, borderRadius: '2px 0 0 2px' }}>
+                  style={{ backgroundColor: color, borderRadius: '2px 0 0 2px' }}>
               {tipo}
             </div>
           </div>
 
-          {/* Foto do Jogador */}
-          <div className="relative z-10 w-full h-36 flex justify-center mt-[-10px]">
+          {/* Foto do Jogador - Ajustada para o recorte novo */}
+          <div className="relative z-10 w-full h-40 flex justify-center mt-[-15px]">
             <img src={j.foto} alt={j.nome} 
-                 className="h-full object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] scale-110 group-hover:scale-125 transition-all duration-500" />
+                  className="h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] scale-125 group-hover:scale-[1.35] transition-all duration-500" />
           </div>
 
           {/* Nome e Rodapé */}
