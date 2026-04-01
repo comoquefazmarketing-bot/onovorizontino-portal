@@ -58,11 +58,9 @@ const SLOTS: Record<string, { id:string; x:number; y:number }[]> = {
   '4-2-3-1': [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'dm1',x:64,y:57},{id:'dm2',x:36,y:57},{id:'rm',x:76,y:38},{id:'am',x:50,y:36},{id:'lm',x:24,y:38},{id:'st',x:50,y:18}],
 };
 
-export default function TigreFCPerfilPublico({ myUserId, targetUserId, jogoId, onClose }: any) {
-  const [perfilRival, setPerfilRival] = useState<any>(null);
-  const [perfilEu, setPerfilEu] = useState<any>(null);
-  const [escRival, setEscRival] = useState<any>(null);
-  const [escEu, setEscEu] = useState<any>(null);
+export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: any) {
+  const [perfil, setPerfil] = useState<any>(null);
+  const [escalacao, setEscalacao] = useState<any>(null);
   const [pontuacoes, setPontuacoes] = useState<Record<number, number>>({}); 
   const [loading, setLoading] = useState(true);
 
@@ -70,47 +68,41 @@ export default function TigreFCPerfilPublico({ myUserId, targetUserId, jogoId, o
     async function loadData() {
       if (!targetUserId || !jogoId) return;
       try {
-        // Carrega dados do Rival, Meus dados e Scouts
-        const [rivalData, euData, rivalEsc, euEsc, scoutData] = await Promise.all([
-          supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single(),
-          supabase.from('tigre_fc_usuarios').select('*').eq('id', myUserId).single(),
-          supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle(),
-          supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', myUserId).eq('jogo_id', jogoId).maybeSingle(),
-          supabase.from('tigre_fc_scouts_jogadores').select('jogador_id, pontos').eq('jogo_id', jogoId)
-        ]);
+        const { data: uData } = await supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single();
+        setPerfil(uData);
 
-        setPerfilRival(rivalData.data);
-        setPerfilEu(euData.data);
-        setEscRival(rivalEsc.data);
-        setEscEu(euEsc.data);
+        const { data: escData } = await supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle();
+        setEscalacao(escData);
 
+        const { data: scoutData } = await supabase.from('tigre_fc_scouts_jogadores').select('jogador_id, pontos').eq('jogo_id', jogoId);
         const ptsMap: Record<number, number> = {};
-        scoutData.data?.forEach(s => ptsMap[Number(s.jogador_id)] = s.pontos);
+        scoutData?.forEach(s => ptsMap[Number(s.jogador_id)] = s.pontos);
         setPontuacoes(ptsMap);
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     }
     loadData();
-  }, [targetUserId, myUserId, jogoId]);
+  }, [targetUserId, jogoId]);
 
   if (loading) return null;
 
-  const slots = SLOTS[escRival?.formacao || '4-3-3'];
-  const lineupRival = escRival?.lineup || {};
-  const capitaoRivalId = Number(escRival?.capitao_id);
-  const capitaoEuId = Number(escEu?.capitao_id);
+  const slots = SLOTS[escalacao?.formacao || '4-3-3'];
+  const lineup = escalacao?.lineup || {};
+  const capitaoId = Number(escalacao?.capitao_id);
 
-  // Helper para calcular total
-  const calcScore = (lineup: any, capId: number) => {
-    return Object.values(lineup || {}).reduce((acc: number, val: any) => {
-      const id = Number(typeof val === 'object' ? val.id : val);
-      const pts = pontuacoes[id] || 0;
-      return acc + (id === capId ? pts * 1.5 : pts);
-    }, 0);
-  };
+  const playerScores = Object.values(lineup).map((val: any) => {
+    const id = Number(typeof val === 'object' ? val.id : val);
+    return { id, score: (pontuacoes[id] || 0) as number };
+  });
 
-  const totalRival = calcScore(lineupRival, capitaoRivalId);
-  const totalEu = calcScore(escEu?.lineup, capitaoEuId);
+  const heroiId = playerScores.length > 0 
+    ? playerScores.reduce((prev, current) => (prev.score > current.score) ? prev : current).id 
+    : null;
+
+  const totalPontosEscalados: number = playerScores.reduce((acc, p) => {
+    const multiplicador = p.id === capitaoId ? 1.5 : 1;
+    return acc + (p.score * multiplicador);
+  }, 0);
 
   const getNotaColor = (n: number) => {
     if (n >= 8) return '#4ade80';
@@ -120,27 +112,27 @@ export default function TigreFCPerfilPublico({ myUserId, targetUserId, jogoId, o
   };
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.94)', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(15px)', padding:10 }}>
+    <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.92)', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(15px)', padding:10 }}>
       <div style={{ width:'100%', maxWidth:440, background:'#050505', borderRadius:32, border:'1px solid #222', maxHeight:'95vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.8)' }}>
         
-        {/* PLACAR VS */}
-        <div style={{ background:'linear-gradient(135deg, #F5C400 0%, #D4A900 100%)', padding:'15px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'4px solid #000' }}>
-          <div style={{ flex:1, textAlign:'center' }}>
-            <div style={{ fontSize:9, fontWeight:1000, color:'rgba(0,0,0,0.4)' }}>MEU SCORE</div>
-            <div style={{ fontSize:18, fontWeight:1000, color:'#000' }}>{totalEu.toFixed(1)}</div>
+        <div style={{ background:'linear-gradient(135deg, #F5C400 0%, #D4A900 100%)', padding:'20px 25px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'4px solid #000' }}>
+          <div>
+            <div style={{ fontSize:11, fontWeight:1000, color:'rgba(0,0,0,0.4)', textTransform:'uppercase', letterSpacing:'1px' }}>Time do Rival</div>
+            <div style={{ fontSize:22, fontWeight:1000, color:'#000', textTransform:'uppercase', fontStyle:'italic', lineHeight:1 }}>
+              {perfil?.apelido || perfil?.nome || 'TREINADOR'}
+            </div>
           </div>
-          <div style={{ background:'#000', color:'#F5C400', padding:'5px 12px', borderRadius:8, fontWeight:1000, fontStyle:'italic' }}>VS</div>
-          <div style={{ flex:1, textAlign:'center' }}>
-            <div style={{ fontSize:9, fontWeight:1000, color:'rgba(0,0,0,0.4)' }}>RIVAL ({perfilRival?.apelido || '...'})</div>
-            <div style={{ fontSize:18, fontWeight:1000, color:'#000' }}>{totalRival.toFixed(1)}</div>
-          </div>
-          <button onClick={onClose} style={{ background:'#000', color:'#F5C400', border:'none', width:30, height:30, borderRadius:'50%', fontWeight:1000, cursor:'pointer', marginLeft:10 }}>✕</button>
+          <button 
+            onClick={onClose} 
+            style={{ background:'#000', color:'#F5C400', border:'none', width:36, height:36, borderRadius:'50%', fontWeight:1000, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
+          >
+            ✕
+          </button>
         </div>
 
         <div style={{ overflowY:'auto', flex:1, paddingBottom:30 }}>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
             
-            {/* CAMPO DO ADVERSÁRIO */}
             <div style={{ 
               position:'relative', width:360, height:480, marginTop:20, borderRadius:24, border:'4px solid #1a1a1a', overflow:'hidden',
               background: 'radial-gradient(circle at center, #1a4a1a 0%, #0d2b0d 100%)',
@@ -149,21 +141,22 @@ export default function TigreFCPerfilPublico({ myUserId, targetUserId, jogoId, o
               <div style={{ position:'absolute', inset:15, border:'2px solid rgba(255,255,255,0.15)' }} />
               <div style={{ position:'absolute', top:'50%', width:'100%', height:'2px', background:'rgba(255,255,255,0.15)' }} />
               
-              {escRival && slots.map(slot => {
-                const pId = Number(typeof lineupRival[slot.id] === 'object' ? lineupRival[slot.id]?.id : lineupRival[slot.id]);
+              {escalacao && slots.map(slot => {
+                const pId = Number(typeof lineup[slot.id] === 'object' ? lineup[slot.id]?.id : lineup[slot.id]);
                 const p = PLAYERS[pId];
                 if (!p) return null;
                 const nota = pontuacoes[pId] || 0;
-                const isCap = pId === capitaoRivalId;
-                const isHer = pId === (Object.values(lineupRival).reduce((prev:any, curr:any) => (pontuacoes[Number(typeof prev==='object'?prev.id:prev)] > pontuacoes[Number(typeof curr==='object'?curr.id:curr)]) ? prev : curr));
+                const isCap = pId === capitaoId;
+                const isHer = pId === heroiId;
 
                 return (
-                  <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%, -50%)', zIndex: isCap ? 50 : 10 }}>
+                  <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%, -50%)', zIndex: isCap || isHer ? 50 : 10 }}>
                     <div style={{ position:'relative' }}>
                       <TigreFCPlayerCard 
                         player={p} 
-                        size={56} 
+                        size={58} 
                         isCapitao={isCap} 
+                        isHeroi={isHer} 
                       />
                       <div style={{ 
                         position:'absolute', top:-5, right:-10, 
@@ -180,45 +173,58 @@ export default function TigreFCPerfilPublico({ myUserId, targetUserId, jogoId, o
               })}
             </div>
 
-            {/* BARRA DE DOMÍNIO VISUAL */}
-            <div style={{ width:'90%', marginTop:25, background:'#111', padding:15, borderRadius:20, border:'1px solid #222' }}>
-               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                  <span style={{ fontSize:10, color: totalEu > totalRival ? '#F5C400' : '#666', fontWeight:1000 }}>MEU DOMÍNIO</span>
-                  <span style={{ fontSize:10, color: totalRival > totalEu ? '#F5C400' : '#666', fontWeight:1000 }}>DOMÍNIO RIVAL</span>
-               </div>
-               <div style={{ width:'100%', height:8, background:'#222', borderRadius:10, overflow:'hidden', display:'flex' }}>
-                  <div style={{ width: `${(totalEu / (totalEu + totalRival + 0.1)) * 100}%`, background:'#F5C400', transition:'width 0.5s ease' }} />
-               </div>
-            </div>
-
-            {/* TABELA DE SCOUT */}
-            <div style={{ width:'100%', padding:'0 20px', marginTop:20 }}>
-               <div style={{ background:'#111', borderRadius:24, border:'1px solid #222', padding:18 }}>
-                  <div style={{ fontSize:11, color:'#666', fontWeight:1000, marginBottom:12 }}>DESTAQUES DO RIVAL</div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                    {Object.values(lineupRival).map((val: any) => {
-                      const id = Number(typeof val === 'object' ? val.id : val);
-                      const p = PLAYERS[id];
-                      if(!p) return null;
-                      return (
-                        <div key={id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(255,255,255,0.03)', padding:'8px 12px', borderRadius:10 }}>
-                          <span style={{ fontSize:10, color:'#999' }}>{p.short}</span>
-                          <span style={{ fontSize:10, fontWeight:1000, color: getNotaColor(pontuacoes[id] || 0) }}>
-                            {(pontuacoes[id] || 0).toFixed(1)}
-                          </span>
-                        </div>
-                      );
-                    })}
+            <div style={{ width:'100%', padding:'0 20px', marginTop:25 }}>
+              <div style={{ background:'linear-gradient(180deg, #111 0%, #0a0a0a 100%)', borderRadius:24, border:'1px solid #222', padding:20 }}>
+                
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+                    <div style={{ color:'#666', fontSize:12, fontWeight:900, textTransform:'uppercase' }}>Pontuação Final</div>
+                    <div style={{ color:'#fff', fontSize:28, fontWeight:1000, fontStyle:'italic' }}>
+                      {totalPontosEscalados.toFixed(1)} <span style={{fontSize: 14, color: '#F5C400'}}>PTS</span>
+                    </div>
+                </div>
+                
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:25 }}>
+                  <div style={{ background:'rgba(255,215,0,0.05)', padding:12, borderRadius:16, border:'1px solid rgba(255,215,0,0.2)' }}>
+                    <div style={{ fontSize:9, color:'#FFD700', fontWeight:900, marginBottom:4 }}>★ CAPITÃO</div>
+                    <div style={{ fontSize:14, color:'#fff', fontWeight:800 }}>{PLAYERS[capitaoId]?.short || '---'}</div>
                   </div>
-               </div>
+                  <div style={{ background:'rgba(96,165,250,0.05)', padding:12, borderRadius:16, border:'1px solid rgba(96,165,250,0.2)' }}>
+                    <div style={{ fontSize:9, color:'#60a5fa', fontWeight:900, marginBottom:4 }}>💎 O HERÓI</div>
+                    <div style={{ fontSize:14, color:'#fff', fontWeight:800 }}>{PLAYERS[heroiId || 0]?.short || '---'}</div>
+                  </div>
+                </div>
+
+                <div style={{ fontSize:11, color:'#F5C400', fontWeight:1000, marginBottom:12, letterSpacing:1 }}>SCOUT DETALHADO</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  {playerScores.sort((a,b) => b.score - a.score).map((item: any) => {
+                    const p = PLAYERS[item.id];
+                    if(!p) return null;
+                    return (
+                      <div key={item.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(255,255,255,0.03)', padding:'8px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.05)' }}>
+                        <span style={{ fontSize:11, color:'#999', fontWeight:700 }}>{p.short}</span>
+                        <span style={{ fontSize:11, fontWeight:1000, color: getNotaColor(item.score) }}>
+                          {item.score.toFixed(1)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button style={{ 
+                  width:'100%', marginTop:25, background:'#fff', color:'#000', border:'none', padding:'16px', borderRadius:16, 
+                  fontWeight:1000, textTransform:'uppercase', fontSize:13, cursor:'pointer', letterSpacing:1
+                }}>
+                  Compartilhar Resenha 🐯
+                </button>
+              </div>
             </div>
           </div>
         </div>
         
-        <div style={{ padding:'15px', textAlign:'center', background:'#050505', borderTop:'1px solid #222' }}>
-          <button style={{ background:'#F5C400', color:'#000', border:'none', padding:'12px 30px', borderRadius:12, fontWeight:1000, fontSize:12, cursor:'pointer' }}>
-            REIVINDICAR VITÓRIA 🏆
-          </button>
+        <div style={{ padding:'15px', textAlign:'center', borderTop:'1px solid #1a1a1a', background:'#050505' }}>
+          <span style={{ color:'#444', fontSize:10, fontWeight:1000, letterSpacing:2 }}>
+            TIGRE FC • SEASON 2026 • OFFICIAL DATA
+          </span>
         </div>
       </div>
     </div>
