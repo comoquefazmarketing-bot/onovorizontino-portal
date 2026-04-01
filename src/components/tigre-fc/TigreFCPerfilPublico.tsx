@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import TigreFCPlayerCard from '@/components/tigre-fc/TigreFCPlayerCard';
 
@@ -14,14 +14,14 @@ const PLAYERS: Record<number, any> = {
   2:  { id:2,  name:'Jordi',          short:'Jordi',      num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
   3:  { id:3,  name:'João Scapin',    short:'Scapin',     num:12, pos:'GOL', foto:BASE+'JOAO-SCAPIN.jpg.webp' },
   4:  { id:4,  name:'Lucas Ribeiro',  short:'Lucas',      num:1,  pos:'GOL', foto:BASE+'LUCAS-RIBEIRO.jpg.webp' },
-  5:  { id:5,  name:'Lora',           short:'Lora',        num:2,  pos:'LAT', foto:BASE+'LORA.jpg.webp' },
+  5:  { id:5,  name:'Lora',           short:'Lora',       num:2,  pos:'LAT', foto:BASE+'LORA.jpg.webp' },
   6:  { id:6,  name:'Castrillón',     short:'Castrillón', num:6,  pos:'LAT', foto:BASE+'CASTRILLON.jpg.webp' },
   7:  { id:7,  name:'Arthur Barbosa', short:'A.Barbosa',  num:22, pos:'LAT', foto:BASE+'ARTHUR-BARBOSA.jpg.webp' },
-  8:  { id:8,  name:'Mayk',           short:'Mayk',        num:26, pos:'LAT', foto:BASE+'MAYK.jpg.webp' },
-  9:  { id:9,  name:'Maykon Jesus',   short:'Maykon',      num:27, pos:'LAT', foto:BASE+'MAYKON-JESUS.jpg.webp' },
+  8:  { id:8,  name:'Mayk',           short:'Mayk',       num:26, pos:'LAT', foto:BASE+'MAYK.jpg.webp' },
+  9:  { id:9,  name:'Maykon Jesus',   short:'Maykon',     num:27, pos:'LAT', foto:BASE+'MAYKON-JESUS.jpg.webp' },
   10: { id:10, name:'Dantas',          short:'Dantas',      num:3,  pos:'ZAG', foto:BASE+'DANTAAS.jpg.webp' },
   11: { id:11, name:'Eduardo Brock',  short:'E.Brock',     num:5,  pos:'ZAG', foto:BASE+'EDUARDO-BROCK.jpg.webp' },
-  12: { id:12, name:'Patrick',        short:'Patrick',     num:4,  pos:'ZAG', foto:BASE+'PATRICK.jpg.webp' },
+  12: { id:12, name:'Patrick',         short:'Patrick',     num:4,  pos:'ZAG', foto:BASE+'PATRICK.jpg.webp' },
   13: { id:13, name:'Gabriel Bahia',  short:'G.Bahia',     num:14, pos:'ZAG', foto:BASE+'GABRIEL-BAHIA.jpg.webp' },
   14: { id:14, name:'Carlinhos',       short:'Carlinhos',   num:25, pos:'ZAG', foto:BASE+'CARLINHOS.jpg.webp' },
   15: { id:15, name:'Alemão',          short:'Alemão',      num:28, pos:'ZAG', foto:BASE+'ALEMAO.jpg.webp' },
@@ -32,9 +32,9 @@ const PLAYERS: Record<number, any> = {
   20: { id:20, name:'Léo Naldi',      short:'L.Naldi',     num:7,  pos:'MEI', foto:BASE+'LEO-NALDI.jpg.webp' },
   21: { id:21, name:'Rômulo',          short:'Rômulo',      num:10, pos:'MEI', foto:BASE+'ROMULO.jpg.webp' },
   22: { id:22, name:'Matheus Bianqui', short:'Bianqui',     num:11, pos:'MEI', foto:BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  23: { id:23, name:'Juninho',        short:'Juninho',     num:20, pos:'MEI', foto:BASE+'JUNINHO.jpg.webp' },
-  24: { id:24, name:'Tavinho',        short:'Tavinho',     num:17, pos:'MEI', foto:BASE+'TAVINHO.jpg.webp' },
-  25: { id:25, name:'Diego Galo',     short:'D.Galo',      num:29, pos:'MEI', foto:BASE+'DIEGO-GALO.jpg.webp' },
+  23: { id:23, name:'Juninho',         short:'Juninho',     num:20, pos:'MEI', foto:BASE+'JUNINHO.jpg.webp' },
+  24: { id:24, name:'Tavinho',         short:'Tavinho',     num:17, pos:'MEI', foto:BASE+'TAVINHO.jpg.webp' },
+  25: { id:25, name:'Diego Galo',      short:'D.Galo',      num:29, pos:'MEI', foto:BASE+'DIEGO-GALO.jpg.webp' },
   26: { id:26, name:'Marlon',          short:'Marlon',      num:30, pos:'MEI', foto:BASE+'MARLON.jpg.webp' },
   27: { id:27, name:'Hector Bianchi', short:'Hector',      num:16, pos:'MEI', foto:BASE+'HECTOR-BIACHI.jpg.webp' },
   28: { id:28, name:'Nogueira',       short:'Nogueira',    num:36, pos:'MEI', foto:BASE+'NOGUEIRA.jpg.webp' },
@@ -43,7 +43,7 @@ const PLAYERS: Record<number, any> = {
   31: { id:31, name:'Robson',          short:'Robson',      num:9,  pos:'ATA', foto:BASE+'ROBSON.jpg.webp' },
   32: { id:32, name:'Vinícius Paiva', short:'V.Paiva',     num:13, pos:'ATA', foto:BASE+'VINICIUS-PAIVA.jpg.webp' },
   33: { id:33, name:'Hélio Borges',   short:'H.Borges',    num:18, pos:'ATA', foto:BASE+'HELIO-BORGES.jpg.webp' },
-  34: { id:34, name:'Jardiel',        short:'Jardiel',     num:19, pos:'ATA', foto:BASE+'JARDIEL.jpg.webp' },
+  34: { id:34, name:'Jardiel',         short:'Jardiel',     num:19, pos:'ATA', foto:BASE+'JARDIEL.jpg.webp' },
   35: { id:35, name:'Nicolas Careca', short:'N.Careca',    num:21, pos:'ATA', foto:BASE+'NICOLAS-CARECA.jpg.webp' },
   36: { id:36, name:'Titi Ortiz',     short:'T.Ortiz',     num:15, pos:'ATA', foto:BASE+'TITI-ORTIZ.jpg.webp' },
   37: { id:37, name:'Diego Mathias',  short:'D.Mathias',   num:41, pos:'ATA', foto:BASE+'DIEGO-MATHIAS.jpg.webp' },
@@ -58,7 +58,7 @@ const SLOTS: Record<string, { id:string; x:number; y:number }[]> = {
   '4-2-3-1': [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'dm1',x:64,y:57},{id:'dm2',x:36,y:57},{id:'rm',x:76,y:38},{id:'am',x:50,y:36},{id:'lm',x:24,y:38},{id:'st',x:50,y:18}],
 };
 
-export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onClose }: any) {
+export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: any) {
   const [perfil, setPerfil] = useState<any>(null);
   const [escalacao, setEscalacao] = useState<any>(null);
   const [pontuacoes, setPontuacoes] = useState<Record<number, number>>({}); 
@@ -74,12 +74,10 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
         const { data: escData } = await supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle();
         setEscalacao(escData);
 
-        // BUSCA DAS PONTUAÇÕES DO JOGO (Transparência)
-        // Aqui buscamos os scouts reais do jogo para mostrar as notas estilo SofaScore
         const { data: scoutData } = await supabase.from('tigre_fc_scouts_jogadores').select('jogador_id, pontos').eq('jogo_id', jogoId);
         
         const ptsMap: Record<number, number> = {};
-        scoutData?.forEach(s => ptsMap[s.jogador_id] = s.pontos);
+        scoutData?.forEach(s => ptsMap[Number(s.jogador_id)] = s.pontos);
         setPontuacoes(ptsMap);
 
       } catch (e) { console.error(e); }
@@ -88,14 +86,26 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
     loadData();
   }, [targetUserId, jogoId]);
 
+  if (loading) return null;
+
   const slots = SLOTS[escalacao?.formacao || '4-3-3'];
   const lineup = escalacao?.lineup || {};
   const capitaoId = Number(escalacao?.capitao_id);
 
-  // Lógica para achar o "Herói" (Maior pontuação do time escalado)
-  const playerScores = Object.values(lineup).map((id: any) => ({ id: Number(id), score: pontuacoes[Number(id)] || 0 }));
-  const maxScore = Math.max(...playerScores.map(p => p.score));
-  const heroiId = playerScores.find(p => p.score === maxScore && p.score > 0)?.id;
+  // Lógica de pontos e herói
+  const playerScores = Object.values(lineup).map((val: any) => {
+    const id = Number(typeof val === 'object' ? val.id : val);
+    return { id, score: pontuacoes[id] || 0 };
+  });
+
+  const totalPontosEscalados = playerScores.reduce((acc, p) => {
+    const multiplicador = p.id === capitaoId ? 1.5 : 1;
+    return acc + (p.score * multiplicador);
+  }, 0);
+
+  const heroiId = playerScores.length > 0 
+    ? playerScores.reduce((prev, current) => (prev.score > current.score) ? prev : current).id 
+    : null;
 
   const getNotaColor = (n: number) => {
     if (n >= 8) return '#2ecc71';
@@ -108,22 +118,23 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
     <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(10px)', padding:10 }}>
       <div style={{ width:'100%', maxWidth:450, background:'#0a0a0a', borderRadius:24, border:'1px solid #333', maxHeight:'90vh', overflow:'hidden', display:'flex', flexDirection:'column' }}>
         
-        {/* Header Transparência */}
+        {/* Header */}
         <div style={{ background:'#F5C400', padding:'15px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div>
             <div style={{ fontSize:10, fontWeight:900, color:'rgba(0,0,0,0.5)', textTransform:'uppercase' }}>Review da Rodada</div>
-            <div style={{ fontSize:16, fontWeight:900, color:'#000' }}>{perfil?.apelido || 'Torcedor'}</div>
+            <div style={{ fontSize:16, fontWeight:900, color:'#000' }}>{perfil?.apelido || perfil?.nome || 'Torcedor'}</div>
           </div>
           <button onClick={onClose} style={{ background:'#000', color:'#F5C400', border:'none', width:30, height:30, borderRadius:'50%', fontWeight:900, cursor:'pointer' }}>×</button>
         </div>
 
         <div style={{ overflowY:'auto', flex:1, padding:'20px 0' }}>
-          {/* Campo com Notas */}
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:15 }}>
-            <div style={{ position:'relative', width:300, height:420, background:'#0d2b0d', borderRadius:10, border:'2px solid #1a1a1a', overflow:'hidden' }}>
-              {/* Linhas do Campo */}
-              <div style={{ position:'absolute', inset:0, border:'1px solid rgba(255,255,255,0.1)', margin:10 }} />
-              <div style={{ position:'absolute', top:'50%', width:'100%', height:1, background:'rgba(255,255,255,0.1)' }} />
+            
+            {/* CAMPO DE FUTEBOL */}
+            <div style={{ position:'relative', width:320, height:440, background:'#0d2b0d', borderRadius:10, border:'2px solid #1a1a1a', overflow:'hidden', backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+              <div style={{ position:'absolute', inset:10, border:'1px solid rgba(255,255,255,0.2)' }} />
+              <div style={{ position:'absolute', top:'50%', width:'100%', height:1, background:'rgba(255,255,255,0.2)' }} />
+              <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:80, height:80, border:'1px solid rgba(255,255,255,0.2)', borderRadius:'50%' }} />
               
               {escalacao && slots.map(slot => {
                 const pId = Number(typeof lineup[slot.id] === 'object' ? lineup[slot.id]?.id : lineup[slot.id]);
@@ -131,66 +142,61 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onCl
                 if (!p) return null;
                 const nota = pontuacoes[pId] || 0;
                 const isCap = pId === capitaoId;
-                const isHero = pId === heroiId;
 
                 return (
                   <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%, -50%)', textAlign:'center', zIndex:10 }}>
                     <div style={{ position:'relative' }}>
-                      <TigreFCPlayerCard player={p} size={55} isCapitao={isCap} />
-                      {/* Badge da Nota estilo SofaScore */}
+                      <TigreFCPlayerCard player={p} size={50} isCapitao={isCap} />
                       <div style={{ 
-                        position:'absolute', bottom:-5, right:-8, 
+                        position:'absolute', bottom:-2, right:-5, 
                         background: getNotaColor(nota), color:'#000', 
-                        fontSize:10, fontWeight:900, padding:'2px 5px', 
-                        borderRadius:4, border:'1px solid #000',
-                        boxShadow:'0 2px 4px rgba(0,0,0,0.5)'
+                        fontSize:9, fontWeight:900, padding:'2px 4px', 
+                        borderRadius:4, border:'1px solid #000', zIndex:20
                       }}>
                         {nota.toFixed(1)}
                       </div>
-                      {isHero && <div style={{ position:'absolute', top:-15, left:'50%', transform:'translateX(-50%)', fontSize:14 }}>🌟</div>}
                     </div>
-                    <div style={{ fontSize:9, color:'#fff', fontWeight:900, marginTop:8, textShadow:'1px 1px 2px #000' }}>{p.short}</div>
+                    <div style={{ fontSize:9, color:'#fff', fontWeight:900, marginTop:4, textShadow:'1px 1px 2px #000', background: 'rgba(0,0,0,0.5)', padding: '1px 4px', borderRadius: 4 }}>
+                        {p.short}
+                    </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Legenda de Transparência */}
+            {/* PAINEL DE PONTUAÇÃO */}
             <div style={{ width:'100%', padding:'0 20px' }}>
               <div style={{ background:'#111', borderRadius:16, border:'1px solid #222', padding:15 }}>
-                <h4 style={{ color:'#F5C400', fontSize:12, fontWeight:900, textTransform:'uppercase', margin:'0 0 10px 0', display:'flex', justifyContent:'space-between' }}>
-                  <span>Destaques do Jogo</span>
-                  <span>Total: {perfil?.total_pontos} pts</span>
-                </h4>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:15, alignItems: 'center' }}>
+                    <span style={{ color:'#F5C400', fontSize:12, fontWeight:900, textTransform:'uppercase' }}>Destaques do Jogo</span>
+                    <span style={{ color:'#fff', fontSize:14, fontWeight:900 }}>{totalPontosEscalados.toFixed(1)} <small style={{fontSize: 10, color: '#F5C400'}}>PTS</small></span>
+                </div>
                 
-                <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
-                  <div style={{ flex:1, minWidth:120, background:'#000', padding:10, borderRadius:12, border:'1px solid #333' }}>
-                    <div style={{ fontSize:9, color:'#666', fontWeight:900 }}>CAPITÃO (x1.5)</div>
-                    <div style={{ fontSize:13, color:'#fff', fontWeight:900 }}>{PLAYERS[capitaoId]?.name || 'N/A'}</div>
+                <div style={{ display:'flex', gap:10, marginBottom: 20 }}>
+                  <div style={{ flex:1, background:'#000', padding:10, borderRadius:12, border:'1px solid #333' }}>
+                    <div style={{ fontSize:8, color:'#666', fontWeight:900 }}>CAPITÃO (x1.5)</div>
+                    <div style={{ fontSize:12, color:'#fff', fontWeight:900 }}>{PLAYERS[capitaoId]?.short || '---'}</div>
                   </div>
-                  <div style={{ flex:1, minWidth:120, background:'#000', padding:10, borderRadius:12, border:'1px solid #333' }}>
-                    <div style={{ fontSize:9, color:'#666', fontWeight:900 }}>O HERÓI</div>
-                    <div style={{ fontSize:13, color:'#2ecc71', fontWeight:900 }}>{PLAYERS[heroiId || 0]?.name || 'N/A'}</div>
+                  <div style={{ flex:1, background:'#000', padding:10, borderRadius:12, border:'1px solid #333' }}>
+                    <div style={{ fontSize:8, color:'#666', fontWeight:900 }}>O HERÓI</div>
+                    <div style={{ fontSize:12, color:'#2ecc71', fontWeight:900 }}>{PLAYERS[heroiId || 0]?.short || '---'}</div>
                   </div>
                 </div>
 
-                {/* Lista de todos os jogadores e pontos para conferência */}
-                <div style={{ marginTop:15 }}>
-                   <div style={{ fontSize:10, color:'#444', fontWeight:900, marginBottom:8 }}>CONFERÊNCIA DE SCOUTS</div>
-                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                      {Object.values(lineup).map((id: any) => {
-                        const p = PLAYERS[Number(id)];
-                        if(!p) return null;
-                        return (
-                          <div key={id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(255,255,255,0.02)', padding:'5px 8px', borderRadius:6 }}>
-                            <span style={{ fontSize:11, color:'#bbb' }}>{p.short}</span>
-                            <span style={{ fontSize:11, fontWeight:900, color: getNotaColor(pontuacoes[p.id] || 0) }}>
-                              {(pontuacoes[p.id] || 0).toFixed(1)}
-                            </span>
-                          </div>
-                        )
-                      })}
-                   </div>
+                <div style={{ fontSize:10, color:'#444', fontWeight:900, marginBottom:8 }}>CONFERÊNCIA DE SCOUTS</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                  {playerScores.map((item: any) => {
+                    const p = PLAYERS[item.id];
+                    if(!p) return null;
+                    return (
+                      <div key={item.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(255,255,255,0.03)', padding:'6px 10px', borderRadius:6 }}>
+                        <span style={{ fontSize:10, color:'#bbb' }}>{p.short}</span>
+                        <span style={{ fontSize:10, fontWeight:900, color: getNotaColor(item.score) }}>
+                          {item.score.toFixed(1)}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
