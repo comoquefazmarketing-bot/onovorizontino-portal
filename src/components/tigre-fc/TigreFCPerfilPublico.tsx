@@ -9,7 +9,6 @@ const supabase = createClient(
 );
 
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
-
 const PLAYERS: Record<number, any> = {
   1:  { id:1,  name:'César Augusto',  short:'César',     num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
   2:  { id:2,  name:'Jordi',          short:'Jordi',      num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
@@ -59,283 +58,147 @@ const SLOTS: Record<string, { id:string; x:number; y:number }[]> = {
   '4-2-3-1': [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'dm1',x:64,y:57},{id:'dm2',x:36,y:57},{id:'rm',x:76,y:38},{id:'am',x:50,y:36},{id:'lm',x:24,y:38},{id:'st',x:50,y:18}],
 };
 
-const NIVEL_ICON: Record<string,string>  = { Novato:'🌱', Fiel:'⚡', Garra:'🔥', Lenda:'🐯' };
-const NIVEL_COLOR: Record<string,string> = { Novato:'#6b7280', Fiel:'#F5C400', Garra:'#F5C400', Lenda:'#FFD700' };
-
-type Props = {
-  targetUserId: string;
-  jogoId: number | null; 
-  meuId?: string | null;
-  onClose: () => void;
-};
-
-export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onClose }: Props) {
+export default function TigreFCPerfilPublico({ targetUserId, jogoId, meuId, onClose }: any) {
   const [perfil, setPerfil] = useState<any>(null);
   const [escalacao, setEscalacao] = useState<any>(null);
-  const [comentarios, setComentarios] = useState<any[]>([]);
-  const [novoComent, setNovoComent] = useState('');
-  const [enviando, setEnviando] = useState(false);
+  const [pontuacoes, setPontuacoes] = useState<Record<number, number>>({}); 
   const [loading, setLoading] = useState(true);
-  const comentEndRef = useRef<HTMLDivElement>(null);
-  
-  const CAMPO_W = 280;
-  const CAMPO_H = Math.round(CAMPO_W * (105/68));
-  const SLOT_SZ = Math.round(CAMPO_W * 0.18); 
-  const isMe = meuId === targetUserId;
 
   useEffect(() => {
-    const load = async () => {
+    async function loadData() {
+      if (!targetUserId || !jogoId) return;
       try {
-        const { data: userData } = await supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single();
-        setPerfil(userData);
+        const { data: uData } = await supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single();
+        setPerfil(uData);
 
-        if (jogoId) {
-          const { data: escData } = await supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle();
-          const { data: comsData } = await supabase.from('tigre_fc_comentarios').select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
-              .eq('escalacao_usuario_id', targetUserId).eq('jogo_id', jogoId)
-              .order('criado_em', { ascending: true });
-          
-          setEscalacao(escData);
-          setComentarios(comsData || []);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar perfil:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+        const { data: escData } = await supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle();
+        setEscalacao(escData);
 
-    if (!jogoId) return;
-    const channel = supabase.channel(`coments-${targetUserId}-${jogoId}`)
-      .on('postgres_changes', { 
-        event:'INSERT', 
-        schema:'public', 
-        table:'tigre_fc_comentarios',
-        filter: `escalacao_usuario_id=eq.${targetUserId}` 
-      }, async (payload) => {
-        // Busca os dados do autor para o novo comentário em tempo real
-        const { data } = await supabase.from('tigre_fc_comentarios')
-          .select('*, autor:autor_id(apelido,nome,avatar_url,nivel)')
-          .eq('id', payload.new.id)
-          .single();
-        if (data) setComentarios(prev => [...prev, data]);
-      }).subscribe();
+        // BUSCA DAS PONTUAÇÕES DO JOGO (Transparência)
+        // Aqui buscamos os scouts reais do jogo para mostrar as notas estilo SofaScore
+        const { data: scoutData } = await supabase.from('tigre_fc_scouts_jogadores').select('jogador_id, pontos').eq('jogo_id', jogoId);
+        
+        const ptsMap: Record<number, number> = {};
+        scoutData?.forEach(s => ptsMap[s.jogador_id] = s.pontos);
+        setPontuacoes(ptsMap);
 
-    return () => { supabase.removeChannel(channel); };
-  }, [targetUserId, jogoId]);
-
-  useEffect(() => {
-    comentEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [comentarios]);
-
-  const enviarComentario = async () => {
-    if (!novoComent.trim() || !meuId || !jogoId || enviando) return;
-    setEnviando(true);
-    const text = novoComent.trim();
-    try {
-      setNovoComent('');
-      await supabase.from('tigre_fc_comentarios').insert({
-        escalacao_usuario_id: targetUserId, 
-        jogo_id: jogoId,
-        autor_id: meuId, 
-        texto: text,
-      });
-
-      if (!isMe) {
-        await supabase.from('tigre_fc_notificacoes').insert({
-          usuario_id: targetUserId, 
-          tipo: 'corneta',
-          de_usuario_id: meuId, 
-          jogo_id: jogoId,
-          mensagem: 'cornetou sua escalação!',
-        });
-      }
-    } catch (err) {
-      console.error("Erro ao comentar:", err);
-      setNovoComent(text); // Recupera o texto em caso de erro
-    } finally {
-      setEnviando(false);
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
     }
-  };
+    loadData();
+  }, [targetUserId, jogoId]);
 
   const slots = SLOTS[escalacao?.formacao || '4-3-3'];
   const lineup = escalacao?.lineup || {};
-  const capitaoId = escalacao?.capitao_id;
+  const capitaoId = Number(escalacao?.capitao_id);
+
+  // Lógica para achar o "Herói" (Maior pontuação do time escalado)
+  const playerScores = Object.values(lineup).map((id: any) => ({ id: Number(id), score: pontuacoes[Number(id)] || 0 }));
+  const maxScore = Math.max(...playerScores.map(p => p.score));
+  const heroiId = playerScores.find(p => p.score === maxScore && p.score > 0)?.id;
+
+  const getNotaColor = (n: number) => {
+    if (n >= 8) return '#2ecc71';
+    if (n >= 5) return '#f1c40f';
+    if (n > 0) return '#e67e22';
+    return '#95a5a6';
+  };
 
   return (
-    <div 
-      style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.92)', display:'flex', alignItems:'flex-end', justifyContent:'center', backdropFilter:'blur(4px)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div style={{ width:'100%', maxWidth:480, background:'#0a0a0a', borderRadius:'24px 24px 0 0', border:'1px solid #222', maxHeight:'96vh', overflow:'hidden', display:'flex', flexDirection:'column' }}>
+    <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(10px)', padding:10 }}>
+      <div style={{ width:'100%', maxWidth:450, background:'#0a0a0a', borderRadius:24, border:'1px solid #333', maxHeight:'90vh', overflow:'hidden', display:'flex', flexDirection:'column' }}>
         
-        {/* Header */}
-        <div style={{ background:'#F5C400', padding:'16px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-          <span style={{ fontWeight:900, fontSize:14, color:'#111', textTransform:'uppercase' }}>
-            {isMe ? 'Minha Escalação' : 'Escalação do Torcedor'}
-          </span>
-          <button onClick={onClose} style={{ background:'#111', border:'none', color:'#F5C400', fontWeight:900, width:28, height:28, borderRadius:'50%', cursor:'pointer' }}>×</button>
+        {/* Header Transparência */}
+        <div style={{ background:'#F5C400', padding:'15px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div>
+            <div style={{ fontSize:10, fontWeight:900, color:'rgba(0,0,0,0.5)', textTransform:'uppercase' }}>Review da Rodada</div>
+            <div style={{ fontSize:16, fontWeight:900, color:'#000' }}>{perfil?.apelido || 'Torcedor'}</div>
+          </div>
+          <button onClick={onClose} style={{ background:'#000', color:'#F5C400', border:'none', width:30, height:30, borderRadius:'50%', fontWeight:900, cursor:'pointer' }}>×</button>
         </div>
 
-        <div style={{ overflowY:'auto', flex:1 }}>
-          {loading ? (
-            <div style={{ padding:60, textAlign:'center', color:'#555', fontSize:14 }}>Carregando Perfil...</div>
-          ) : (
-            <>
-              {/* Profile Info */}
-              <div style={{ padding:'20px 16px', display:'flex', alignItems:'center', gap:16, background:'linear-gradient(to bottom, #111, #0a0a0a)' }}>
-                <div style={{ position:'relative' }}>
-                  {perfil?.avatar_url ? (
-                    <img src={perfil.avatar_url} style={{ width:60, height:60, borderRadius:'50%', border:`2px solid ${NIVEL_COLOR[perfil.nivel] || '#F5C400'}`, objectFit:'cover' }} alt="Avatar" />
-                  ) : (
-                    <div style={{ width:60, height:60, borderRadius:'50%', background:'#222', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:'#F5C400', border:'2px solid #333' }}>
-                      {(perfil?.apelido || perfil?.nome || '?').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:18, fontWeight:900, color:'#fff', display:'flex', alignItems:'center', gap:6 }}>
-                    {perfil?.apelido || perfil?.nome}
-                  </div>
-                  <div style={{ fontSize:12, color: NIVEL_COLOR[perfil?.nivel], fontWeight:800, textTransform:'uppercase', letterSpacing:0.5 }}>
-                    {NIVEL_ICON[perfil?.nivel]} {perfil?.nivel || 'Novato'}
-                  </div>
-                </div>
-                <div style={{ textAlign:'center', background:'rgba(245,196,0,0.05)', padding:'8px 12px', borderRadius:12, border:'1px solid rgba(245,196,0,0.1)' }}>
-                  <div style={{ fontSize:22, fontWeight:900, color:'#F5C400', lineHeight:1 }}>{perfil?.total_pontos || 0}</div>
-                  <div style={{ fontSize:8, color:'#555', textTransform:'uppercase', fontWeight:900, marginTop:4 }}>PTS TOTAL</div>
-                </div>
-              </div>
+        <div style={{ overflowY:'auto', flex:1, padding:'20px 0' }}>
+          {/* Campo com Notas */}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:15 }}>
+            <div style={{ position:'relative', width:300, height:420, background:'#0d2b0d', borderRadius:10, border:'2px solid #1a1a1a', overflow:'hidden' }}>
+              {/* Linhas do Campo */}
+              <div style={{ position:'absolute', inset:0, border:'1px solid rgba(255,255,255,0.1)', margin:10 }} />
+              <div style={{ position:'absolute', top:'50%', width:'100%', height:1, background:'rgba(255,255,255,0.1)' }} />
+              
+              {escalacao && slots.map(slot => {
+                const pId = Number(typeof lineup[slot.id] === 'object' ? lineup[slot.id]?.id : lineup[slot.id]);
+                const p = PLAYERS[pId];
+                if (!p) return null;
+                const nota = pontuacoes[pId] || 0;
+                const isCap = pId === capitaoId;
+                const isHero = pId === heroiId;
 
-              {/* Tactical Field */}
-              <div style={{ padding:'20px 0', background:'#080808', display:'flex', flexDirection:'column', alignItems:'center', borderBottom:'1px solid #111' }}>
-                <div style={{ position:'relative', width:CAMPO_W, height:CAMPO_H, borderRadius:8, overflow:'hidden', background:'#0f2d0f', border:'2px solid #1a1a1a' }}>
-                  <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%' }} viewBox="0 0 68 105" preserveAspectRatio="none">
-                    {[0,1,2,3,4,5,6].map(i => <rect key={i} x="0" y={i*15} width="68" height="7.5" fill={i%2===0?'rgba(255,255,255,0.02)':'transparent'} />)}
-                    <rect x="2" y="3" width="64" height="99" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
-                    <line x1="2" y1="52.5" x2="66" y2="52.5" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
-                    <circle cx="34" cy="52.5" r="9" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
-                  </svg>
-
-                  {escalacao ? slots.map(slot => {
-                    const slotData = lineup[slot.id];
-                    const pId = typeof slotData === 'object' ? slotData?.id : slotData;
-                    const player = pId ? PLAYERS[Number(pId)] : null;
-
-                    if (!player) return null;
-
-                    return (
-                      <div key={slot.id} style={{ 
-                        position:'absolute', 
-                        left:`${slot.x}%`, 
-                        top:`${slot.y}%`, 
-                        transform:'translate(-50%, -50%)',
-                        zIndex: 20,
-                        textAlign: 'center'
+                return (
+                  <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%, -50%)', textAlign:'center', zIndex:10 }}>
+                    <div style={{ position:'relative' }}>
+                      <TigreFCPlayerCard player={p} size={55} isCapitao={isCap} />
+                      {/* Badge da Nota estilo SofaScore */}
+                      <div style={{ 
+                        position:'absolute', bottom:-5, right:-8, 
+                        background: getNotaColor(nota), color:'#000', 
+                        fontSize:10, fontWeight:900, padding:'2px 5px', 
+                        borderRadius:4, border:'1px solid #000',
+                        boxShadow:'0 2px 4px rgba(0,0,0,0.5)'
                       }}>
-                        <TigreFCPlayerCard 
-                          player={player} 
-                          size={SLOT_SZ} 
-                          isCapitao={Number(pId) === Number(capitaoId)}
-                        />
-                        <div style={{ 
-                          marginTop: 2, 
-                          fontSize: 8, 
-                          fontWeight: 900, 
-                          color: '#fff', 
-                          background: 'rgba(0,0,0,0.8)',
-                          padding: '1px 4px',
-                          borderRadius: 4,
-                          whiteSpace: 'nowrap',
-                          border: '1px solid #333'
-                        }}>
-                          {player.short}
-                        </div>
+                        {nota.toFixed(1)}
                       </div>
-                    );
-                  }) : (
-                    <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color:'#333', fontSize:12, fontWeight:700 }}>
-                      AINDA NÃO ESCALOU
+                      {isHero && <div style={{ position:'absolute', top:-15, left:'50%', transform:'translateX(-50%)', fontSize:14 }}>🌟</div>}
                     </div>
-                  )}
-                </div>
-                {escalacao && (
-                  <div style={{ marginTop:12, fontSize:10, fontWeight:900, color:'#555', textTransform:'uppercase' }}>
-                    Formação: {escalacao.formacao}
+                    <div style={{ fontSize:9, color:'#fff', fontWeight:900, marginTop:8, textShadow:'1px 1px 2px #000' }}>{p.short}</div>
                   </div>
-                )}
-              </div>
+                );
+              })}
+            </div>
 
-              {/* Comments Feed */}
-              <div style={{ padding: '20px 16px' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
-                   <div style={{ width:4, height:14, background:'#F5C400', borderRadius:2 }} />
-                   <h3 style={{ color: '#fff', fontSize:13, fontWeight:900, textTransform: 'uppercase', margin:0 }}>Corneta dos Torcedores</h3>
-                </div>
+            {/* Legenda de Transparência */}
+            <div style={{ width:'100%', padding:'0 20px' }}>
+              <div style={{ background:'#111', borderRadius:16, border:'1px solid #222', padding:15 }}>
+                <h4 style={{ color:'#F5C400', fontSize:12, fontWeight:900, textTransform:'uppercase', margin:'0 0 10px 0', display:'flex', justifyContent:'space-between' }}>
+                  <span>Destaques do Jogo</span>
+                  <span>Total: {perfil?.total_pontos} pts</span>
+                </h4>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap:12 }}>
-                  {comentarios.length === 0 ? (
-                    <div style={{ textAlign:'center', padding:30, color:'#444', fontSize:12, border:'1px dashed #222', borderRadius:16 }}>
-                      Ninguém cornetou ainda. Seja o primeiro!
-                    </div>
-                  ) : comentarios.map((c, idx) => (
-                    <div key={idx} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-                      {c.autor?.avatar_url ? (
-                        <img src={c.autor.avatar_url} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #222', objectFit:'cover' }} alt="" />
-                      ) : (
-                        <div style={{ width:32, height:32, borderRadius:'50%', background:'#111', border:'1px solid #222', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#F5C400' }}>
-                          {(c.autor?.apelido || '?').charAt(0)}
-                        </div>
-                      )}
-                      <div style={{ flex:1, background: '#111', padding: '10px 14px', borderRadius: '0 16px 16px 16px', border: '1px solid #1a1a1a' }}>
-                        <div style={{ display: 'flex', justifyContent:'space-between', marginBottom:4, alignItems:'center' }}>
-                          <span style={{ fontSize: 11, fontWeight: 900, color: NIVEL_COLOR[c.autor?.nivel] || '#F5C400' }}>
-                            {NIVEL_ICON[c.autor?.nivel]} {c.autor?.apelido || c.autor?.nome}
-                          </span>
-                          <span style={{ fontSize: 9, color: '#444' }}>{new Date(c.criado_em).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}</span>
-                        </div>
-                        <p style={{ color: '#bbb', fontSize: 13, margin: 0, lineHeight:1.4 }}>{c.texto}</p>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={comentEndRef} />
+                <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
+                  <div style={{ flex:1, minWidth:120, background:'#000', padding:10, borderRadius:12, border:'1px solid #333' }}>
+                    <div style={{ fontSize:9, color:'#666', fontWeight:900 }}>CAPITÃO (x1.5)</div>
+                    <div style={{ fontSize:13, color:'#fff', fontWeight:900 }}>{PLAYERS[capitaoId]?.name || 'N/A'}</div>
+                  </div>
+                  <div style={{ flex:1, minWidth:120, background:'#000', padding:10, borderRadius:12, border:'1px solid #333' }}>
+                    <div style={{ fontSize:9, color:'#666', fontWeight:900 }}>O HERÓI</div>
+                    <div style={{ fontSize:13, color:'#2ecc71', fontWeight:900 }}>{PLAYERS[heroiId || 0]?.name || 'N/A'}</div>
+                  </div>
+                </div>
+
+                {/* Lista de todos os jogadores e pontos para conferência */}
+                <div style={{ marginTop:15 }}>
+                   <div style={{ fontSize:10, color:'#444', fontWeight:900, marginBottom:8 }}>CONFERÊNCIA DE SCOUTS</div>
+                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                      {Object.values(lineup).map((id: any) => {
+                        const p = PLAYERS[Number(id)];
+                        if(!p) return null;
+                        return (
+                          <div key={id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(255,255,255,0.02)', padding:'5px 8px', borderRadius:6 }}>
+                            <span style={{ fontSize:11, color:'#bbb' }}>{p.short}</span>
+                            <span style={{ fontSize:11, fontWeight:900, color: getNotaColor(pontuacoes[p.id] || 0) }}>
+                              {(pontuacoes[p.id] || 0).toFixed(1)}
+                            </span>
+                          </div>
+                        )
+                      })}
+                   </div>
                 </div>
               </div>
-            </>
-          )}
+            </div>
+          </div>
         </div>
-
-        {/* Corneta Input */}
-        <div style={{ padding: '16px 20px 24px', background: '#0a0a0a', borderTop: '1px solid #1a1a1a', display: 'flex', gap:10, alignItems:'center' }}>
-          <input 
-            value={novoComent}
-            onChange={e => setNovoComent(e.target.value.slice(0, 150))}
-            onKeyDown={e => e.key === 'Enter' && enviarComentario()}
-            placeholder="Mande sua corneta..."
-            style={{ flex: 1, background: '#111', border: '1px solid #222', borderRadius: 24, padding: '12px 18px', color: '#fff', outline: 'none', fontSize:14 }}
-          />
-          <button 
-            onClick={enviarComentario}
-            disabled={!novoComent.trim() || enviando}
-            style={{ 
-              background: novoComent.trim() ? '#F5C400' : '#1a1a1a', 
-              color: '#111',
-              border: 'none', 
-              borderRadius: '50%', 
-              width: 44, 
-              height: 44, 
-              fontWeight: 900, 
-              cursor: novoComent.trim() ? 'pointer' : 'default',
-              transition: '0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 20
-            }}
-          >
-            {enviando ? '...' : '↑'}
-          </button>
+        
+        <div style={{ padding:15, textAlign:'center', color:'#444', fontSize:10, fontWeight:700 }}>
+          DADOS OFICIAIS TIGRE FC • ATUALIZADO EM TEMPO REAL
         </div>
       </div>
     </div>
