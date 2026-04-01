@@ -11,7 +11,7 @@ const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Interfaces para o TypeScript não reclamar no build
+// Interfaces para o TypeScript
 interface Equipe {
   nome: string;
   escudo_url: string;
@@ -51,7 +51,7 @@ export default function TigreFCPage() {
     setMounted(true);
   }, []);
 
-  // 1. Cronômetro com verificação de segurança
+  // 1. Cronômetro
   useEffect(() => {
     if (!jogo || !mounted) return;
     const interval = setInterval(() => {
@@ -78,14 +78,12 @@ export default function TigreFCPage() {
   // 2. Busca de Dados
   useEffect(() => {
     if (!mounted) return;
-
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Próximo Jogo
     fetch('/api/proximo-jogo')
       .then(r => r.json())
-      .then(({ jogos }) => { if (jogos?.[0]) setJogo(jogos[0]); })
-      .catch(err => console.error("Erro ao buscar jogo:", err));
+      .then(({ jogos }) => { if (jogos?.[0]) setJogo(jogos[0]); });
 
     // Sessão do Usuário
     sb.auth.getSession().then(async ({ data: { session } }) => {
@@ -98,11 +96,9 @@ export default function TigreFCPage() {
     // Ranking
     fetch(`${SUPABASE_URL}/rest/v1/tigre_fc_usuarios?select=id,nome,apelido,avatar_url,nivel,pontos_total&order=pontos_total.desc&limit=10`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    })
-    .then(r => r.json())
-    .then(data => { if (Array.isArray(data)) setRanking(data); });
+    }).then(r => r.json()).then(data => { if (Array.isArray(data)) setRanking(data); });
 
-    // Destaques Reais
+    // Destaques Reais (Ajustado para evitar erro de tipo no jogador)
     async function loadDestaques() {
       const { data: lastRes } = await sb.from('tigre_fc_resultados').select('jogo_id').eq('processado', true).order('criado_em', { ascending: false }).limit(1).single();
       if (lastRes) {
@@ -113,10 +109,16 @@ export default function TigreFCPage() {
           .limit(2);
         
         if (sc && sc.length >= 2) {
-          setDestaques({
-            capitao: { nome: sc[0].jogador.nome, foto_url: sc[0].jogador.foto_url, pontos: sc[0].pontos },
-            heroi: { nome: sc[1].jogador.nome, foto_url: sc[1].jogador.foto_url, pontos: sc[1].pontos }
-          });
+          // Garantindo que acessamos o objeto jogador corretamente (mesmo se o Supabase entender como array)
+          const j1 = Array.isArray(sc[0].jogador) ? sc[0].jogador[0] : sc[0].jogador;
+          const j2 = Array.isArray(sc[1].jogador) ? sc[1].jogador[0] : sc[1].jogador;
+
+          if (j1 && j2) {
+            setDestaques({
+              capitao: { nome: j1.nome, foto_url: j1.foto_url, pontos: sc[0].pontos },
+              heroi: { nome: j2.nome, foto_url: j2.foto_url, pontos: sc[1].pontos }
+            });
+          }
         }
       }
     }
