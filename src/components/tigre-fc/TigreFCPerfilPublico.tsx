@@ -86,16 +86,18 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: 
 
   if (loading) return null;
 
-  const slots = SLOTS[escalacao?.formacao || '4-3-3'];
   const lineup = escalacao?.lineup || {};
+  const slots = SLOTS[escalacao?.formacao || '4-3-3'];
   const capitaoId = Number(escalacao?.capitao_id);
 
-  // Extração segura de IDs e Scores
-  const playerScores = Object.values(lineup).map((val: any) => {
+  // EXTRAÇÃO DINÂMICA: Mapeia os IDs vindos do objeto lineup no banco
+  const playerScores = Object.keys(lineup).map((key) => {
+    const val = lineup[key];
     const id = Number(typeof val === 'object' ? val.id : val);
     return { id, score: (pontuacoes[id] || 0) as number };
   }).filter(p => p.id > 0);
 
+  // Lógica do Herói (Maior pontuação real)
   const heroiId = playerScores.length > 0 
     ? playerScores.reduce((prev, current) => (prev.score > current.score) ? prev : current).id 
     : null;
@@ -113,9 +115,10 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: 
   };
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.92)', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(15px)', padding:10 }}>
+    <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(15px)', padding:10 }}>
       <div style={{ width:'100%', maxWidth:440, background:'#050505', borderRadius:32, border:'1px solid #222', maxHeight:'95vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.8)' }}>
         
+        {/* Header Estilizado */}
         <div style={{ background:'linear-gradient(135deg, #F5C400 0%, #D4A900 100%)', padding:'20px 25px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'4px solid #000' }}>
           <div>
             <div style={{ fontSize:11, fontWeight:1000, color:'rgba(0,0,0,0.4)', textTransform:'uppercase', letterSpacing:'1px' }}>Time do Rival</div>
@@ -125,7 +128,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: 
           </div>
           <button 
             onClick={onClose} 
-            style={{ background:'#000', color:'#F5C400', border:'none', width:36, height:36, borderRadius:'50%', fontWeight:1000, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
+            style={{ background:'#000', color:'#F5C400', border:'none', width:36, height:36, borderRadius:'50%', fontWeight:1000, cursor:'pointer' }}
           >
             ✕
           </button>
@@ -134,18 +137,21 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: 
         <div style={{ overflowY:'auto', flex:1, paddingBottom:30 }}>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
             
+            {/* Campo de Futebol com Slots Dinâmicos */}
             <div style={{ 
               position:'relative', width:360, height:480, marginTop:20, borderRadius:24, border:'4px solid #1a1a1a', overflow:'hidden',
               background: 'radial-gradient(circle at center, #1a4a1a 0%, #0d2b0d 100%)',
               boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5)'
             }}>
-              <div style={{ position:'absolute', inset:15, border:'2px solid rgba(255,255,255,0.15)' }} />
-              <div style={{ position:'absolute', top:'50%', width:'100%', height:'2px', background:'rgba(255,255,255,0.15)' }} />
+              <div style={{ position:'absolute', inset:15, border:'2px solid rgba(255,255,255,0.1)' }} />
+              <div style={{ position:'absolute', top:'50%', width:'100%', height:'2px', background:'rgba(255,255,255,0.1)' }} />
               
-              {escalacao && slots.map(slot => {
-                const pId = Number(typeof lineup[slot.id] === 'object' ? lineup[slot.id]?.id : lineup[slot.id]);
+              {slots.map(slot => {
+                const pData = lineup[slot.id];
+                const pId = Number(typeof pData === 'object' ? pData?.id : pData);
                 const p = PLAYERS[pId];
                 if (!p) return null;
+
                 const nota = pontuacoes[pId] || 0;
                 const isCap = pId === capitaoId;
                 const isHer = pId === heroiId;
@@ -174,6 +180,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: 
               })}
             </div>
 
+            {/* Painel de Resultados */}
             <div style={{ width:'100%', padding:'0 20px', marginTop:25 }}>
               <div style={{ background:'linear-gradient(180deg, #111 0%, #0a0a0a 100%)', borderRadius:24, border:'1px solid #222', padding:20 }}>
                 
@@ -185,19 +192,19 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: 
                 </div>
                 
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:25 }}>
-                  <div style={{ background:'rgba(255,215,0,0.05)', padding:12, borderRadius:16, border:'1px solid rgba(255,215,0,0.2)' }}>
-                    <div style={{ fontSize:9, color:'#FFD700', fontWeight:900, marginBottom:4 }}>★ CAPITÃO</div>
+                  <div style={{ background:'rgba(255,215,0,0.05)', padding:12, borderRadius:16, border:'1px solid rgba(255,215,0,0.3)' }}>
+                    <div style={{ fontSize:9, color:'#FFD700', fontWeight:900, marginBottom:4 }}>★ CAPITÃO (x1.5)</div>
                     <div style={{ fontSize:14, color:'#fff', fontWeight:800 }}>{PLAYERS[capitaoId]?.short || '---'}</div>
                   </div>
-                  <div style={{ background:'rgba(96,165,250,0.05)', padding:12, borderRadius:16, border:'1px solid rgba(96,165,250,0.2)' }}>
-                    <div style={{ fontSize:9, color:'#60a5fa', fontWeight:900, marginBottom:4 }}>💎 O HERÓI</div>
+                  <div style={{ background:'rgba(0,255,255,0.05)', padding:12, borderRadius:16, border:'1px solid rgba(0,255,255,0.3)' }}>
+                    <div style={{ fontSize:9, color:'#00f0ff', fontWeight:900, marginBottom:4 }}>💎 O HERÓI</div>
                     <div style={{ fontSize:14, color:'#fff', fontWeight:800 }}>{PLAYERS[heroiId || 0]?.short || '---'}</div>
                   </div>
                 </div>
 
                 <div style={{ fontSize:11, color:'#F5C400', fontWeight:1000, marginBottom:12, letterSpacing:1 }}>SCOUT DETALHADO</div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                  {playerScores.sort((a,b) => b.score - a.score).map((item: any) => {
+                  {playerScores.sort((a,b) => b.score - a.score).map((item) => {
                     const p = PLAYERS[item.id];
                     if(!p) return null;
                     return (
@@ -212,7 +219,7 @@ export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: 
                 </div>
 
                 <button 
-                  onClick={() => alert('Em breve!')}
+                  onClick={() => alert('Compartilhamento em breve!')}
                   style={{ 
                     width:'100%', marginTop:25, background:'#fff', color:'#000', border:'none', padding:'16px', borderRadius:16, 
                     fontWeight:1000, textTransform:'uppercase', fontSize:13, cursor:'pointer', letterSpacing:1
