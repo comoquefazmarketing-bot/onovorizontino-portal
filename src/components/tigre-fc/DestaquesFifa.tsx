@@ -1,8 +1,7 @@
 'use client';
 
 export default function DestaquesFifa() {
-  // CONFIGURAÇÃO DIRETA (Mágico de Oz)
-  // Aqui você define quem aparece sem depender do Supabase
+  // CONFIGURAÇÃO DIRETA (Mágico de Oz) - Sem dependência de props ou banco
   const capitao = {
     nome: 'César Augusto',
     pontos: 7.3,
@@ -22,7 +21,7 @@ export default function DestaquesFifa() {
 
     return (
       <div className="relative group animate-in fade-in zoom-in duration-1000">
-        {/* Aura de Brilho UEFA */}
+        {/* Aura de Brilho Estilo UEFA */}
         <div className={`absolute -inset-2 blur-2xl opacity-20 group-hover:opacity-50 transition duration-1000`} 
              style={{ backgroundColor: color }} />
         
@@ -33,7 +32,7 @@ export default function DestaquesFifa() {
                boxShadow: `inset 0 0 25px ${color}44`
              }}>
           
-          {/* Reflexo Dinâmico */}
+          {/* Reflexo Dinâmico (Shimmer) */}
           <div className="absolute inset-0 z-0 opacity-20 bg-gradient-to-tr from-transparent via-white to-transparent -translate-x-full animate-[shimmer_5s_infinite]" />
 
           {/* Badge de Pontos */}
@@ -58,7 +57,7 @@ export default function DestaquesFifa() {
                  className="h-full object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] scale-110 group-hover:scale-125 transition-all duration-500" />
           </div>
 
-          {/* Nome e Rodapé UEFA */}
+          {/* Nome e Rodapé */}
           <div className="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/95 to-transparent pb-4 text-center px-2 z-10">
             <p className="text-white font-[1000] text-[12px] uppercase italic tracking-tighter">
               {j.nome}
@@ -67,14 +66,6 @@ export default function DestaquesFifa() {
             <p className="text-[6px] text-zinc-500 font-bold uppercase tracking-[0.4em]">Tigre FC Special</p>
           </div>
         </div>
-
-        <style jsx>{`
-          @keyframes shimmer {
-            0% { transform: translateX(-150%) skewX(-20deg); }
-            30% { transform: translateX(150%) skewX(-20deg); }
-            100% { transform: translateX(150%) skewX(-20deg); }
-          }
-        `}</style>
       </div>
     );
   };
@@ -93,6 +84,14 @@ export default function DestaquesFifa() {
         <CardUT26 j={capitao} tipo="CAPITÃO" />
         <CardUT26 j={heroi} tipo="HERÓI" />
       </div>
+
+      <style jsx global>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-150%) skewX(-20deg); }
+          30% { transform: translateX(150%) skewX(-20deg); }
+          100% { transform: translateX(150%) skewX(-20deg); }
+        }
+      `}</style>
     </section>
   );
 }
