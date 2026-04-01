@@ -1,7 +1,8 @@
 'use client';
 
 export default function DestaquesFifa() {
-  // CONFIGURAÇÃO DIRETA (Mágico de Oz) - Sem dependência de props ou banco
+  // CONFIGURAÇÃO DIRETA (Mágico de Oz) 
+  // Altere apenas aqui para atualizar o painel manualmente
   const capitao = {
     nome: 'César Augusto',
     pontos: 7.3,
@@ -51,7 +52,7 @@ export default function DestaquesFifa() {
             </div>
           </div>
 
-          {/* Jogador */}
+          {/* Foto do Jogador */}
           <div className="relative z-10 w-full h-36 flex justify-center mt-[-10px]">
             <img src={j.foto} alt={j.nome} 
                  className="h-full object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] scale-110 group-hover:scale-125 transition-all duration-500" />
@@ -72,7 +73,7 @@ export default function DestaquesFifa() {
 
   return (
     <section className="my-12 flex flex-col items-center">
-      <div className="flex items-center gap-6 mb-10 w-full max-w-xl">
+      <div className="flex items-center gap-6 mb-10 w-full max-w-xl px-4">
         <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-yellow-500/40" />
         <h2 className="text-[11px] font-black text-white uppercase tracking-[0.6em] italic opacity-90 whitespace-nowrap">
           The Best <span className="text-yellow-500">Tigre FC</span>
@@ -80,7 +81,7 @@ export default function DestaquesFifa() {
         <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-yellow-500/40" />
       </div>
       
-      <div className="flex justify-center gap-8">
+      <div className="flex justify-center gap-8 flex-wrap">
         <CardUT26 j={capitao} tipo="CAPITÃO" />
         <CardUT26 j={heroi} tipo="HERÓI" />
       </div>
