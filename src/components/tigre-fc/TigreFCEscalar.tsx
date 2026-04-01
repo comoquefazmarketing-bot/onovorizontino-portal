@@ -174,7 +174,7 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isList }: { player: Play
   );
 }
 
-export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
+export default function TigreFCEscalar({ jogoId, targetUserId }: { jogoId: number, targetUserId?: string }) {
   const [mounted, setMounted]         = useState(false);
   const [step, setStep]                = useState<Step>('login');
   const [prevStep, setPrevStep]        = useState<Step | null>(null);
@@ -190,7 +190,13 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [jogo, setJogo]                = useState<any>(null);
   const [saving, setSaving]            = useState(false);
   const [fieldWidth, setFieldWidth]   = useState(340);
+  
+  // Estados para o Perfil do Rival (Modo Cornetar)
   const [perfilUsuario, setPerfilUsuario] = useState<any>(null);
+  const [lineupRival, setLineupRival] = useState<Lineup>({});
+  const [formacaoRival, setFormacaoRival] = useState('4-3-3');
+  const [capitaoRivalId, setCapitaoRivalId] = useState<number | null>(null);
+  const [heroiRivalId, setHeroiRivalId] = useState<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -199,6 +205,42 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
+
+  // Lógica para abrir o Perfil se houver um targetUserId
+  useEffect(() => {
+    if (targetUserId && mounted) {
+        setPrevStep(step);
+        setStep('perfil');
+        buscarDadosRival(targetUserId);
+    }
+  }, [targetUserId, mounted]);
+
+  const buscarDadosRival = async (uid: string) => {
+    try {
+        // 1. Perfil do Rival
+        const { data: uData } = await supabase.from('tigre_fc_usuarios').select('*').eq('id', uid).single();
+        setPerfilUsuario(uData);
+
+        // 2. Escalação do Rival (Busca Manual)
+        const { data: escData } = await supabase
+            .from('tigre_fc_escalacoes')
+            .select('*')
+            .eq('usuario_id', uid)
+            .eq('jogo_id', jogoId)
+            .maybeSingle();
+
+        if (escData) {
+            setFormacaoRival(escData.formacao || '4-3-3');
+            setCapitaoRivalId(escData.capitao_id);
+            setHeroiRivalId(escData.heroi_id);
+            const l: Lineup = {};
+            Object.entries(escData.lineup || {}).forEach(([k, v]: any) => { 
+                if(v?.id) l[k] = PLAYERS.find(p => p.id === v.id) || null; 
+            });
+            setLineupRival(l);
+        }
+    } catch (e) { console.error("Erro ao carregar rival:", e); }
+  };
 
   const isMercadoAberto = () => {
     if (!jogo?.data_inicio) return true;
@@ -331,7 +373,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     </main>
   );
 
-  // NOVO: Render do Modal de Perfil/Cornetar com alta prioridade de Z-Index
+  // MODAL DE PERFIL / CORNETAR (RENDERIZAÇÃO DO CAMPO DO RIVAL)
   if (step === 'perfil') return (
     <div style={{ position:'fixed', inset:0, background:'#080808', zIndex: 9999, padding: 20, display:'flex', flexDirection:'column' }}>
        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20 }}>
@@ -341,10 +383,38 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
        <div style={{ flex: 1, overflowY: 'auto', textAlign:'center' }}>
           <div style={{ fontSize: 40 }}>🐯</div>
           <h1 style={{ fontSize: 24, fontWeight: 900, margin: '10px 0' }}>{perfilUsuario?.apelido}</h1>
-          <p style={{ color: '#666' }}>Bora cornetar a escalação?</p>
-          {/* Adicione aqui os detalhes da escalação do outro usuário */}
-          <div style={{ marginTop: 40, padding: 20, border: '1px dashed #333', borderRadius: 16 }}>
-             EM BREVE: CORNETÔMETRO 🎺
+          <p style={{ color: '#666', marginBottom: 20 }}>Olha a prancheta do rival!</p>
+          
+          {/* Campo de Futebol do Rival */}
+          <div style={{ perspective: '1000px', display:'flex', justifyContent:'center', marginBottom: 30 }}>
+              <div style={{ 
+                position:'relative', width: fieldWidth * 0.9, height: (fieldWidth * 0.9) * 1.4, 
+                background:'#1a4a1a', borderRadius:4, border: '2px solid #fff', overflow: 'hidden'
+              }}>
+                <svg viewBox="0 0 68 105" style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity: 0.3, pointerEvents:'none' }}>
+                    <g fill="none" stroke="#fff" strokeWidth="0.5">
+                        <line x1="0" y1="52.5" x2="68" y2="52.5" /><circle cx="34" cy="52.5" r="9.15" />
+                    </g>
+                </svg>
+
+                {(FORMATIONS[formacaoRival] || FORMATIONS['4-3-3']).map(slot => {
+                    const p = lineupRival[slot.id];
+                    return (
+                        <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)' }}>
+                            {p ? (
+                                <PlayerCard player={p} size={fieldWidth * 0.15} isCapitao={capitaoRivalId===p.id} isHeroi={heroiRivalId===p.id} />
+                            ) : (
+                                <div style={{ width:20, height:20, borderRadius:'50%', background:'rgba(255,255,255,0.1)' }} />
+                            )}
+                        </div>
+                    );
+                })}
+              </div>
+          </div>
+
+          <div style={{ padding: 20, background: '#111', borderRadius: 16, border: '1px dashed #333' }}>
+              <p style={{ fontSize: 12, fontWeight: 900, color: '#F5C400' }}>CORNETÔMETRO 🎺</p>
+              <p style={{ fontSize: 10, color: '#666' }}>Em breve: Envie uma cornetada direta!</p>
           </div>
        </div>
     </div>
@@ -511,7 +581,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         )}
       </div>
 
-      {/* Botões de Navegação Flutuantes Internos (Z-Index Ajustado) */}
+      {/* Botões de Navegação Flutuantes */}
       {['escalar','capitao','heroi','palpite','confirmar'].includes(step) && (
         <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)', zIndex: 1000 }}>
           <button 
