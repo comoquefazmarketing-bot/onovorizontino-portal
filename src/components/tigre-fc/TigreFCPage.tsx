@@ -158,11 +158,7 @@ export default function TigreFCPage() {
 
         {/* DESTAQUES FIFA NEON (Com Fallback de Carregamento) */}
         {destaques ? (
-          <DestaquesFifa capitao={destaques.capitao} heroi={destaques.heroi} />
-        ) : (
-          <div className="my-16 h-[250px] bg-[#111] rounded-[40px] border border-white/5 flex items-center justify-center animate-pulse">
-             <p className="text-[9px] font-black uppercase tracking-[0.6em] text-zinc-600">Buscando Craques...</p>
-          </div>
+        <DestaquesFifa />
         )}
 
         {/* RAIO-X TIGRE FC (Com proteção de Scroll) */}
