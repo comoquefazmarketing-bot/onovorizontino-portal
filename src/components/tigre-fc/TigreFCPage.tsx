@@ -159,7 +159,6 @@ export default function TigreFCPage() {
         {/* DESTAQUES FIFA NEON (Com Fallback de Carregamento) */}
         {destaques ? (
         <DestaquesFifa />
-        )}
 
         {/* RAIO-X TIGRE FC (Com proteção de Scroll) */}
         <section className="mt-20">
