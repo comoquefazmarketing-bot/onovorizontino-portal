@@ -6,15 +6,15 @@ export default function DestaquesFifa() {
   const capitao = {
     nome: 'César Augusto',
     pontos: 7.3,
-    // FOTO ATUALIZADA (DESTAQUE)
-    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CESAR%20AUGUSTO%20DESTAQUE.png'
+    // FOTO ATUALIZADA (VERSÃO 1)
+    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CESAR%20AUGUSTO%20DESTAQUE%20(1).png'
   };
 
   const heroi = {
     nome: 'Patrick',
     pontos: 7.3,
-    // FOTO ATUALIZADA (DESTAQUE)
-    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/PATRICK%20DESTAQUE.png'
+    // FOTO ATUALIZADA (VERSÃO 1)
+    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/PATRICK%20DESTAQUE%20(1).png'
   };
 
   const CardUT26 = ({ j, tipo }: { j: any, tipo: 'CAPITÃO' | 'HERÓI' }) => {
@@ -54,10 +54,10 @@ export default function DestaquesFifa() {
             </div>
           </div>
 
-          {/* Foto do Jogador - Ajustada para o recorte novo */}
+          {/* Foto do Jogador - Ajustada para destacar o recorte PNG */}
           <div className="relative z-10 w-full h-40 flex justify-center mt-[-15px]">
             <img src={j.foto} alt={j.nome} 
-                  className="h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] scale-125 group-hover:scale-[1.35] transition-all duration-500" />
+                  className="h-full object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] scale-125 group-hover:scale-[1.35] transition-all duration-500" />
           </div>
 
           {/* Nome e Rodapé */}
