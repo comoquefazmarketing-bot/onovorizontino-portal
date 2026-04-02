@@ -32,12 +32,9 @@ interface UsuarioRanking {
   pontos_total: number;
 }
 
-// Next.js 15: O tipo da página deve receber params como uma Promise
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
-  // Desempacota os parâmetros usando a nova API 'use'
   const resolvedParams = use(params);
-  const urlJogoId = resolvedParams.jogoId;
-
+  
   const [mounted, setMounted] = useState(false);
   const [jogo, setJogo] = useState<Jogo | null>(null);
   const [ranking, setRanking] = useState<UsuarioRanking[]>([]);
@@ -46,11 +43,20 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
   const topRef = useRef<HTMLDivElement>(null);
 
+  // Forçar scroll para o topo ao carregar
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
+    
+    // Scroll imediato
+    window.scrollTo(0, 0);
+
+    // Scroll reforçado após renderização inicial para evitar que iFrames ou Chat puxem o scroll
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      topRef.current?.focus();
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -58,7 +64,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     const sb = createClient(SB_URL, SB_KEY);
 
     async function init() {
-      // 1. Busca Sessão do Usuário de forma segura
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user) {
         const { data: u } = await sb.from('tigre_fc_usuarios')
@@ -68,7 +73,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (u) setMeuId(u.id);
       }
 
-      // 2. Busca Jogo e Ranking
       try {
         const [resJogo, { data: rankData }] = await Promise.all([
           fetch('/api/proximo-jogo').then(r => r.json()),
@@ -87,7 +91,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     init();
   }, [mounted]);
 
-  // Timer: Fecha o mercado 90 minutos antes
   useEffect(() => {
     if (!jogo) return;
     
@@ -120,7 +123,11 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     <main className="min-h-screen bg-[#050505] text-white pb-40 font-sans selection:bg-yellow-500 overflow-x-hidden">
       
       {/* 🏆 HEADER PREMIUM */}
-      <header ref={topRef} className="bg-[#F5C400] pt-20 pb-32 px-6 border-b-[12px] border-black text-center relative overflow-hidden">
+      <header 
+        ref={topRef} 
+        tabIndex={-1} // Permite focar programaticamente para garantir o scroll
+        className="bg-[#F5C400] pt-20 pb-32 px-6 border-b-[12px] border-black text-center relative overflow-hidden outline-none"
+      >
         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/20" />
         
