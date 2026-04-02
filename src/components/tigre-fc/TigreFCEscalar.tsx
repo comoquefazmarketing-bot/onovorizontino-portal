@@ -12,6 +12,7 @@ const supabase = createClient(
 );
 
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
+const ASSETS = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ASSETS/';
 
 const PLAYERS = [
   { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
@@ -73,6 +74,7 @@ type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 
 function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { player: Player, size: number, isSelected?: boolean, isCaptain?: boolean, isHero?: boolean, isField?: boolean }) {
+  // Lógica de enquadramento: no campo mostra o lado direito (perto da numeração), no mercado o lado esquerdo
   const bgPos = isField ? 'right' : 'left';
   return (
     <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} style={{ width: size }}>
@@ -92,7 +94,8 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
       </div>
       <style jsx>{`
         .card-wrapper { position: relative; transition: transform 0.2s; flex-shrink: 0; margin: 0 auto; }
-        .card-box { background: #111; border-radius: 4px; overflow: hidden; position: relative; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .selected { transform: scale(1.08); z-index: 10; }
+        .card-box { background: #111; border-radius: 6px; overflow: hidden; position: relative; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; z-index: 5; border: 1px solid #000; }
         .cap { background: #F5C400; color: #000; }
         .star { background: #fff; color: #000; }
@@ -115,6 +118,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
   const [palpite, setPalpite] = useState({ home: 0, away: 0 });
   const [filterPos, setFilterPos] = useState<string>('TODOS');
   const [fieldWidth, setFieldWidth] = useState(360);
+  const [specialGallery, setSpecialGallery] = useState<'captain' | 'hero' | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -123,6 +127,27 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, []);
+
+  const handleSlotClick = (slotId: string) => {
+    if (selectedSlot === slotId) {
+      setSelectedSlot(null);
+      return;
+    }
+    setSelectedSlot(slotId);
+  };
+
+  const selectFromMarket = (player: Player) => {
+    if (selectedSlot) {
+      setLineup(prev => ({ ...prev, [selectedSlot]: player }));
+      setSelectedSlot(null);
+    }
+  };
+
+  const selectSpecial = (player: Player) => {
+    if (specialGallery === 'captain') setCaptain(player.id);
+    if (specialGallery === 'hero') setHero(player.id);
+    setSpecialGallery(null);
+  };
 
   const handleDownload = async () => {
     if (cardRef.current) {
@@ -138,6 +163,8 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
 
   const usedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
   const isComplete = usedIds.length === 11;
+  const captainObj = PLAYERS.find(p => p.id === captain);
+  const heroObj = PLAYERS.find(p => p.id === hero);
 
   return (
     <main className="container">
@@ -160,7 +187,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
               const p = lineup[slot.id];
               const isSel = selectedSlot === slot.id;
               return (
-                <div key={slot.id} className="slot" onClick={() => setSelectedSlot(isSel ? null : slot.id)} style={{ left: `${slot.x}%`, top: `${slot.y}%`, zIndex: isSel ? 50 : 10 }}>
+                <div key={slot.id} className="slot" onClick={() => handleSlotClick(slot.id)} style={{ left: `${slot.x}%`, top: `${slot.y}%`, zIndex: isSel ? 50 : 10 }}>
                   {p ? (
                     <PlayerCard player={p} size={fieldWidth * 0.16} isSelected={isSel} isField />
                   ) : (
@@ -181,8 +208,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
               {PLAYERS.filter(p => !usedIds.includes(p.id))
                       .filter(p => filterPos === 'TODOS' || p.pos === filterPos)
                       .map(p => (
-                <div key={p.id} className="grid-item" onClick={() => { if(selectedSlot) { setLineup(prev => ({ ...prev, [selectedSlot]: p })); setSelectedSlot(null); } }} 
-                     style={{ opacity: selectedSlot ? 1 : 0.4 }}>
+                <div key={p.id} className="grid-item" onClick={() => selectFromMarket(p)} style={{ opacity: selectedSlot ? 1 : 0.4 }}>
                   <PlayerCard player={p} size={(fieldWidth / 3) - 8} />
                 </div>
               ))}
@@ -194,53 +220,93 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         </div>
       )}
 
+      {/* NOVA EXPERIÊNCIA DE ESCOLHA DE CAPITÃO E HERÓI (UI FIFA 26) */}
       {step === 'especiais' && (
         <div className="content">
-           <div className="alert highlight">🏆 CAPITÃO E HERÓI</div>
-           <div className="especiais-list">
-              {Object.values(lineup).map(p => p && (
-                <div key={p.id} className="esp-row">
-                   <PlayerCard player={p} size={60} isCaptain={captain === p.id} isHero={hero === p.id} isField />
-                   <div className="esp-actions">
-                      <button className={captain === p.id ? 'active cap' : ''} onClick={() => setCaptain(p.id)}>CAPITÃO</button>
-                      <button className={hero === p.id ? 'active star' : ''} onClick={() => setHero(p.id)}>HERÓI</button>
-                   </div>
+           <div className="alert highlight">🏆 DESIGNE SEUS LÍDERES ELITE</div>
+           
+           <div className="special-slots">
+                <div className="special-slot cap" onClick={() => setSpecialGallery('captain')}>
+                    {captainObj ? (
+                        <PlayerCard player={captainObj} size={100} isField isCaptain />
+                    ) : (
+                        <div className="slot-placeholder cap">
+                            <span className="plus-special">+</span>
+                            CAPITÃO
+                        </div>
+                    )}
                 </div>
-              ))}
+                <div className="special-slot star" onClick={() => setSpecialGallery('hero')}>
+                    {heroObj ? (
+                        <PlayerCard player={heroObj} size={100} isField isHero />
+                    ) : (
+                        <div className="slot-placeholder star">
+                            <span className="plus-special">+</span>
+                            HERÓI
+                        </div>
+                    )}
+                </div>
            </div>
+
+           {specialGallery && (
+               <div className="special-gallery-overlay">
+                   <div className="market-header">
+                       ESCOLHA SEU {specialGallery === 'captain' ? 'CAPITÃO' : 'HERÓI'}
+                       <button className="close-gallery" onClick={() => setSpecialGallery(null)}>X</button>
+                   </div>
+                   <div className="filters">
+                      {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(f => (
+                        <button key={f} className={filterPos === f ? 'f-active' : ''} onClick={() => setFilterPos(f)}>{f}</button>
+                      ))}
+                   </div>
+                   <div className="players-grid gallery-grid">
+                       {PLAYERS.filter(p => filterPos === 'TODOS' || p.pos === filterPos).map(p => (
+                           <div key={p.id} onClick={() => selectSpecial(p)}>
+                               <PlayerCard player={p} size={(fieldWidth / 3) - 16} />
+                           </div>
+                       ))}
+                   </div>
+               </div>
+           )}
+
            <div className="dock">
             <button className="next-btn" disabled={!captain || !hero} onClick={() => setStep('palpite')}>DEFINIR PLACAR ➜</button>
           </div>
         </div>
       )}
 
+      {/* NOVO PLACAR HUD DE TV (EA FC TRANSMISSION STYLE) */}
       {step === 'palpite' && (
-        <div className="content">
+        <div className="content center-flex">
           <div className="match-day-hud">
-            <div className="hud-title">MATCH DAY <span>OFFICIAL PREDICTION</span></div>
+            <div className="hud-header">
+                <div className="header-status">LIVE</div>
+                <div className="header-matchinfo">JOGO {jogoId} PREVIEW</div>
+            </div>
             <div className="hud-scoreboard">
-                <div className="team tigre">
-                    <div className="logo-shield">🐯</div>
-                    <span>TIGRE</span>
+                <div className="hud-team hud-home">
+                    <img src={ASSETS+'shield-tigre.png'} alt="Tigre" />
+                    <span className="hud-name">TIGRE</span>
                 </div>
-                <div className="inputs">
+                <div className="hud-inputs">
                     <input type="number" value={palpite.home} onChange={e => setPalpite({...palpite, home: parseInt(e.target.value)||0})} />
-                    <div className="vs-badge">VS</div>
+                    <div className="hud-divider"><span className="divider-neon">X</span></div>
                     <input type="number" value={palpite.away} onChange={e => setPalpite({...palpite, away: parseInt(e.target.value)||0})} />
                 </div>
-                <div className="team away">
-                    <div className="logo-shield gray">⚽</div>
-                    <span>ADV</span>
+                <div className="hud-team hud-away">
+                    <div className="adv-shield-placeholder">?</div>
+                    <span className="hud-name">ADV</span>
                 </div>
             </div>
-            <div className="hud-footer">FIFA 26 ULTIMATE TEAM | PREVIEW</div>
+            <div className="hud-footer">FIFA 26 TRANSMISSION | PREDICTION</div>
           </div>
           <div className="dock">
-            <button className="next-btn" onClick={() => setStep('compartilhar')}>GERAR CARD FINAL ➜</button>
+            <button className="next-btn" onClick={() => setStep('compartilhar')}>FINALIZAR TUDO ➜</button>
           </div>
         </div>
       )}
 
+      {/* NOVO CARD FINAL PREMIUM E SISTEMA DE COMPARTILHAMENTO */}
       {step === 'compartilhar' && (
         <div className="content">
           <div id="final-card" ref={cardRef} className="card-capture">
@@ -267,54 +333,72 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
           </div>
 
           <div className="share-actions">
-            <button className="download-btn" onClick={handleDownload}>💾 BAIXAR IMAGEM</button>
-            <button className="back-btn" onClick={() => setStep('escalar')}>↺ REFAZER</button>
+            <button className="download-btn" onClick={handleDownload}>💾 BAIXAR CARD</button>
+            <button className="back-btn" onClick={() => setStep('escalar')}>↺ REFAZER ESQUADRÃO</button>
           </div>
         </div>
       )}
 
       <style jsx global>{`
-        body { background: #000; margin: 0; font-family: 'Inter', sans-serif; color: #fff; }
-        .container { min-height: 100vh; padding-bottom: 120px; }
-        .header { background: #F5C400; color: #000; text-align: center; padding: 12px; font-weight: 900; position: sticky; top: 0; z-index: 100; font-size: 18px; }
-        .header span { opacity: 0.6; font-size: 12px; margin-left: 5px; }
-        .content { display: flex; flex-direction: column; align-items: center; max-width: 500px; margin: 0 auto; padding: 15px; }
-        
-        .alert { background: #111; color: #888; width: 100%; text-align: center; padding: 10px; font-weight: 800; font-size: 11px; border-radius: 4px; margin-bottom: 10px; border: 1px solid #222; }
-        .alert.highlight { background: #F5C400; color: #000; }
+        body { background: #000; margin: 0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .container { min-height: 100vh; color: #fff; padding-bottom: 120px; }
+        .header { background: #F5C400; color: #000; text-align: center; padding: 12px; font-weight: 900; font-size: 18px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .header span { opacity: 0.6; font-size: 12px; }
+        .content { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; padding: 10px; }
+        .center-flex { justify-content: center; height: 80vh; }
 
-        .field { position: relative; background: #1a4a1a; background-image: repeating-linear-gradient(0deg, #1a4a1a, #1a4a1a 10%, #1e531e 10%, #1e531e 20%); border: 2px solid #fff; border-radius: 4px; overflow: hidden; }
-        .pitch-markings { position: absolute; inset: 0; pointer-events: none; opacity: 0.3; }
+        .alert { background: #111; color: #888; width: 100%; text-align: center; padding: 10px; font-weight: 800; font-size: 11px; border-radius: 4px; margin-bottom: 8px; border: 1px solid #222; }
+        .alert.highlight { background: #F5C400; color: #000; border-color: #F5C400; }
+
+        .field { position: relative; background: #1a4a1a; background-image: repeating-linear-gradient(0deg, #1a4a1a, #1a4a1a 10%, #1e531e 10%, #1e531e 20%); border: 2px solid #fff; border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
+        .pitch-markings { position: absolute; inset: 0; pointer-events: none; opacity: 0.4; }
         .center-line { position: absolute; top: 50%; width: 100%; height: 2px; background: #fff; }
         .center-circle { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); }
         .area { position: absolute; left: 50%; width: 50%; height: 12%; border: 2px solid #fff; transform: translateX(-50%); }
         .area.top { top: 0; border-top: none; } .area.bottom { bottom: 0; border-bottom: none; }
         .slot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; }
-        .dot { border-radius: 50%; border: 1px dashed #fff; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); font-size: 14px; }
+        .dot { border-radius: 50%; border: 1px dashed #fff; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; }
         .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.2); }
 
-        .market-section { width: 100%; background: #080808; padding: 10px 0; }
-        .filters { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
-        .filters button { background: #151515; border: 1px solid #222; color: #666; padding: 8px 12px; border-radius: 4px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+        .market-section { width: 100%; background: #080808; border-radius: 8px; padding: 5px; }
+        .filters { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+        .filters button { background: #151515; border: 1px solid #222; color: #666; padding: 6px 10px; border-radius: 4px; font-size: 9px; font-weight: 800; }
         .filters button.f-active { background: #F5C400; color: #000; }
-        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 
-        /* MATCH DAY HUD */
-        .match-day-hud { width: 100%; background: #111; border: 1px solid #333; border-radius: 12px; padding: 20px; box-shadow: 0 0 40px rgba(245,196,0,0.1); position: relative; overflow: hidden; }
-        .match-day-hud::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(245,196,0,0.05) 0%, transparent 70%); }
-        .hud-title { text-align: center; font-weight: 900; font-size: 12px; letter-spacing: 2px; margin-bottom: 30px; color: #888; }
-        .hud-title span { color: #F5C400; display: block; font-size: 10px; }
-        .hud-scoreboard { display: flex; align-items: center; justify-content: space-between; gap: 15px; position: relative; z-index: 1; }
-        .team { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .logo-shield { width: 70px; height: 70px; background: #000; border: 3px solid #F5C400; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 0 20px rgba(245,196,0,0.2); }
-        .logo-shield.gray { border-color: #444; }
-        .team span { font-weight: 1000; font-size: 14px; color: #fff; }
-        .inputs { display: flex; align-items: center; gap: 8px; }
-        .inputs input { width: 60px; height: 80px; background: #000; border: 2px solid #F5C400; border-radius: 8px; color: #fff; text-align: center; font-size: 40px; font-weight: 900; font-family: monospace; }
-        .vs-badge { background: #F5C400; color: #000; padding: 4px 8px; font-size: 10px; font-weight: 900; border-radius: 4px; }
-        .hud-footer { text-align: center; margin-top: 30px; font-size: 8px; font-weight: 800; color: #444; letter-spacing: 3px; }
+        /* ESPECIAIS (UI FIFA 26) */
+        .special-slots { display: flex; gap: 20px; width: 100%; justify-content: center; margin-top: 40px; }
+        .special-slot { position: relative; border-radius: 12px; transition: 0.3s; cursor: pointer; }
+        .special-slot:hover { transform: translateY(-5px); }
+        .special-slot.cap { background: radial-gradient(circle at center, rgba(245,196,0,0.1) 0%, transparent 80%); }
+        .special-slot.star { background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 80%); }
+        .slot-placeholder { width: 100px; height: 135px; border-radius: 6px; border: 3px dashed #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #666; gap: 10px; }
+        .special-slot.cap .slot-placeholder { border-color: rgba(245,196,0,0.4); color: #F5C400; }
+        .special-slot.star .slot-placeholder { border-color: rgba(255,255,255,0.4); color: #fff; }
+        .plus-special { font-size: 32px; font-weight: 900; }
+        .special-gallery-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 500; display: flex; flex-direction: column; padding: 20px; animation: fadeIn 0.3s; }
+        .market-header { color: #F5C400; font-size: 16px; font-weight: 1000; text-align: center; margin-bottom: 20px; position: relative; padding: 0 40px; }
+        .close-gallery { position: absolute; right: 0; top: -5px; background: transparent; border: none; color: #fff; font-size: 20px; font-weight: 1000; }
+        .gallery-grid { padding-top: 20px; }
 
-        /* CAPTURE CARD */
+        /* MATCH DAY HUD TV */
+        .match-day-hud { width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: rgba(10,10,10,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); overflow: hidden; position: relative; box-shadow: 0 0 50px rgba(245,196,0,0.05); }
+        .match-day-hud::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(245,196,0,0.05) 0%, transparent 40%); pointer-events: none; }
+        .hud-header { border-bottom: 2px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; font-size: 8px; font-weight: 900; color: #444; letter-spacing: 2px; }
+        .header-status { background: #FF3D00; color: #fff; padding: 4px 8px; border-radius: 4px; animation: blink 1s infinite; }
+        .hud-scoreboard { display: flex; align-items: center; justify-content: space-between; padding: 30px 15px; gap: 20px; }
+        .hud-team { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; }
+        .hud-team img, .adv-shield-placeholder { width: 60px; height: 60px; border-radius: 12px; border: 3px solid rgba(255,255,255,0.05); background: #000; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #444; }
+        .hud-team.tigre img { border-color: #F5C400; }
+        .hud-name { font-weight: 1000; font-size: 12px; color: #fff; }
+        .hud-inputs { display: flex; align-items: center; gap: 10px; }
+        .hud-inputs input { width: 60px; height: 80px; background: #000; border: 2px solid #333; border-radius: 6px; color: #F5C400; text-align: center; font-size: 48px; font-weight: 900; font-family: 'Mono', monospace; }
+        .hud-inputs input:focus { border-color: #F5C400; outline: none; }
+        .hud-divider { display: flex; flex-direction: column; align-items: center; }
+        .vs-badge { font-weight: 900; font-size: 14px; color: #444; }
+        .hud-footer { border-top: 2px solid rgba(255,255,255,0.05); text-align: center; padding: 10px; font-size: 7px; font-weight: 800; color: #222; letter-spacing: 3px; }
+
+        /* CAPTURE CARD (INSTAGRAMÁVEL) */
         .card-capture { width: 380px; background: #000; border: 6px solid #F5C400; padding: 20px; position: relative; }
         .capture-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 15px; }
         .header-logo { font-weight: 1000; color: #F5C400; font-size: 20px; }
@@ -327,12 +411,15 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         .footer-brand { font-size: 8px; color: #444; }
 
         .share-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 20px; }
-        .download-btn { background: #00C853; color: #fff; border: none; padding: 18px; border-radius: 8px; font-weight: 900; cursor: pointer; }
+        .download-btn { background: #00C853; color: #fff; border: none; padding: 18px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; }
         .back-btn { background: transparent; border: 1px solid #333; color: #888; padding: 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
 
-        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000); z-index: 200; display: flex; justify-content: center; }
-        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 8px; font-weight: 1000; font-size: 16px; box-shadow: 0 10px 30px rgba(245,196,0,0.3); }
-        .next-btn:disabled { background: #222; color: #444; box-shadow: none; }
+        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(transparent, #000 40%); z-index: 200; display: flex; justify-content: center; }
+        .next-btn { width: 100%; max-width: 400px; padding: 15px; background: #F5C400; color: #000; border: none; border-radius: 8px; font-weight: 900; font-size: 14px; box-shadow: 0 10px 30px rgba(245,196,0,0.3); }
+        .next-btn:disabled { background: #222; color: #444; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes blinking { 50% { opacity: 0.5; } }
       `}</style>
     </main>
   );
