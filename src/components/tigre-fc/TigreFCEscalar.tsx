@@ -1,8 +1,10 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 import html2canvas from 'html2canvas';
 
+// Configuração do Cliente Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -16,36 +18,36 @@ const PLAYERS = [
   { id: 2,  name: 'Jordi',             short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
   { id: 3,  name: 'João Scapin',       short: 'Scapin',      num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
   { id: 4,  name: 'Lucas Ribeiro',     short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
-  { id: 5,  name: 'Lora',              short: 'Lora',           num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
+  { id: 5,  name: 'Lora',              short: 'Lora',            num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
   { id: 6,  name: 'Castrillón',         short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
   { id: 7,  name: 'Arthur Barbosa',     short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
   { id: 8,  name: 'Sander',             short: 'Sander',     num: 33, pos: 'LAT', foto: BASE+'SANDER.jpg.webp' },
   { id: 9,  name: 'Maykon Jesus',       short: 'Maykon',      num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
   { id: 10, name: 'Dantas',             short: 'Dantas',      num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
   { id: 11, name: 'Eduardo Brock',      short: 'E.Brock',     num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
-  { id: 12, name: 'Patrick',            short: 'Patrick',     num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
+  { id: 12, name: 'Patrick',             short: 'Patrick',     num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
   { id: 13, name: 'Gabriel Bahia',      short: 'G.Bahia',     num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
   { id: 14, name: 'Carlinhos',          short: 'Carlinhos',   num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
   { id: 15, name: 'Alemão',             short: 'Alemão',      num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
-  { id: 16, name: 'Renato Palm',        short: 'R.Palm',      num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
-  { id: 17, name: 'Alvariño',           short: 'Alvariño',     num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
+  { id: 16, name: 'Renato Palm',         short: 'R.Palm',      num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
+  { id: 17, name: 'Alvariño',            short: 'Alvariño',     num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
   { id: 18, name: 'Bruno Santana',      short: 'B.Santana',   num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
   { id: 19, name: 'Luís Oyama',          short: 'Oyama',           num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
   { id: 20, name: 'Léo Naldi',          short: 'L.Naldi',     num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
   { id: 21, name: 'Rômulo',             short: 'Rômulo',      num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
   { id: 22, name: 'Matheus Bianqui',  short: 'Bianqui',     num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  { id: 23, name: 'Juninho',            short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
-  { id: 24, name: 'Tavinho',            short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
+  { id: 23, name: 'Juninho',             short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
+  { id: 24, name: 'Tavinho',             short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
   { id: 25, name: 'Diego Galo',          short: 'D.Galo',      num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
   { id: 26, name: 'Marlon',             short: 'Marlon',      num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
   { id: 27, name: 'Hector Bianchi',     short: 'Hector',      num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
   { id: 28, name: 'Nogueira',           short: 'Nogueira',     num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
   { id: 29, name: 'Luiz Gabriel',       short: 'L.Gabriel',   num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
-  { id: 30, name: 'Jhones Kauê',        short: 'J.Kauê',      num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
+  { id: 30, name: 'Jhones Kauê',         short: 'J.Kauê',      num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
   { id: 31, name: 'Robson',             short: 'Robson',      num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
   { id: 32, name: 'Vinícius Paiva',     short: 'V.Paiva',     num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
   { id: 33, name: 'Hélio Borges',       short: 'H.Borges',     num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
-  { id: 34, name: 'Jardiel',            short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
+  { id: 34, name: 'Jardiel',             short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
   { id: 35, name: 'Nicolas Careca',     short: 'N.Careca',     num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
   { id: 36, name: 'Titi Ortiz',         short: 'T.Ortiz',     num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
   { id: 37, name: 'Diego Mathias',      short: 'D.Mathias',   num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
@@ -124,6 +126,7 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
 }
 
 export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
+  const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -167,7 +170,9 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from('escalacoes').insert([{
+
+      // 1. Salvar no Supabase
+      const { error } = await supabase.from('escalacoes').insert([{
         user_id: user?.id || null,
         jogo_id: jogoId,
         jogadores_ids: usedIds,
@@ -175,19 +180,42 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         heroi_id: hero,
         palpite_casa: palpite.home,
         palpite_fora: palpite.away,
-        formacao: formationKey
+        formacao: formationKey,
+        criado_por: "Felipe Makarios"
       }]);
 
+      if (error) throw error;
+
+      // 2. Capturar e compartilhar (opcional se der erro no navegador)
       if (cardRef.current) {
-        const canvas = await html2canvas(cardRef.current, { useCORS: true, scale: 2 });
-        const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
-        if (blob && navigator.share) {
-          const file = new File([blob], 'meu-tigre-fc.png', { type: 'image/png' });
-          await navigator.share({ title: 'Minha Escalação Tigre FC', files: [file] });
+        try {
+          const canvas = await html2canvas(cardRef.current, { useCORS: true, scale: 2 });
+          const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
+          
+          if (blob && navigator.share) {
+            const file = new File([blob], 'meu-tigre-fc.png', { type: 'image/png' });
+            await navigator.share({ 
+              title: 'Minha Escalação Tigre FC', 
+              text: 'Confira meu time para o jogo!',
+              files: [file] 
+            });
+          }
+        } catch (shareErr) {
+          console.log("Compartilhamento não concluído");
         }
       }
-      alert("Salvo com sucesso!");
-    } catch (err) { alert("Erro ao salvar."); } finally { setLoading(false); }
+
+      // 3. Redirecionamento Final
+      alert("Escalação salva com sucesso!");
+      router.push('/'); 
+      setTimeout(() => { window.location.href = "/"; }, 500);
+
+    } catch (err) { 
+      console.error(err);
+      alert("Erro ao salvar sua escalação."); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   if (!mounted) return null;
@@ -322,9 +350,10 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
           </div>
           <div className="share-actions">
             <button className="share-btn" onClick={handleFinishAndShare} disabled={loading}>
-              {loading ? "PROCESSANDO..." : "🚀 SALVAR E COMPARTILHAR"}
+              {loading ? "SALVANDO..." : "🚀 SALVAR E COMPARTILHAR"}
             </button>
-            <button className="back-btn" onClick={() => setStep('escalar')}>↺ VOLTAR</button>
+            <button className="exit-btn" onClick={() => router.push('/')}>🏠 VOLTAR AO INÍCIO</button>
+            <button className="back-btn" onClick={() => setStep('escalar')}>↺ EDITAR TIME</button>
           </div>
         </div>
       )}
@@ -390,12 +419,13 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         .footer-author { color: #444; font-size: 9px; }
 
         .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 35%); display: flex; justify-content: center; z-index: 150; }
-        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border-radius: 12px; font-weight: 900; border: none; font-size: 15px; box-shadow: 0 5px 15px rgba(245,196,0,0.3); }
-        .next-btn:disabled { background: #222; color: #444; box-shadow: none; }
+        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border-radius: 12px; font-weight: 900; border: none; font-size: 15px; box-shadow: 0 5px 15px rgba(245,196,0,0.3); cursor: pointer; }
+        .next-btn:disabled { background: #222; color: #444; box-shadow: none; cursor: not-allowed; }
         
         .share-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
-        .share-btn { background: #F5C400; color: #000; padding: 18px; border-radius: 12px; font-weight: 900; border: none; font-size: 15px; }
-        .back-btn { background: transparent; border: 1px solid #333; color: #555; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 12px; }
+        .share-btn { background: #F5C400; color: #000; padding: 18px; border-radius: 12px; font-weight: 900; border: none; font-size: 15px; cursor: pointer; }
+        .exit-btn { background: #111; color: #fff; padding: 12px; border-radius: 12px; font-weight: 800; border: 1px solid #333; cursor: pointer; }
+        .back-btn { background: transparent; border: none; color: #555; padding: 8px; font-weight: 800; font-size: 12px; text-decoration: underline; cursor: pointer; }
       `}</style>
     </main>
   );
