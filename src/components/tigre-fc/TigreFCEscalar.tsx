@@ -1,9 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import * as htmlToImage from 'html-to-image';
 
-// Configuração robusta do Supabase
+// Configuração Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -11,7 +10,6 @@ const supabase = createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true
     }
   }
 );
@@ -61,16 +59,14 @@ const PLAYERS = [
   { id: 39, name: 'Ronald Barcellos',  short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-const FORMATIONS = {
-  '4-3-3': [
-    { id:'gk',  label:'GOL', x:50, y:92 }, { id:'rb',  label:'LAT', x:85, y:72 },
-    { id:'cb1', label:'ZAG', x:62, y:78 }, { id:'cb2', label:'ZAG', x:38, y:78 },
-    { id:'lb',  label:'LAT', x:15, y:72 }, { id:'cm1', label:'MEI', x:75, y:52 },
-    { id:'cm2', label:'MEI', x:50, y:55 }, { id:'cm3', label:'MEI', x:25, y:52 },
-    { id:'rw',  label:'ATA', x:82, y:22 }, { id:'st',  label:'ATA', x:50, y:12 },
-    { id:'lw',  label:'ATA', x:18, y:22 },
-  ],
-};
+const FORMATION_433 = [
+  { id:'gk',  label:'GOL', x:50, y:92 }, { id:'rb',  label:'LAT', x:85, y:72 },
+  { id:'cb1', label:'ZAG', x:62, y:78 }, { id:'cb2', label:'ZAG', x:38, y:78 },
+  { id:'lb',  label:'LAT', x:15, y:72 }, { id:'cm1', label:'MEI', x:75, y:52 },
+  { id:'cm2', label:'MEI', x:50, y:55 }, { id:'cm3', label:'MEI', x:25, y:52 },
+  { id:'rw',  label:'ATA', x:82, y:22 }, { id:'st',  label:'ATA', x:50, y:12 },
+  { id:'lw',  label:'ATA', x:18, y:22 },
+];
 
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
@@ -86,10 +82,10 @@ function PlayerCard({ player, size, isField }: { player: Player, size: number, i
         transition: 'all 0.4s'
       }}>
         <div style={{
-          width: '200%', height: '100%',
+          width: '100%', height: '100%',
           backgroundImage: `url(${player.foto})`,
           backgroundSize: 'cover',
-          backgroundPosition: isField ? 'right center' : 'left center',
+          backgroundPosition: 'center',
           maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
         }} />
@@ -103,14 +99,13 @@ function PlayerCard({ player, size, isField }: { player: Player, size: number, i
 }
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
-  const fieldRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<'login' | 'escalar' | 'finalizado'>('login');
   const [lineup, setLineup] = useState<Lineup>({});
   const [selected, setSelected] = useState<{ player: Player, fromSlot: string | null } | null>(null);
   const [fieldWidth, setFieldWidth] = useState(360);
   const [usuario, setUsuario] = useState<any>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -118,154 +113,142 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     update();
     window.addEventListener('resize', update);
     
+    // Auth Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) { setUsuario(session.user); setStep('escalar'); }
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
-      if (session) { setUsuario(session.user); setStep('escalar'); }
-      else { setStep('login'); }
-    });
-
-    return () => {
-      window.removeEventListener('resize', update);
-      authListener.subscription.unsubscribe();
-    };
+    return () => window.removeEventListener('resize', update);
   }, []);
 
-  const handleSalvarTime = async () => {
-    // Aqui você insere a lógica de salvar no banco de dados Supabase
-    // Após salvar, mudamos para o step finalizado
-    setStep('finalizado');
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    });
   };
 
-  const handleShare = async () => {
-    if (!fieldRef.current) return;
-    setIsGenerating(true);
-
-    try {
-      // Captura a imagem do campo
-      const dataUrl = await htmlToImage.toPng(fieldRef.current, { 
-        cacheBust: true, 
-        pixelRatio: 2,
-        backgroundColor: '#050505' 
-      });
-
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], 'meu-time-tigre-fc.png', { type: 'image/png' });
-
-      // Tenta o compartilhamento nativo (Mobile)
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: 'Tigre FC Elite',
-          text: 'Olha o meu timaço para o próximo jogo! 🐯',
-          files: [file]
-        });
-      } else {
-        // Fallback: Download
-        const link = document.createElement('a');
-        link.download = 'tigre-fc-escalacao.png';
-        link.href = dataUrl;
-        link.click();
-      }
-    } catch (err) {
-      console.error("Erro ao compartilhar:", err);
-    } finally {
-      setIsGenerating(false);
+  const handleTapSlot = (slotId: string) => {
+    const playerInSlot = lineup[slotId];
+    if (selected) {
+      setLineup(prev => ({ 
+        ...prev, 
+        [selected.fromSlot || 'temp']: playerInSlot || null, 
+        [slotId]: selected.player 
+      }));
+      setSelected(null);
+    } else if (playerInSlot) {
+      setSelected({ player: playerInSlot, fromSlot: slotId });
     }
+  };
+
+  const handleSalvar = async () => {
+    setSaving(true);
+    try {
+      // Exemplo de salvamento no Supabase
+      const { error } = await supabase.from('escalacoes').upsert({
+        user_id: usuario?.id,
+        jogo_id: jogoId,
+        time: lineup,
+        updated_at: new Date()
+      });
+      if (error) throw error;
+      setStep('finalizado');
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao salvar sua escalação.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleShare = () => {
+    const text = `🐯 Escalei meu time no Tigre FC Elite! Você consegue bater minha tática?`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + window.location.origin)}`);
   };
 
   if (!mounted) return null;
 
+  if (step === 'login') return (
+    <div style={{ height: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={handleGoogleLogin} style={{ padding: '20px 40px', borderRadius: 12, fontWeight: 900, cursor: 'pointer' }}>
+            ENTRAR COM GOOGLE
+        </button>
+    </div>
+  );
+
+  const filledCount = Object.values(lineup).filter(Boolean).length;
+
   return (
     <main style={{ minHeight:'100vh', background:'#050505', color:'#fff', overflowX: 'hidden' }}>
-      <div style={{ background:'#F5C400', padding:16, textAlign:'center', borderBottom:'4px solid #ccaa00', zIndex: 100, position: 'relative' }}>
-        <span style={{ color:'#000', fontWeight: 1000, letterSpacing: 2 }}>TIGRE FC <span style={{ fontWeight: 400 }}>ELITE 26</span></span>
+      <div style={{ background:'#F5C400', padding:16, textAlign:'center', borderBottom:'4px solid #ccaa00' }}>
+        <span style={{ color:'#000', fontWeight: 1000 }}>TIGRE FC ELITE 26</span>
       </div>
 
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '10px 16px' }}>
         
-        {/* AREA DE CAPTURA DA IMAGEM */}
-        <div ref={fieldRef} style={{ background: '#050505', padding: '10px 0' }}>
-            <div style={{ perspective: '1200px', marginBottom: 30 }}>
-                <div style={{
-                    width: fieldWidth, height: fieldWidth * 1.35, margin: '0 auto',
-                    background: 'linear-gradient(180deg, #1a4a1a 0%, #0a2a0a 100%)',
-                    borderRadius: '16px', position: 'relative',
-                    backgroundImage: `repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 40px, transparent 40px, transparent 80px)`,
-                    border: '2px solid rgba(255,255,255,0.1)',
-                    transform: 'rotateX(25deg)', transformStyle: 'preserve-3d'
-                }}>
-                    {FORMATIONS['4-3-3'].map((slot) => (
-                    <div key={slot.id} onClick={() => step === 'escalar' && handleTapSlot(slot.id)} style={{
-                        position: 'absolute', left: `${slot.x}%`, top: `${slot.y}%`,
-                        transform: 'translate(-50%, -50%) translateZ(35px)',
-                        zIndex: 10, cursor: 'pointer'
-                    }}>
-                        {lineup[slot.id] ? (
-                        <PlayerCard player={lineup[slot.id]!} size={fieldWidth * 0.17} isField />
-                        ) : (
-                        <div style={{ width: 38, height: 38, borderRadius: '50%', border: '1.5px dashed #F5C400', color: '#F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>+</div>
-                        )}
-                    </div>
-                    ))}
-                    <img src={LOGO} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, opacity: 0.2 }} />
-                </div>
-            </div>
-        </div>
-
         {step === 'escalar' && (
           <>
-            <div style={{ background:'#111', borderRadius:24, padding:20, border:'1px solid #222', marginBottom: 120 }}>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:12 }}>
-                {PLAYERS.filter(p => !Object.values(lineup).map(lp => lp?.id).includes(p.id)).map(p => (
-                  <div key={p.id} onClick={() => setSelected({ player: p, fromSlot: null })} style={{ cursor: 'pointer' }}>
-                    <PlayerCard player={p} size={(fieldWidth/4) - 18} />
+            {/* Campo 3D */}
+            <div style={{ perspective: '1200px', margin: '20px 0' }}>
+              <div style={{
+                width: fieldWidth, height: fieldWidth * 1.3, margin: '0 auto',
+                background: 'linear-gradient(180deg, #1a4a1a 0%, #0a2a0a 100%)',
+                borderRadius: '16px', position: 'relative',
+                transform: 'rotateX(20deg)', border: '2px solid rgba(255,255,255,0.1)'
+              }}>
+                {FORMATION_433.map((slot) => (
+                  <div key={slot.id} onClick={() => handleTapSlot(slot.id)} style={{
+                    position: 'absolute', left: `${slot.x}%`, top: `${slot.y}%`,
+                    transform: 'translate(-50%, -50%)', zIndex: 10, cursor: 'pointer'
+                  }}>
+                    {lineup[slot.id] ? (
+                      <PlayerCard player={lineup[slot.id]!} size={fieldWidth * 0.16} isField />
+                    ) : (
+                      <div style={{ width: 35, height: 35, borderRadius: '50%', border: '1.5px dashed #F5C400', color: '#F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div style={{ position:'fixed', bottom:0, left:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 70%)', zIndex: 1000 }}>
-              <button onClick={handleSalvarTime} disabled={Object.values(lineup).filter(Boolean).length < 11} style={{ width: '100%', padding: '22px', borderRadius: '14px', border: 'none', background: '#F5C400', color: '#000', fontWeight: 1000, cursor: 'pointer' }}>
-                FINALIZAR ESCALAÇÃO 🐯
-              </button>
+            {/* Mercado */}
+            <div style={{ background:'#111', borderRadius:20, padding:15, marginBottom: 100 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:10 }}>
+                {PLAYERS.filter(p => !Object.values(lineup).some(lp => lp?.id === p.id)).map(p => (
+                  <div key={p.id} onClick={() => setSelected({ player: p, fromSlot: null })} style={{ cursor: 'pointer' }}>
+                    <PlayerCard player={p} size={(fieldWidth/4) - 20} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Botão Fixo */}
+            <div style={{ position:'fixed', bottom:0, left:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 60%)' }}>
+                <button 
+                  onClick={handleSalvar}
+                  disabled={filledCount < 11 || saving}
+                  style={{ width: '100%', padding: 20, borderRadius: 12, background: filledCount === 11 ? '#F5C400' : '#222', color: '#000', fontWeight: 1000, border: 'none' }}>
+                  {saving ? 'SALVANDO...' : filledCount < 11 ? `FALTAM ${11 - filledCount} JOGADORES` : 'CONFIRMAR TIME 🐯'}
+                </button>
             </div>
           </>
         )}
 
         {step === 'finalizado' && (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <h2 style={{ color: '#F5C400', fontWeight: 1000, marginBottom: 10 }}>TIME SALVO COM SUCESSO!</h2>
-            <p style={{ color: '#888', marginBottom: 30 }}>Agora você pode salvar a imagem ou compartilhar.</p>
-
-            <button 
-                onClick={handleShare} 
-                disabled={isGenerating}
-                style={{ width:'100%', padding:22, borderRadius:16, background:'#25D366', color:'#fff', fontWeight:1000, border:'none', fontSize:16, marginBottom: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-              {isGenerating ? 'GERANDO IMAGEM...' : 'COMPARTILHAR / SALVAR'}
-            </button>
-
-            <button onClick={() => setStep('escalar')} style={{ background:'transparent', color:'#F5C400', border:'none', fontWeight:900, cursor:'pointer' }}>
-              REVISAR MEU TIME
-            </button>
+          <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+             <img src={LOGO} style={{ width: 100, marginBottom: 20 }} />
+             <h2 style={{ color: '#F5C400' }}>TIME ESCALADO!</h2>
+             <button onClick={handleShare} style={{ width: '100%', padding: 20, background: '#25D366', color: '#fff', borderRadius: 12, border: 'none', fontWeight: 900, marginTop: 20 }}>
+               CHAMAR NO WHATSAPP
+             </button>
           </div>
         )}
       </div>
 
       <style jsx>{`
-        @keyframes card-entry { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes card-entry { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </main>
   );
-
-  function handleTapSlot(slotId: string) {
-    const playerInSlot = lineup[slotId];
-    if (selected) {
-      setLineup(prev => ({ ...prev, [selected.fromSlot || 'temp']: playerInSlot || null, [slotId]: selected.player }));
-      setSelected(null);
-    } else if (playerInSlot) {
-      setSelected({ player: playerInSlot, fromSlot: slotId });
-    }
-  }
 }
