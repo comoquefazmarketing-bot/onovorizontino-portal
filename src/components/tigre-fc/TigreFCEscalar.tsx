@@ -2,9 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import TigreFCLogin from '@/components/tigre-fc/TigreFCLogin';
-import html2canvas from 'html2canvas';
 
-// CONFIGURAÇÃO SUPABASE COM PERSISTÊNCIA (Correção Mobile)
+// CONFIGURAÇÃO SUPABASE COM PERSISTÊNCIA (Correção para não deslogar no Mobile)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,7 +20,7 @@ const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const MINUTOS_ANTECEDENCIA = 90; 
 
-// --- BASE DE DADOS INTEGRAL ---
+// --- BASE DE DADOS COMPLETA ---
 const PLAYERS = [
   { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id: 2,  name: 'Jordi',           short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
@@ -66,67 +65,45 @@ const PLAYERS = [
 
 const FORMATIONS = {
   '4-3-3': [
-    { id: 'gk',  label: 'GOL', x: 50, y: 88 },
-    { id: 'rb',  label: 'LAT', x: 82, y: 68 }, { id: 'cb1', label: 'ZAG', x: 62, y: 72 }, { id: 'cb2', label: 'ZAG', x: 38, y: 72 }, { id: 'lb',  label: 'LAT', x: 18, y: 68 },
-    { id: 'cm1', label: 'MEI', x: 75, y: 48 }, { id: 'cm2', label: 'MEI', x: 50, y: 45 }, { id: 'cm3', label: 'MEI', x: 25, y: 48 },
-    { id: 'rw',  label: 'ATA', x: 80, y: 22 }, { id: 'st',  label: 'ATA', x: 50, y: 15 }, { id: 'lw',  label: 'ATA', x: 20, y: 22 },
+    { id: 'gk',  label: 'GOL', x: 50, y: 92 },
+    { id: 'rb',  label: 'LAT', x: 85, y: 72 }, { id: 'cb1', label: 'ZAG', x: 62, y: 76 }, { id: 'cb2', label: 'ZAG', x: 38, y: 76 }, { id: 'lb',  label: 'LAT', x: 15, y: 72 },
+    { id: 'cm1', label: 'MEI', x: 75, y: 52 }, { id: 'cm2', label: 'MEI', x: 50, y: 54 }, { id: 'cm3', label: 'MEI', x: 25, y: 52 },
+    { id: 'rw',  label: 'ATA', x: 80, y: 28 }, { id: 'st',  label: 'ATA', x: 50, y: 20 }, { id: 'lw',  label: 'ATA', x: 20, y: 28 },
   ],
   '4-4-2': [
-    { id: 'gk',  label: 'GOL', x: 50, y: 88 },
-    { id: 'rb',  label: 'LAT', x: 82, y: 68 }, { id: 'cb1', label: 'ZAG', x: 62, y: 72 }, { id: 'cb2', label: 'ZAG', x: 38, y: 72 }, { id: 'lb',  label: 'LAT', x: 18, y: 68 },
-    { id: 'rm',  label: 'MEI', x: 80, y: 48 }, { id: 'cm1', label: 'MEI', x: 60, y: 48 }, { id: 'cm2', label: 'MEI', x: 40, y: 48 }, { id: 'lm',  label: 'MEI', x: 20, y: 48 },
-    { id: 'st1', label: 'ATA', x: 65, y: 20 }, { id: 'st2', label: 'ATA', x: 35, y: 20 },
+    { id: 'gk',  label: 'GOL', x: 50, y: 92 },
+    { id: 'rb',  label: 'LAT', x: 85, y: 72 }, { id: 'cb1', label: 'ZAG', x: 62, y: 76 }, { id: 'cb2', label: 'ZAG', x: 38, y: 76 }, { id: 'lb',  label: 'LAT', x: 15, y: 72 },
+    { id: 'rm',  label: 'MEI', x: 82, y: 52 }, { id: 'cm1', label: 'MEI', x: 60, y: 54 }, { id: 'cm2', label: 'MEI', x: 40, y: 54 }, { id: 'lm',  label: 'MEI', x: 18, y: 52 },
+    { id: 'st1', label: 'ATA', x: 65, y: 24 }, { id: 'st2', label: 'ATA', x: 35, y: 24 },
   ],
 };
-
-// Componente de Card Individual
-function PlayerCard({ player, size=50, isCapitao, isHeroi, onClick }: any) {
-  if (!player) return (
-    <div onClick={onClick} style={{ width: size, height: size, borderRadius:'50%', border:'2px dashed rgba(255,255,255,0.4)', background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
-      <span style={{ fontSize:20, color:'#fff', fontWeight:100 }}>+</span>
-    </div>
-  );
-  return (
-    <div onClick={onClick} style={{ width: size, textAlign:'center', position:'relative', cursor:'pointer' }}>
-      {isCapitao && <div style={{ position:'absolute', top:-15, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:16 }}>👑</div>}
-      {isHeroi && <div style={{ position:'absolute', top:-15, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:16 }}>⭐</div>}
-      <div style={{ width: size, height: size, borderRadius:'50%', overflow:'hidden', border:'2px solid #F5C400', background:'#111' }}>
-        <img src={player.foto} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-      </div>
-      <div style={{ background:'#F5C400', color:'#000', fontSize: size*0.18, fontWeight:1000, borderRadius:4, marginTop:-8, position:'relative', zIndex:2, padding:'1px 4px', whiteSpace:'nowrap', boxShadow:'0 2px 4px rgba(0,0,0,0.3)' }}>
-        {player.short.toUpperCase()}
-      </div>
-    </div>
-  );
-}
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState('login');
   const [usuario, setUsuario] = useState<any>(null);
-  const [mercadoAberto, setMercadoAberto] = useState(true);
   const [formation, setFormation] = useState('4-3-3');
   const [lineup, setLineup] = useState<any>({});
-  const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  
+  // LOGICA DE SELEÇÃO LIVRE
+  const [activePlayer, setActivePlayer] = useState<any>(null);
   const [filterPos, setFilterPos] = useState('TODOS');
+  
   const [capitao, setCapitao] = useState<any>(null);
   const [heroi, setHeroi] = useState<any>(null);
   const [palpite, setPalpite] = useState({ mandante: 1, visitante: 0 });
   const [saving, setSaving] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const [mercadoAberto, setMercadoAberto] = useState(true);
 
   useEffect(() => {
     setMounted(true);
-    checkSessionAndMarket();
+    checkSession();
   }, [jogoId]);
 
-  async function checkSessionAndMarket() {
+  async function checkSession() {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      setUsuario(session.user);
-      setStep('escalar');
-    }
-
+    if (session) { setUsuario(session.user); setStep('escalar'); }
+    
     const { data: jogo } = await supabase.from('tigre_fc_jogos').select('horario_jogo').eq('id', jogoId).single();
     if (jogo) {
       const limite = new Date(new Date(jogo.horario_jogo).getTime() - MINUTOS_ANTECEDENCIA * 60000);
@@ -134,21 +111,34 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     }
   }
 
+  const handleSlotClick = (slotId: string) => {
+    if (!mercadoAberto) return;
+    if (activePlayer) {
+      // Se já tem um jogador selecionado na lista, coloca ele no slot
+      setLineup({ ...lineup, [slotId]: activePlayer });
+      setActivePlayer(null);
+    } else if (lineup[slotId]) {
+      // Se clicar num slot ocupado sem ter player selecionado, remove o jogador do campo
+      const newLineup = { ...lineup };
+      delete newLineup[slotId];
+      setLineup(newLineup);
+    }
+  };
+
   const handleSalvar = async () => {
-    if (!usuario || !mercadoAberto) return;
     setSaving(true);
     try {
       const { error } = await supabase.from('tigre_fc_escalacoes').upsert({
         usuario_id: usuario.id, jogo_id: jogoId, formacao: formation, lineup, capitao_id: capitao?.id, heroi_id: heroi?.id
       }, { onConflict: 'usuario_id,jogo_id' });
-
+      
       await supabase.from('tigre_fc_palpites').upsert({
         usuario_id: usuario.id, jogo_id: jogoId, gols_mandante: palpite.mandante, gols_visitante: palpite.visitante
       }, { onConflict: 'usuario_id,jogo_id' });
 
       if (error) throw error;
       setStep('sucesso');
-    } catch (e) { alert("Erro ao salvar sua escalação."); }
+    } catch (e) { alert("Erro ao salvar!"); }
     finally { setSaving(false); }
   };
 
@@ -158,154 +148,160 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const filledCount = Object.keys(lineup).length;
 
   return (
-    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom:120 }}>
+    <main style={{ minHeight: '100vh', background: '#050505', color: '#fff', paddingBottom: 180 }}>
       {/* Header Fixo */}
-      <div style={{ background:'#F5C400', padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:100, boxShadow:'0 2px 10px rgba(0,0,0,0.5)' }}>
-        <img src={LOGO} style={{ width:24 }} />
-        <div style={{ color:'#000', fontWeight:1000, fontSize:11, letterSpacing:1 }}>{step.toUpperCase()}</div>
-        {!mercadoAberto && <div style={{ color:'red', fontSize:10, fontWeight:900 }}>FECHADO</div>}
+      <div style={{ background: '#F5C400', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 4px 15px rgba(0,0,0,0.5)' }}>
+        <img src={LOGO} style={{ width: 22 }} />
+        <div style={{ color: '#000', fontWeight: 1000, fontSize: 11, letterSpacing: 1 }}>TIGRE FC • {step.toUpperCase()}</div>
+        <div style={{ color: '#000', fontWeight: 900, fontSize: 10 }}>{filledCount}/11</div>
       </div>
 
-      <div style={{ maxWidth:450, margin:'0 auto', padding:16 }}>
-        
+      <div style={{ maxWidth: 450, margin: '0 auto', padding: 16 }}>
         {step === 'escalar' && (
           <>
-            <div style={{ display:'flex', gap:8, marginBottom:20 }}>
+            {/* Formações */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 15 }}>
               {Object.keys(FORMATIONS).map(f => (
-                <button key={f} onClick={() => { setFormation(f); setLineup({}); }} style={{ flex:1, padding:12, borderRadius:12, background: formation===f?'#F5C400':'#1a1a1a', color: formation===f?'#000':'#666', border:'none', fontWeight:1000, fontSize:12 }}>{f}</button>
+                <button key={f} onClick={() => { setFormation(f); setLineup({}); }} style={{ flex: 1, padding: '10px', borderRadius: 10, background: formation === f ? '#F5C400' : '#111', color: formation === f ? '#000' : '#444', border: 'none', fontWeight: 1000, fontSize: 12 }}>{f}</button>
               ))}
             </div>
 
-            {/* CAMPO 3D COM PERSPECTIVA REAL */}
+            {/* CAMPO COM PERSPECTIVA 3D */}
             <div style={{ 
-              position:'relative', width:'100%', height:500, 
-              background:'radial-gradient(circle at center, #2e7d32 0%, #1b5e20 100%)', 
-              borderRadius:24, border:'3px solid #333', overflow:'hidden',
-              perspective: '1200px'
+              position: 'relative', width: '100%', height: 480, 
+              background: 'linear-gradient(to bottom, #1b5e20, #2e7d32)', 
+              borderRadius: 20, border: '2px solid #333', overflow: 'hidden',
+              perspective: '1000px', marginBottom: 20
             }}>
               <div style={{ 
-                position:'absolute', width:'100%', height:'100%', 
-                transform:'rotateX(25deg)', transformOrigin:'bottom'
+                position: 'absolute', width: '100%', height: '110%', 
+                transform: 'rotateX(25deg)', transformOrigin: 'bottom',
+                background: 'repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.03) 40px, rgba(0,0,0,0.03) 80px)'
               }}>
-                {/* Linhas do Gramado */}
-                <div style={{ position:'absolute', top:'50%', left:0, right:0, height:2, background:'rgba(255,255,255,0.15)' }} />
-                <div style={{ position:'absolute', top:'50%', left:'50%', width:120, height:120, border:'2px solid rgba(255,255,255,0.15)', borderRadius:'50%', transform:'translate(-50%, -50%)' }} />
+                {/* Linhas do Campo */}
+                <div style={{ position: 'absolute', top: 0, left: '8%', right: '8%', bottom: 0, border: '2px solid rgba(255,255,255,0.15)', borderBottom: 'none' }} />
+                <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.15)' }} />
+                <div style={{ position: 'absolute', top: '50%', left: '50%', width: 100, height: 100, border: '2px solid rgba(255,255,255,0.15)', borderRadius: '50%', transform: 'translate(-50%, -50%)' }} />
                 
-                {FORMATIONS[formation as keyof typeof FORMATIONS].map(slot => (
-                  <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%, -50%)' }}>
-                    <PlayerCard 
-                      player={lineup[slot.id]} 
-                      size={55} 
-                      onClick={() => { setSelectedSlot(slot); setFilterPos(slot.label); }} 
-                    />
-                  </div>
-                ))}
+                {/* Slots de Jogadores */}
+                {FORMATIONS[formation as keyof typeof FORMATIONS].map(slot => {
+                  const p = lineup[slot.id];
+                  return (
+                    <div key={slot.id} onClick={() => handleSlotClick(slot.id)} style={{ position: 'absolute', left: `${slot.x}%`, top: `${slot.y}%`, transform: 'translate(-50%, -50%)', cursor: 'pointer' }}>
+                      <div style={{ transform: 'rotateX(-25deg)', textAlign: 'center' }}>
+                        {!p ? (
+                          <div style={{ width: 45, height: 45, borderRadius: '50%', border: activePlayer ? '2px solid #F5C400' : '2px dashed rgba(255,255,255,0.3)', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: activePlayer ? 'pulse 1.5s infinite' : 'none' }}>
+                            <span style={{ fontSize: 10, color: '#fff', fontWeight: 900 }}>{slot.label}</span>
+                          </div>
+                        ) : (
+                          <div style={{ width: 55, textAlign: 'center', position: 'relative' }}>
+                            <div style={{ width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', border: '2px solid #F5C400', background: '#000', margin: '0 auto' }}>
+                              <img src={p.foto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </div>
+                            <div style={{ background: '#F5C400', color: '#000', fontSize: 8, fontWeight: 1000, borderRadius: 4, marginTop: -6, padding: '1px 4px', whiteSpace: 'nowrap', display: 'inline-block' }}>
+                              {p.short.toUpperCase()}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* GAVETA DE SELEÇÃO (OVERLAY) */}
-            {selectedSlot && (
-              <div style={{ position:'fixed', bottom:0, left:0, right:0, background:'#0f0f0f', borderTop:'3px solid #F5C400', borderTopLeftRadius:30, borderTopRightRadius:30, zIndex:1000, padding:20, maxHeight:'75vh', overflowY:'auto', boxShadow:'0 -10px 30px rgba(0,0,0,0.8)' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:20, alignItems:'center' }}>
-                  <div style={{ fontWeight:1000, fontSize:14, color:'#F5C400' }}>SELECIONAR {selectedSlot.label}</div>
-                  <button onClick={() => setSelectedSlot(null)} style={{ background:'#222', border:'none', color:'#fff', padding:'8px 15px', borderRadius:10, fontWeight:900, fontSize:12 }}>VOLTAR</button>
-                </div>
-
-                <div style={{ display:'flex', gap:6, marginBottom:20, overflowX:'auto', paddingBottom:5 }}>
-                  {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(p => (
-                    <button key={p} onClick={() => setFilterPos(p)} style={{ padding:'8px 16px', borderRadius:20, background: filterPos===p?'#F5C400':'#1a1a1a', color: filterPos===p?'#000':'#fff', border:'none', fontSize:10, fontWeight:1000 }}>{p}</button>
-                  ))}
-                </div>
-
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:15 }}>
-                  {PLAYERS.filter(p => filterPos==='TODOS' || p.pos===filterPos).map(p => {
-                    const isSelected = Object.values(lineup).some((s:any) => s?.id === p.id);
-                    return (
-                      <div key={p.id} onClick={() => { if(!isSelected){ setLineup({...lineup, [selectedSlot.id]: p}); setSelectedSlot(null); } }} style={{ textAlign:'center', opacity: isSelected?0.3:1 }}>
-                        <div style={{ width:70, height:70, margin:'0 auto', borderRadius:'50%', overflow:'hidden', border: isSelected?'none':'2px solid #333' }}>
-                          <img src={p.foto} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                        </div>
-                        <div style={{ fontSize:10, fontWeight:800, marginTop:6 }}>{p.short}</div>
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* LISTA DE JOGADORES - SELEÇÃO LIVRE */}
+            <div style={{ background: '#111', borderRadius: 20, padding: 15, border: '1px solid #222' }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 15, overflowX: 'auto', paddingBottom: 5 }}>
+                {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(p => (
+                  <button key={p} onClick={() => setFilterPos(p)} style={{ padding: '8px 15px', borderRadius: 12, background: filterPos === p ? '#F5C400' : '#222', color: filterPos === p ? '#000' : '#888', border: 'none', fontSize: 10, fontWeight: 1000 }}>{p}</button>
+                ))}
               </div>
-            )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                {PLAYERS.filter(p => filterPos === 'TODOS' || p.pos === filterPos).map(p => {
+                  const isSelected = Object.values(lineup).some((s: any) => s?.id === p.id);
+                  const isActive = activePlayer?.id === p.id;
+                  return (
+                    <div key={p.id} onClick={() => !isSelected && setActivePlayer(p)} style={{ textAlign: 'center', opacity: isSelected ? 0.3 : 1, transition: '0.2s', transform: isActive ? 'scale(1.1)' : 'scale(1)' }}>
+                      <div style={{ width: 60, height: 60, margin: '0 auto', borderRadius: '50%', overflow: 'hidden', border: isActive ? '3px solid #F5C400' : '2px solid #333', position: 'relative' }}>
+                        <img src={p.foto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {isSelected && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>✅</div>}
+                      </div>
+                      <div style={{ fontSize: 9, fontWeight: 800, marginTop: 5, color: isActive ? '#F5C400' : '#fff' }}>{p.short}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </>
         )}
 
-        {/* STEPS DE CAPITÃO E HERÓI */}
+        {/* OUTROS STEPS MANTIDOS */}
         {['capitao', 'heroi'].includes(step) && (
-          <div style={{ textAlign:'center' }}>
-            <h2 style={{ color:'#F5C400', fontWeight:1000, fontSize:22, fontStyle:'italic' }}>
-              {step==='capitao' ? 'QUEM SERÁ O CAPITÃO? 👑' : 'QUEM É O SEU HERÓI? ⭐'}
-            </h2>
-            <p style={{ color:'#666', fontSize:12, marginBottom:30 }}>{step==='capitao' ? 'O capitão ganha pontos dobrados!' : 'O herói garante bônus se marcar gol.'}</p>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:20 }}>
-              {Object.values(lineup).map((p:any) => (
-                <div key={p.id} onClick={() => step==='capitao' ? setCapitao(p) : setHeroi(p)} style={{ transform: (step==='capitao'?capitao:heroi)?.id===p.id ? 'scale(1.1)' : 'scale(1)', transition:'0.2s' }}>
-                  <PlayerCard player={p} size={80} isCapitao={capitao?.id===p.id} isHeroi={heroi?.id===p.id} />
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ color: '#F5C400', fontWeight: 1000, letterSpacing: 1 }}>{step === 'capitao' ? 'QUEM É O CAPITÃO? 👑' : 'QUEM É O HERÓI? ⭐'}</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 40 }}>
+              {Object.values(lineup).map((p: any) => (
+                <div key={p.id} onClick={() => step === 'capitao' ? setCapitao(p) : setHeroi(p)} style={{ opacity: (step==='capitao'?capitao:heroi)?.id === p.id ? 1 : 0.5 }}>
+                  <div style={{ width: 80, height: 80, margin: '0 auto', borderRadius: '50%', overflow: 'hidden', border: (step==='capitao'?capitao:heroi)?.id === p.id ? '4px solid #F5C400' : '2px solid #333' }}>
+                    <img src={p.foto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div style={{ marginTop: 10, fontWeight: 900, fontSize: 11 }}>{p.short.toUpperCase()}</div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* STEP DE PALPITE PLACAR */}
         {step === 'palpite' && (
-          <div style={{ textAlign:'center', marginTop:40 }}>
-            <h2 style={{ color:'#F5C400', fontWeight:1000 }}>PLACAR FINAL ⚽</h2>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:20, marginTop:40 }}>
-              <div>
-                <div style={{ fontSize:10, color:'#F5C400', fontWeight:900, marginBottom:8 }}>AMAZONAS</div>
-                <input type="number" value={palpite.mandante} onChange={(e)=>setPalpite({...palpite, mandante: parseInt(e.target.value)})} style={{ width:75, height:75, borderRadius:20, background:'#111', border:'2px solid #333', color:'#fff', textAlign:'center', fontSize:32, fontWeight:1000 }} />
-              </div>
-              <div style={{ fontSize:24, fontWeight:1000, marginTop:20 }}>X</div>
-              <div>
-                <div style={{ fontSize:10, color:'#888', fontWeight:900, marginBottom:8 }}>VISITANTE</div>
-                <input type="number" value={palpite.visitante} onChange={(e)=>setPalpite({...palpite, visitante: parseInt(e.target.value)})} style={{ width:75, height:75, borderRadius:20, background:'#111', border:'2px solid #333', color:'#fff', textAlign:'center', fontSize:32, fontWeight:1000 }} />
-              </div>
-            </div>
+          <div style={{ textAlign: 'center', marginTop: 40 }}>
+             <h2 style={{ color: '#F5C400', fontWeight: 1000 }}>PLACAR DO JOGO ⚽</h2>
+             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginTop: 50 }}>
+                <input type="number" value={palpite.mandante} onChange={(e)=>setPalpite({...palpite, mandante: parseInt(e.target.value)})} style={{ width: 80, height: 80, borderRadius: 20, background: '#111', border: '2px solid #333', color: '#fff', textAlign: 'center', fontSize: 32, fontWeight: 1000 }} />
+                <div style={{ fontSize: 24, fontWeight: 1000 }}>X</div>
+                <input type="number" value={palpite.visitante} onChange={(e)=>setPalpite({...palpite, visitante: parseInt(e.target.value)})} style={{ width: 80, height: 80, borderRadius: 20, background: '#111', border: '2px solid #333', color: '#fff', textAlign: 'center', fontSize: 32, fontWeight: 1000 }} />
+             </div>
           </div>
         )}
 
-        {/* SUCESSO */}
         {step === 'sucesso' && (
-          <div style={{ textAlign:'center', padding:40 }}>
-            <div style={{ fontSize:60, marginBottom:20 }}>🐯</div>
-            <h2 style={{ color:'#F5C400', fontWeight:1000, fontSize:28 }}>ESCALADO!</h2>
-            <p style={{ color:'#888', lineHeight:1.5 }}>Sua escalação e palpite foram salvos no sistema do Tigre FC.</p>
-            <button onClick={() => window.location.reload()} style={{ marginTop:40, background:'#fff', color:'#000', padding:'18px 40px', borderRadius:16, fontWeight:1000, border:'none', width:'100%' }}>VOLTAR</button>
+          <div style={{ textAlign: 'center', padding: 50 }}>
+            <h1 style={{ fontSize: 80 }}>🐯</h1>
+            <h2 style={{ color: '#F5C400', fontWeight: 1000, fontSize: 24 }}>TIME ESCALADO!</h2>
+            <button onClick={() => window.location.reload()} style={{ marginTop: 40, background: '#F5C400', color: '#000', padding: '18px 50px', borderRadius: 15, fontWeight: 1000, border: 'none', width: '100%' }}>VOLTAR AO INÍCIO</button>
           </div>
         )}
       </div>
 
-      {/* Botão de Ação Fixo */}
+      {/* BOTÃO DE AÇÃO FIXO */}
       {step !== 'sucesso' && (
-        <div style={{ position:'fixed', bottom:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 40%)', zIndex:200 }}>
+        <div style={{ position: 'fixed', bottom: 0, width: '100%', padding: 20, background: 'linear-gradient(transparent, #000 40%)', zIndex: 100 }}>
           <button 
-            disabled={!mercadoAberto || saving || (step==='escalar' && filledCount < 11)}
+            disabled={saving || (step === 'escalar' && filledCount < 11)}
             onClick={() => {
-              if (step==='escalar') setStep('capitao');
-              else if (step==='capitao' && capitao) setStep('heroi');
-              else if (step==='heroi' && heroi) setStep('palpite');
-              else if (step==='palpite') handleSalvar();
+              if (step === 'escalar') setStep('capitao');
+              else if (step === 'capitao' && capitao) setStep('heroi');
+              else if (step === 'heroi' && heroi) setStep('palpite');
+              else if (step === 'palpite') handleSalvar();
             }}
-            style={{ 
-              width:'100%', padding:22, borderRadius:20, background: mercadoAberto?'#F5C400':'#222', color:'#000', 
-              fontWeight:1000, border:'none', fontSize:14, textTransform:'uppercase',
-              opacity: (step==='escalar' && filledCount<11) ? 0.5 : 1
-            }}
+            style={{ width: '100%', padding: 20, borderRadius: 20, background: '#F5C400', color: '#000', fontWeight: 1000, border: 'none', fontSize: 13, textTransform: 'uppercase', opacity: (step === 'escalar' && filledCount < 11) ? 0.5 : 1 }}
           >
-            {!mercadoAberto ? 'MERCADO FECHADO' : 
-             step==='escalar' ? (filledCount<11 ? `ESCALAR MAIS ${11-filledCount}` : 'PRÓXIMO: CAPITÃO →') :
-             step==='capitao' ? 'PRÓXIMO: HERÓI →' :
-             step==='heroi' ? 'DAR PALPITE →' :
-             (saving ? 'SALVANDO...' : 'CONFIRMAR ESCALAÇÃO 🐯')}
+            {step === 'escalar' ? (filledCount < 11 ? `FALTAM ${11 - filledCount} JOGADORES` : 'DEFINIR CAPITÃO →') :
+             step === 'capitao' ? (capitao ? 'DEFINIR HERÓI →' : 'SELECIONE O CAPITÃO') :
+             step === 'heroi' ? (heroi ? 'DAR PALPITE →' : 'SELECIONE O HERÓI') :
+             (saving ? 'SALVANDO...' : 'FINALIZAR ESCALAÇÃO 🐯')}
           </button>
         </div>
       )}
+
+      <style jsx global>{`
+        @keyframes pulse {
+          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 196, 0, 0.4); }
+          70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(245, 196, 0, 0); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 196, 0, 0); }
+        }
+      `}</style>
     </main>
   );
 }
