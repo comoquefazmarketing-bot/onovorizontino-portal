@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect, ReactNode } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { use } from 'react'; // Importante para lidar com a Promise do params
 
 // --- INTERFACES ---
 interface Player {
@@ -14,10 +13,9 @@ interface Player {
   foto: string;
 }
 
-interface PageProps {
-  params: Promise<{
-    jogoId: string;
-  }>;
+// ESTA INTERFACE É A CHAVE PARA O BUILD PASSAR
+interface TigreFCEscalarProps {
+  jogoId: number;
 }
 
 // --- CONFIGURAÇÃO SUPABASE ---
@@ -130,11 +128,7 @@ function PlayerCard({ player, size, isSelected, status, onClick }: any) {
   );
 }
 
-export default function TigreFCFantasy({ params }: PageProps) {
-  // Resolvemos o jogoId imediatamente usando 'use' para compatibilidade com Next 15
-  const resolvedParams = use(params);
-  const jogoId = resolvedParams.jogoId;
-
+export default function TigreFCEscalar({ jogoId }: TigreFCEscalarProps) {
   const [step, setStep] = useState<'escalar' | 'capitao' | 'heroi' | 'palpite' | 'share'>('escalar');
   const [formationKey, setFormationKey] = useState('4-3-3');
   const [lineup, setLineup] = useState<Record<string, Player | null>>({});
