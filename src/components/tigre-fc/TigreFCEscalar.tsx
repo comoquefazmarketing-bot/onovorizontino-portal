@@ -83,6 +83,7 @@ const FORMATIONS: Record<string, { id: string; label: string; x: number; y: numb
 };
 
 function PlayerCard({ player, size, isCapitao, isHeroi, isList }: any) {
+  if (!player) return null;
   return (
     <div style={{ width: size, textAlign: 'center', position: 'relative' }}>
       {isCapitao && <div style={{ position:'absolute', top:-15, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:16 }}>👑</div>}
@@ -114,12 +115,10 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [capitao, setCapitao] = useState<any>(null);
   const [heroi, setHeroi] = useState<any>(null);
   const [saving, setSaving] = useState(false);
-  const [sharing, setSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
-    // Recupera sessão ativa se existir
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUsuario(session.user);
@@ -132,7 +131,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     if (!usuario) return;
     setSaving(true);
     try {
-      const { error: errorEsc } = await supabase.from('tigre_fc_escalacoes').upsert({
+      const { error } = await supabase.from('tigre_fc_escalacoes').upsert({
         usuario_id: usuario.id,
         jogo_id: jogoId,
         formacao: formation,
@@ -141,7 +140,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         heroi_id: heroi?.id
       }, { onConflict: 'usuario_id,jogo_id' });
 
-      if (errorEsc) throw errorEsc;
+      if (error) throw error;
       setStep('salvo');
     } catch (e) {
       alert("Erro ao salvar.");
@@ -152,16 +151,13 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
   const handleShare = async () => {
     if (!cardRef.current) return;
-    setSharing(true);
     setTimeout(async () => {
       const canvas = await html2canvas(cardRef.current!, { backgroundColor: '#050505', useCORS: true, scale: 2 });
       const image = canvas.toDataURL('image/png');
-      setSharing(false);
-
       if (navigator.share) {
         const blob = await (await fetch(image)).blob();
-        const file = new File([blob], 'time-tigre.png', { type: 'image/png' });
-        navigator.share({ title: 'Tigre FC', files: [file] }).catch(() => {});
+        const file = new File([blob], 'time.png', { type: 'image/png' });
+        navigator.share({ title: 'Meu Time Tigre FC', files: [file] }).catch(() => {});
       } else {
         const link = document.createElement('a');
         link.href = image; link.download = 'meu-tigre.png'; link.click();
@@ -171,33 +167,26 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
   if (!mounted) return null;
 
-  if (step === 'login') {
-    return <TigreFCLogin jogoId={jogoId} onSuccess={(u) => { setUsuario(u); setStep('escalar'); }} />;
-  }
+  if (step === 'login') return <TigreFCLogin jogoId={jogoId} onSuccess={(u) => { setUsuario(u); setStep('escalar'); }} />;
 
   if (step === 'salvo') {
     return (
       <main style={{ minHeight:'100vh', background:'#000', padding:20, display:'flex', flexDirection:'column', alignItems:'center' }}>
-        <h2 style={{ color: '#F5C400', fontWeight: 900, fontStyle:'italic' }}>TIME ESCALADO! 🐯</h2>
-        
+        <h2 style={{ color:'#F5C400', fontWeight:900 }}>TIME ESCALADO! 🐯</h2>
         <div ref={cardRef} style={{ width: '100%', maxWidth: 380, background: '#050505', borderRadius: 24, padding: 20, border: '1px solid #222', marginTop: 20 }}>
           <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 15 }}>
-             <div style={{ color:'#fff', fontSize:20, fontWeight:1000 }}>{usuario?.email?.split('@')[0].toUpperCase()}</div>
-             <img src={LOGO} style={{ width: 35 }} />
+             <div style={{ color:'#fff', fontSize:18, fontWeight:900 }}>{usuario?.email?.split('@')[0]}</div>
+             <img src={LOGO} style={{ width: 30 }} />
           </div>
-          <div style={{ position:'relative', width:'100%', height: 420, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 16, overflow:'hidden' }}>
+          <div style={{ position:'relative', width:'100%', height: 420, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 16 }}>
             {FORMATIONS[formation].map(slot => (
               <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)' }}>
                 <PlayerCard player={lineup[slot.id]} size={45} isCapitao={capitao?.id === lineup[slot.id]?.id} isHeroi={heroi?.id === lineup[slot.id]?.id} />
               </div>
             ))}
           </div>
-          <div style={{ marginTop:15, textAlign:'center', color:'#F5C400', fontSize:10, fontWeight:800 }}>WWW.TIGREFC.APP</div>
         </div>
-
-        <button onClick={handleShare} style={{ width:'100%', maxWidth:380, marginTop:25, background:'#fff', color:'#000', padding:18, borderRadius:16, fontWeight:1000, border:'none' }}>
-           COMPARTILHAR NO STORY 📸
-        </button>
+        <button onClick={handleShare} style={{ width:'100%', maxWidth:380, marginTop:20, background:'#fff', color:'#000', padding:18, borderRadius:16, fontWeight:900, border:'none' }}>COMPARTILHAR 📸</button>
       </main>
     );
   }
@@ -205,15 +194,9 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const filledCount = Object.keys(lineup).length;
 
   return (
-    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom: 120 }}>
-      {/* Header Fixo */}
+    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom: 100 }}>
       <div style={{ background:'#F5C400', padding:12, display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:100 }}>
         <img src={LOGO} style={{ width: 22 }} />
-        <div style={{ display:'flex', gap:4 }}>
-           {[1,2,3,4].map(i => (
-             <div key={i} style={{ width: 30, height:4, background: i === (step==='escalar'?1:step==='capitao'?2:3) ? '#000' : 'rgba(0,0,0,0.2)', borderRadius:2 }} />
-           ))}
-        </div>
         <span style={{ color:'#000', fontSize:10, fontWeight:1000 }}>{step.toUpperCase()}</span>
       </div>
 
@@ -225,21 +208,15 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                 <button key={f} onClick={() => setFormation(f)} style={{ flex:1, padding:10, borderRadius:8, background: formation===f?'#F5C400':'#1a1a1a', color: formation===f?'#000':'#666', border:'none', fontWeight:900 }}>{f}</button>
               ))}
             </div>
-
-            <div style={{ position:'relative', width:'100%', height: 460, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 12, border: '2px solid #222' }}>
+            <div style={{ position:'relative', width:'100%', height: 460, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 12, border:'2px solid #222' }}>
                {FORMATIONS[formation].map(slot => (
-                 <div key={slot.id} onClick={() => setSelectedSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)', cursor:'pointer' }}>
-                    {lineup[slot.id] ? <PlayerCard player={lineup[slot.id]} size={52} /> : <div style={{ width:38, height:38, borderRadius:'50%', border:'1px dashed #fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8 }}>{slot.label}</div>}
+                 <div key={slot.id} onClick={() => setSelectedSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)' }}>
+                    {lineup[slot.id] ? <PlayerCard player={lineup[slot.id]} size={50} /> : <div style={{ width:35, height:35, borderRadius:'50%', border:'1px dashed #fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8 }}>{slot.label}</div>}
                  </div>
                ))}
             </div>
-
             {selectedSlot && (
               <div style={{ marginTop:20, background:'#111', padding:15, borderRadius:16, border:'1px solid #222' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:15 }}>
-                  <span style={{ fontWeight:900 }}>SELECIONE: {selectedSlot.toUpperCase()}</span>
-                  <button onClick={() => setSelectedSlot(null)} style={{ color:'#F5C400', background:'none', border:'none' }}>FECHAR</button>
-                </div>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(75px, 1fr))', gap:10 }}>
                   {PLAYERS.filter(p => p.pos === FORMATIONS[formation].find(s => s.id === selectedSlot)?.label).map(p => (
                     <div key={p.id} onClick={() => { setLineup({...lineup, [selectedSlot]: p}); setSelectedSlot(null); }} style={{ textAlign:'center' }}>
@@ -256,4 +233,43 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         {step === 'capitao' && (
           <div style={{ textAlign:'center' }}>
             <h3 style={{ color:'#F5C400', fontWeight:900 }}>QUEM SERÁ O CAPITÃO? 👑</h3>
-            <p style={{ fontSize:12, color:'#666
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:15, marginTop:20 }}>
+               {Object.values(lineup).map((p: any) => (
+                 <div key={p.id} onClick={() => setCapitao(p)} style={{ padding:10, borderRadius:12, border: capitao?.id===p.id ? '1px solid #F5C400' : '1px solid #1a1a1a' }}>
+                    <PlayerCard player={p} size={60} isCapitao={capitao?.id===p.id} />
+                 </div>
+               ))}
+            </div>
+          </div>
+        )}
+
+        {step === 'heroi' && (
+          <div style={{ textAlign:'center' }}>
+            <h3 style={{ color:'#F5C400', fontWeight:900 }}>QUEM É O HERÓI? ⭐</h3>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:15, marginTop:20 }}>
+               {Object.values(lineup).map((p: any) => (
+                 <div key={p.id} onClick={() => setHeroi(p)} style={{ padding:10, borderRadius:12, border: heroi?.id===p.id ? '1px solid #F5C400' : '1px solid #1a1a1a' }}>
+                    <PlayerCard player={p} size={60} isHeroi={heroi?.id===p.id} />
+                 </div>
+               ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ position:'fixed', bottom:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 40%)' }}>
+         <button 
+           onClick={() => {
+              if(step === 'escalar' && filledCount === 11) setStep('capitao');
+              else if(step === 'capitao' && capitao) setStep('heroi');
+              else if(step === 'heroi' && heroi) handleSalvar();
+           }}
+           disabled={saving || (step === 'escalar' && filledCount < 11)}
+           style={{ width:'100%', padding:20, borderRadius:16, background:'#F5C400', color:'#000', fontWeight:1000, border:'none' }}
+         >
+           {step === 'escalar' ? (filledCount < 11 ? `FALTAM ${11 - filledCount}` : 'PRÓXIMO →') : step === 'capitao' ? 'PRÓXIMO →' : (saving ? 'SALVANDO...' : 'FINALIZAR 🐯')}
+         </button>
+      </div>
+    </main>
+  );
+}
