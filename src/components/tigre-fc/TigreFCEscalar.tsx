@@ -3,9 +3,17 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import TigreFCLogin from '@/components/tigre-fc/TigreFCLogin';
 
+// Configuração robusta do Supabase para evitar deslogue repentino
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
 );
 
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
@@ -88,18 +96,9 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isField }: { player: Pla
         }} />
 
         <div style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.85)', padding: '4px 0', textAlign: 'center', borderTop: '1px solid #F5C400' }}>
-          <div style={{ color: '#F5C400', fontSize: size * 0.1, fontWeight: 900 }}>{player.pos}</div>
-          <div style={{ color: '#fff', fontSize: size * 0.14, fontWeight: 1000, textTransform: 'uppercase' }}>{player.short}</div>
+          <div style={{ color: '#F5C400', fontSize: Math.max(size * 0.1, 8), fontWeight: 900 }}>{player.pos}</div>
+          <div style={{ color: '#fff', fontSize: Math.max(size * 0.14, 10), fontWeight: 1000, textTransform: 'uppercase' }}>{player.short}</div>
         </div>
-
-        {(isCapitao || isHeroi) && (
-          <div style={{
-            position: 'absolute', top: 4, right: 4, background: '#F5C400',
-            color: '#000', width: size * 0.2, height: size * 0.2, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 900, fontSize: size * 0.12, boxShadow: '0 0 10px #F5C400'
-          }}>{isCapitao ? 'C' : 'H'}</div>
-        )}
       </div>
     </div>
   );
@@ -108,7 +107,6 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isField }: { player: Pla
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<'login' | 'escalar' | 'finalizado'>('login');
-  const [formation, setFormation] = useState('4-3-3');
   const [lineup, setLineup] = useState<Lineup>({});
   const [selected, setSelected] = useState<{ player: Player, fromSlot: string | null } | null>(null);
   const [fieldWidth, setFieldWidth] = useState(360);
@@ -119,8 +117,36 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     const update = () => setFieldWidth(Math.min(window.innerWidth - 32, 450));
     update();
     window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    
+    // Escuta mudanças na autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setUsuario(session.user);
+        setStep('escalar');
+      } else {
+        setStep('login');
+      }
+    });
+
+    return () => {
+      window.removeEventListener('resize', update);
+      authListener.subscription.unsubscribe();
+    };
   }, []);
+
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account', // select_account é melhor que 'consent' para evitar loops
+        },
+      },
+    });
+    if (error) console.error("Erro Login:", error.message);
+  };
 
   const handleTapSlot = (slotId: string) => {
     const playerInSlot = lineup[slotId];
@@ -138,7 +164,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
   const handleShare = async () => {
     const text = `🐯 Montei meu timaço de ELITE no Tigre FC! Você consegue bater minha escalação? Monte a sua agora!`;
-    const url = window.location.href;
+    const url = window.location.origin;
 
     if (navigator.share) {
       try {
@@ -150,13 +176,32 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   };
 
   if (!mounted) return null;
-  if (step === 'login') return <TigreFCLogin jogoId={jogoId} onSuccess={(u) => { setUsuario(u); setStep('escalar'); }} />;
+  
+  if (step === 'login') return (
+    <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ textAlign: 'center', width: '100%', maxWidth: 400 }}>
+        <img src={LOGO} style={{ width: 120, marginBottom: 30 }} alt="Tigre FC" />
+        <h1 style={{ color: '#F5C400', fontWeight: 1000, marginBottom: 10 }}>BEM-VINDO À ELITE</h1>
+        <p style={{ color: '#888', marginBottom: 40 }}>Faça login para escalar o seu time para o jogo.</p>
+        <button 
+          onClick={handleGoogleLogin}
+          style={{ 
+            width: '100%', padding: 20, borderRadius: 16, border: 'none', background: '#fff', 
+            color: '#000', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, cursor: 'pointer' 
+          }}>
+          <img src="https://www.google.com/favicon.ico" style={{ width: 20 }} />
+          ENTRAR COM GOOGLE
+        </button>
+      </div>
+    </div>
+  );
 
-  const currentSlots = FORMATIONS[formation];
+  const currentSlots = FORMATIONS['4-3-3'];
   const usedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
 
   return (
     <main style={{ minHeight:'100vh', background:'#050505', color:'#fff', overflowX: 'hidden' }}>
+      {/* Header */}
       <div style={{ background:'#F5C400', padding:16, textAlign:'center', borderBottom:'4px solid #ccaa00', zIndex: 100, position: 'relative' }}>
         <span style={{ color:'#000', fontWeight: 1000, letterSpacing: 2 }}>TIGRE FC <span style={{ fontWeight: 400 }}>ELITE 26</span></span>
       </div>
@@ -199,7 +244,8 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
-            <div style={{ background:'#111', borderRadius:24, padding:20, border:'1px solid #222' }}>
+            {/* Mercado */}
+            <div style={{ background:'#111', borderRadius:24, padding:20, border:'1px solid #222', marginBottom: 120 }}>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:15 }}>
                 <span style={{ fontWeight:900, color:'#F5C400', fontSize:12 }}>MERCADO ELITE</span>
                 <span style={{ fontSize:10, color:'#555' }}>{usedIds.length}/11 SELECIONADOS</span>
@@ -213,6 +259,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             </div>
 
+            {/* Botão de Finalizar */}
             <div style={{ position:'fixed', bottom:0, left:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 70%)', zIndex: 1000 }}>
               <button 
                 onClick={() => setStep('finalizado')}
@@ -223,7 +270,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                   color: '#000', fontWeight: 1000, fontSize: 14, textTransform: 'uppercase',
                   boxShadow: usedIds.length === 11 ? '0 5px 25px rgba(245, 196, 0, 0.4)' : 'none'
                 }}>
-                {usedIds.length < 11 ? `ESCALAR MAIS ${11 - usedIds.length}` : 'FINALIZAR ESCALAÇÃO 🐯'}
+                {usedIds.length < 11 ? `FALTAM ${11 - usedIds.length} JOGADORES` : 'FINALIZAR ESCALAÇÃO 🐯'}
               </button>
             </div>
           </>
@@ -233,21 +280,16 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           <div style={{ textAlign: 'center', padding: '40px 0', animation: 'card-entry 0.6s ease' }}>
             <div style={{ background: '#111', padding: 30, borderRadius: 24, border: '2px solid #F5C400', marginBottom: 30 }}>
               <img src={LOGO} style={{ width: 80, marginBottom: 20 }} />
-              <h2 style={{ color: '#F5C400', fontWeight: 1000 }}>TIME SALVO!</h2>
-              <p style={{ color: '#888', fontSize: 14 }}>Você agora faz parte da Elite do Tigre FC.</p>
-              
-              <div style={{ display:'flex', justifyContent:'center', gap: 5, marginTop: 20 }}>
-                {Object.values(lineup).filter(Boolean).slice(0, 5).map(p => (
-                  <img key={p!.id} src={p!.foto} style={{ width: 50, height: 65, objectFit: 'cover', borderRadius: 6, border: '1px solid #333' }} />
-                ))}
-              </div>
+              <h2 style={{ color: '#F5C400', fontWeight: 1000 }}>TIME ESCALADO!</h2>
+              <p style={{ color: '#888', fontSize: 14 }}>Seu time de elite já está na base de dados.</p>
             </div>
 
             <button 
               onClick={handleShare}
               style={{ 
                 width:'100%', padding:22, borderRadius:16, background:'#25D366', color:'#fff', 
-                fontWeight:1000, border:'none', fontSize:16, marginBottom: 15, cursor: 'pointer'
+                fontWeight:1000, border:'none', fontSize:16, marginBottom: 15, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
               }}>
               CONVIDAR AMIGOS (WHATSAPP)
             </button>
@@ -257,11 +299,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               style={{ background:'transparent', color:'#F5C400', border:'none', fontWeight:900, cursor:'pointer' }}>
               REVISAR MEU TIME
             </button>
-
-            <div style={{ marginTop: 50, padding: 20, background: 'rgba(245,196,0,0.1)', borderRadius: 16, border: '1px dashed #F5C400' }}>
-              <div style={{ color: '#F5C400', fontWeight: 900, marginBottom: 5 }}>DESAFIE UM AMIGO</div>
-              <p style={{ color: '#ccc', fontSize: 12 }}>Compartilhe sua escalação e veja quem entende mais de tática!</p>
-            </div>
           </div>
         )}
       </div>
