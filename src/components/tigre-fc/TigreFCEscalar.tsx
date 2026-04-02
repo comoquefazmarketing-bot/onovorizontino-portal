@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 // --- INTERFACES ---
@@ -11,6 +11,12 @@ interface Player {
   num: number;
   pos: string;
   foto: string;
+}
+
+interface PageProps {
+  params: {
+    jogoId: string;
+  };
 }
 
 // --- CONFIGURAÇÃO SUPABASE ---
@@ -105,7 +111,6 @@ function PlayerCard({ player, size, isSelected, status, onClick }: any) {
           width: 200%; height: 100%; background-size: cover;
           background-position: left center; transition: background-position 0.1s steps(1);
         }
-        /* Efeito GIF: Alterna entre a pose da esquerda e direita */
         .card-wrapper:hover .photo-sprite, .selected .photo-sprite {
           animation: player-gif 0.8s infinite steps(1);
         }
@@ -126,7 +131,9 @@ function PlayerCard({ player, size, isSelected, status, onClick }: any) {
   );
 }
 
-export default function TigreFCFantasy() {
+export default function TigreFCFantasy({ params }: PageProps) {
+  const jogoId = params.jogoId;
+
   // ESTADOS
   const [step, setStep] = useState<'escalar' | 'capitao' | 'heroi' | 'palpite' | 'share'>('escalar');
   const [formationKey, setFormationKey] = useState('4-3-3');
@@ -157,13 +164,27 @@ export default function TigreFCFantasy() {
     }
   };
 
-  const handleFinalizar = () => {
+  const handleSalvar = async () => {
       setSaving(true);
-      // Aqui entraria sua lógica de supabase.from('escalacoes').insert(...)
-      setTimeout(() => {
+      try {
+          // Lógica de inserção no Supabase usando jogoId
+          const { error } = await supabase.from('escalacoes').insert({
+              jogo_id: jogoId,
+              jogadores: usedIds,
+              capitao_id: capitao,
+              heroi_id: heroi,
+              palpite_home: palpite.home,
+              palpite_away: palpite.away
+          });
+
+          if (error) throw error;
+          setStep('share');
+      } catch (err) {
+          console.error(err);
+          alert("Erro ao salvar escalação.");
+      } finally {
           setSaving(false);
-          alert("Escalação salva com sucesso!");
-      }, 1500);
+      }
   };
 
   return (
@@ -218,7 +239,7 @@ export default function TigreFCFantasy() {
         </div>
       </div>
 
-      {/* SELEÇÃO INVERSA (CARDS ABAIXO DO CAMPO) */}
+      {/* SELEÇÃO INVERSA / FILTROS */}
       {step === 'escalar' && (
         <section className="market-section">
           <div className="market-controls">
@@ -247,14 +268,20 @@ export default function TigreFCFantasy() {
         </section>
       )}
 
-      {/* INPUT DE PALPITE */}
+      {/* TELA DE PALPITE */}
       {step === 'palpite' && (
           <div className="palpite-box">
-              <h3>PLACAR DO JOGO</h3>
+              <h3 style={{fontWeight: 900, fontSize: 14, color: '#F5C400'}}>PLACAR DO JOGO</h3>
               <div className="inputs">
-                <input type="number" placeholder="0" onChange={e => setPalpite({...palpite, home: +e.target.value})} />
-                <span>X</span>
-                <input type="number" placeholder="0" onChange={e => setPalpite({...palpite, away: +e.target.value})} />
+                <div className="team-input">
+                    <span style={{fontSize: 10, display:'block', marginBottom: 5}}>TIGRE</span>
+                    <input type="number" placeholder="0" value={palpite.home} onChange={e => setPalpite({...palpite, home: +e.target.value})} />
+                </div>
+                <span className="x-mark">X</span>
+                <div className="team-input">
+                    <span style={{fontSize: 10, display:'block', marginBottom: 5}}>VISITANTE</span>
+                    <input type="number" placeholder="0" value={palpite.away} onChange={e => setPalpite({...palpite, away: +e.target.value})} />
+                </div>
               </div>
           </div>
       )}
@@ -263,34 +290,34 @@ export default function TigreFCFantasy() {
       <footer className="action-footer">
           <button 
             className="main-button"
-            disabled={saving || (step === 'escalar' && filledCount < 11)}
+            disabled={saving || (step === 'escalar' && filledCount < 11) || (step === 'capitao' && !capitao) || (step === 'heroi' && !heroi)}
             onClick={() => {
                 if (step === 'escalar') setStep('capitao');
-                else if (step === 'capitao' && capitao) setStep('heroi');
-                else if (step === 'heroi' && heroi) setStep('palpite');
-                else if (step === 'palpite') handleFinalizar();
+                else if (step === 'capitao') setStep('heroi');
+                else if (step === 'heroi') setStep('palpite');
+                else if (step === 'palpite') handleSalvar();
             }}
           >
               {saving ? 'PROCESSANDO...' : 
                step === 'escalar' ? (filledCount < 11 ? `FALTAM ${11 - filledCount} JOGADORES` : 'ESCOLHER CAPITÃO →') :
-               step === 'capitao' ? 'CONFIRMAR CAPITÃO' :
-               step === 'heroi' ? 'CONFIRMAR HERÓI' : 'SALVAR ESCALAÇÃO'}
+               step === 'capitao' ? (capitao ? 'CONFIRMAR CAPITÃO' : 'SELECIONE O CAPITÃO NO CAMPO') :
+               step === 'heroi' ? (heroi ? 'CONFIRMAR HERÓI' : 'SELECIONE O HERÓI NO CAMPO') : 'SALVAR ESCALAÇÃO'}
           </button>
-          {step !== 'escalar' && <button className="back-btn" onClick={() => setStep('escalar')}>Recomeçar</button>}
+          {step !== 'escalar' && <button className="back-btn" onClick={() => setStep('escalar')}>Recomeçar Escalação</button>}
       </footer>
 
       <style jsx global>{`
-        .fantasy-container { background: #000; min-height: 100vh; color: #fff; padding-bottom: 120px; }
+        .fantasy-container { background: #000; min-height: 100vh; color: #fff; padding-bottom: 140px; font-family: sans-serif; }
         .game-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .game-header img { height: 25px; }
         .step-indicator { display: flex; gap: 6px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #222; }
         .dot.active { background: #F5C400; box-shadow: 0 0 8px #F5C400; }
 
-        .field-viewport { perspective: 1000px; padding: 10px; margin-top: -20px; }
+        .field-viewport { perspective: 1000px; padding: 10px; margin-top: -20px; overflow: hidden; }
         .soccer-field { 
-          position: relative; width: 100%; height: 450px; background: #1a4a1a; 
-          border-radius: 8px; transform: rotateX(20deg); border: 2px solid rgba(255,255,255,0.1);
+          position: relative; width: 100%; height: 460px; background: #1a4a1a; 
+          border-radius: 8px; transform: rotateX(15deg); border: 2px solid rgba(255,255,255,0.1);
           background-image: linear-gradient(#225c22 50%, #1a4a1a 50%); background-size: 100% 40px;
         }
         .field-lines { position: absolute; inset: 0; border: 1px solid rgba(255,255,255,0.2); }
@@ -298,27 +325,30 @@ export default function TigreFCFantasy() {
         .player-slot { position: absolute; transform: translate(-50%, -50%); z-index: 5; }
         
         .add-placeholder { 
-          width: 40px; height: 40px; border-radius: 50%; border: 1px dashed #F5C400;
+          width: 38px; height: 38px; border-radius: 50%; border: 1px dashed #F5C400;
           background: rgba(0,0,0,0.6); color: #F5C400; font-size: 8px; font-weight: 900;
         }
-        .add-placeholder.active { background: #F5C400; color: #000; border-style: solid; }
+        .add-placeholder.active { background: #F5C400; color: #000; border-style: solid; box-shadow: 0 0 15px #F5C400; }
 
-        .market-section { padding: 20px; background: #050505; border-radius: 20px 20px 0 0; margin-top: -20px; position: relative; z-index: 20; }
+        .market-section { padding: 20px; background: #050505; border-radius: 20px 20px 0 0; margin-top: -15px; position: relative; z-index: 20; border-top: 1px solid #1a1a1a; }
         .market-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .group { display: flex; gap: 8px; overflow-x: auto; }
-        .group button { padding: 8px 15px; border-radius: 20px; border: 1px solid #222; background: #111; color: #666; font-size: 11px; font-weight: 800; }
+        .group { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
+        .group::-webkit-scrollbar { display: none; }
+        .group button { padding: 8px 16px; border-radius: 20px; border: 1px solid #222; background: #111; color: #666; font-size: 10px; font-weight: 800; white-space: nowrap; }
         .group button.active { background: #F5C400; color: #000; border-color: #F5C400; }
         
-        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 
-        .action-footer { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 30%); z-index: 100; text-align: center; }
-        .main-button { width: 100%; max-width: 400px; padding: 18px; border-radius: 15px; background: #F5C400; color: #000; border: none; font-weight: 900; }
-        .main-button:disabled { background: #222; color: #444; }
-        .back-btn { margin-top: 10px; background: none; border: none; color: #666; font-size: 12px; }
+        .action-footer { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); z-index: 100; text-align: center; }
+        .main-button { width: 100%; max-width: 450px; padding: 20px; border-radius: 18px; background: #F5C400; color: #000; border: none; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+        .main-button:disabled { background: #1a1a1a; color: #444; }
+        .back-btn { margin-top: 12px; background: none; border: none; color: #888; font-size: 11px; text-decoration: underline; cursor: pointer; }
 
-        .palpite-box { text-align: center; padding: 40px 20px; }
-        .inputs { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px; }
-        .inputs input { width: 80px; height: 80px; background: #111; border: 2px solid #F5C400; border-radius: 15px; color: #fff; text-align: center; font-size: 32px; font-weight: 900; }
+        .palpite-box { text-align: center; padding: 40px 20px; background: #050505; margin-top: -20px; border-radius: 20px; }
+        .inputs { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-top: 20px; }
+        .team-input input { width: 70px; height: 70px; background: #111; border: 2px solid #333; border-radius: 15px; color: #fff; text-align: center; font-size: 28px; font-weight: 900; }
+        .team-input input:focus { border-color: #F5C400; outline: none; }
+        .x-mark { font-weight: 900; color: #333; font-size: 20px; padding-bottom: 20px; }
       `}</style>
     </main>
   );
