@@ -149,9 +149,10 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  const usedPlayers = Object.values(lineup).filter(Boolean) as Player[];
-  const usedIds = usedPlayers.map(p => p.id);
-  const isComplete = usedIds.length === 11 && captain && hero;
+  // Variáveis calculadas dentro do componente para garantir acesso em todo lugar
+  const currentUsedPlayers = Object.values(lineup).filter(Boolean) as Player[];
+  const currentUsedIds = currentUsedPlayers.map(p => p.id);
+  const isComplete = currentUsedIds.length === 11 && captain && hero;
 
   const handlePlayerClick = (p: Player) => {
     if (specialMode === 'captain') {
@@ -171,11 +172,16 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
+      // Pegamos os IDs aqui dentro de novo para segurança
+      const idsParaSalvar = Object.values(lineup)
+        .filter(p => p !== null)
+        .map(p => p!.id);
+
       // 1. Salvar no Supabase
       const { error } = await supabase.from('escalacoes').insert([{
         user_id: user?.id || null,
         jogo_id: jogoId,
-        jogadores_ids: usedIds,
+        jogadores_ids: idsParaSalvar,
         capitao_id: captain,
         heroi_id: hero,
         palpite_casa: palpite.home,
@@ -186,7 +192,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
 
       if (error) throw error;
 
-      // 2. Capturar e compartilhar (opcional se der erro no navegador)
+      // 2. Capturar e compartilhar
       if (cardRef.current) {
         try {
           const canvas = await html2canvas(cardRef.current, { useCORS: true, scale: 2 });
@@ -201,18 +207,18 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
             });
           }
         } catch (shareErr) {
-          console.log("Compartilhamento não concluído");
+          console.log("Compartilhamento cancelado ou não suportado");
         }
       }
 
-      // 3. Redirecionamento Final
+      // 3. Redirecionamento
       alert("Escalação salva com sucesso!");
       router.push('/'); 
-      setTimeout(() => { window.location.href = "/"; }, 500);
+      setTimeout(() => { window.location.href = "/"; }, 600);
 
     } catch (err) { 
       console.error(err);
-      alert("Erro ao salvar sua escalação."); 
+      alert("Erro ao salvar sua escalação. Verifique sua conexão."); 
     } finally { 
       setLoading(false); 
     }
@@ -284,7 +290,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
               </div>
             </div>
             <div className="players-grid">
-              {(specialMode ? usedPlayers : PLAYERS.filter(p => !usedIds.includes(p.id)))
+              {(specialMode ? currentUsedPlayers : PLAYERS.filter(p => !currentUsedIds.includes(p.id)))
                 .filter(p => filterPos === 'TODOS' || p.pos === filterPos)
                 .map(p => (
                 <div key={p.id} className="grid-item" onClick={() => handlePlayerClick(p)}>
