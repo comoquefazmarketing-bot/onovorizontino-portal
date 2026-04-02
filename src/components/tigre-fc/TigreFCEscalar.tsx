@@ -17,6 +17,7 @@ const supabase = createClient(
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 
+// LISTA COMPLETA E ÍNTEGRA (39 JOGADORES)
 const PLAYERS = [
   { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id: 2,  name: 'Jordi',             short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
@@ -84,7 +85,7 @@ function PlayerCard({ player, size, isField }: { player: Player, size: number, i
       <div style={{
         position: 'relative', width: size, height: size * 1.38,
         background: '#111', borderRadius: '8px', overflow: 'hidden',
-        border: `1.5px solid rgba(255,255,255,0.1)`,
+        border: '1.5px solid rgba(255,255,255,0.1)',
         transform: isField ? 'rotateX(-15deg)' : 'none',
         transition: 'all 0.4s'
       }}>
@@ -105,7 +106,8 @@ function PlayerCard({ player, size, isField }: { player: Player, size: number, i
   );
 }
 
-export default function TigreFCEscalar() {
+// ADICIONADO A INTERFACE JOGOID PARA CORRIGIR O ERRO DE COMPILAÇÃO
+export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<'login' | 'escalar' | 'finalizado'>('login');
   const [lineup, setLineup] = useState<Lineup>({});
@@ -154,7 +156,6 @@ export default function TigreFCEscalar() {
   const currentSlots = FORMATIONS['4-2-3-1'];
   const usedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
   
-  // Lógica de Filtro
   const filteredPlayers = PLAYERS
     .filter(p => !usedIds.includes(p.id))
     .filter(p => filterPos === 'TODOS' || p.pos === filterPos);
@@ -190,14 +191,12 @@ export default function TigreFCEscalar() {
               </div>
             </div>
 
-            {/* Mercado com Filtros */}
             <div style={{ background:'#111', borderRadius:24, padding:20, border:'1px solid #222', marginBottom: 120 }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'center', marginBottom:15 }}>
-                <span style={{ fontWeight:900, color:'#F5C400', fontSize:12 }}>MERCADO ELITE</span>
+                <span style={{ fontWeight:900, color:'#F5C400', fontSize:12 }}>MERCADO ELITE (JOGO {jogoId})</span>
                 <span style={{ fontSize:10, color:'#555' }}>{usedIds.length}/11</span>
               </div>
 
-              {/* Barra de Filtros */}
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 20, paddingBottom: 5 }}>
                 {posicoes.map(pos => (
                   <button 
@@ -207,7 +206,7 @@ export default function TigreFCEscalar() {
                       padding: '6px 12px', borderRadius: 12, border: 'none',
                       background: filterPos === pos ? '#F5C400' : '#222',
                       color: filterPos === pos ? '#000' : '#888',
-                      fontSize: 10, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap'
+                      fontSize: 10, fontWeight: 800, cursor: 'pointer'
                     }}
                   >
                     {pos}
