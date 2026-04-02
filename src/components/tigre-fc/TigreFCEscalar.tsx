@@ -13,10 +13,11 @@ interface Player {
   foto: string;
 }
 
+// Interface para as Props da Página (Next.js 15 compatível)
 interface PageProps {
-  params: {
+  params: Promise<{
     jogoId: string;
-  };
+  }>;
 }
 
 // --- CONFIGURAÇÃO SUPABASE ---
@@ -28,7 +29,6 @@ const supabase = createClient(
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 
-// --- DADOS DOS JOGADORES ---
 const PLAYERS: Player[] = [
   { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id: 2,  name: 'Jordi',           short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
@@ -84,7 +84,6 @@ const FORMATIONS: Record<string, any[]> = {
   ]
 };
 
-// --- COMPONENTE CARD ---
 function PlayerCard({ player, size, isSelected, status, onClick }: any) {
   return (
     <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} onClick={onClick} style={{ width: size }}>
@@ -131,10 +130,10 @@ function PlayerCard({ player, size, isSelected, status, onClick }: any) {
   );
 }
 
+// Transformamos o componente em assíncrono para dar o await no params
 export default function TigreFCFantasy({ params }: PageProps) {
-  const jogoId = params.jogoId;
-
-  // ESTADOS
+  // Estados
+  const [jogoId, setJogoId] = useState<string | null>(null);
   const [step, setStep] = useState<'escalar' | 'capitao' | 'heroi' | 'palpite' | 'share'>('escalar');
   const [formationKey, setFormationKey] = useState('4-3-3');
   const [lineup, setLineup] = useState<Record<string, Player | null>>({});
@@ -145,13 +144,16 @@ export default function TigreFCFantasy({ params }: PageProps) {
   const [palpite, setPalpite] = useState({ home: 0, away: 0 });
   const [saving, setSaving] = useState(false);
 
-  // Cálculos derivados
+  // Captura o ID da URL
+  useEffect(() => {
+    params.then(p => setJogoId(p.jogoId));
+  }, [params]);
+
   const filledCount = useMemo(() => Object.values(lineup).filter(Boolean).length, [lineup]);
   const usedIds = useMemo(() => Object.values(lineup).filter(Boolean).map(p => p!.id), [lineup]);
 
   const togglePlayer = (p: Player) => {
     const isAlreadySelected = usedIds.includes(p.id);
-    
     if (isAlreadySelected) {
         const entry = Object.entries(lineup).find(([_, player]) => player?.id === p.id);
         if (entry) setLineup({ ...lineup, [entry[0]]: null });
@@ -165,18 +167,17 @@ export default function TigreFCFantasy({ params }: PageProps) {
   };
 
   const handleSalvar = async () => {
+      if (!jogoId) return;
       setSaving(true);
       try {
-          // Lógica de inserção no Supabase usando jogoId
           const { error } = await supabase.from('escalacoes').insert({
-              jogo_id: jogoId,
+              jogo_id: Number(jogoId),
               jogadores: usedIds,
               capitao_id: capitao,
               heroi_id: heroi,
               palpite_home: palpite.home,
               palpite_away: palpite.away
           });
-
           if (error) throw error;
           setStep('share');
       } catch (err) {
@@ -198,16 +199,8 @@ export default function TigreFCFantasy({ params }: PageProps) {
         </div>
       </header>
 
-      {/* CAMPO EM PERSPECTIVA */}
       <div className="field-viewport">
         <div className="soccer-field">
-          <div className="field-lines">
-            <div className="penalty-area top" />
-            <div className="circle-middle" />
-            <div className="line-middle" />
-            <div className="penalty-area bottom" />
-          </div>
-
           {FORMATIONS[formationKey].map(slot => {
             const p = lineup[slot.id];
             return (
@@ -218,18 +211,10 @@ export default function TigreFCFantasy({ params }: PageProps) {
                        if(step === 'capitao') setCapitao(p.id);
                        if(step === 'heroi') setHeroi(p.id);
                    }}>
-                     <PlayerCard 
-                        player={p} 
-                        size={55} 
-                        status={capitao === p.id ? 'cap' : heroi === p.id ? 'hero' : ''} 
-                        isSelected 
-                    />
+                     <PlayerCard player={p} size={55} status={capitao === p.id ? 'cap' : heroi === p.id ? 'hero' : ''} isSelected />
                    </div>
                 ) : (
-                  <button className={`add-placeholder ${activeSlot === slot.id ? 'active' : ''}`} onClick={() => {
-                      setActiveSlot(slot.id);
-                      setFilterPos(slot.pos);
-                  }}>
+                  <button className={`add-placeholder ${activeSlot === slot.id ? 'active' : ''}`} onClick={() => { setActiveSlot(slot.id); setFilterPos(slot.pos); }}>
                     <span>{slot.pos}</span>
                   </button>
                 )}
@@ -239,7 +224,6 @@ export default function TigreFCFantasy({ params }: PageProps) {
         </div>
       </div>
 
-      {/* SELEÇÃO INVERSA / FILTROS */}
       {step === 'escalar' && (
         <section className="market-section">
           <div className="market-controls">
@@ -256,41 +240,31 @@ export default function TigreFCFantasy({ params }: PageProps) {
           </div>
           <div className="players-grid">
             {PLAYERS.filter(p => p.pos === filterPos).map(p => (
-                <PlayerCard 
-                    key={p.id} 
-                    player={p} 
-                    size={'100%'} 
-                    isSelected={usedIds.includes(p.id)}
-                    onClick={() => togglePlayer(p)} 
-                />
+                <PlayerCard key={p.id} player={p} size={'100%'} isSelected={usedIds.includes(p.id)} onClick={() => togglePlayer(p)} />
             ))}
           </div>
         </section>
       )}
 
-      {/* TELA DE PALPITE */}
       {step === 'palpite' && (
           <div className="palpite-box">
               <h3 style={{fontWeight: 900, fontSize: 14, color: '#F5C400'}}>PLACAR DO JOGO</h3>
               <div className="inputs">
                 <div className="team-input">
                     <span style={{fontSize: 10, display:'block', marginBottom: 5}}>TIGRE</span>
-                    <input type="number" placeholder="0" value={palpite.home} onChange={e => setPalpite({...palpite, home: +e.target.value})} />
+                    <input type="number" value={palpite.home} onChange={e => setPalpite({...palpite, home: +e.target.value})} />
                 </div>
                 <span className="x-mark">X</span>
                 <div className="team-input">
                     <span style={{fontSize: 10, display:'block', marginBottom: 5}}>VISITANTE</span>
-                    <input type="number" placeholder="0" value={palpite.away} onChange={e => setPalpite({...palpite, away: +e.target.value})} />
+                    <input type="number" value={palpite.away} onChange={e => setPalpite({...palpite, away: +e.target.value})} />
                 </div>
               </div>
           </div>
       )}
 
-      {/* BOTÃO DE AÇÃO FIXO */}
       <footer className="action-footer">
-          <button 
-            className="main-button"
-            disabled={saving || (step === 'escalar' && filledCount < 11) || (step === 'capitao' && !capitao) || (step === 'heroi' && !heroi)}
+          <button className="main-button" disabled={saving || (step === 'escalar' && filledCount < 11) || (step === 'capitao' && !capitao) || (step === 'heroi' && !heroi)}
             onClick={() => {
                 if (step === 'escalar') setStep('capitao');
                 else if (step === 'capitao') setStep('heroi');
@@ -298,57 +272,29 @@ export default function TigreFCFantasy({ params }: PageProps) {
                 else if (step === 'palpite') handleSalvar();
             }}
           >
-              {saving ? 'PROCESSANDO...' : 
-               step === 'escalar' ? (filledCount < 11 ? `FALTAM ${11 - filledCount} JOGADORES` : 'ESCOLHER CAPITÃO →') :
-               step === 'capitao' ? (capitao ? 'CONFIRMAR CAPITÃO' : 'SELECIONE O CAPITÃO NO CAMPO') :
-               step === 'heroi' ? (heroi ? 'CONFIRMAR HERÓI' : 'SELECIONE O HERÓI NO CAMPO') : 'SALVAR ESCALAÇÃO'}
+              {saving ? 'PROCESSANDO...' : step === 'escalar' ? (filledCount < 11 ? `FALTAM ${11 - filledCount}` : 'CAPITÃO →') : 'SALVAR'}
           </button>
-          {step !== 'escalar' && <button className="back-btn" onClick={() => setStep('escalar')}>Recomeçar Escalação</button>}
       </footer>
 
       <style jsx global>{`
-        .fantasy-container { background: #000; min-height: 100vh; color: #fff; padding-bottom: 140px; font-family: sans-serif; }
-        .game-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .fantasy-container { background: #000; min-height: 100vh; padding-bottom: 120px; color: #fff; }
+        .game-header { padding: 15px; display: flex; justify-content: space-between; }
         .game-header img { height: 25px; }
-        .step-indicator { display: flex; gap: 6px; }
+        .step-indicator { display: flex; gap: 5px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #222; }
-        .dot.active { background: #F5C400; box-shadow: 0 0 8px #F5C400; }
-
-        .field-viewport { perspective: 1000px; padding: 10px; margin-top: -20px; overflow: hidden; }
-        .soccer-field { 
-          position: relative; width: 100%; height: 460px; background: #1a4a1a; 
-          border-radius: 8px; transform: rotateX(15deg); border: 2px solid rgba(255,255,255,0.1);
-          background-image: linear-gradient(#225c22 50%, #1a4a1a 50%); background-size: 100% 40px;
-        }
-        .field-lines { position: absolute; inset: 0; border: 1px solid rgba(255,255,255,0.2); }
-        .line-middle { position: absolute; top: 50%; width: 100%; height: 1px; background: rgba(255,255,255,0.2); }
-        .player-slot { position: absolute; transform: translate(-50%, -50%); z-index: 5; }
-        
-        .add-placeholder { 
-          width: 38px; height: 38px; border-radius: 50%; border: 1px dashed #F5C400;
-          background: rgba(0,0,0,0.6); color: #F5C400; font-size: 8px; font-weight: 900;
-        }
-        .add-placeholder.active { background: #F5C400; color: #000; border-style: solid; box-shadow: 0 0 15px #F5C400; }
-
-        .market-section { padding: 20px; background: #050505; border-radius: 20px 20px 0 0; margin-top: -15px; position: relative; z-index: 20; border-top: 1px solid #1a1a1a; }
-        .market-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .group { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
-        .group::-webkit-scrollbar { display: none; }
-        .group button { padding: 8px 16px; border-radius: 20px; border: 1px solid #222; background: #111; color: #666; font-size: 10px; font-weight: 800; white-space: nowrap; }
-        .group button.active { background: #F5C400; color: #000; border-color: #F5C400; }
-        
-        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-
-        .action-footer { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); z-index: 100; text-align: center; }
-        .main-button { width: 100%; max-width: 450px; padding: 20px; border-radius: 18px; background: #F5C400; color: #000; border: none; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
-        .main-button:disabled { background: #1a1a1a; color: #444; }
-        .back-btn { margin-top: 12px; background: none; border: none; color: #888; font-size: 11px; text-decoration: underline; cursor: pointer; }
-
-        .palpite-box { text-align: center; padding: 40px 20px; background: #050505; margin-top: -20px; border-radius: 20px; }
-        .inputs { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-top: 20px; }
-        .team-input input { width: 70px; height: 70px; background: #111; border: 2px solid #333; border-radius: 15px; color: #fff; text-align: center; font-size: 28px; font-weight: 900; }
-        .team-input input:focus { border-color: #F5C400; outline: none; }
-        .x-mark { font-weight: 900; color: #333; font-size: 20px; padding-bottom: 20px; }
+        .dot.active { background: #F5C400; }
+        .field-viewport { perspective: 1000px; padding: 10px; }
+        .soccer-field { position: relative; width: 100%; height: 450px; background: #1a4a1a; transform: rotateX(15deg); border-radius: 10px; }
+        .player-slot { position: absolute; transform: translate(-50%, -50%); }
+        .add-placeholder { width: 40px; height: 40px; border-radius: 50%; border: 1px dashed #F5C400; background: #000; color: #F5C400; font-size: 9px; }
+        .market-section { padding: 20px; background: #050505; border-top: 1px solid #222; }
+        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .action-footer { position: fixed; bottom: 0; width: 100%; padding: 20px; background: #000; }
+        .main-button { width: 100%; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 10px; font-weight: 900; }
+        .palpite-box { text-align: center; padding: 40px 20px; }
+        .inputs { display: flex; justify-content: center; align-items: center; gap: 15px; }
+        .team-input input { width: 60px; height: 60px; background: #111; border: 1px solid #333; color: #fff; text-align: center; font-size: 24px; border-radius: 10px; }
+        .x-mark { font-weight: 900; }
       `}</style>
     </main>
   );
