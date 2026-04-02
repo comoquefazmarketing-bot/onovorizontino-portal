@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import TigreFCLogin from '@/components/tigre-fc/TigreFCLogin';
 import html2canvas from 'html2canvas';
 
-// Configuração para NÃO DESLOGAR no mobile
+// CONFIGURAÇÃO DE LOGIN ROBUSTA (Evita deslogar no mobile)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -20,7 +20,7 @@ const supabase = createClient(
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 
-// --- DADOS DOS JOGADORES ---
+// --- DADOS DOS JOGADORES (LISTA COMPLETA RECUPERADA) ---
 const PLAYERS = [
   { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id: 2,  name: 'Jordi',           short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
@@ -114,11 +114,13 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [capitao, setCapitao] = useState<any>(null);
   const [heroi, setHeroi] = useState<any>(null);
+  const [palpite, setPalpite] = useState({ mandante: 1, visitante: 0 });
   const [saving, setSaving] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
+    // Checagem de sessão imediata para evitar tela de login desnecessária
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUsuario(session.user);
@@ -127,11 +129,12 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     });
   }, []);
 
-  const handleSalvar = async () => {
+  const handleFinalizar = async () => {
     if (!usuario) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from('tigre_fc_escalacoes').upsert({
+      // Salva Escalação
+      await supabase.from('tigre_fc_escalacoes').upsert({
         usuario_id: usuario.id,
         jogo_id: jogoId,
         formacao: formation,
@@ -140,10 +143,17 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         heroi_id: heroi?.id
       }, { onConflict: 'usuario_id,jogo_id' });
 
-      if (error) throw error;
+      // Salva Palpite
+      await supabase.from('tigre_fc_palpites').upsert({
+        usuario_id: usuario.id,
+        jogo_id: jogoId,
+        gols_mandante: palpite.mandante,
+        gols_visitante: palpite.visitante
+      }, { onConflict: 'usuario_id,jogo_id' });
+
       setStep('salvo');
     } catch (e) {
-      alert("Erro ao salvar.");
+      alert("Erro ao salvar. Verifique sua conexão.");
     } finally {
       setSaving(false);
     }
@@ -156,8 +166,8 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
       const image = canvas.toDataURL('image/png');
       if (navigator.share) {
         const blob = await (await fetch(image)).blob();
-        const file = new File([blob], 'time.png', { type: 'image/png' });
-        navigator.share({ title: 'Meu Time Tigre FC', files: [file] }).catch(() => {});
+        const file = new File([blob], 'meu-tigre.png', { type: 'image/png' });
+        navigator.share({ title: 'Tigre FC', files: [file] }).catch(() => {});
       } else {
         const link = document.createElement('a');
         link.href = image; link.download = 'meu-tigre.png'; link.click();
@@ -167,16 +177,20 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
   if (!mounted) return null;
 
-  if (step === 'login') return <TigreFCLogin jogoId={jogoId} onSuccess={(u) => { setUsuario(u); setStep('escalar'); }} />;
+  // TELA DE LOGIN
+  if (step === 'login') {
+    return <TigreFCLogin jogoId={jogoId} onSuccess={(u) => { setUsuario(u); setStep('escalar'); }} />;
+  }
 
+  // TELA DE SUCESSO (Área Instagramável)
   if (step === 'salvo') {
     return (
       <main style={{ minHeight:'100vh', background:'#000', padding:20, display:'flex', flexDirection:'column', alignItems:'center' }}>
-        <h2 style={{ color:'#F5C400', fontWeight:900 }}>TIME ESCALADO! 🐯</h2>
-        <div ref={cardRef} style={{ width: '100%', maxWidth: 380, background: '#050505', borderRadius: 24, padding: 20, border: '1px solid #222', marginTop: 20 }}>
+        <h2 style={{ color: '#F5C400', fontWeight: 900, fontStyle: 'italic', marginBottom: 20 }}>TIME ESCALADO! 🐯</h2>
+        <div ref={cardRef} style={{ width: '100%', maxWidth: 380, background: '#050505', borderRadius: 24, padding: 20, border: '1px solid #222' }}>
           <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 15 }}>
-             <div style={{ color:'#fff', fontSize:18, fontWeight:900 }}>{usuario?.email?.split('@')[0]}</div>
-             <img src={LOGO} style={{ width: 30 }} />
+            <div style={{ color: '#fff', fontSize: 20, fontWeight: 1000 }}>{usuario?.email?.split('@')[0].toUpperCase()}</div>
+            <img src={LOGO} style={{ width: 35 }} />
           </div>
           <div style={{ position:'relative', width:'100%', height: 420, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 16 }}>
             {FORMATIONS[formation].map(slot => (
@@ -185,8 +199,11 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               </div>
             ))}
           </div>
+          <div style={{ marginTop: 15, textAlign: 'center', color: '#F5C400', fontSize: 10, fontWeight: 800 }}>WWW.TIGREFC.APP</div>
         </div>
-        <button onClick={handleShare} style={{ width:'100%', maxWidth:380, marginTop:20, background:'#fff', color:'#000', padding:18, borderRadius:16, fontWeight:900, border:'none' }}>COMPARTILHAR 📸</button>
+        <button onClick={handleShare} style={{ width:'100%', maxWidth:380, marginTop:25, background:'#fff', color:'#000', padding:18, borderRadius:16, fontWeight:1000, border:'none' }}>
+          COMPARTILHAR NO STORY 📸
+        </button>
       </main>
     );
   }
@@ -194,13 +211,21 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const filledCount = Object.keys(lineup).length;
 
   return (
-    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom: 100 }}>
+    <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom: 110 }}>
+      {/* Barra de Progresso */}
       <div style={{ background:'#F5C400', padding:12, display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:100 }}>
         <img src={LOGO} style={{ width: 22 }} />
-        <span style={{ color:'#000', fontSize:10, fontWeight:1000 }}>{step.toUpperCase()}</span>
+        <div style={{ display:'flex', gap:4 }}>
+          {['escalar','capitao','heroi','palpite'].map((s, i) => (
+            <div key={s} style={{ width: 30, height: 4, borderRadius: 2, background: step === s ? '#000' : 'rgba(0,0,0,0.2)' }} />
+          ))}
+        </div>
+        <span style={{ fontWeight: 1000, color:'#000', fontSize: 10 }}>{step.toUpperCase()}</span>
       </div>
 
       <div style={{ maxWidth:480, margin:'0 auto', padding:16 }}>
+        
+        {/* STEP 1: ESCALAR */}
         {step === 'escalar' && (
           <>
             <div style={{ display:'flex', gap:8, marginBottom:15 }}>
@@ -208,15 +233,21 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                 <button key={f} onClick={() => setFormation(f)} style={{ flex:1, padding:10, borderRadius:8, background: formation===f?'#F5C400':'#1a1a1a', color: formation===f?'#000':'#666', border:'none', fontWeight:900 }}>{f}</button>
               ))}
             </div>
-            <div style={{ position:'relative', width:'100%', height: 460, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 12, border:'2px solid #222' }}>
+
+            <div style={{ position:'relative', width:'100%', height: 460, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 12, border: '2px solid #222' }}>
                {FORMATIONS[formation].map(slot => (
-                 <div key={slot.id} onClick={() => setSelectedSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)' }}>
-                    {lineup[slot.id] ? <PlayerCard player={lineup[slot.id]} size={50} /> : <div style={{ width:35, height:35, borderRadius:'50%', border:'1px dashed #fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8 }}>{slot.label}</div>}
+                 <div key={slot.id} onClick={() => setSelectedSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)', cursor:'pointer' }}>
+                    {lineup[slot.id] ? <PlayerCard player={lineup[slot.id]} size={52} /> : <div style={{ width:38, height:38, borderRadius:'50%', border:'1px dashed #fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8 }}>{slot.label}</div>}
                  </div>
                ))}
             </div>
+
             {selectedSlot && (
               <div style={{ marginTop:20, background:'#111', padding:15, borderRadius:16, border:'1px solid #222' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:15 }}>
+                   <span style={{ fontWeight:900, fontSize:12 }}>POSIÇÃO: {selectedSlot.toUpperCase()}</span>
+                   <button onClick={() => setSelectedSlot(null)} style={{ color:'#F5C400', background:'none', border:'none', fontSize:12 }}>FECHAR X</button>
+                </div>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(75px, 1fr))', gap:10 }}>
                   {PLAYERS.filter(p => p.pos === FORMATIONS[formation].find(s => s.id === selectedSlot)?.label).map(p => (
                     <div key={p.id} onClick={() => { setLineup({...lineup, [selectedSlot]: p}); setSelectedSlot(null); }} style={{ textAlign:'center' }}>
@@ -230,12 +261,14 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </>
         )}
 
+        {/* STEP 2: CAPITÃO */}
         {step === 'capitao' && (
           <div style={{ textAlign:'center' }}>
             <h3 style={{ color:'#F5C400', fontWeight:900 }}>QUEM SERÁ O CAPITÃO? 👑</h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:15, marginTop:20 }}>
+            <p style={{ fontSize:12, color:'#666', marginBottom:20 }}>O capitão pontua 1.5x mais.</p>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:15 }}>
                {Object.values(lineup).map((p: any) => (
-                 <div key={p.id} onClick={() => setCapitao(p)} style={{ padding:10, borderRadius:12, border: capitao?.id===p.id ? '1px solid #F5C400' : '1px solid #1a1a1a' }}>
+                 <div key={p.id} onClick={() => setCapitao(p)} style={{ padding:10, borderRadius:12, border: capitao?.id===p.id ? '1px solid #F5C400' : '1px solid #1a1a1a', background: capitao?.id===p.id ? 'rgba(245,196,0,0.05)' : 'none' }}>
                     <PlayerCard player={p} size={60} isCapitao={capitao?.id===p.id} />
                  </div>
                ))}
@@ -243,31 +276,57 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </div>
         )}
 
+        {/* STEP 3: HERÓI */}
         {step === 'heroi' && (
           <div style={{ textAlign:'center' }}>
             <h3 style={{ color:'#F5C400', fontWeight:900 }}>QUEM É O HERÓI? ⭐</h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:15, marginTop:20 }}>
+            <p style={{ fontSize:12, color:'#666', marginBottom:20 }}>Sua aposta secreta do jogo.</p>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:15 }}>
                {Object.values(lineup).map((p: any) => (
-                 <div key={p.id} onClick={() => setHeroi(p)} style={{ padding:10, borderRadius:12, border: heroi?.id===p.id ? '1px solid #F5C400' : '1px solid #1a1a1a' }}>
+                 <div key={p.id} onClick={() => setHeroi(p)} style={{ padding:10, borderRadius:12, border: heroi?.id===p.id ? '1px solid #F5C400' : '1px solid #1a1a1a', background: heroi?.id===p.id ? 'rgba(245,196,0,0.05)' : 'none' }}>
                     <PlayerCard player={p} size={60} isHeroi={heroi?.id===p.id} />
                  </div>
                ))}
             </div>
           </div>
         )}
+
+        {/* STEP 4: PALPITE */}
+        {step === 'palpite' && (
+          <div style={{ textAlign:'center', marginTop:40 }}>
+            <h3 style={{ color:'#F5C400', fontWeight:900 }}>QUAL O PLACAR? ⚽</h3>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:20, marginTop:30 }}>
+              <div>
+                <div style={{ fontSize:10, color:'#666', marginBottom:5 }}>AMAZONAS</div>
+                <input type="number" value={palpite.mandante} onChange={(e)=>setPalpite({...palpite, mandante: parseInt(e.target.value)})} style={{ width:60, height:60, borderRadius:12, background:'#111', border:'1px solid #333', color:'#fff', textAlign:'center', fontSize:24, fontWeight:900 }} />
+              </div>
+              <div style={{ fontSize:20, fontWeight:900, marginTop:20 }}>X</div>
+              <div>
+                <div style={{ fontSize:10, color:'#666', marginBottom:5 }}>VISITANTE</div>
+                <input type="number" value={palpite.visitante} onChange={(e)=>setPalpite({...palpite, visitante: parseInt(e.target.value)})} style={{ width:60, height:60, borderRadius:12, background:'#111', border:'1px solid #333', color:'#fff', textAlign:'center', fontSize:24, fontWeight:900 }} />
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
 
-      <div style={{ position:'fixed', bottom:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 40%)' }}>
+      {/* Botão de Ação Inferior */}
+      <div style={{ position:'fixed', bottom:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 40%)', zIndex:200 }}>
          <button 
            onClick={() => {
               if(step === 'escalar' && filledCount === 11) setStep('capitao');
               else if(step === 'capitao' && capitao) setStep('heroi');
-              else if(step === 'heroi' && heroi) handleSalvar();
+              else if(step === 'heroi' && heroi) setStep('palpite');
+              else if(step === 'palpite') handleFinalizar();
            }}
            disabled={saving || (step === 'escalar' && filledCount < 11)}
-           style={{ width:'100%', padding:20, borderRadius:16, background:'#F5C400', color:'#000', fontWeight:1000, border:'none' }}
+           style={{ width:'100%', padding:20, borderRadius:16, background:'#F5C400', color:'#000', fontWeight:1000, border:'none', fontSize:14, textTransform:'uppercase' }}
          >
-           {step === 'escalar' ? (filledCount < 11 ? `FALTAM ${11 - filledCount}` : 'PRÓXIMO →') : step === 'capitao' ? 'PRÓXIMO →' : (saving ? 'SALVANDO...' : 'FINALIZAR 🐯')}
+           {step === 'escalar' ? (filledCount < 11 ? `FALTAM ${11 - filledCount} JOGADORES` : 'DEFINIR CAPITÃO →') : 
+            step === 'capitao' ? (capitao ? 'DEFINIR HERÓI →' : 'SELECIONE O CAPITÃO') :
+            step === 'heroi' ? (heroi ? 'DAR PALPITE →' : 'SELECIONE O HERÓI') :
+            (saving ? 'SALVANDO...' : 'CONFIRMAR ESCALAÇÃO 🐯')}
          </button>
       </div>
     </main>
