@@ -2,16 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Configuração Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    }
-  }
+  { auth: { persistSession: true, autoRefreshToken: true } }
 );
 
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
@@ -59,7 +53,7 @@ const PLAYERS = [
   { id: 39, name: 'Ronald Barcellos',  short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-const FORMATION_433 = [
+const FORMATION = [
   { id:'gk',  label:'GOL', x:50, y:92 }, { id:'rb',  label:'LAT', x:85, y:72 },
   { id:'cb1', label:'ZAG', x:62, y:78 }, { id:'cb2', label:'ZAG', x:38, y:78 },
   { id:'lb',  label:'LAT', x:15, y:72 }, { id:'cm1', label:'MEI', x:75, y:52 },
@@ -71,27 +65,29 @@ const FORMATION_433 = [
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 
-function PlayerCard({ player, size, isField }: { player: Player, size: number, isField?: boolean }) {
+function PlayerCard({ player, size, isCapitao, isHeroi, isField }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean, isField?: boolean }) {
   return (
-    <div style={{ width: size, animation: 'card-entry 0.6s ease-out backwards' }}>
+    <div style={{ width: size, animation: 'card-entry 0.6s ease-out' }}>
       <div style={{
         position: 'relative', width: size, height: size * 1.38,
         background: '#111', borderRadius: '8px', overflow: 'hidden',
-        border: `1.5px solid rgba(255,255,255,0.1)`,
+        border: `1.5px solid ${isCapitao ? '#F5C400' : isHeroi ? '#00E5FF' : 'rgba(255,255,255,0.1)'}`,
         transform: isField ? 'rotateX(-15deg)' : 'none',
-        transition: 'all 0.4s'
+        boxShadow: isCapitao ? '0 0 15px rgba(245,196,0,0.5)' : isHeroi ? '0 0 15px rgba(0,229,255,0.5)' : 'none'
       }}>
         <div style={{
-          width: '100%', height: '100%',
-          backgroundImage: `url(${player.foto})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          width: '100%', height: '100%', backgroundImage: `url(${player.foto})`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
           maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
         }} />
-        <div style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.85)', padding: '4px 0', textAlign: 'center', borderTop: '1px solid #F5C400' }}>
-          <div style={{ color: '#F5C400', fontSize: Math.max(size * 0.1, 8), fontWeight: 900 }}>{player.pos}</div>
-          <div style={{ color: '#fff', fontSize: Math.max(size * 0.14, 10), fontWeight: 1000, textTransform: 'uppercase' }}>{player.short}</div>
+        
+        {/* Badges de destaque */}
+        {isCapitao && <div style={{ position:'absolute', top:2, right:2, background:'#F5C400', color:'#000', fontSize:8, fontWeight:900, padding:'2px 4px', borderRadius:4 }}>C</div>}
+        {isHeroi && <div style={{ position:'absolute', top:2, left:2, background:'#00E5FF', color:'#000', fontSize:8, fontWeight:900, padding:'2px 4px', borderRadius:4 }}>H</div>}
+
+        <div style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.9)', padding: '4px 0', textAlign: 'center' }}>
+          <div style={{ color: isCapitao ? '#F5C400' : '#fff', fontSize: Math.max(size * 0.14, 9), fontWeight: 900 }}>{player.short}</div>
         </div>
       </div>
     </div>
@@ -99,156 +95,166 @@ function PlayerCard({ player, size, isField }: { player: Player, size: number, i
 }
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
-  const [mounted, setMounted] = useState(false);
-  const [step, setStep] = useState<'login' | 'escalar' | 'finalizado'>('login');
+  const [step, setStep] = useState<'login' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'finalizado'>('login');
   const [lineup, setLineup] = useState<Lineup>({});
-  const [selected, setSelected] = useState<{ player: Player, fromSlot: string | null } | null>(null);
-  const [fieldWidth, setFieldWidth] = useState(360);
+  const [capitao, setCapitao] = useState<number | null>(null);
+  const [heroi, setHeroi] = useState<number | null>(null);
+  const [palpite, setPalpite] = useState({ mandante: 0, visitante: 0 });
   const [usuario, setUsuario] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+  const [fieldWidth, setFieldWidth] = useState(360);
 
   useEffect(() => {
-    setMounted(true);
     const update = () => setFieldWidth(Math.min(window.innerWidth - 32, 450));
     update();
     window.addEventListener('resize', update);
-    
-    // Auth Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) { setUsuario(session.user); setStep('escalar'); }
     });
-
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin }
-    });
-  };
-
-  const handleTapSlot = (slotId: string) => {
-    const playerInSlot = lineup[slotId];
-    if (selected) {
-      setLineup(prev => ({ 
-        ...prev, 
-        [selected.fromSlot || 'temp']: playerInSlot || null, 
-        [slotId]: selected.player 
-      }));
-      setSelected(null);
-    } else if (playerInSlot) {
-      setSelected({ player: playerInSlot, fromSlot: slotId });
-    }
-  };
-
   const handleSalvar = async () => {
     setSaving(true);
-    try {
-      // Exemplo de salvamento no Supabase
-      const { error } = await supabase.from('escalacoes').upsert({
-        user_id: usuario?.id,
-        jogo_id: jogoId,
-        time: lineup,
-        updated_at: new Date()
-      });
-      if (error) throw error;
-      setStep('finalizado');
-    } catch (e) {
-      console.error(e);
-      alert("Erro ao salvar sua escalação.");
-    } finally {
-      setSaving(false);
-    }
+    const { error } = await supabase.from('escalacoes_elite').upsert({
+      user_id: usuario?.id,
+      jogo_id: jogoId,
+      jogadores: lineup,
+      capitao_id: capitao,
+      heroi_id: heroi,
+      palpite: palpite,
+      updated_at: new Date()
+    });
+    setSaving(false);
+    if (!error) setStep('finalizado');
   };
-
-  const handleShare = () => {
-    const text = `🐯 Escalei meu time no Tigre FC Elite! Você consegue bater minha tática?`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + window.location.origin)}`);
-  };
-
-  if (!mounted) return null;
 
   if (step === 'login') return (
-    <div style={{ height: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <button onClick={handleGoogleLogin} style={{ padding: '20px 40px', borderRadius: 12, fontWeight: 900, cursor: 'pointer' }}>
-            ENTRAR COM GOOGLE
-        </button>
+    <div style={{ height:'100vh', background:'#050505', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column' }}>
+        <img src={LOGO} style={{ width:120, marginBottom:40 }} />
+        <button onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })} style={{ padding:'20px 40px', borderRadius:16, border:'none', background:'#fff', fontWeight:900, cursor:'pointer' }}>ENTRAR COM GOOGLE</button>
     </div>
   );
 
-  const filledCount = Object.values(lineup).filter(Boolean).length;
+  const filledPlayers = Object.values(lineup).filter(Boolean) as Player[];
 
   return (
-    <main style={{ minHeight:'100vh', background:'#050505', color:'#fff', overflowX: 'hidden' }}>
-      <div style={{ background:'#F5C400', padding:16, textAlign:'center', borderBottom:'4px solid #ccaa00' }}>
-        <span style={{ color:'#000', fontWeight: 1000 }}>TIGRE FC ELITE 26</span>
+    <main style={{ minHeight:'100vh', background:'#050505', color:'#fff', paddingBottom:120 }}>
+      {/* Header com Progresso */}
+      <div style={{ background:'#F5C400', padding:16, textAlign:'center', position:'sticky', top:0, zIndex:1000 }}>
+        <div style={{ color:'#000', fontWeight:1000, fontSize:12 }}>{step.toUpperCase()}</div>
       </div>
 
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '10px 16px' }}>
         
-        {step === 'escalar' && (
-          <>
-            {/* Campo 3D */}
-            <div style={{ perspective: '1200px', margin: '20px 0' }}>
-              <div style={{
-                width: fieldWidth, height: fieldWidth * 1.3, margin: '0 auto',
-                background: 'linear-gradient(180deg, #1a4a1a 0%, #0a2a0a 100%)',
-                borderRadius: '16px', position: 'relative',
-                transform: 'rotateX(20deg)', border: '2px solid rgba(255,255,255,0.1)'
-              }}>
-                {FORMATION_433.map((slot) => (
-                  <div key={slot.id} onClick={() => handleTapSlot(slot.id)} style={{
+        {/* CAMPO 3D (Visível em quase todos os passos para contexto) */}
+        {(['escalar', 'capitao', 'heroi', 'confirmar'].includes(step)) && (
+          <div style={{ perspective: '1200px', margin: '20px 0' }}>
+            <div style={{
+              width: fieldWidth, height: fieldWidth * 1.3, margin: '0 auto',
+              background: 'linear-gradient(180deg, #1a4a1a 0%, #0a2a0a 100%)',
+              borderRadius: '16px', position: 'relative', border: '2px solid rgba(255,255,255,0.1)',
+              transform: 'rotateX(20deg)', transition: '0.5s'
+            }}>
+              {FORMATION.map((slot) => {
+                const p = lineup[slot.id];
+                return (
+                  <div key={slot.id} onClick={() => step === 'escalar' && handleTapSlot(slot.id, p)} style={{
                     position: 'absolute', left: `${slot.x}%`, top: `${slot.y}%`,
                     transform: 'translate(-50%, -50%)', zIndex: 10, cursor: 'pointer'
                   }}>
-                    {lineup[slot.id] ? (
-                      <PlayerCard player={lineup[slot.id]!} size={fieldWidth * 0.16} isField />
+                    {p ? (
+                      <div onClick={() => {
+                        if(step === 'capitao') setCapitao(p.id);
+                        if(step === 'heroi') setHeroi(p.id);
+                      }}>
+                        <PlayerCard player={p} size={fieldWidth * 0.16} isField isCapitao={capitao === p.id} isHeroi={heroi === p.id} />
+                      </div>
                     ) : (
                       <div style={{ width: 35, height: 35, borderRadius: '50%', border: '1.5px dashed #F5C400', color: '#F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</div>
                     )}
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-
-            {/* Mercado */}
-            <div style={{ background:'#111', borderRadius:20, padding:15, marginBottom: 100 }}>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:10 }}>
-                {PLAYERS.filter(p => !Object.values(lineup).some(lp => lp?.id === p.id)).map(p => (
-                  <div key={p.id} onClick={() => setSelected({ player: p, fromSlot: null })} style={{ cursor: 'pointer' }}>
-                    <PlayerCard player={p} size={(fieldWidth/4) - 20} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Botão Fixo */}
-            <div style={{ position:'fixed', bottom:0, left:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 60%)' }}>
-                <button 
-                  onClick={handleSalvar}
-                  disabled={filledCount < 11 || saving}
-                  style={{ width: '100%', padding: 20, borderRadius: 12, background: filledCount === 11 ? '#F5C400' : '#222', color: '#000', fontWeight: 1000, border: 'none' }}>
-                  {saving ? 'SALVANDO...' : filledCount < 11 ? `FALTAM ${11 - filledCount} JOGADORES` : 'CONFIRMAR TIME 🐯'}
-                </button>
-            </div>
-          </>
-        )}
-
-        {step === 'finalizado' && (
-          <div style={{ textAlign: 'center', padding: '50px 20px' }}>
-             <img src={LOGO} style={{ width: 100, marginBottom: 20 }} />
-             <h2 style={{ color: '#F5C400' }}>TIME ESCALADO!</h2>
-             <button onClick={handleShare} style={{ width: '100%', padding: 20, background: '#25D366', color: '#fff', borderRadius: 12, border: 'none', fontWeight: 900, marginTop: 20 }}>
-               CHAMAR NO WHATSAPP
-             </button>
           </div>
         )}
-      </div>
 
-      <style jsx>{`
-        @keyframes card-entry { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
+        {/* MECÂNICA DE MERCADO */}
+        {step === 'escalar' && (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:10, background:'#111', padding:15, borderRadius:20 }}>
+            {PLAYERS.filter(p => !filledPlayers.some(fp => fp.id === p.id)).map(p => (
+              <div key={p.id} onClick={() => handleSelectFromMercado(p)} style={{ cursor:'pointer' }}>
+                <PlayerCard player={p} size={(fieldWidth/4) - 20} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* MECÂNICA DE PALPITE */}
+        {step === 'palpite' && (
+          <div style={{ textAlign:'center', padding:40, background:'#111', borderRadius:24, border:'1px solid #F5C400' }}>
+            <h3 style={{ color:'#F5C400', marginBottom:30 }}>PLACAR FINAL</h3>
+            <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:20 }}>
+              <div>
+                <div style={{ fontSize:10, marginBottom:10 }}>TIGRE</div>
+                <input type="number" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', borderRadius:12, border:'none', fontSize:24, fontWeight:900 }} />
+              </div>
+              <div style={{ fontSize:24, marginTop:20 }}>X</div>
+              <div>
+                <div style={{ fontSize:10, marginBottom:10 }}>ADVERSÁRIO</div>
+                <input type="number" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', borderRadius:12, border:'none', fontSize:24, fontWeight:900 }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BOTÃO DE AÇÃO DINÂMICO */}
+        <div style={{ position:'fixed', bottom:0, left:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 70%)', zIndex:2000 }}>
+           <button 
+             onClick={handleNextStep}
+             disabled={saving}
+             style={{ width:'100%', padding:22, borderRadius:16, border:'none', background:'#F5C400', color:'#000', fontWeight:1000, fontSize:14 }}>
+             {getButtonText()}
+           </button>
+           {step !== 'escalar' && step !== 'finalizado' && (
+             <button onClick={handlePrevStep} style={{ width:'100%', background:'transparent', color:'#888', border:'none', marginTop:10 }}>← VOLTAR</button>
+           )}
+        </div>
+
+      </div>
     </main>
   );
+
+  // Funções de Ajuda
+  function handleSelectFromMercado(p: Player) {
+    const firstEmpty = FORMATION.find(slot => !lineup[slot.id]);
+    if(firstEmpty) setLineup({...lineup, [firstEmpty.id]: p});
+  }
+
+  function handleTapSlot(slotId: string, player: Player | null) {
+    if(player) setLineup({...lineup, [slotId]: null});
+  }
+
+  function handleNextStep() {
+    if (step === 'escalar' && filledPlayers.length === 11) setStep('capitao');
+    else if (step === 'capitao' && capitao) setStep('heroi');
+    else if (step === 'heroi' && heroi) setStep('palpite');
+    else if (step === 'palpite') setStep('confirmar');
+    else if (step === 'confirmar') handleSalvar();
+  }
+
+  function handlePrevStep() {
+    const steps: any[] = ['escalar', 'capitao', 'heroi', 'palpite', 'confirmar'];
+    setStep(steps[steps.indexOf(step) - 1]);
+  }
+
+  function getButtonText() {
+    if(saving) return "PROCESSANDO...";
+    if(step === 'escalar') return filledPlayers.length < 11 ? `FALTAM ${11 - filledPlayers.length} JOGADORES` : "ESCOLHER CAPITÃO →";
+    if(step === 'capitao') return !capitao ? "SELECIONE O CAPITÃO" : "ESCOLHER HERÓI →";
+    if(step === 'heroi') return !heroi ? "SELECIONE O HERÓI" : "DAR PALPITE →";
+    if(step === 'palpite') return "REVISAR ESCALAÇÃO →";
+    return "CONFIRMAR TUDO 🐯";
+  }
 }
