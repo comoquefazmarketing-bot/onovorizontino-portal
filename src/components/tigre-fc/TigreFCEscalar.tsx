@@ -140,7 +140,6 @@ export default function TigreFCEscalar({ jogoId = 3 }) {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // Lógica de IDs ocupados (Campo + Banco)
   const currentTitulares = Object.values(lineup).filter(Boolean) as Player[];
   const currentReserves = reserves.filter(Boolean) as Player[];
   const occupiedIds = [...currentTitulares.map(p => p.id), ...currentReserves.map(p => p.id)];
@@ -182,13 +181,16 @@ export default function TigreFCEscalar({ jogoId = 3 }) {
           ))}
         </div>
 
-        {/* Campo */}
+        {/* Campo Estilo Jorjão */}
         <div className="field" style={{ width: fieldWidth, height: fieldWidth * 1.35 }}>
+          {/* Gramado Quadriculado */}
+          <div className="grass-pattern"></div>
+          
           <div className="pitch-markings">
             <div className="center-line"></div>
             <div className="center-circle"></div>
-            <div className="area top"><div className="small-area"></div></div>
-            <div className="area bottom"><div className="small-area"></div></div>
+            <div className="area top"><div className="small-area"></div><div className="penalty-spot"></div><div className="area-arc"></div></div>
+            <div className="area bottom"><div className="small-area"></div><div className="penalty-spot"></div><div className="area-arc"></div></div>
           </div>
           
           {FORMATIONS[formationKey].map(slot => {
@@ -234,13 +236,13 @@ export default function TigreFCEscalar({ jogoId = 3 }) {
                 className={`spec-btn ${specialMode === 'captain' ? 'active' : ''} ${captain ? 'done' : ''} ${!captain && lineupCompleta ? 'glow-active' : ''}`} 
                 onClick={() => { setSpecialMode('captain'); setSelectedSlot(null); setSelectedReserveIndex(null); }}
               >
-                {captain ? "✅ CAPITÃO OK" : "ESCOLHER CAPITÃO"}
+                {captain ? "✅ CAPITÃO" : "CAPITÃO"}
               </button>
               <button 
                 className={`spec-btn ${specialMode === 'hero' ? 'active' : ''} ${hero ? 'done' : ''} ${!hero && lineupCompleta ? 'glow-active' : ''}`} 
                 onClick={() => { setSpecialMode('hero'); setSelectedSlot(null); setSelectedReserveIndex(null); }}
               >
-                {hero ? "✅ HERÓI OK" : "ESCOLHER HERÓI"}
+                {hero ? "✅ HERÓI" : "HERÓI"}
               </button>
             </div>
             <div className="filters">
@@ -262,13 +264,13 @@ export default function TigreFCEscalar({ jogoId = 3 }) {
         </div>
         
         <div className="dock">
-          <button className="next-btn" disabled={!isComplete}>PRÓXIMO PASSO ➜</button>
+          <button className="next-btn" disabled={!isComplete}>CONFIRMAR ESCALAÇÃO ➜</button>
         </div>
       </div>
 
       <style jsx global>{`
         body { background: #000; margin: 0; font-family: 'Inter', sans-serif; color: #fff; }
-        .header { background: #F5C400; color: #000; text-align: center; padding: 15px; font-weight: 900; font-size: 20px; position: sticky; top: 0; z-index: 100; }
+        .header { background: #F5C400; color: #000; text-align: center; padding: 15px; font-weight: 900; font-size: 20px; position: sticky; top: 0; z-index: 100; text-transform: uppercase; font-style: italic; }
         .content { display: flex; flex-direction: column; align-items: center; padding: 10px; max-width: 500px; margin: 0 auto; width: 100%; }
         
         /* Formação */
@@ -276,18 +278,40 @@ export default function TigreFCEscalar({ jogoId = 3 }) {
         .formation-selector button { flex: 1; padding: 8px; border: none; background: transparent; color: #555; font-weight: 800; font-size: 10px; border-radius: 6px; }
         .formation-selector button.active { background: #F5C400; color: #000; }
 
-        /* Campo */
-        .field { position: relative; background: #0d2b0d; border: 2px solid #1a4a1a; border-radius: 8px; overflow: hidden; }
-        .pitch-markings { position: absolute; inset: 0; pointer-events: none; }
-        .center-line { position: absolute; top: 50%; width: 100%; height: 2px; background: rgba(255,255,255,0.1); }
-        .center-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.1); border-radius: 50%; }
-        .area { position: absolute; left: 50%; transform: translateX(-50%); width: 160px; height: 70px; border: 2px solid rgba(255,255,255,0.1); }
-        .area.top { top: -2px; border-radius: 0 0 40px 40px; }
-        .area.bottom { bottom: -2px; border-radius: 40px 40px 0 0; }
-        .slot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; z-index: 20; }
-        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); }
-        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.1); }
-        .plus { color: rgba(255,255,255,0.2); font-size: 20px; font-weight: 300; }
+        /* Estilização do Campo Jorjão */
+        .field { position: relative; background: #1a4a1a; border: 3px solid #333; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* Gramado Quadriculado (Checkerboard) */
+        .grass-pattern {
+          position: absolute;
+          inset: 0;
+          background-color: #2d5a27;
+          background-image: 
+            linear-gradient(90deg, rgba(255,255,255,0.03) 50%, transparent 50%),
+            linear-gradient(rgba(255,255,255,0.03) 50%, transparent 50%);
+          background-size: 20% 10%; /* Cria o aspecto de faixas horizontais e blocos */
+        }
+
+        .pitch-markings { position: absolute; inset: 0; pointer-events: none; border: 2px solid rgba(255,255,255,0.2); margin: 5px; }
+        .center-line { position: absolute; top: 50%; width: 100%; height: 2px; background: rgba(255,255,255,0.2); }
+        .center-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; }
+        
+        .area { position: absolute; left: 50%; transform: translateX(-50%); width: 50%; height: 18%; border: 2px solid rgba(255,255,255,0.2); }
+        .area.top { top: 0; border-top: none; }
+        .area.bottom { bottom: 0; border-bottom: none; }
+        
+        .small-area { position: absolute; left: 50%; transform: translateX(-50%); width: 40%; height: 35%; border: 2px solid rgba(255,255,255,0.15); }
+        .area.top .small-area { top: 0; border-top: none; }
+        .area.bottom .small-area { bottom: 0; border-bottom: none; }
+        
+        .penalty-spot { position: absolute; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: rgba(255,255,255,0.4); border-radius: 50%; }
+        .area.top .penalty-spot { bottom: 20%; }
+        .area.bottom .penalty-spot { top: 20%; }
+
+        .slot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; z-index: 20; transition: all 0.2s ease; }
+        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); backdrop-filter: blur(2px); }
+        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.2); scale: 1.1; }
+        .plus { color: rgba(255,255,255,0.4); font-size: 20px; font-weight: 300; }
 
         /* Reservas */
         .reserves-container { margin-top: 15px; background: #080808; padding: 12px; border-radius: 12px; border: 1px solid #111; }
@@ -298,20 +322,23 @@ export default function TigreFCEscalar({ jogoId = 3 }) {
 
         /* Mercado */
         .market-section { width: 100%; margin-top: 20px; background: #050505; padding-bottom: 120px; }
-        .market-sticky-header { position: sticky; top: 55px; background: #000; z-index: 80; padding: 10px 0; }
+        .market-sticky-header { position: sticky; top: 55px; background: #000; z-index: 80; padding: 10px 0; border-bottom: 1px solid #111; }
         .special-selectors { display: flex; gap: 8px; margin-bottom: 10px; }
-        .spec-btn { flex: 1; padding: 12px; border-radius: 8px; font-size: 10px; font-weight: 900; border: 1px solid #222; background: #000; color: #444; }
-        .spec-btn.active { border-color: #F5C400; color: #fff; }
-        .spec-btn.done { border-color: #1a4a1a; color: #4ade80; }
-        .filters { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; }
-        .filters button { padding: 6px 12px; border-radius: 20px; border: 1px solid #222; background: #111; color: #666; font-size: 9px; font-weight: 800; white-space: nowrap; }
+        .spec-btn { flex: 1; padding: 12px; border-radius: 8px; font-size: 10px; font-weight: 900; border: 1px solid #222; background: #111; color: #666; transition: 0.3s; }
+        .spec-btn.active { border-color: #F5C400; color: #F5C400; background: rgba(245,196,0,0.05); }
+        .spec-btn.done { border-color: #F5C400; background: #F5C400; color: #000; }
+        
+        .filters { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+        .filters::-webkit-scrollbar { display: none; }
+        .filters button { padding: 6px 14px; border-radius: 20px; border: 1px solid #222; background: #111; color: #666; font-size: 9px; font-weight: 800; white-space: nowrap; }
         .filters button.f-active { background: #fff; color: #000; border-color: #fff; }
-        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        
+        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
 
         /* Rodapé */
         .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); display: flex; justify-content: center; z-index: 150; }
-        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border-radius: 12px; font-weight: 900; border: none; font-size: 15px; }
-        .next-btn:disabled { background: #111; color: #333; }
+        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border-radius: 12px; font-weight: 900; border: none; font-size: 15px; box-shadow: 0 4px 15px rgba(245,196,0,0.2); cursor: pointer; }
+        .next-btn:disabled { background: #222; color: #444; box-shadow: none; cursor: not-allowed; }
 
         @keyframes neon-glow {
           0%, 100% { box-shadow: 0 0 5px #F5C400; transform: scale(1); }
