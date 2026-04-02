@@ -89,23 +89,12 @@ type Lineup = Record<string, Player | null>;
 type FormationKey = keyof typeof FORMATIONS;
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-function PlayerCard({
-  player, size, isSelected, isCaptain, isHero, isField
-}: {
-  player: Player; size: number; isSelected?: boolean;
-  isCaptain?: boolean; isHero?: boolean; isField?: boolean;
-}) {
+function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: any) {
   return (
     <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} style={{ width: size }}>
       <div className="card-box" style={{
         height: size * 1.35,
-        border: isCaptain
-          ? '2px solid #FFD700'
-          : isHero
-          ? '2px solid #60a5fa'
-          : isSelected
-          ? '2px solid #F5C400'
-          : '1px solid #333'
+        border: isCaptain ? '2px solid #FFD700' : isHero ? '2px solid #60a5fa' : isSelected ? '2px solid #F5C400' : '1px solid #333'
       }}>
         <div className="player-img" style={{
           width: '100%', height: '100%',
@@ -143,12 +132,7 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
     error:  { color: '#f87171', text: '✗ erro ao salvar', opacity: 1  },
   }[status];
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 5,
-      color: config.color, opacity: config.opacity,
-      fontSize: 10, fontWeight: 900, letterSpacing: 1,
-      transition: 'all 0.3s ease',
-    }}>{config.text}</div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: config.color, opacity: config.opacity, fontSize: 10, fontWeight: 900 }}>{config.text}</div>
   );
 }
 
@@ -156,22 +140,23 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
   const router = useRouter();
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
   const [mounted,   setMounted]   = useState(false);
-  const [formationKey,      setFormationKey]      = useState<FormationKey>('4-2-3-1');
-  const [lineup,            setLineup]            = useState<Lineup>({});
-  const [reserves,          setReserves]          = useState<(Player | null)[]>([null, null, null, null, null]);
-  const [captain,           setCaptain]           = useState<number | null>(null);
-  const [hero,              setHero]              = useState<number | null>(null);
-  const [selectedSlot,         setSelectedSlot]         = useState<string | null>(null);
+  const [formationKey, setFormationKey] = useState<FormationKey>('4-2-3-1');
+  const [lineup, setLineup] = useState<Lineup>({});
+  const [reserves, setReserves] = useState<(Player | null)[]>([null, null, null, null, null]);
+  const [captain, setCaptain] = useState<number | null>(null);
+  const [hero, setHero] = useState<number | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [selectedReserveIndex, setSelectedReserveIndex] = useState<number | null>(null);
-  const [specialMode,          setSpecialMode]          = useState<'captain' | 'hero' | null>(null);
-  const [filterPos,            setFilterPos]            = useState<string>('TODOS');
-  const [fieldWidth,           setFieldWidth]           = useState(360);
-  const [saveStatus,      setSaveStatus]      = useState<SaveStatus>('idle');
-  const [isLoadingData,   setIsLoadingData]   = useState(true);
-  const [confirming,      setConfirming]      = useState(false);
-  const saveTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isInitialLoad   = useRef(true);
-  const isSavingRef     = useRef(false);
+  const [specialMode, setSpecialMode] = useState<'captain' | 'hero' | null>(null);
+  const [filterPos, setFilterPos] = useState<string>('TODOS');
+  const [fieldWidth, setFieldWidth] = useState(360);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [confirming, setConfirming] = useState(false);
+  
+  const saveTimerRef = useRef<any>(null);
+  const isInitialLoad = useRef(true);
+  const isSavingRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -201,43 +186,40 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
   }, [mounted]);
 
   const carregarEscalacao = async (uid: string) => {
-    const { data: esc, error } = await supabase.from('tigre_fc_escalacoes').select('formacao, lineup, capitao_id, heroi_id, reservas').eq('usuario_id', uid).eq('jogo_id', jogoId).maybeSingle();
-    if (error || !esc) return;
-    const savedFormation = (esc.formacao as FormationKey) || '4-2-3-1';
-    if (savedFormation in FORMATIONS) setFormationKey(savedFormation);
-    if (esc.lineup && typeof esc.lineup === 'object') {
-      const restoredLineup: Lineup = {};
-      for (const [slot, val] of Object.entries(esc.lineup)) {
-        if (!val) continue;
-        const playerId = typeof val === 'object' ? Number((val as { id: number }).id) : Number(val);
-        if (!isNaN(playerId) && playerId > 0) restoredLineup[slot] = PLAYERS_MAP[playerId] ?? null;
-      }
-      setLineup(restoredLineup);
+    const { data: esc } = await supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', uid).eq('jogo_id', jogoId).maybeSingle();
+    if (!esc) return;
+    setFormationKey((esc.formacao as FormationKey) || '4-2-3-1');
+    if (esc.lineup) {
+      const restored: Lineup = {};
+      Object.entries(esc.lineup).forEach(([slot, pid]) => { restored[slot] = PLAYERS_MAP[Number(pid)] || null; });
+      setLineup(restored);
     }
-    if (esc.capitao_id) setCaptain(Number(esc.capitao_id));
-    if (esc.heroi_id)   setHero(Number(esc.heroi_id));
+    setCaptain(esc.capitao_id ? Number(esc.capitao_id) : null);
+    setHero(esc.heroi_id ? Number(esc.heroi_id) : null);
     if (Array.isArray(esc.reservas)) {
-      const restoredReserves: (Player | null)[] = Array(5).fill(null);
-      (esc.reservas as (number | null)[]).forEach((id, idx) => {
-        if (idx < 5 && id != null) restoredReserves[idx] = PLAYERS_MAP[Number(id)] ?? null;
-      });
-      setReserves(restoredReserves);
+      const res = Array(5).fill(null);
+      esc.reservas.forEach((id: any, i: number) => { if (i < 5 && id) res[i] = PLAYERS_MAP[Number(id)]; });
+      setReserves(res);
     }
   };
 
-  const executarSave = useCallback(async (uid: string, currentLineup: Lineup, currentFormation: FormationKey, currentCaptain: number | null, currentHero: number | null, currentReserves: (Player | null)[]) => {
+  const executarSave = useCallback(async (uid: string, currLineup: Lineup, currForm: FormationKey, currCap: number | null, currHero: number | null, currRes: any[]) => {
     if (isSavingRef.current) return;
     isSavingRef.current = true;
     setSaveStatus('saving');
     try {
-      const lineupParaSalvar: Record<string, number> = {};
-      for (const [slot, player] of Object.entries(currentLineup)) if (player) lineupParaSalvar[slot] = player.id;
-      const reservasParaSalvar = currentReserves.map(p => p?.id ?? null);
+      const lineupIds: any = {};
+      Object.entries(currLineup).forEach(([s, p]) => { if (p) lineupIds[s] = p.id; });
+      const resIds = currRes.map(p => p?.id || null);
+      
       const { error } = await supabase.from('tigre_fc_escalacoes').upsert({
-        usuario_id: uid, jogo_id: jogoId, formacao: currentFormation, lineup: lineupParaSalvar, capitao_id: currentCaptain, heroi_id: currentHero, reservas: reservasParaSalvar, atualizado_em: new Date().toISOString()
+        usuario_id: uid, jogo_id: jogoId, formacao: currForm, lineup: lineupIds,
+        capitao_id: currCap, heroi_id: currHero, reservas: resIds, atualizado_em: new Date().toISOString()
       }, { onConflict: 'usuario_id,jogo_id' });
+      
       setSaveStatus(error ? 'error' : 'saved');
-    } catch { setSaveStatus('error'); } finally {
+      return !error;
+    } catch { setSaveStatus('error'); return false; } finally {
       isSavingRef.current = false;
       setTimeout(() => setSaveStatus('idle'), 2000);
     }
@@ -246,37 +228,45 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
   useEffect(() => {
     if (isInitialLoad.current || !usuarioId) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => { executarSave(usuarioId, lineup, formationKey, captain, hero, reserves); }, 800);
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+    saveTimerRef.current = setTimeout(() => { 
+      executarSave(usuarioId, lineup, formationKey, captain, hero, reserves); 
+    }, 800);
   }, [lineup, reserves, captain, hero, formationKey, usuarioId, executarSave]);
 
   const confirmarEscalacao = async () => {
     if (!isComplete || !usuarioId || confirming) return;
     setConfirming(true);
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    await executarSave(usuarioId, lineup, formationKey, captain, hero, reserves);
-    router.push(`/tigre-fc/palpite/${jogoId}`);
-  };
+    
+    // Salva uma última vez antes de ir
+    const ok = await executarSave(usuarioId, lineup, formationKey, captain, hero, reserves);
+    
+    if (ok) {
+      // Verificamos se o palpite existe antes de navegar para evitar 404
+      const { data: palpite } = await supabase
+        .from('tigre_fc_palpites')
+        .select('id')
+        .eq('usuario_id', usuarioId)
+        .eq('jogo_id', jogoId)
+        .maybeSingle();
 
-  const currentTitulares  = Object.values(lineup).filter(Boolean) as Player[];
-  const currentReservesFilled = reserves.filter(Boolean) as Player[];
-  const occupiedIds       = [...currentTitulares.map(p => p.id), ...currentReservesFilled.map(p => p.id)];
-  const lineupCompleta    = currentTitulares.length === 11;
-  const isComplete        = lineupCompleta && captain !== null && hero !== null;
-
-  const handlePlayerClick = (p: Player) => {
-    if (specialMode === 'captain') { setCaptain(p.id); setSpecialMode(null); }
-    else if (specialMode === 'hero') { setHero(p.id); setSpecialMode(null); }
-    else if (selectedSlot !== null) { setLineup(prev => ({ ...prev, [selectedSlot]: p })); setSelectedSlot(null); }
-    else if (selectedReserveIndex !== null) {
-      const newReserves = [...reserves];
-      newReserves[selectedReserveIndex] = p;
-      setReserves(newReserves);
-      setSelectedReserveIndex(null);
+      if (palpite) {
+        // Se o palpite existe, vai para a tela de palpite que permite compartilhar
+        router.push(`/tigre-fc/palpite/${jogoId}`);
+      } else {
+        // Se NÃO tem palpite ainda, manda para a tela de criar palpite
+        // Substitua pela sua rota real de criar palpite se for diferente
+        router.push(`/tigre-fc/fazer-palpite/${jogoId}`);
+      }
+    } else {
+      setConfirming(false);
     }
   };
 
-  if (!mounted) return <div style={{ minHeight: '100vh', background: '#000' }} />;
+  const currentTitulares = Object.values(lineup).filter(Boolean) as Player[];
+  const occupiedIds = [...currentTitulares.map(p => p.id), ...reserves.filter(p => p).map(p => p!.id)];
+  const isComplete = currentTitulares.length === 11 && captain !== null && hero !== null;
+
+  if (!mounted) return <div style={{ background: '#000', minHeight: '100vh' }} />;
 
   return (
     <main className="container">
@@ -286,146 +276,113 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
       </header>
 
       {isLoadingData ? (
-        <div className="loader-container">
-          <div className="soccer-icon">⚽</div>
-          <div className="loader-text">CARREGANDO SEU TIME...</div>
-        </div>
+        <div className="loader">⚽ CARREGANDO...</div>
       ) : (
         <div className="content">
           <div className="formation-selector">
-            {(Object.keys(FORMATIONS) as FormationKey[]).map(f => (
-              <button key={f} className={formationKey === f ? 'active' : ''} onClick={() => { if (formationKey === f) return; setFormationKey(f); setLineup({}); setCaptain(null); setHero(null); }}>{f}</button>
+            {Object.keys(FORMATIONS).map((f: any) => (
+              <button key={f} className={formationKey === f ? 'active' : ''} onClick={() => setFormationKey(f)}>{f}</button>
             ))}
           </div>
 
           <div className="field" style={{ width: fieldWidth, height: fieldWidth * 1.35 }}>
-            <div className="grass-pattern" />
-            <div className="pitch-markings">
-              <div className="center-line" />
-              <div className="center-circle" />
-              <div className="area top"><div className="small-area" /></div>
-              <div className="area bottom"><div className="small-area" /></div>
+            <div className="grass" />
+            
+            {/* Slot do Técnico Enderson Moreira */}
+            <div className="coach-area" style={{ position: 'absolute', left: '4%', top: '45%' }}>
+              <PlayerCard player={PLAYERS.find(p => p.id === 99)} size={fieldWidth * 0.14} />
+              <div className="label">TÉCNICO</div>
             </div>
 
-            {/* Técnico Enderson Moreira fixo no banco/lateral */}
-            <div className="coach-slot" style={{ left: '5%', top: '50%' }}>
-              <PlayerCard player={PLAYERS.find(p => p.id === 99)!} size={fieldWidth * 0.14} />
-              <div className="coach-label">TÉCNICO</div>
-            </div>
-
-            {FORMATIONS[formationKey].map(slot => {
+            {FORMATIONS[formationKey].map((slot: any) => {
               const p = lineup[slot.id];
               const isSel = selectedSlot === slot.id;
               return (
-                <div key={slot.id} className="slot" onClick={() => { setSelectedSlot(prev => prev === slot.id ? null : slot.id); setSelectedReserveIndex(null); setSpecialMode(null); }} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
-                  {p ? <PlayerCard player={p} size={fieldWidth * 0.16} isSelected={isSel} isCaptain={captain === p.id} isHero={hero === p.id} isField /> : <div className={`dot ${isSel ? 'active' : ''}`} style={{ width: fieldWidth * 0.11, height: fieldWidth * 0.11 }}><span className="plus">+</span></div>}
+                <div key={slot.id} className="slot" onClick={() => { setSelectedSlot(slot.id); setSelectedReserveIndex(null); setSpecialMode(null); }} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
+                  {p ? <PlayerCard player={p} size={fieldWidth * 0.16} isSelected={isSel} isCaptain={captain === p.id} isHero={hero === p.id} isField /> : <div className={`dot ${isSel ? 'active' : ''}`}>+</div>}
                 </div>
               );
             })}
           </div>
 
-          <div className="reserves-container" style={{ width: fieldWidth }}>
-            <div className="reserves-header">BANCO DE RESERVAS</div>
-            <div className="reserves-row">
-              {reserves.map((p, idx) => {
-                const isSel = selectedReserveIndex === idx;
-                return (
-                  <div key={idx} className="reserve-slot" onClick={() => { setSelectedReserveIndex(prev => prev === idx ? null : idx); setSelectedSlot(null); setSpecialMode(null); }}>
-                    {p ? <PlayerCard player={p} size={fieldWidth * 0.15} isSelected={isSel} /> : <div className={`dot-reserve ${isSel ? 'active' : ''}`}>+</div>}
-                  </div>
-                );
-              })}
+          {/* Banco de Reservas */}
+          <div className="reserves" style={{ width: fieldWidth }}>
+            <div className="res-title">BANCO DE RESERVAS</div>
+            <div className="res-row">
+              {reserves.map((p, i) => (
+                <div key={i} onClick={() => { setSelectedReserveIndex(i); setSelectedSlot(null); setSpecialMode(null); }}>
+                  {p ? <PlayerCard player={p} size={fieldWidth * 0.15} isSelected={selectedReserveIndex === i} /> : <div className="dot-res">+</div>}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="market-section">
-            <div className="market-sticky-header">
-              <div className="special-selectors">
-                <button className={['spec-btn', specialMode === 'captain' ? 'active' : '', captain ? 'done' : '', !captain && lineupCompleta ? 'glow-active' : ''].join(' ')} onClick={() => { setSpecialMode('captain'); setSelectedSlot(null); setSelectedReserveIndex(null); }}>{captain ? '✅ CAPITÃO' : '👑 CAPITÃO'}</button>
-                <button className={['spec-btn', specialMode === 'hero' ? 'active' : '', hero ? 'done' : '', !hero && lineupCompleta ? 'glow-active' : ''].join(' ')} onClick={() => { setSpecialMode('hero'); setSelectedSlot(null); setSelectedReserveIndex(null); }}>{hero ? '✅ HERÓI' : '⭐ HERÓI'}</button>
-              </div>
-              <div className="filters">
-                {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(f => (
-                  <button key={f} className={filterPos === f ? 'f-active' : ''} onClick={() => setFilterPos(f)}>{f}</button>
-                ))}
-              </div>
-            </div>
-
-            <div className="players-grid">
-              {(specialMode ? currentTitulares : PLAYERS.filter(p => !occupiedIds.includes(p.id) && p.id !== 99))
-                .filter(p => filterPos === 'TODOS' || p.pos === filterPos)
-                .map(p => (
-                  <div key={p.id} className="grid-item" onClick={() => handlePlayerClick(p)}>
-                    <PlayerCard player={p} size={(fieldWidth / 3) - 16} isCaptain={captain === p.id} isHero={hero === p.id} />
-                  </div>
-                ))}
-            </div>
+          {/* Mercado / Seleção */}
+          <div className="market">
+             <div className="sticky-nav">
+                <div className="special-btns">
+                  <button className={`s-btn ${captain ? 'done' : ''}`} onClick={() => setSpecialMode('captain')}>👑 {captain ? 'CAPITÃO OK' : 'CAPITÃO'}</button>
+                  <button className={`s-btn ${hero ? 'done' : ''}`} onClick={() => setSpecialMode('hero')}>⭐ {hero ? 'HERÓI OK' : 'HERÓI'}</button>
+                </div>
+                <div className="pos-filters">
+                  {['TODOS', 'GOL', 'ZAG', 'MEI', 'ATA'].map(f => <button key={f} onClick={() => setFilterPos(f)} className={filterPos === f ? 'active' : ''}>{f}</button>)}
+                </div>
+             </div>
+             <div className="grid">
+                {(specialMode ? currentTitulares : PLAYERS.filter(p => !occupiedIds.includes(p.id) && p.id !== 99))
+                  .filter(p => filterPos === 'TODOS' || p.pos === filterPos)
+                  .map(p => (
+                    <div key={p.id} onClick={() => {
+                      if (specialMode === 'captain') { setCaptain(p.id); setSpecialMode(null); }
+                      else if (specialMode === 'hero') { setHero(p.id); setSpecialMode(null); }
+                      else if (selectedSlot) { setLineup({...lineup, [selectedSlot]: p}); setSelectedSlot(null); }
+                      else if (selectedReserveIndex !== null) { 
+                        const r = [...reserves]; r[selectedReserveIndex] = p; setReserves(r); setSelectedReserveIndex(null); 
+                      }
+                    }}>
+                      <PlayerCard player={p} size={(fieldWidth/3)-15} />
+                    </div>
+                  ))}
+             </div>
           </div>
 
           <div className="dock">
-            <div className="progress-info">
-              <span style={{ color: lineupCompleta ? '#4ade80' : '#555' }}>{lineupCompleta ? '✓' : `${currentTitulares.length}/11`} TITULARES</span>
-              <span style={{ color: captain ? '#4ade80' : '#555' }}>{captain ? '✓' : '○'} CAPITÃO</span>
-              <span style={{ color: hero ? '#4ade80' : '#555' }}>{hero ? '✓' : '○'} HERÓI</span>
-            </div>
-            <button className="next-btn" disabled={!isComplete || confirming} onClick={confirmarEscalacao}>{confirming ? 'SALVANDO... ⏳' : 'CONFIRMAR ESCALAÇÃO ➜'}</button>
+             <button className="confirm-btn" disabled={!isComplete || confirming} onClick={confirmarEscalacao}>
+               {confirming ? 'SALVANDO...' : 'CONFIRMAR E VER PALPITE ➜'}
+             </button>
           </div>
         </div>
       )}
 
       <style jsx global>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes neon-glow { 0%, 100% { box-shadow: 0 0 5px #F5C400; transform: scale(1); } 50% { box-shadow: 0 0 15px #F5C400; transform: scale(1.02); } }
-        body { background: #000; margin: 0; font-family: 'Inter', sans-serif; color: #fff; }
-        .header { background: #F5C400; color: #000; padding: 15px 20px; font-weight: 900; font-size: 18px; font-style: italic; text-transform: uppercase; letter-spacing: 1px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; }
-        .elite { font-size: 12px; opacity: 0.6; margin-left: 8px; }
-        .loader-container { display: flex; flexDirection: column; align-items: center; justify-content: center; minHeight: calc(100vh - 56px); gap: 12px; color: #F5C400; }
-        .soccer-icon { fontSize: 28px; animation: spin 1s linear infinite; }
-        .loader-text { fontSize: 11px; fontWeight: 900; letterSpacing: 3px; opacity: 0.7; }
-        .content { display: flex; flex-direction: column; align-items: center; padding: 10px; max-width: 500px; margin: 0 auto; width: 100%; }
-        .formation-selector { display: flex; gap: 4px; margin-bottom: 12px; background: #111; padding: 4px; border-radius: 8px; width: 100%; }
-        .formation-selector button { flex: 1; padding: 8px; border: none; background: transparent; color: #555; font-weight: 800; font-size: 10px; border-radius: 6px; cursor: pointer; }
+        body { background: #000; color: #fff; margin: 0; font-family: sans-serif; }
+        .header { background: #F5C400; color: #000; padding: 15px; font-weight: 900; display: flex; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .content { display: flex; flex-direction: column; align-items: center; padding: 10px; padding-bottom: 120px; }
+        .formation-selector { display: flex; gap: 5px; width: 100%; margin-bottom: 10px; }
+        .formation-selector button { flex: 1; padding: 8px; background: #111; color: #555; border: none; border-radius: 4px; font-weight: 900; }
         .formation-selector button.active { background: #F5C400; color: #000; }
-        .field { position: relative; background: #1a4a1a; border: 3px solid #333; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .grass-pattern { position: absolute; inset: 0; background-color: #2d5a27; background-image: linear-gradient(90deg, rgba(255,255,255,0.03) 50%, transparent 50%), linear-gradient(rgba(255,255,255,0.03) 50%, transparent 50%); background-size: 20% 10%; }
-        .pitch-markings { position: absolute; inset: 0; pointer-events: none; border: 2px solid rgba(255,255,255,0.2); margin: 5px; }
-        .center-line { position: absolute; top: 50%; width: 100%; height: 2px; background: rgba(255,255,255,0.2); }
-        .center-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; }
-        .area { position: absolute; left: 50%; transform: translateX(-50%); width: 50%; height: 18%; border: 2px solid rgba(255,255,255,0.2); }
-        .area.top { top: 0; border-top: none; }
-        .area.bottom { bottom: 0; border-bottom: none; }
-        .small-area { position: absolute; left: 50%; transform: translateX(-50%); width: 40%; height: 35%; border: 2px solid rgba(255,255,255,0.15); }
-        .coach-slot { position: absolute; transform: translateY(-50%); z-index: 30; text-align: center; }
-        .coach-label { font-size: 7px; font-weight: 900; color: #F5C400; background: #000; padding: 1px 4px; border-radius: 2px; margin-top: 2px; }
-        .slot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; z-index: 20; transition: all 0.2s ease; }
-        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); backdrop-filter: blur(2px); transition: all 0.2s; }
-        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.2); scale: 1.1; }
-        .plus { color: rgba(255,255,255,0.4); font-size: 20px; font-weight: 300; }
-        .reserves-container { margin-top: 15px; background: #080808; padding: 12px; border-radius: 12px; border: 1px solid #111; }
-        .reserves-header { font-size: 9px; font-weight: 900; color: #444; letter-spacing: 2px; text-align: center; margin-bottom: 10px; }
-        .reserves-row { display: flex; justify-content: center; gap: 6px; }
-        .dot-reserve { width: 45px; height: 60px; background: #111; border: 1px dashed #222; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #333; font-size: 16px; transition: all 0.2s; cursor: pointer; }
-        .dot-reserve.active { border-color: #F5C400; background: #1a1a1a; color: #F5C400; }
-        .market-section { width: 100%; margin-top: 20px; background: #050505; padding-bottom: 140px; }
-        .market-sticky-header { position: sticky; top: 56px; background: #000; z-index: 80; padding: 10px 0; border-bottom: 1px solid #111; }
-        .special-selectors { display: flex; gap: 8px; margin-bottom: 10px; }
-        .spec-btn { flex: 1; padding: 12px; border-radius: 8px; font-size: 10px; font-weight: 900; border: 1px solid #222; background: #111; color: #666; transition: 0.3s; cursor: pointer; }
-        .spec-btn.active { border-color: #F5C400; color: #F5C400; background: rgba(245,196,0,0.05); }
-        .spec-btn.done { border-color: #F5C400; background: #F5C400; color: #000; }
-        .glow-active { animation: neon-glow 1.5s infinite; border-color: #F5C400 !important; color: #fff !important; }
-        .filters { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
-        .filters::-webkit-scrollbar { display: none; }
-        .filters button { padding: 6px 14px; border-radius: 20px; border: 1px solid #222; background: #111; color: #666; font-size: 9px; font-weight: 800; white-space: nowrap; cursor: pointer; }
-        .filters button.f-active { background: #fff; color: #000; border-color: #fff; }
-        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
-        .grid-item { cursor: pointer; }
-        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 14px 20px 20px; background: linear-gradient(transparent, #000 40%); display: flex; flex-direction: column; align-items: center; z-index: 150; }
-        .progress-info { display: flex; justify-content: center; gap: 12px; marginBottom: 10px; fontSize: 10px; fontWeight: 900; letterSpacing: 1px; }
-        .next-btn { width: 100%; max-width: 440px; padding: 18px; background: #F5C400; color: #000; border-radius: 12px; font-weight: 900; border: none; font-size: 15px; letter-spacing: 1px; box-shadow: 0 4px 20px rgba(245,196,0,0.25); cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
-        .next-btn:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245,196,0,0.35); }
-        .next-btn:not(:disabled):active { transform: scale(0.97); }
-        .next-btn:disabled { background: #1a1a1a; color: #444; box-shadow: none; cursor: not-allowed; }
-        ::-webkit-scrollbar { width: 0; }
+        .field { background: #1a4a1a; position: relative; border-radius: 8px; border: 2px solid #333; overflow: hidden; }
+        .grass { position: absolute; inset: 0; background: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 20px 20px; }
+        .slot { position: absolute; transform: translate(-50%, -50%); z-index: 20; }
+        .dot { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #444; display: flex; align-items: center; justify-content: center; color: #444; }
+        .dot.active { border-color: #F5C400; color: #F5C400; }
+        .label { font-size: 8px; font-weight: 900; color: #F5C400; text-align: center; margin-top: 2px; }
+        .reserves { margin-top: 15px; background: #080808; padding: 10px; border-radius: 8px; }
+        .res-title { font-size: 9px; color: #444; text-align: center; margin-bottom: 8px; font-weight: 900; }
+        .res-row { display: flex; justify-content: center; gap: 8px; }
+        .dot-res { width: 40px; height: 55px; background: #111; border: 1px dashed #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #333; }
+        .market { width: 100%; margin-top: 20px; }
+        .sticky-nav { position: sticky; top: 50px; background: #000; z-index: 50; padding: 10px 0; }
+        .special-btns { display: flex; gap: 8px; margin-bottom: 10px; }
+        .s-btn { flex: 1; padding: 10px; background: #111; border: 1px solid #222; color: #666; font-weight: 900; border-radius: 6px; }
+        .s-btn.done { background: #F5C400; color: #000; }
+        .pos-filters { display: flex; gap: 5px; overflow-x: auto; }
+        .pos-filters button { padding: 5px 12px; background: #111; border: none; border-radius: 15px; color: #555; font-size: 10px; font-weight: 900; }
+        .pos-filters button.active { background: #fff; color: #000; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 30%); z-index: 100; display: flex; justify-content: center; }
+        .confirm-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; border: none; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; }
+        .confirm-btn:disabled { background: #222; color: #444; }
       `}</style>
     </main>
   );
