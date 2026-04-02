@@ -72,10 +72,18 @@ type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 
 function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { player: Player, size: number, isSelected?: boolean, isCaptain?: boolean, isHero?: boolean, isField?: boolean }) {
+  // Lógica solicitada: Esquerda no mercado, Direita no campo
+  const bgPos = isField ? 'right' : 'left';
+
   return (
     <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} style={{ width: size }}>
       <div className="card-box" style={{ height: size * 1.35, border: isSelected ? '3px solid #F5C400' : '1px solid #333' }}>
-        <img src={player.foto} alt={player.short} className="player-img" />
+        <div style={{
+          width: '100%', height: '100%',
+          backgroundImage: `url(${player.foto})`,
+          backgroundSize: 'cover',
+          backgroundPosition: `${bgPos} top`
+        }} />
         {isCaptain && <div className="badge cap">C</div>}
         {isHero && <div className="badge star">⭐</div>}
         <div className="card-info">
@@ -84,16 +92,15 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
         </div>
       </div>
       <style jsx>{`
-        .card-wrapper { position: relative; transition: transform 0.2s; flex-shrink: 0; }
-        .selected { transform: scale(1.05); z-index: 10; }
+        .card-wrapper { position: relative; transition: transform 0.2s; flex-shrink: 0; margin: 0 auto; }
+        .selected { transform: scale(1.08); z-index: 10; }
         .card-box { background: #111; border-radius: 6px; overflow: hidden; position: relative; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .player-img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
-        .badge { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; z-index: 5; border: 1px solid #000; }
+        .badge { position: absolute; top: 4px; right: 4px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; z-index: 5; border: 1px solid #000; }
         .cap { background: #F5C400; color: #000; }
         .star { background: #fff; color: #000; }
-        .card-info { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.85); text-align: center; padding: 2px 0; border-top: 1px solid rgba(245,196,0,0.4); }
-        .pos { color: #F5C400; font-size: 8px; font-weight: 900; }
-        .name { color: #fff; font-size: 10px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+        .card-info { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); text-align: center; padding: 3px 0; border-top: 1px solid rgba(245,196,0,0.4); }
+        .pos { color: #F5C400; font-size: 8px; font-weight: 900; line-height: 1; }
+        .name { color: #fff; font-size: 10px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px; }
       `}</style>
     </div>
   );
@@ -119,11 +126,13 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
   }, []);
 
   const handleSlotClick = (slotId: string) => {
+    // Se clicar no slot que já está selecionado, desseleciona
     if (selectedSlot === slotId) {
       setSelectedSlot(null);
-    } else {
-      setSelectedSlot(slotId);
+      return;
     }
+    // Se o slot já tiver jogador, permite trocar ou selecionar para mover
+    setSelectedSlot(slotId);
   };
 
   const selectFromMarket = (player: Player) => {
@@ -144,8 +153,8 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
 
       {step === 'escalar' && (
         <div className="content">
-          <div className="alert">
-            {selectedSlot ? "⚡ TOQUE NO JOGADOR ABAIXO PARA ESCALAR" : "👉 TOQUE EM UM CÍRCULO (+) NO CAMPO"}
+          <div className={`alert ${selectedSlot ? 'highlight' : ''}`}>
+            {selectedSlot ? "⚡ SELECIONE O JOGADOR NA LISTA ABAIXO" : "👉 TOQUE EM UM CÍRCULO (+) NO CAMPO"}
           </div>
 
           <div className="field" style={{ width: fieldWidth, height: fieldWidth * 1.4 }}>
@@ -153,31 +162,35 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
               const p = lineup[slot.id];
               const isSel = selectedSlot === slot.id;
               return (
-                <div key={slot.id} className="slot" onClick={() => handleSlotClick(slot.id)} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
+                <div key={slot.id} className="slot" onClick={() => handleSlotClick(slot.id)} style={{ left: `${slot.x}%`, top: `${slot.y}%`, zIndex: isSel ? 50 : 10 }}>
                   {p ? (
                     <PlayerCard player={p} size={fieldWidth * 0.17} isSelected={isSel} isField />
                   ) : (
-                    <div className={`dot ${isSel ? 'active' : ''}`} style={{ width: fieldWidth * 0.12, height: fieldWidth * 0.12 }}>+</div>
+                    <div className={`dot ${isSel ? 'active' : ''}`} style={{ width: fieldWidth * 0.12, height: fieldWidth * 0.12 }}>
+                      <span className="plus">+</span>
+                    </div>
                   )}
                 </div>
               );
             })}
           </div>
 
-          <div className="market-box">
-            <div className="market-header">MERCADO ELITE (JOGO {jogoId})</div>
-            <div className="filters">
-              {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(f => (
-                <button key={f} className={filterPos === f ? 'f-active' : ''} onClick={() => setFilterPos(f)}>{f}</button>
-              ))}
+          <div className="market-section">
+            <div className="market-sticky-header">
+              <div className="market-title">MERCADO DE ATLETAS</div>
+              <div className="filters">
+                {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(f => (
+                  <button key={f} className={filterPos === f ? 'f-active' : ''} onClick={() => setFilterPos(f)}>{f}</button>
+                ))}
+              </div>
             </div>
-            {/* CORREÇÃO DO LAYOUT: Overflow horizontal para não cortar fotos */}
-            <div className="market-scroll">
+
+            <div className="players-grid">
               {PLAYERS.filter(p => !usedIds.includes(p.id))
                       .filter(p => filterPos === 'TODOS' || p.pos === filterPos)
                       .map(p => (
-                <div key={p.id} onClick={() => selectFromMarket(p)} style={{ opacity: selectedSlot ? 1 : 0.4 }}>
-                  <PlayerCard player={p} size={85} />
+                <div key={p.id} className="grid-item" onClick={() => selectFromMarket(p)} style={{ opacity: selectedSlot ? 1 : 0.4 }}>
+                  <PlayerCard player={p} size={(fieldWidth / 3) - 16} />
                 </div>
               ))}
             </div>
@@ -185,46 +198,73 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
 
           <div className="dock">
             <button className="next-btn" disabled={!isComplete} onClick={() => setStep('especiais')}>
-              {isComplete ? "DEFINIR LÍDERES ➜" : `FALTAM ${11 - usedIds.length} JOGADORES`}
+              {isComplete ? "DEFINIR LÍDERES ➜" : `ESCALADOS: ${usedIds.length}/11`}
             </button>
           </div>
         </div>
       )}
 
-      {/* OS PRÓXIMOS PASSOS SEGUEM A LÓGICA DE CAPITÃO, PLACAR E COMPARTILHAR */}
-      {/* ... (especiais, palpite, compartilhar) ... */}
+      {/* OS PRÓXIMOS PASSOS: ESPECIAIS, PALPITE, COMPARTILHAR */}
+      {step === 'especiais' && (
+        <div className="content">
+           <div className="alert highlight">🏆 QUEM SÃO OS LÍDERES DO TIME?</div>
+           <div className="especiais-grid">
+              {Object.values(lineup).map(p => p && (
+                <div key={p.id} className="especial-row">
+                   <PlayerCard player={p} size={70} isCaptain={captain === p.id} isHero={hero === p.id} isField />
+                   <div className="especial-actions">
+                      <button className={captain === p.id ? 'active cap' : ''} onClick={() => setCaptain(p.id)}>CAPITÃO</button>
+                      <button className={hero === p.id ? 'active star' : ''} onClick={() => setHero(p.id)}>HERÓI</button>
+                   </div>
+                </div>
+              ))}
+           </div>
+           <div className="dock">
+            <button className="next-btn" disabled={!captain || !hero} onClick={() => setStep('palpite')}>DEFINIR PLACAR ➜</button>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
-        body { background: #000; margin: 0; font-family: sans-serif; overflow-x: hidden; }
-        .container { min-height: 100vh; color: #fff; padding-bottom: 100px; }
-        .header { background: #F5C400; color: #000; text-align: center; padding: 15px; font-weight: 900; font-size: 20px; position: sticky; top: 0; z-index: 100; }
-        .header span { opacity: 0.7; font-weight: 400; }
-        .content { display: flex; flex-direction: column; align-items: center; padding: 10px; }
-        .alert { background: #1a1a1a; color: #F5C400; width: 100%; text-align: center; padding: 12px; font-weight: 800; font-size: 11px; border-radius: 4px; margin-bottom: 10px; border: 1px solid #333; }
-        .field { position: relative; background: #133313; border: 3px solid #1a4a1a; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 60px #000; }
-        .slot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; }
-        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); color: #fff; font-weight: bold; }
-        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.2); box-shadow: 0 0 15px #F5C400; }
+        body { background: #000; margin: 0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .container { min-height: 100vh; color: #fff; padding-bottom: 120px; }
+        .header { background: #F5C400; color: #000; text-align: center; padding: 15px; font-weight: 1000; font-size: 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .header span { opacity: 0.6; font-weight: 400; margin-left: 5px; }
         
-        .market-box { width: 100%; margin-top: 15px; }
-        .market-header { color: #F5C400; font-size: 12px; font-weight: 900; text-align: center; margin-bottom: 10px; }
-        .filters { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 10px; justify-content: center; }
-        .filters button { background: #222; border: 1px solid #333; color: #888; padding: 6px 12px; border-radius: 4px; font-size: 10px; font-weight: 800; }
-        .filters button.f-active { background: #F5C400; color: #000; }
+        .content { display: flex; flex-direction: column; align-items: center; padding: 10px; width: 100%; max-width: 500px; margin: 0 auto; }
         
-        /* O SEGREDO DO LAYOUT ESTÁ AQUI */
-        .market-scroll { 
-          display: flex; 
-          gap: 12px; 
-          overflow-x: auto; 
-          padding: 10px 16px 20px 16px; 
-          scrollbar-width: none; /* Firefox */
-        }
-        .market-scroll::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .alert { background: #111; color: #666; width: 100%; text-align: center; padding: 12px; font-weight: 800; font-size: 11px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #222; transition: 0.3s; }
+        .alert.highlight { background: #F5C400; color: #000; border-color: #F5C400; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 50%); z-index: 200; }
-        .next-btn { width: 100%; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 8px; font-weight: 900; font-size: 16px; box-shadow: 0 4px 20px rgba(245,196,0,0.3); }
-        .next-btn:disabled { background: #333; color: #666; box-shadow: none; }
+        .field { position: relative; background: #133313; border: 3px solid #1a4a1a; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 80px #000; margin-bottom: 20px; }
+        .slot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; }
+        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); color: #fff; }
+        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.15); box-shadow: 0 0 15px rgba(245,196,0,0.4); }
+        .plus { font-size: 20px; opacity: 0.3; }
+
+        .market-section { width: 100%; background: #080808; border-radius: 12px 12px 0 0; padding-top: 10px; }
+        .market-sticky-header { position: sticky; top: 55px; background: #080808; z-index: 80; padding: 10px 0; }
+        .market-title { color: #F5C400; font-size: 11px; font-weight: 900; text-align: center; letter-spacing: 1px; margin-bottom: 10px; }
+        
+        .filters { display: flex; gap: 6px; overflow-x: auto; padding: 0 10px 10px; scrollbar-width: none; }
+        .filters::-webkit-scrollbar { display: none; }
+        .filters button { background: #151515; border: 1px solid #222; color: #666; padding: 8px 16px; border-radius: 20px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+        .filters button.f-active { background: #F5C400; color: #000; border-color: #F5C400; }
+
+        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+        .grid-item { display: flex; justify-content: center; }
+
+        .especiais-grid { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+        .especial-row { background: #111; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 15px; border: 1px solid #222; }
+        .especial-actions { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .especial-actions button { padding: 10px; border-radius: 6px; border: 1px solid #333; background: #1a1a1a; color: #fff; font-weight: 900; font-size: 10px; }
+        .especial-actions button.active.cap { background: #F5C400; color: #000; border-color: #F5C400; }
+        .especial-actions button.active.star { background: #fff; color: #000; border-color: #fff; }
+
+        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); z-index: 200; display: flex; justify-content: center; }
+        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 12px; font-weight: 1000; font-size: 16px; box-shadow: 0 10px 30px rgba(245,196,0,0.3); transition: 0.3s; }
+        .next-btn:disabled { background: #222; color: #444; box-shadow: none; }
       `}</style>
     </main>
   );
