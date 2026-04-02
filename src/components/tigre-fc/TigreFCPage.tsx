@@ -1,16 +1,17 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
-import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa'; 
+import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SB_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Interfaces para melhor manutenção
+// Interfaces refinadas
 interface Time {
   nome: string;
   escudo_url: string;
@@ -40,17 +41,19 @@ export default function TigreFCPage() {
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
   const topRef = useRef<HTMLDivElement>(null);
 
+  // Inicialização básica
   useEffect(() => {
     setMounted(true);
     window.scrollTo(0, 0);
   }, []);
 
+  // Busca de Dados (Supabase e API)
   useEffect(() => {
     if (!mounted) return;
     const sb = createClient(SB_URL, SB_KEY);
 
     async function init() {
-      // Busca sessão do usuário de forma segura
+      // 1. Busca Sessão do Usuário
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user) {
         const { data: u } = await sb.from('tigre_fc_usuarios')
@@ -60,6 +63,7 @@ export default function TigreFCPage() {
         if (u) setMeuId(u.id);
       }
 
+      // 2. Busca Jogo e Ranking em paralelo
       try {
         const [resJogo, { data: rankData }] = await Promise.all([
           fetch('/api/proximo-jogo').then(r => r.json()),
@@ -78,18 +82,20 @@ export default function TigreFCPage() {
     init();
   }, [mounted]);
 
-  // Timer otimizado
+  // Timer de Bloqueio (90 min antes do jogo)
   useEffect(() => {
     if (!jogo) return;
     
     const calculateTime = () => {
+      // Ajuste para garantir parsing correto da data
       const gameTime = new Date(jogo.data_hora.replace(' ', 'T')).getTime();
       const lockTime = gameTime - (90 * 60 * 1000); 
-      const diff = lockTime - Date.now();
+      const now = Date.now();
+      const diff = lockTime - now;
       
       if (diff <= 0) {
         setTimeLeft({ h: '00', m: '00', s: '00' });
-        return false;
+        return;
       }
       
       setTimeLeft({
@@ -97,11 +103,10 @@ export default function TigreFCPage() {
         m: String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0'),
         s: String(Math.floor((diff % 60000) / 1000)).padStart(2, '0')
       });
-      return true;
     };
 
-    calculateTime();
     const timer = setInterval(calculateTime, 1000);
+    calculateTime(); // Chamada inicial
     return () => clearInterval(timer);
   }, [jogo]);
 
@@ -110,7 +115,7 @@ export default function TigreFCPage() {
   return (
     <main className="min-h-screen bg-[#050505] text-white pb-40 font-sans selection:bg-yellow-500 overflow-x-hidden">
       
-      {/* 🏆 HEADER ULTRA-PREMIUM */}
+      {/* 🏆 HEADER PREMIUM */}
       <header ref={topRef} className="bg-[#F5C400] pt-20 pb-32 px-6 border-b-[12px] border-black text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/20" />
@@ -183,6 +188,7 @@ export default function TigreFCPage() {
                 </div>
               </div>
 
+              {/* Link para Escalação: O ID é passado na rota */}
               <Link href={`/tigre-fc/escalar/${jogo.id}`} className="relative flex items-center justify-center bg-[#F5C400] text-black py-7 rounded-[35px] font-[1000] uppercase italic text-sm shadow-[0_20px_40px_rgba(245,196,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all overflow-hidden group">
                 <span className="relative z-10 tracking-[0.2em]">CONVOCAR TITULARES →</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 skew-x-12" />
@@ -191,7 +197,6 @@ export default function TigreFCPage() {
           </section>
         )}
 
-        {/* 🌟 DESTAQUES (CARTA DO FIFA) */}
         <DestaquesFifa />
 
         {/* 🔍 RAIO-X TÁTICO */}
@@ -214,7 +219,7 @@ export default function TigreFCPage() {
           </div>
         </section>
 
-        {/* 🐯 RANKING "LÍDER DA ALCATEIA" */}
+        {/* 🐯 RANKING */}
         <section className="mt-32">
           <div className="flex justify-between items-end mb-10 px-6">
             <div>
@@ -279,7 +284,7 @@ export default function TigreFCPage() {
           </div>
         </section>
 
-        {/* 💬 CHAT VESTIÁRIO */}
+        {/* 💬 CHAT */}
         <section className="mt-32">
           <div className="flex items-center justify-between mb-8 px-6">
             <div>
