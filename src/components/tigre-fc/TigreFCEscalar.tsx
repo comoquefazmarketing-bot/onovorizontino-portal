@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, ReactNode } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { use } from 'react';
 
 // --- INTERFACES ---
 interface Player {
@@ -13,12 +14,12 @@ interface Player {
   foto: string;
 }
 
-// ESTA INTERFACE É A CHAVE PARA O BUILD PASSAR
-interface TigreFCEscalarProps {
-  jogoId: number;
+interface PageProps {
+  params: Promise<{
+    jogoId: string;
+  }>;
 }
 
-// --- CONFIGURAÇÃO SUPABASE ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -64,20 +65,20 @@ const PLAYERS: Player[] = [
   { id: 34, name: 'Jardiel',         short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
   { id: 35, name: 'Nicolas Careca',  short: 'N.Careca',    num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
   { id: 36, name: 'Titi Ortiz',      short: 'T.Ortiz',     num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
-  { id: 37, name: 'Diego Mathias',   short: 'D.Mathias',  num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
+  { id: 37, name: 'Diego Mathias',  short: 'D.Mathias',  num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
   { id: 38, name: 'Carlão',          short: 'Carlão',      num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
   { id: 39, name: 'Ronald Barcellos', short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
 const FORMATIONS: Record<string, any[]> = {
   '4-3-3': [
-    { id:'gk', pos:'GOL', x:50, y:90 }, { id:'rb', pos:'LAT', x:85, y:70 }, { id:'cb1', pos:'ZAG', x:62, y:75 }, { id:'cb2', pos:'ZAG', x:38, y:75 }, { id:'lb', pos:'LAT', x:15, y:70 },
+    { id:'gk', pos:'GOL', x:50, y:88 }, { id:'rb', pos:'LAT', x:82, y:68 }, { id:'cb1', pos:'ZAG', x:62, y:75 }, { id:'cb2', pos:'ZAG', x:38, y:75 }, { id:'lb', pos:'LAT', x:18, y:68 },
     { id:'cm1', pos:'MEI', x:75, y:48 }, { id:'cm2', pos:'MEI', x:50, y:52 }, { id:'cm3', pos:'MEI', x:25, y:48 },
     { id:'rw', pos:'ATA', x:80, y:20 }, { id:'st', pos:'ATA', x:50, y:12 }, { id:'lw', pos:'ATA', x:20, y:20 }
   ],
   '4-4-2': [
-    { id:'gk', pos:'GOL', x:50, y:90 }, { id:'rb', pos:'LAT', x:85, y:70 }, { id:'cb1', pos:'ZAG', x:62, y:75 }, { id:'cb2', pos:'ZAG', x:38, y:75 }, { id:'lb', pos:'LAT', x:15, y:70 },
-    { id:'rm', pos:'MEI', x:85, y:45 }, { id:'cm1', pos:'MEI', x:60, y:50 }, { id:'cm2', pos:'MEI', x:40, y:50 }, { id:'lm', pos:'MEI', x:15, y:45 },
+    { id:'gk', pos:'GOL', x:50, y:88 }, { id:'rb', pos:'LAT', x:82, y:68 }, { id:'cb1', pos:'ZAG', x:62, y:75 }, { id:'cb2', pos:'ZAG', x:38, y:75 }, { id:'lb', pos:'LAT', x:18, y:68 },
+    { id:'rm', pos:'MEI', x:82, y:45 }, { id:'cm1', pos:'MEI', x:60, y:50 }, { id:'cm2', pos:'MEI', x:40, y:50 }, { id:'lm', pos:'MEI', x:18, y:45 },
     { id:'st1', pos:'ATA', x:65, y:18 }, { id:'st2', pos:'ATA', x:35, y:18 }
   ]
 };
@@ -99,36 +100,42 @@ function PlayerCard({ player, size, isSelected, status, onClick }: any) {
       <style jsx>{`
         .card-wrapper { cursor: pointer; transition: transform 0.2s; position: relative; }
         .card-body { 
-          position: relative; width: 100%; height: 110px; background: #111; 
+          position: relative; width: 100%; height: 90px; background: #111; 
           border-radius: 6px; overflow: hidden; border: 1px solid #333;
           display: flex; flex-direction: column;
         }
         .photo-container { flex: 1; position: relative; overflow: hidden; background: #0a0a0a; }
         .photo-sprite {
-          width: 200%; height: 100%; background-size: cover;
-          background-position: left center; transition: background-position 0.1s steps(1);
+          width: 200%; height: 100%; 
+          background-size: contain; 
+          background-repeat: no-repeat;
+          background-position: left bottom; 
+          transition: background-position 0.1s steps(1);
         }
         .card-wrapper:hover .photo-sprite, .selected .photo-sprite {
           animation: player-gif 0.8s infinite steps(1);
         }
         @keyframes player-gif {
-          0%, 100% { background-position: left center; }
-          50% { background-position: right center; }
+          0%, 100% { background-position: left bottom; }
+          50% { background-position: right bottom; }
         }
-        .card-info { background: #000; padding: 2px; text-align: center; }
-        .player-num { display: block; color: #F5C400; font-size: 9px; font-weight: 900; }
-        .player-name { color: #fff; font-size: 9px; text-transform: uppercase; font-weight: 700; white-space: nowrap; overflow: hidden; }
+        .card-info { background: #000; padding: 2px; text-align: center; border-top: 1px solid #222; }
+        .player-num { display: block; color: #F5C400; font-size: 8px; font-weight: 900; }
+        .player-name { color: #fff; font-size: 8px; text-transform: uppercase; font-weight: 700; white-space: nowrap; overflow: hidden; }
         .selected .card-body { border-color: #F5C400; box-shadow: 0 0 10px rgba(245,196,0,0.4); }
         .cap { border: 2px solid #F5C400 !important; }
         .hero { border: 2px solid #00E5FF !important; }
-        .badge { position: absolute; top: -5px; right: -5px; background: #F5C400; color: #000; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .badge { position: absolute; top: -5px; right: -5px; background: #F5C400; color: #000; width: 14px; height: 14px; border-radius: 50%; font-size: 9px; font-weight: 900; display: flex; align-items: center; justify-content: center; z-index: 10; }
         .badge.hero { background: #00E5FF; }
       `}</style>
     </div>
   );
 }
 
-export default function TigreFCEscalar({ jogoId }: TigreFCEscalarProps) {
+export default function TigreFCFantasy({ params }: PageProps) {
+  const resolvedParams = use(params);
+  const jogoId = resolvedParams.jogoId;
+
   const [step, setStep] = useState<'escalar' | 'capitao' | 'heroi' | 'palpite' | 'share'>('escalar');
   const [formationKey, setFormationKey] = useState('4-3-3');
   const [lineup, setLineup] = useState<Record<string, Player | null>>({});
@@ -141,6 +148,11 @@ export default function TigreFCEscalar({ jogoId }: TigreFCEscalarProps) {
 
   const filledCount = useMemo(() => Object.values(lineup).filter(Boolean).length, [lineup]);
   const usedIds = useMemo(() => Object.values(lineup).filter(Boolean).map(p => p!.id), [lineup]);
+
+  const filteredPlayers = useMemo(() => {
+    if (filterPos === 'TODOS') return PLAYERS;
+    return PLAYERS.filter(p => p.pos === filterPos);
+  }, [filterPos]);
 
   const togglePlayer = (p: Player) => {
     const isAlreadySelected = usedIds.includes(p.id);
@@ -201,7 +213,7 @@ export default function TigreFCEscalar({ jogoId }: TigreFCEscalarProps) {
                        if(step === 'capitao') setCapitao(p.id);
                        if(step === 'heroi') setHeroi(p.id);
                    }}>
-                     <PlayerCard player={p} size={55} status={capitao === p.id ? 'cap' : heroi === p.id ? 'hero' : ''} isSelected />
+                     <PlayerCard player={p} size={45} status={capitao === p.id ? 'cap' : heroi === p.id ? 'hero' : ''} isSelected />
                    </div>
                 ) : (
                   <button className={`add-placeholder ${activeSlot === slot.id ? 'active' : ''}`} onClick={() => { setActiveSlot(slot.id); setFilterPos(slot.pos); }}>
@@ -223,13 +235,13 @@ export default function TigreFCEscalar({ jogoId }: TigreFCEscalarProps) {
                 ))}
             </div>
             <div className="group">
-                {['GOL', 'ZAG', 'LAT', 'MEI', 'ATA'].map(pos => (
+                {['TODOS', 'GOL', 'ZAG', 'LAT', 'MEI', 'ATA'].map(pos => (
                     <button key={pos} className={filterPos === pos ? 'active' : ''} onClick={() => setFilterPos(pos)}>{pos}</button>
                 ))}
             </div>
           </div>
           <div className="players-grid">
-            {PLAYERS.filter(p => p.pos === filterPos).map(p => (
+            {filteredPlayers.map(p => (
                 <PlayerCard key={p.id} player={p} size={'100%'} isSelected={usedIds.includes(p.id)} onClick={() => togglePlayer(p)} />
             ))}
           </div>
@@ -277,32 +289,56 @@ export default function TigreFCEscalar({ jogoId }: TigreFCEscalarProps) {
       </footer>
 
       <style jsx global>{`
-        .fantasy-container { background: #000; min-height: 100vh; padding-bottom: 120px; color: #fff; font-family: sans-serif; }
+        .fantasy-container { background: #000; min-height: 100vh; padding-bottom: 120px; color: #fff; font-family: sans-serif; overflow-x: hidden; }
         .game-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .game-header img { height: 25px; }
         .step-indicator { display: flex; gap: 5px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #222; }
         .dot.active { background: #F5C400; }
-        .field-viewport { perspective: 1000px; padding: 10px; margin-top: 10px; }
-        .soccer-field { position: relative; width: 100%; height: 450px; background: #1a4a1a; transform: rotateX(15deg); border-radius: 10px; border: 2px solid rgba(255,255,255,0.1); background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 20px 20px; }
-        .player-slot { position: absolute; transform: translate(-50%, -50%); transition: all 0.3s; }
-        .add-placeholder { width: 40px; height: 40px; border-radius: 50%; border: 1px dashed #F5C400; background: rgba(0,0,0,0.5); color: #F5C400; font-size: 9px; font-weight: 900; }
+        
+        .field-viewport { padding: 10px; margin-top: 10px; }
+        .soccer-field { 
+          position: relative; 
+          width: 100%; 
+          height: 380px; 
+          background: #1a4a1a; 
+          border-radius: 10px; 
+          border: 2px solid rgba(255,255,255,0.1); 
+          background-image: 
+            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+          background-size: 50% 100%;
+        }
+        
+        .player-slot { position: absolute; transform: translate(-50%, -50%); transition: all 0.3s; z-index: 5; }
+        .add-placeholder { 
+          width: 35px; height: 35px; border-radius: 50%; 
+          border: 1px dashed #F5C400; background: rgba(0,0,0,0.6); 
+          color: #F5C400; font-size: 8px; font-weight: 900; 
+        }
         .add-placeholder.active { background: #F5C400; color: #000; }
-        .market-section { padding: 20px; background: #050505; border-top: 1px solid #222; }
-        .market-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        
+        .market-section { padding: 15px; background: #0a0a0a; border-top: 1px solid #222; }
+        .market-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
         .market-controls .group { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; }
-        .market-controls button { padding: 8px 12px; background: #111; border: 1px solid #333; color: #999; border-radius: 6px; font-size: 10px; font-weight: 900; white-space: nowrap; }
+        .market-controls button { padding: 6px 12px; background: #111; border: 1px solid #333; color: #999; border-radius: 4px; font-size: 9px; font-weight: 900; white-space: nowrap; }
         .market-controls button.active { background: #F5C400; color: #000; border-color: #F5C400; }
-        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .action-footer { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(to top, #000 80%, transparent); display: flex; gap: 10px; z-index: 100; }
-        .main-button { flex: 1; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+        
+        .players-grid { 
+          display: grid; 
+          grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); 
+          gap: 10px; 
+        }
+        
+        .action-footer { position: fixed; bottom: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.9); display: flex; gap: 10px; z-index: 100; border-top: 1px solid #222; }
+        .main-button { flex: 1; padding: 15px; background: #F5C400; color: #000; border: none; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 11px; }
         .main-button:disabled { background: #222; color: #555; }
-        .back-button { padding: 0 20px; background: #111; color: #fff; border: 1px solid #333; border-radius: 12px; font-weight: 900; font-size: 10px; }
-        .palpite-box { text-align: center; padding: 40px 20px; }
-        .inputs { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px; }
-        .team-input input { width: 70px; height: 70px; background: #111; border: 2px solid #333; color: #fff; text-align: center; font-size: 32px; border-radius: 15px; font-weight: 900; }
-        .team-input input:focus { border-color: #F5C400; outline: none; }
-        .x-mark { font-weight: 900; color: #F5C400; font-size: 20px; }
+        .back-button { padding: 0 15px; background: #111; color: #fff; border: 1px solid #333; border-radius: 8px; font-weight: 900; font-size: 9px; }
+        
+        .palpite-box { text-align: center; padding: 30px 10px; }
+        .inputs { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px; }
+        .team-input input { width: 60px; height: 60px; background: #111; border: 2px solid #333; color: #fff; text-align: center; font-size: 24px; border-radius: 12px; font-weight: 900; }
+        .x-mark { font-weight: 900; color: #F5C400; font-size: 18px; }
       `}</style>
     </main>
   );
