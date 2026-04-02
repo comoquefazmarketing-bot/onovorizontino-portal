@@ -1,141 +1,143 @@
 'use client';
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// --- CONFIGURAÇÃO SUPABASE (PERSISTÊNCIA ATIVA) ---
+// --- CONFIGURAÇÃO SUPABASE ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   { auth: { persistSession: true, autoRefreshToken: true } }
 );
 
-// --- CONSTANTES DE ATIVOS (FIDELIDADE ABSOLUTA) ---
+// --- CONSTANTES DE ATIVOS ---
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 
 const PLAYERS = [
   { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
-  { id: 2,  name: 'Jordi',             short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
-  { id: 3,  name: 'João Scapin',       short: 'Scapin',      num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
-  { id: 4,  name: 'Lucas Ribeiro',     short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
-  { id: 5,  name: 'Lora',              short: 'Lora',         num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
-  { id: 6,  name: 'Castrillón',        short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
-  { id: 7,  name: 'Arthur Barbosa',    short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
-  { id: 8,  name: 'Sander',            short: 'Sander',     num: 33, pos: 'LAT', foto: BASE+'SANDER.jpg.webp' },
-  { id: 9,  name: 'Maykon Jesus',      short: 'Maykon',      num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
-  { id: 10, name: 'Dantas',            short: 'Dantas',      num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
-  { id: 11, name: 'Eduardo Brock',     short: 'E.Brock',     num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
-  { id: 12, name: 'Patrick',           short: 'Patrick',     num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
-  { id: 13, name: 'Gabriel Bahia',     short: 'G.Bahia',     num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
-  { id: 14, name: 'Carlinhos',         short: 'Carlinhos',   num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
-  { id: 15, name: 'Alemão',            short: 'Alemão',      num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
-  { id: 16, name: 'Renato Palm',       short: 'R.Palm',      num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
-  { id: 17, name: 'Alvariño',          short: 'Alvariño',    num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
-  { id: 18, name: 'Bruno Santana',     short: 'B.Santana',   num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
-  { id: 19, name: 'Luís Oyama',         short: 'Oyama',         num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
-  { id: 20, name: 'Léo Naldi',         short: 'L.Naldi',     num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
-  { id: 21, name: 'Rômulo',            short: 'Rômulo',      num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
-  { id: 22, name: 'Matheus Bianqui',  short: 'Bianqui',     num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  { id: 23, name: 'Juninho',           short: 'Juninho',     num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
-  { id: 24, name: 'Tavinho',           short: 'Tavinho',     num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
-  { id: 25, name: 'Diego Galo',         short: 'D.Galo',      num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
-  { id: 26, name: 'Marlon',            short: 'Marlon',      num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
-  { id: 27, name: 'Hector Bianchi',    short: 'Hector',      num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
-  { id: 28, name: 'Nogueira',          short: 'Nogueira',    num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
-  { id: 29, name: 'Luiz Gabriel',      short: 'L.Gabriel',   num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
-  { id: 30, name: 'Jhones Kauê',       short: 'J.Kauê',      num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
-  { id: 31, name: 'Robson',            short: 'Robson',      num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
-  { id: 32, name: 'Vinícius Paiva',    short: 'V.Paiva',     num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
-  { id: 33, name: 'Hélio Borges',      short: 'H.Borges',    num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
-  { id: 34, name: 'Jardiel',           short: 'Jardiel',     num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
-  { id: 35, name: 'Nicolas Careca',    short: 'N.Careca',    num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
-  { id: 36, name: 'Titi Ortiz',        short: 'T.Ortiz',     num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
-  { id: 37, name: 'Diego Mathias',     short: 'D.Mathias',   num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
-  { id: 38, name: 'Carlão',            short: 'Carlão',      num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
-  { id: 39, name: 'Ronald Barcellos',  short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
+  { id: 2,  name: 'Jordi',           short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
+  { id: 3,  name: 'João Scapin',     short: 'Scapin',     num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
+  { id: 4,  name: 'Lucas Ribeiro',   short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
+  { id: 5,  name: 'Lora',            short: 'Lora',       num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
+  { id: 6,  name: 'Castrillón',      short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
+  { id: 7,  name: 'Arthur Barbosa',  short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
+  { id: 8,  name: 'Sander',          short: 'Sander',     num: 33, pos: 'LAT', foto: BASE+'SANDER.jpg.webp' },
+  { id: 9,  name: 'Maykon Jesus',    short: 'Maykon',     num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
+  { id: 10, name: 'Dantas',          short: 'Dantas',     num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
+  { id: 11, name: 'Eduardo Brock',   short: 'E.Brock',    num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
+  { id: 12, name: 'Patrick',         short: 'Patrick',    num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
+  { id: 13, name: 'Gabriel Bahia',   short: 'G.Bahia',    num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
+  { id: 14, name: 'Carlinhos',       short: 'Carlinhos',  num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
+  { id: 15, name: 'Alemão',          short: 'Alemão',     num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
+  { id: 16, name: 'Renato Palm',     short: 'R.Palm',     num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
+  { id: 17, name: 'Alvariño',        short: 'Alvariño',   num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
+  { id: 18, name: 'Bruno Santana',   short: 'B.Santana',  num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
+  { id: 19, name: 'Luís Oyama',      short: 'Oyama',      num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
+  { id: 20, name: 'Léo Naldi',       short: 'L.Naldi',    num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
+  { id: 21, name: 'Rômulo',          short: 'Rômulo',     num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
+  { id: 22, name: 'Matheus Bianqui', short: 'Bianqui',    num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
+  { id: 23, name: 'Juninho',         short: 'Juninho',    num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
+  { id: 24, name: 'Tavinho',         short: 'Tavinho',    num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
+  { id: 25, name: 'Diego Galo',      short: 'D.Galo',     num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
+  { id: 26, name: 'Marlon',          short: 'Marlon',     num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
+  { id: 27, name: 'Hector Bianchi',  short: 'Hector',     num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
+  { id: 28, name: 'Nogueira',        short: 'Nogueira',   num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
+  { id: 29, name: 'Luiz Gabriel',    short: 'L.Gabriel',  num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
+  { id: 30, name: 'Jhones Kauê',     short: 'J.Kauê',     num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
+  { id: 31, name: 'Robson',          short: 'Robson',     num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
+  { id: 32, name: 'Vinícius Paiva',  short: 'V.Paiva',    num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
+  { id: 33, name: 'Hélio Borges',    short: 'H.Borges',   num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
+  { id: 34, name: 'Jardiel',         short: 'Jardiel',    num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
+  { id: 35, name: 'Nicolas Careca',  short: 'N.Careca',   num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
+  { id: 36, name: 'Titi Ortiz',      short: 'T.Ortiz',    num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
+  { id: 37, name: 'Diego Mathias',   short: 'D.Mathias',  num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
+  { id: 38, name: 'Carlão',          short: 'Carlão',     num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
+  { id: 39, name: 'Ronald Barcellos', short: 'Ronald',     num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
 const FORMATION = [
-  { id:'gk',  label:'GOL', x:50, y:90 }, { id:'rb',  label:'LAT', x:85, y:72 },
-  { id:'cb1', label:'ZAG', x:62, y:78 }, { id:'cb2', label:'ZAG', x:38, y:78 },
-  { id:'lb',  label:'LAT', x:15, y:72 }, { id:'cm1', label:'MEI', x:75, y:52 },
-  { id:'cm2', label:'MEI', x:50, y:55 }, { id:'cm3', label:'MEI', x:25, y:52 },
-  { id:'rw',  label:'ATA', x:82, y:22 }, { id:'st',  label:'ATA', x:50, y:12 },
-  { id:'lw',  label:'ATA', x:18, y:22 },
+  { id:'gk',  label:'GOL', x:50, y:92 }, 
+  { id:'rb',  label:'LAT', x:82, y:72 },
+  { id:'cb1', label:'ZAG', x:62, y:78 }, 
+  { id:'cb2', label:'ZAG', x:38, y:78 },
+  { id:'lb',  label:'LAT', x:18, y:72 }, 
+  { id:'cm1', label:'MEI', x:75, y:52 },
+  { id:'cm2', label:'MEI', x:50, y:55 }, 
+  { id:'cm3', label:'MEI', x:25, y:52 },
+  { id:'rw',  label:'ATA', x:80, y:22 }, 
+  { id:'st',  label:'ATA', x:50, y:12 },
+  { id:'lw',  label:'ATA', x:20, y:22 },
 ];
 
 const RESERVES_SLOTS = ['res1', 'res2', 'res3', 'res4', 'res5'];
 
 type Player = typeof PLAYERS[0];
 
-// --- COMPONENTE PLAYER CARD (ESTILO ULTIMATE TEAM) ---
-function PlayerCard({ player, size, isCapitao, isHeroi, isField, isSelected }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean, isField?: boolean, isSelected?: boolean }) {
-  const borderColor = isCapitao ? '#F5C400' : isHeroi ? '#00E5FF' : 'rgba(255,255,255,0.2)';
-  
+// --- COMPONENTE PLAYER CARD (PADRÃO FC 25 / ULTIMATE TEAM) ---
+function PlayerCard({ player, size, isCapitao, isHeroi, isField, isSelected, onClick }: any) {
   return (
-    <div className="card-container" style={{ width: size }}>
-      <div className={`card-body ${isCapitao ? 'gold' : isHeroi ? 'hero' : ''}`} style={{
+    <div 
+      onClick={onClick}
+      style={{ 
+        width: size, 
+        animation: 'card-entry 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+        cursor: 'pointer'
+      }}
+    >
+      <div className={`card-container ${isCapitao ? 'cap' : isHeroi ? 'hero' : ''}`} style={{
         position: 'relative', width: size, height: size * 1.38,
-        background: '#111', borderRadius: '6px', overflow: 'hidden',
-        border: `2px solid ${borderColor}`,
-        boxShadow: isCapitao ? '0 0 20px rgba(245,196,0,0.4)' : isHeroi ? '0 0 20px rgba(0,229,255,0.4)' : 'none',
-        transform: isField ? 'rotateX(-10deg)' : 'none',
-        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        background: '#1a1a1a', borderRadius: '4px', overflow: 'hidden',
+        border: `1px solid rgba(255,255,255,0.2)`,
+        boxShadow: '0 10px 20px rgba(0,0,0,0.5)',
+        transition: 'all 0.3s ease',
+        transformStyle: 'preserve-3d'
       }}>
-        {/* Efeito Shine */}
-        <div className="shine-effect" />
-        
-        {/* Foto com Offset Dinâmico */}
+        {/* Camada de Foto */}
         <div style={{
           width: '100%', height: '100%', 
           backgroundImage: `url(${player.foto})`,
-          backgroundSize: '200% 100%',
-          backgroundPosition: isSelected || isField ? 'right center' : 'left center',
-          transition: 'background-position 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
-          maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)'
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)'
         }} />
 
-        {/* Badge de Posição/Número */}
-        <div style={{ position: 'absolute', top: 4, left: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: size*0.15, fontWeight: 900, color: borderColor }}>{player.num}</span>
-            <span style={{ fontSize: size*0.08, color: '#fff', opacity: 0.7 }}>{player.pos}</span>
+        {/* Overlay de Informações */}
+        <div style={{ 
+            position: 'absolute', bottom: 0, width: '100%', 
+            background: 'linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)', 
+            padding: '8px 0', textAlign: 'center' 
+        }}>
+          <div style={{ color: '#F5C400', fontSize: size * 0.1, fontWeight: 900, letterSpacing: -0.5 }}>{player.num}</div>
+          <div style={{ color: '#fff', fontSize: size * 0.14, fontWeight: 800, textTransform: 'uppercase' }}>{player.short}</div>
         </div>
 
-        {/* Nome do Jogador */}
-        <div style={{ 
-          position: 'absolute', bottom: 0, width: '100%', 
-          background: 'rgba(0,0,0,0.85)', padding: '5px 0', 
-          textAlign: 'center', borderTop: `1px solid ${borderColor}` 
-        }}>
-          <div style={{ color: '#fff', fontSize: Math.max(size * 0.12, 10), fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            {player.short}
-          </div>
-        </div>
+        {/* Shine Effect */}
+        <div className="shine-effect" />
       </div>
 
       <style jsx>{`
-        .card-container:hover .card-body { transform: scale(1.05) translateY(-5px); z-index: 100; }
+        .card-container:hover { transform: scale(1.1) translateY(-5px); z-index: 50; }
+        .cap { border: 2px solid #F5C400 !important; box-shadow: 0 0 20px rgba(245, 196, 0, 0.4) !important; }
+        .hero { border: 2px solid #00E5FF !important; box-shadow: 0 0 20px rgba(0, 229, 255, 0.4) !important; }
         .shine-effect {
           position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-          transform: skewX(-20deg); animation: shine 4s infinite; z-index: 2;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transform: skewX(-20deg);
+          animation: shine 3s infinite;
         }
-        @keyframes shine { 0% { left: -100%; } 20% { left: 150%; } 100% { left: 150%; } }
-        @keyframes card-entry { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .card-body { animation: card-entry 0.5s ease-out; }
+        @keyframes shine { to { left: 200%; } }
       `}</style>
     </div>
   );
 }
 
-// --- COMPONENTE PRINCIPAL ---
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [step, setStep] = useState<'login' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'finalizado'>('login');
   const [lineup, setLineup] = useState<Record<string, Player | null>>({});
   const [reserves, setReserves] = useState<Record<string, Player | null>>({});
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
-  
   const [capitao, setCapitao] = useState<number | null>(null);
   const [heroi, setHeroi] = useState<number | null>(null);
   const [palpite, setPalpite] = useState({ mandante: 0, visitante: 0 });
@@ -144,7 +146,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [fieldWidth, setFieldWidth] = useState(360);
 
   useEffect(() => {
-    const update = () => setFieldWidth(Math.min(window.innerWidth - 32, 500));
+    const update = () => setFieldWidth(Math.min(window.innerWidth, 500));
     update();
     window.addEventListener('resize', update);
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -153,79 +155,104 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     return () => window.removeEventListener('resize', update);
   }, []);
 
+  const allSelectedIds = useMemo(() => {
+    return [...Object.values(lineup), ...Object.values(reserves)].filter(Boolean).map(p => p!.id);
+  }, [lineup, reserves]);
+
   const handleSalvar = async () => {
     setSaving(true);
     const { error } = await supabase.from('escalacoes_elite').upsert({
-      user_id: usuario?.id, jogo_id: jogoId, jogadores: lineup, reservas: reserves,
-      capitao_id: capitao, heroi_id: heroi, palpite: palpite, updated_at: new Date()
+      user_id: usuario?.id,
+      jogo_id: jogoId,
+      jogadores: lineup,
+      reservas: reserves,
+      capitao_id: capitao,
+      heroi_id: heroi,
+      palpite: palpite,
+      updated_at: new Date()
     });
     if (!error) setStep('finalizado');
     setSaving(false);
   };
 
-  if (step === 'login') return (
-    <div style={{ height:'100vh', background:'#000', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-        <img src={LOGO} style={{ width: 140, marginBottom: 40, filter: 'drop-shadow(0 0 20px #F5C400)' }} />
-        <button onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })} style={{ 
-          padding: '20px 40px', borderRadius: 12, border: 'none', background: '#F5C400', 
-          color: '#000', fontWeight: 900, cursor: 'pointer', boxShadow: '0 10px 30px rgba(245,196,0,0.3)' 
-        }}>ENTRAR COM GOOGLE</button>
-    </div>
-  );
-
   const filledMain = Object.values(lineup).filter(Boolean).length;
   const filledRes = Object.values(reserves).filter(Boolean).length;
-  const allSelectedIds = [...Object.values(lineup), ...Object.values(reserves)].filter(Boolean).map(p => p!.id);
+
+  if (step === 'login') return <div style={{ height:'100vh', background:'#000' }} />;
 
   return (
-    <main style={{ minHeight:'100vh', background:'#050505', color:'#fff', paddingBottom:180, overflowX:'hidden' }}>
+    <main style={{ minHeight:'100vh', background:'#000', color:'#fff', overflowX: 'hidden' }}>
       
-      {/* Header Estilo EA */}
-      <div style={{ 
-        background: 'linear-gradient(90deg, #F5C400 0%, #FFD700 100%)', 
-        padding: '15px 20px', position: 'sticky', top: 0, zIndex: 2000, 
+      {/* HUD SUPERIOR - GLASSMORPHISM */}
+      <nav style={{ 
+        position: 'sticky', top: 0, zIndex: 100, 
+        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(15px)',
+        padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center'
       }}>
-        <img src={LOGO} style={{ width: 40 }} />
-        <div style={{ color: '#000', fontWeight: 1000, fontSize: 13, textTransform: 'uppercase' }}>
-          {step === 'escalar' ? `ESQUADRÃO: ${filledMain}/11 | ${filledRes}/5` : step}
+        <img src={LOGO} alt="Tigre FC" style={{ height: 35 }} />
+        <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 10, color: '#F5C400', fontWeight: 900 }}>STATUS DA ESCALAÇÃO</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>{filledMain}/11 TITULARES</div>
         </div>
-        <div style={{ width: 40 }} />
-      </div>
+      </nav>
 
-      <div style={{ maxWidth: 500, margin: '0 auto', padding: '10px' }}>
+      <div style={{ maxWidth: 500, margin: '0 auto', position: 'relative' }}>
         
-        {/* CAMPO COM PERSPECTIVA 3D */}
-        <div style={{ perspective: '1500px', margin: '30px 0 50px 0' }}>
-          <div className="soccer-field" style={{
-            width: fieldWidth, height: fieldWidth * 1.35, margin: '0 auto',
-            background: 'radial-gradient(circle at center, #2e7d32 0%, #1b5e20 100%)',
-            borderRadius: '20px', position: 'relative', transform: 'rotateX(20deg)',
-            border: '4px solid rgba(255,255,255,0.1)', boxShadow: '0 30px 60px rgba(0,0,0,0.5)'
+        {/* CAMPO DE JOGO - ESTÉTICA FIFA/FC 26 */}
+        <div style={{ 
+          perspective: '1500px', 
+          marginTop: -20,
+          marginBottom: 40,
+          filter: activeSlot ? 'blur(5px) brightness(0.3)' : 'none',
+          transition: 'all 0.4s ease'
+        }}>
+          <div style={{
+            width: '100%', height: fieldWidth * 1.4,
+            background: 'radial-gradient(circle at 50% 100%, #1e5d2c 0%, #0a200f 100%)',
+            position: 'relative',
+            transform: 'rotateX(25deg)',
+            transformOrigin: 'bottom',
+            border: '4px solid rgba(255,255,255,0.05)',
+            boxShadow: '0 50px 100px rgba(0,0,0,0.8)'
           }}>
             {/* Linhas do Campo */}
-            <div style={{ position: 'absolute', top: '50%', width: '100%', height: '2px', background: 'rgba(255,255,255,0.1)' }} />
-            <div style={{ position: 'absolute', top: '50%', left: '50%', width: 100, height: 100, border: '2px solid rgba(255,255,255,0.1)', borderRadius: '50%', transform: 'translate(-50%, -50%)' }} />
+            <div style={{ position: 'absolute', top: '50%', width: '100%', height: 2, background: 'rgba(255,255,255,0.1)' }} />
+            <div style={{ 
+                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                width: 120, height: 120, border: '2px solid rgba(255,255,255,0.1)', borderRadius: '50%' 
+            }} />
+            <div style={{ position: 'absolute', bottom: 0, left: '25%', width: '50%', height: '15%', border: '2px solid rgba(255,255,255,0.1)', borderBottom: 'none' }} />
 
+            {/* Renderização dos Slots de Jogadores */}
             {FORMATION.map((slot) => {
               const p = lineup[slot.id];
-              const isActive = activeSlot === slot.id;
               return (
-                <div key={slot.id} onClick={() => step === 'escalar' && setActiveSlot(slot.id)} style={{
+                <div key={slot.id} style={{
                   position: 'absolute', left: `${slot.x}%`, top: `${slot.y}%`, 
-                  transform: 'translate(-50%, -50%)', zIndex: 10
+                  transform: 'translate(-50%, -50%) translateZ(20px)',
+                  zIndex: 10
                 }}>
                   {p ? (
-                    <div onClick={() => {
-                        if(step === 'capitao') setCapitao(p.id);
-                        if(step === 'heroi') setHeroi(p.id);
-                    }}>
-                        <PlayerCard player={p} size={fieldWidth * 0.17} isField isCapitao={capitao === p.id} isHeroi={heroi === p.id} isSelected />
-                    </div>
+                    <PlayerCard 
+                      player={p} 
+                      size={fieldWidth * 0.17} 
+                      isCapitao={capitao === p.id} 
+                      isHeroi={heroi === p.id}
+                      onClick={() => {
+                        if (step === 'escalar') setLineup({...lineup, [slot.id]: null});
+                        if (step === 'capitao') setCapitao(p.id);
+                        if (step === 'heroi') setHeroi(p.id);
+                      }} 
+                    />
                   ) : (
-                    <div className={isActive ? 'slot-active' : 'slot-empty'}>
-                        <span style={{ fontSize: 18 }}>+</span>
-                    </div>
+                    <button 
+                      onClick={() => step === 'escalar' && setActiveSlot(slot.id)}
+                      className="add-btn"
+                    >
+                      <span style={{ fontSize: 10 }}>{slot.label}</span>
+                      <span style={{ fontSize: 20 }}>+</span>
+                    </button>
                   )}
                 </div>
               );
@@ -234,143 +261,152 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         </div>
 
         {/* BANCO DE RESERVAS */}
-        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 20, marginBottom: 30, border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h4 style={{ color: '#F5C400', fontSize: 11, fontWeight: 900, marginBottom: 15, textAlign:'center', textTransform:'uppercase' }}>Banco de Suplentes</h4>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-                {RESERVES_SLOTS.map(id => {
-                    const p = reserves[id];
-                    const isActive = activeSlot === id;
-                    return (
-                        <div key={id} onClick={() => step === 'escalar' && setActiveSlot(id)} style={{ cursor: 'pointer' }}>
-                            {p ? <PlayerCard player={p} size={fieldWidth * 0.15} isSelected /> : 
-                            <div className={isActive ? 'slot-res-active' : 'slot-res-empty'}>+</div>}
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-
-        {/* MERCADO (DRAWER/MODAL) */}
-        {activeSlot && step === 'escalar' && (
-          <div className="market-overlay">
-             <div className="market-content">
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding: '20px 20px 10px 20px' }}>
-                    <h3 style={{ fontSize: 14, fontWeight: 900, color: '#F5C400' }}>ESCOLHER JOGADOR</h3>
-                    <button onClick={() => setActiveSlot(null)} style={{ background:'rgba(255,255,255,0.1)', border:'none', color:'#fff', padding:'8px 15px', borderRadius:8, fontWeight:900 }}>X</button>
+        <section style={{ padding: '0 20px 120px' }}>
+          <h3 style={{ fontSize: 12, color: '#666', fontWeight: 900, marginBottom: 15, textAlign: 'center' }}>SUPLENTES</h3>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+            {RESERVES_SLOTS.map(id => {
+              const p = reserves[id];
+              return (
+                <div key={id} style={{ flex: 1, maxWidth: 70 }}>
+                  {p ? (
+                    <PlayerCard player={p} size={fieldWidth * 0.14} onClick={() => step === 'escalar' && setReserves({...reserves, [id]: null})} />
+                  ) : (
+                    <div onClick={() => step === 'escalar' && setActiveSlot(id)} className="reserve-empty">
+                      +
+                    </div>
+                  )}
                 </div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:12, padding: 20, maxHeight: '60vh', overflowY: 'auto' }}>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* MODAL MERCADO - FULLSCREEN OVERLAY */}
+        {activeSlot && (
+          <div className="market-overlay">
+            <div className="market-content">
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom:20 }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 900 }}>CONTRATAR JOGADOR</h2>
+                    <button onClick={() => setActiveSlot(null)} style={{ background: '#333', border: 'none', color: '#fff', borderRadius: '50%', width: 30, height: 30 }}>✕</button>
+                </div>
+                
+                <div className="players-grid">
                     {PLAYERS.filter(p => !allSelectedIds.includes(p.id)).map(p => (
-                        <div key={p.id} onClick={() => {
+                        <PlayerCard 
+                          key={p.id} 
+                          player={p} 
+                          size={100} 
+                          onClick={() => {
                             if(RESERVES_SLOTS.includes(activeSlot)) setReserves({...reserves, [activeSlot]: p});
                             else setLineup({...lineup, [activeSlot]: p});
                             setActiveSlot(null);
-                        }}>
-                            <PlayerCard player={p} size={(fieldWidth/4) - 20} />
-                        </div>
+                          }}
+                        />
                     ))}
                 </div>
-             </div>
+            </div>
           </div>
         )}
 
-        {/* PASSO DE PALPITE */}
+        {/* HUD DE PALPITE */}
         {step === 'palpite' && (
-          <div style={{ textAlign:'center', padding:40, background:'#111', borderRadius:24, border:'2px solid #F5C400', animation: 'card-entry 0.5s ease' }}>
-            <h3 style={{ color:'#F5C400', fontWeight: 1000, marginBottom:30 }}>PLACAR DO JOGO</h3>
-            <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:25 }}>
-              <div style={{ textAlign:'center' }}>
-                <span style={{ fontSize:10, opacity:0.6, display:'block', marginBottom:10 }}>TIGRE FC</span>
-                <input type="number" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Number(e.target.value)})} style={{ width:80, height:80, textAlign:'center', borderRadius:16, border:'none', background:'#222', color:'#fff', fontSize:32, fontWeight:900 }} />
-              </div>
-              <div style={{ fontSize:24, fontWeight:900, marginTop:20 }}>X</div>
-              <div style={{ textAlign:'center' }}>
-                <span style={{ fontSize:10, opacity:0.6, display:'block', marginBottom:10 }}>ADVERSÁRIO</span>
-                <input type="number" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Number(e.target.value)})} style={{ width:80, height:80, textAlign:'center', borderRadius:16, border:'none', background:'#222', color:'#fff', fontSize:32, fontWeight:900 }} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TELA FINALIZADA */}
-        {step === 'finalizado' && (
-            <div style={{ textAlign:'center', padding:40, animation: 'card-entry 0.6s ease' }}>
-                <div style={{ background:'#111', padding:40, borderRadius:30, border:'2px solid #F5C400' }}>
-                    <img src={LOGO} style={{ width: 80, marginBottom:20 }} />
-                    <h2 style={{ fontWeight:1000, color:'#F5C400' }}>TIME ENVIADO!</h2>
-                    <p style={{ opacity:0.7, fontSize:14 }}>Sua escalação de elite foi salva com sucesso, Felipe.</p>
+            <div className="step-modal">
+                <h2 style={{ color: '#F5C400' }}>QUAL O PLACAR?</h2>
+                <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+                    <input type="number" className="score-input" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Number(e.target.value)})} />
+                    <span style={{ fontSize: 32, fontWeight: 900 }}>X</span>
+                    <input type="number" className="score-input" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Number(e.target.value)})} />
                 </div>
-                <button onClick={() => window.location.reload()} style={{ marginTop:20, background:'none', border:'none', color:'#F5C400', fontWeight:900 }}>NOVA ESCALAÇÃO</button>
             </div>
         )}
 
-        {/* BOTÃO DE AÇÃO DINÂMICO (ESTILO EA) */}
-        {step !== 'finalizado' && (
-            <div style={{ position:'fixed', bottom:0, left:0, width:'100%', padding:'30px 20px', background:'linear-gradient(transparent, #000 50%)', zIndex:3000 }}>
-                <button 
-                    disabled={saving}
-                    onClick={() => {
-                        if(step==='escalar' && filledMain===11 && filledRes===5) setStep('capitao');
-                        else if(step==='capitao' && capitao) setStep('heroi');
-                        else if(step==='heroi' && heroi) setStep('palpite');
-                        else if(step==='palpite') setStep('confirmar');
-                        else if(step==='confirmar') handleSalvar();
-                    }}
-                    style={{ 
-                        width:'100%', padding:22, borderRadius:16, border:'none', 
-                        background: (filledMain === 11 && filledRes === 5) || step !== 'escalar' ? '#F5C400' : '#222',
-                        color:'#000', fontWeight:1000, fontSize:15, textTransform:'uppercase', letterSpacing:'1px',
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)', cursor:'pointer', transition:'all 0.3s'
-                    }}>
-                    {getBtnText(step, filledMain, filledRes, capitao, heroi, saving)}
-                </button>
-                {step !== 'escalar' && (
-                    <button onClick={() => setStep('escalar')} style={{ width:'100%', background:'transparent', color:'#888', border:'none', marginTop:15, fontWeight:700 }}>VOLTAR À ESCALAÇÃO</button>
-                )}
-            </div>
-        )}
+        {/* BOTÃO DE AÇÃO PRINCIPAL - FOOTER FIXO */}
+        <div style={{ 
+            position: 'fixed', bottom: 0, left: 0, width: '100%', 
+            padding: '20px', background: 'linear-gradient(0deg, #000 60%, transparent 100%)', zIndex: 1000 
+        }}>
+            <button 
+                className="main-action-btn"
+                onClick={() => {
+                    if (step === 'escalar' && filledMain === 11 && filledRes === 5) setStep('capitao');
+                    else if (step === 'capitao' && capitao) setStep('heroi');
+                    else if (step === 'heroi' && heroi) setStep('palpite');
+                    else if (step === 'palpite') setStep('confirmar');
+                    else if (step === 'confirmar') handleSalvar();
+                }}
+            >
+                {saving ? "PROCESSANDO..." : getBtnText(step, filledMain, filledRes, capitao, heroi)}
+            </button>
+            {step !== 'escalar' && (
+                <button onClick={() => setStep('escalar')} style={{ width: '100%', marginTop: 10, background: 'transparent', border: 'none', color: '#666', fontSize: 12, fontWeight: 700 }}>REVISAR TIME</button>
+            )}
+        </div>
 
       </div>
 
       <style jsx global>{`
-        body { background: #050505; }
-        .slot-empty { 
-            width: 45px; height: 45px; border-radius: 50%; border: 2px dashed #F5C400; 
-            color: #F5C400; display: flex; align-items: center; justifyContent: center;
-            background: rgba(245,196,0,0.05); transition: 0.3s;
+        @font-face { font-family: 'FC24'; src: url('https://fonts.cdnfonts.com/css/din-alternate'); }
+        body { font-family: 'DIN Alternate', sans-serif; background: #000; margin: 0; }
+        
+        .add-btn {
+          width: 50px; height: 50px; border-radius: 50%;
+          background: rgba(245, 196, 0, 0.1); border: 2px dashed #F5C400;
+          color: #F5C400; display: flex; flex-direction: column; 
+          align-items: center; justify-content: center; font-weight: 900;
+          transition: all 0.3s;
         }
-        .slot-active { 
-            width: 50px; height: 50px; border-radius: 50%; border: 3px solid #F5C400; 
-            color: #F5C400; display: flex; align-items: center; justifyContent: center;
-            background: rgba(245,196,0,0.2); animation: pulse 1s infinite;
+        .add-btn:hover { background: rgba(245, 196, 0, 0.3); transform: scale(1.2); }
+
+        .reserve-empty {
+            height: 80px; border-radius: 8px; border: 1px dashed #333;
+            display: flex; alignItems: center; justifyContent: center; color: #333; font-size: 24px;
         }
-        .slot-res-empty {
-            width: 50px; height: 65px; border-radius: 8px; border: 1px dashed #444;
-            display: flex; align-items: center; justifyContent: center; color: #444;
-        }
-        .slot-res-active {
-            width: 50px; height: 65px; border-radius: 8px; border: 2px solid #F5C400;
-            display: flex; align-items: center; justifyContent: center; color: #F5C400;
-            background: rgba(245,196,0,0.1); animation: pulse 1s infinite;
-        }
+
         .market-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 4000; display: flex; align-items: flex-end;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(20px); z-index: 2000; padding: 20px;
+            animation: fadeIn 0.3s ease;
         }
-        .market-content {
-            width: 100%; background: #0a0a0a; border-radius: 30px 30px 0 0;
-            border-top: 2px solid #F5C400; animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        .market-content { max-width: 500px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; }
+        .players-grid { 
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; 
+            overflow-y: auto; padding-bottom: 50px;
         }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .main-action-btn {
+            width: 100%; padding: 20px; border-radius: 12px; border: none;
+            background: linear-gradient(90deg, #F5C400 0%, #D4AC00 100%);
+            color: #000; font-weight: 900; font-size: 14px; text-transform: uppercase;
+            letter-spacing: 1px; box-shadow: 0 10px 20px rgba(245, 196, 0, 0.2);
+            transition: all 0.3s;
+        }
+        .main-action-btn:active { transform: scale(0.95); }
+
+        .score-input {
+            width: 80px; height: 80px; background: #111; border: 2px solid #333;
+            border-radius: 16px; color: #fff; font-size: 40px; text-align: center; font-weight: 900;
+        }
+
+        .step-modal {
+            position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            width: 90%; max-width: 400px; background: #0a0a0a; border: 1px solid #333;
+            padding: 30px; border-radius: 24px; text-align: center; z-index: 1500;
+            box-shadow: 0 30px 60px rgba(0,0,0,1);
+        }
+
+        @keyframes card-entry {
+          from { opacity: 0; transform: translateY(20px) scale(0.8); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
     </main>
   );
 }
 
-function getBtnText(step: any, m: number, r: number, cap: any, her: any, sav: boolean) {
-    if(sav) return "PROCESSANDO...";
-    if(step === 'escalar') return (m === 11 && r === 5) ? "DEFINIR CAPITÃO →" : `FALTAM ${11-m} TITULARES`;
-    if(step === 'capitao') return !cap ? "ESCOLHA O CAPITÃO NO CAMPO" : "DEFINIR HERÓI DA RODADA →";
-    if(step === 'heroi') return !her ? "ESCOLHA O HERÓI NO CAMPO" : "DAR PALPITE FINAL →";
-    return "FINALIZAR ESCALAÇÃO 🐯";
+function getBtnText(step: string, m: number, r: number, cap: any, her: any) {
+    if(step === 'escalar') return (m === 11 && r === 5) ? "AVANÇAR PARA CAPITÃO" : "ESCALAÇÃO INCOMPLETA";
+    if(step === 'capitao') return !cap ? "ESCOLHA O CAPITÃO (C)" : "DEFINIR HERÓI";
+    if(step === 'heroi') return !her ? "ESCOLHA O HERÓI (H)" : "PLACAR FINAL";
+    return "CONFIRMAR TUDO 🐯";
 }
