@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, use } from 'react'; // Importado 'use'
+import { useState, useEffect, useRef, use } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
@@ -11,7 +11,7 @@ const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/pu
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SB_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Interfaces refinadas
+// Interfaces
 interface Time {
   nome: string;
   escudo_url: string;
@@ -32,11 +32,12 @@ interface UsuarioRanking {
   pontos_total: number;
 }
 
-// 1. Ajuste na assinatura da função para aceitar params do Next.js 15
+// Next.js 15: O tipo da página deve receber params como uma Promise
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
-  // 2. Desempacotando os params (caso você queira usar o jogoId da URL nesta página principal)
+  // Desempacota os parâmetros usando a nova API 'use'
   const resolvedParams = use(params);
-  
+  const urlJogoId = resolvedParams.jogoId;
+
   const [mounted, setMounted] = useState(false);
   const [jogo, setJogo] = useState<Jogo | null>(null);
   const [ranking, setRanking] = useState<UsuarioRanking[]>([]);
@@ -45,7 +46,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
   const topRef = useRef<HTMLDivElement>(null);
 
-  // Inicialização básica
   useEffect(() => {
     setMounted(true);
     if (typeof window !== 'undefined') {
@@ -53,13 +53,12 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     }
   }, []);
 
-  // Busca de Dados (Supabase e API)
   useEffect(() => {
     if (!mounted) return;
     const sb = createClient(SB_URL, SB_KEY);
 
     async function init() {
-      // 1. Busca Sessão do Usuário
+      // 1. Busca Sessão do Usuário de forma segura
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user) {
         const { data: u } = await sb.from('tigre_fc_usuarios')
@@ -69,7 +68,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (u) setMeuId(u.id);
       }
 
-      // 2. Busca Jogo e Ranking em paralelo
+      // 2. Busca Jogo e Ranking
       try {
         const [resJogo, { data: rankData }] = await Promise.all([
           fetch('/api/proximo-jogo').then(r => r.json()),
@@ -82,13 +81,13 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (resJogo.jogos?.[0]) setJogo(resJogo.jogos[0]);
         if (rankData) setRanking(rankData as UsuarioRanking[]);
       } catch (e) {
-        console.error("Erro ao carregar dados do portal:", e);
+        console.error("Erro ao carregar dados:", e);
       }
     }
     init();
   }, [mounted]);
 
-  // Timer de Bloqueio (90 min antes do jogo)
+  // Timer: Fecha o mercado 90 minutos antes
   useEffect(() => {
     if (!jogo) return;
     
@@ -155,7 +154,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             <div className="bg-zinc-900/90 backdrop-blur-3xl rounded-[60px] border border-white/10 p-10 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
               
-              {/* Cronômetro */}
               <div className="flex justify-center gap-6 mb-12 relative z-10">
                 {(['h', 'm', 's'] as const).map(unit => (
                   <div key={unit} className="flex flex-col items-center">
@@ -171,7 +169,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                 ))}
               </div>
 
-              {/* Confronto */}
               <div className="flex justify-between items-center mb-12 relative z-10">
                 <div className="flex flex-col items-center flex-1">
                   <div className="w-24 h-24 bg-gradient-to-b from-zinc-800 to-black rounded-[35px] p-4 flex items-center justify-center mb-4 border border-white/10 shadow-2xl group-hover:rotate-3 transition-transform">
@@ -193,7 +190,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                 </div>
               </div>
 
-              {/* Link para Escalação */}
               <Link href={`/tigre-fc/escalar/${jogo.id}`} className="relative flex items-center justify-center bg-[#F5C400] text-black py-7 rounded-[35px] font-[1000] uppercase italic text-sm shadow-[0_20px_40px_rgba(245,196,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all overflow-hidden group">
                 <span className="relative z-10 tracking-[0.2em]">CONVOCAR TITULARES →</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 skew-x-12" />
@@ -320,7 +316,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       <style jsx global>{`
         ::-webkit-scrollbar { width: 0px; }
         body { background-color: #050505; }
-        .font-1000 { font-weight: 1000; }
       `}</style>
     </main>
   );
