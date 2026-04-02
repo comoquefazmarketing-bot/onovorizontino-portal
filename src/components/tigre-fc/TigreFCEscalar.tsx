@@ -4,32 +4,63 @@ import { createClient } from '@supabase/supabase-js';
 import TigreFCLogin from '@/components/tigre-fc/TigreFCLogin';
 import html2canvas from 'html2canvas';
 
+// Configuração para NÃO DESLOGAR no mobile
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
 );
 
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
-const MINUTOS_ANTECEDENCIA = 90; 
 
-// --- DADOS DOS JOGADORES (MANTIDOS CONFORME SEU ARQUIVO) ---
+// --- DADOS DOS JOGADORES ---
 const PLAYERS = [
   { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
-  { id: 2,  name: 'Jordi',             short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
-  { id: 5,  name: 'Lora',              short: 'Lora',         num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
-  { id: 11, name: 'Eduardo Brock',     short: 'E.Brock',     num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
-  { id: 21, name: 'Rômulo',            short: 'Rômulo',      num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
-  { id: 31, name: 'Robson',            short: 'Robson',      num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
-  // ... adicione os demais conforme sua lista original
-];
-
-const RESERVA_SLOTS = [
-  { id: 'res_gol', pos: 'GOL', label: 'GOL' },
-  { id: 'res_lat', pos: 'LAT', label: 'LAT' },
-  { id: 'res_zag', pos: 'ZAG', label: 'ZAG' },
-  { id: 'res_mei', pos: 'MEI', label: 'MEI' },
-  { id: 'res_ata', pos: 'ATA', label: 'ATA' },
+  { id: 2,  name: 'Jordi',           short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
+  { id: 3,  name: 'João Scapin',     short: 'Scapin',     num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
+  { id: 4,  name: 'Lucas Ribeiro',   short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
+  { id: 5,  name: 'Lora',            short: 'Lora',       num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
+  { id: 6,  name: 'Castrillón',      short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
+  { id: 7,  name: 'Arthur Barbosa',  short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
+  { id: 8,  name: 'Mayk',            short: 'Mayk',       num: 26, pos: 'LAT', foto: BASE+'MAYK.jpg.webp' },
+  { id: 9,  name: 'Maykon Jesus',    short: 'Maykon',     num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
+  { id: 10, name: 'Dantas',          short: 'Dantas',     num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
+  { id: 11, name: 'Eduardo Brock',   short: 'E.Brock',    num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
+  { id: 12, name: 'Patrick',         short: 'Patrick',    num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
+  { id: 13, name: 'Gabriel Bahia',   short: 'G.Bahia',    num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
+  { id: 14, name: 'Carlinhos',       short: 'Carlinhos',  num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
+  { id: 15, name: 'Alemão',          short: 'Alemão',     num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
+  { id: 16, name: 'Renato Palm',     short: 'R.Palm',     num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
+  { id: 17, name: 'Alvariño',        short: 'Alvariño',   num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
+  { id: 18, name: 'Bruno Santana',   short: 'B.Santana',  num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
+  { id: 19, name: 'Luís Oyama',      short: 'Oyama',      num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
+  { id: 20, name: 'Léo Naldi',       short: 'L.Naldi',    num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
+  { id: 21, name: 'Rômulo',          short: 'Rômulo',     num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
+  { id: 22, name: 'Matheus Bianqui', short: 'Bianqui',    num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
+  { id: 23, name: 'Juninho',         short: 'Juninho',    num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
+  { id: 24, name: 'Tavinho',         short: 'Tavinho',    num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
+  { id: 25, name: 'Diego Galo',      short: 'D.Galo',     num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
+  { id: 26, name: 'Marlon',          short: 'Marlon',     num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
+  { id: 27, name: 'Hector Bianchi',  short: 'Hector',     num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
+  { id: 28, name: 'Nogueira',        short: 'Nogueira',   num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
+  { id: 29, name: 'Luiz Gabriel',    short: 'L.Gabriel',  num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
+  { id: 30, name: 'Jhones Kauê',     short: 'J.Kauê',     num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
+  { id: 31, name: 'Robson',          short: 'Robson',     num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
+  { id: 32, name: 'Vinícius Paiva',  short: 'V.Paiva',    num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
+  { id: 33, name: 'Hélio Borges',    short: 'H.Borges',   num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
+  { id: 34, name: 'Jardiel',         short: 'Jardiel',    num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
+  { id: 35, name: 'Nicolas Careca',  short: 'N.Careca',   num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
+  { id: 36, name: 'Titi Ortiz',      short: 'T.Ortiz',    num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
+  { id: 37, name: 'Diego Mathias',   short: 'D.Mathias',  num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
+  { id: 38, name: 'Carlão',          short: 'Carlão',     num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
+  { id: 39, name: 'Ronald Barcellos', short: 'Ronald',     num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
 const FORMATIONS: Record<string, { id: string; label: string; x: number; y: number }[]> = {
@@ -51,13 +82,11 @@ const FORMATIONS: Record<string, { id: string; label: string; x: number; y: numb
   ],
 };
 
-// --- COMPONENTES AUXILIARES ---
-
 function PlayerCard({ player, size, isCapitao, isHeroi, isList }: any) {
   return (
     <div style={{ width: size, textAlign: 'center', position: 'relative' }}>
-      {isCapitao && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>👑</div>}
-      {isHeroi && <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:14 }}>⭐</div>}
+      {isCapitao && <div style={{ position:'absolute', top:-15, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:16 }}>👑</div>}
+      {isHeroi && <div style={{ position:'absolute', top:-15, left:'50%', transform:'translateX(-50%)', zIndex:10, fontSize:16 }}>⭐</div>}
       <div style={{ 
         width: size, height: size, borderRadius: '50%', overflow: 'hidden', 
         border: `2px solid ${isList ? '#222' : '#F5C400'}`, background: '#111', position: 'relative'
@@ -66,7 +95,7 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isList }: any) {
       </div>
       <div style={{ 
         background: isList ? '#333' : '#F5C400', color: isList ? '#fff' : '#000', 
-        fontSize: size * 0.2, fontWeight: 900, borderRadius: 4, marginTop: -8, 
+        fontSize: size * 0.18, fontWeight: 900, borderRadius: 4, marginTop: -8, 
         position: 'relative', zIndex: 2, padding: '1px 4px', whiteSpace: 'nowrap'
       }}>
         {player.short}
@@ -75,32 +104,35 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isList }: any) {
   );
 }
 
-// --- COMPONENTE PRINCIPAL ---
-
-export default function TigreFCEscalar({ jogoId, targetUserId }: { jogoId: number, targetUserId?: string }) {
+export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   const [mounted, setMounted] = useState(false);
-  const [step, setStep] = useState<any>('login');
+  const [step, setStep] = useState('login');
   const [usuario, setUsuario] = useState<any>(null);
-  const [apelido, setApelido] = useState('');
   const [formation, setFormation] = useState('4-3-3');
   const [lineup, setLineup] = useState<any>({});
-  const [selected, setSelected] = useState<any>(null);
-  const [filterPos, setFilterPos] = useState('TODOS');
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [capitao, setCapitao] = useState<any>(null);
   const [heroi, setHeroi] = useState<any>(null);
-  const [palpite, setPalpite] = useState({ mandante: 1, visitante: 0 });
   const [saving, setSaving] = useState(false);
   const [sharing, setSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    // Recupera sessão ativa se existir
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setUsuario(session.user);
+        setStep('escalar');
+      }
+    });
+  }, []);
 
-  // 1. SALVAR NO BANCO (Histórico garantido)
-  const handleFinalizar = async () => {
+  const handleSalvar = async () => {
+    if (!usuario) return;
     setSaving(true);
     try {
-      // Upsert na escalação com chave composta
-      await supabase.from('tigre_fc_escalacoes').upsert({
+      const { error: errorEsc } = await supabase.from('tigre_fc_escalacoes').upsert({
         usuario_id: usuario.id,
         jogo_id: jogoId,
         formacao: formation,
@@ -109,23 +141,15 @@ export default function TigreFCEscalar({ jogoId, targetUserId }: { jogoId: numbe
         heroi_id: heroi?.id
       }, { onConflict: 'usuario_id,jogo_id' });
 
-      // Upsert no palpite
-      await supabase.from('tigre_fc_palpites').upsert({
-        usuario_id: usuario.id,
-        jogo_id: jogoId,
-        gols_mandante: palpite.mandante,
-        gols_visitante: palpite.visitante
-      }, { onConflict: 'usuario_id,jogo_id' });
-
+      if (errorEsc) throw errorEsc;
       setStep('salvo');
     } catch (e) {
-      alert("Erro ao salvar sua escalação.");
+      alert("Erro ao salvar.");
     } finally {
       setSaving(false);
     }
   };
 
-  // 2. FUNÇÃO DE COMPARTILHAMENTO (Instagram/WhatsApp)
   const handleShare = async () => {
     if (!cardRef.current) return;
     setSharing(true);
@@ -136,130 +160,100 @@ export default function TigreFCEscalar({ jogoId, targetUserId }: { jogoId: numbe
 
       if (navigator.share) {
         const blob = await (await fetch(image)).blob();
-        const file = new File([blob], 'meu-time-tigre.png', { type: 'image/png' });
-        navigator.share({ title: 'Tigre FC', text: 'Escalado! Quem encara?', files: [file] });
+        const file = new File([blob], 'time-tigre.png', { type: 'image/png' });
+        navigator.share({ title: 'Tigre FC', files: [file] }).catch(() => {});
       } else {
         const link = document.createElement('a');
-        link.href = image; link.download = 'tigre-fc-escalacao.png'; link.click();
+        link.href = image; link.download = 'meu-tigre.png'; link.click();
       }
-    }, 100);
+    }, 200);
   };
 
   if (!mounted) return null;
 
-  // Renderização da Tela de Sucesso (A que você pediu)
+  if (step === 'login') {
+    return <TigreFCLogin jogoId={jogoId} onSuccess={(u) => { setUsuario(u); setStep('escalar'); }} />;
+  }
+
   if (step === 'salvo') {
     return (
       <main style={{ minHeight:'100vh', background:'#000', padding:20, display:'flex', flexDirection:'column', alignItems:'center' }}>
-        <div style={{ marginTop: 20, textAlign: 'center', marginBottom: 20 }}>
-          <h2 style={{ color: '#F5C400', fontWeight: 900, fontStyle: 'italic' }}>TUDO PRONTO, TREINADOR!</h2>
-          <p style={{ color: '#fff', fontSize: 12 }}>Sua escalação foi salva com sucesso.</p>
+        <h2 style={{ color: '#F5C400', fontWeight: 900, fontStyle:'italic' }}>TIME ESCALADO! 🐯</h2>
+        
+        <div ref={cardRef} style={{ width: '100%', maxWidth: 380, background: '#050505', borderRadius: 24, padding: 20, border: '1px solid #222', marginTop: 20 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 15 }}>
+             <div style={{ color:'#fff', fontSize:20, fontWeight:1000 }}>{usuario?.email?.split('@')[0].toUpperCase()}</div>
+             <img src={LOGO} style={{ width: 35 }} />
+          </div>
+          <div style={{ position:'relative', width:'100%', height: 420, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 16, overflow:'hidden' }}>
+            {FORMATIONS[formation].map(slot => (
+              <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)' }}>
+                <PlayerCard player={lineup[slot.id]} size={45} isCapitao={capitao?.id === lineup[slot.id]?.id} isHeroi={heroi?.id === lineup[slot.id]?.id} />
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop:15, textAlign:'center', color:'#F5C400', fontSize:10, fontWeight:800 }}>WWW.TIGREFC.APP</div>
         </div>
 
-        {/* ÁREA INSTAGRAMÁVEL */}
-        <div ref={cardRef} style={{ 
-          width: '100%', maxWidth: 380, background: '#050505', borderRadius: 24, padding: 20, border: '1px solid #222', position: 'relative' 
-        }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom: 15 }}>
-            <div>
-              <span style={{ color: '#F5C400', fontSize: 10, fontWeight: 900 }}>TREINADOR</span>
-              <div style={{ color: '#fff', fontSize: 22, fontWeight: 1000 }}>{usuario?.apelido}</div>
-            </div>
-            <img src={LOGO} style={{ width: 40 }} />
-          </div>
-
-          <div style={{ position:'relative', width:'100%', height: 420, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 16, border: '2px solid #1a1a1a', overflow: 'hidden' }}>
-            {FORMATIONS[formation].map(slot => {
-              const p = lineup[slot.id];
-              return p ? (
-                <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)' }}>
-                  <PlayerCard player={p} size={50} isCapitao={capitao?.id === p.id} isHeroi={heroi?.id === p.id} />
-                </div>
-              ) : null;
-            })}
-          </div>
-
-          <div style={{ marginTop: 15, background: 'rgba(245,196,0,0.1)', padding: 12, borderRadius: 12, textAlign: 'center' }}>
-             <p style={{ color: '#fff', fontSize: 11, fontWeight: 800, margin: 0 }}>VEM PRO JOGO TAMBÉM! 🐯</p>
-             <p style={{ color: '#F5C400', fontSize: 9, margin: 0 }}>WWW.TIGREFC.APP</p>
-          </div>
-        </div>
-
-        {/* BOTÕES DE AÇÃO */}
-        <div style={{ width: '100%', maxWidth: 380, marginTop: 25, display: 'grid', gap: 10 }}>
-          <button onClick={handleShare} style={{ background: '#fff', color: '#000', padding: 18, borderRadius: 16, fontWeight: 1000, border: 'none', textTransform: 'uppercase' }}>
-            Compartilhar no Instagram 📸
-          </button>
-          <button onClick={() => window.location.href='/tigre-fc'} style={{ background: 'transparent', color: '#F5C400', padding: 15, fontWeight: 800, border: '1px solid #F5C400', borderRadius: 16 }}>
-            Voltar para a Home
-          </button>
-        </div>
+        <button onClick={handleShare} style={{ width:'100%', maxWidth:380, marginTop:25, background:'#fff', color:'#000', padding:18, borderRadius:16, fontWeight:1000, border:'none' }}>
+           COMPARTILHAR NO STORY 📸
+        </button>
       </main>
     );
   }
 
-  // Se for Login ou Apelido, usa a lógica original que você já tem
-  if (step === 'login') return <TigreFCLogin jogoId={jogoId} onSuccess={(u) => { setUsuario(u); setStep(u.apelido ? 'escalar' : 'apelido'); }} />;
+  const filledCount = Object.keys(lineup).length;
 
-  // ... (Restante da lógica de escalação mantida e otimizada com o Progress Bar)
   return (
     <main style={{ minHeight:'100vh', background:'#080808', color:'#fff', paddingBottom: 120 }}>
-      {/* Header com Progressão */}
-      <div style={{ background:'#F5C400', padding:'10px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:100 }}>
-        <img src={LOGO} style={{ width: 24 }} />
-        <div style={{ display:'flex', gap:5 }}>
-          {['escalar','capitao','heroi','palpite'].map((s, i) => (
-            <div key={s} style={{ width: 30, height: 4, borderRadius: 2, background: step === s ? '#000' : 'rgba(0,0,0,0.2)' }} />
-          ))}
+      {/* Header Fixo */}
+      <div style={{ background:'#F5C400', padding:12, display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:100 }}>
+        <img src={LOGO} style={{ width: 22 }} />
+        <div style={{ display:'flex', gap:4 }}>
+           {[1,2,3,4].map(i => (
+             <div key={i} style={{ width: 30, height:4, background: i === (step==='escalar'?1:step==='capitao'?2:3) ? '#000' : 'rgba(0,0,0,0.2)', borderRadius:2 }} />
+           ))}
         </div>
-        <span style={{ fontWeight: 900, color:'#000', fontSize: 10 }}>{step.toUpperCase()}</span>
+        <span style={{ color:'#000', fontSize:10, fontWeight:1000 }}>{step.toUpperCase()}</span>
       </div>
 
       <div style={{ maxWidth:480, margin:'0 auto', padding:16 }}>
-        {/* Lógica de Escalação (O campo que você já usa) */}
         {step === 'escalar' && (
           <>
-            {/* Seletor de Formação */}
-            <div style={{ display:'flex', gap:6, marginBottom:20, overflowX:'auto' }}>
+            <div style={{ display:'flex', gap:8, marginBottom:15 }}>
               {Object.keys(FORMATIONS).map(f => (
-                <button key={f} onClick={() => setFormation(f)} style={{ padding:'8px 12px', borderRadius:8, background: formation===f?'#F5C400':'#1a1a1a', color: formation===f?'#000':'#555', border:'none', fontWeight:900 }}>{f}</button>
+                <button key={f} onClick={() => setFormation(f)} style={{ flex:1, padding:10, borderRadius:8, background: formation===f?'#F5C400':'#1a1a1a', color: formation===f?'#000':'#666', border:'none', fontWeight:900 }}>{f}</button>
               ))}
             </div>
 
-            {/* O Campo Virtual (Estilizado) */}
-            <div style={{ position:'relative', width:'100%', height: 480, background: '#1a4a1a', borderRadius: 8, border: '2px solid #fff', marginBottom: 20 }}>
-               {FORMATIONS[formation].map(slot => {
-                 const p = lineup[slot.id];
-                 return (
-                   <div key={slot.id} onClick={() => { /* sua lógica de clique no slot */ }} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)' }}>
-                      {p ? <PlayerCard player={p} size={55} /> : <div style={{ width:35, height:35, borderRadius:'50%', border:'1px dashed #fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8 }}>{slot.label}</div>}
-                   </div>
-                 )
-               })}
+            <div style={{ position:'relative', width:'100%', height: 460, background: 'radial-gradient(circle, #1a4a1a 0%, #0d2b0d 100%)', borderRadius: 12, border: '2px solid #222' }}>
+               {FORMATIONS[formation].map(slot => (
+                 <div key={slot.id} onClick={() => setSelectedSlot(slot.id)} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)', cursor:'pointer' }}>
+                    {lineup[slot.id] ? <PlayerCard player={lineup[slot.id]} size={52} /> : <div style={{ width:38, height:38, borderRadius:'50%', border:'1px dashed #fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8 }}>{slot.label}</div>}
+                 </div>
+               ))}
             </div>
-            
-            {/* Lista de Jogadores Filtrável */}
-            {/* ... mantenha sua lógica de filtros e lista aqui ... */}
+
+            {selectedSlot && (
+              <div style={{ marginTop:20, background:'#111', padding:15, borderRadius:16, border:'1px solid #222' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:15 }}>
+                  <span style={{ fontWeight:900 }}>SELECIONE: {selectedSlot.toUpperCase()}</span>
+                  <button onClick={() => setSelectedSlot(null)} style={{ color:'#F5C400', background:'none', border:'none' }}>FECHAR</button>
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(75px, 1fr))', gap:10 }}>
+                  {PLAYERS.filter(p => p.pos === FORMATIONS[formation].find(s => s.id === selectedSlot)?.label).map(p => (
+                    <div key={p.id} onClick={() => { setLineup({...lineup, [selectedSlot]: p}); setSelectedSlot(null); }} style={{ textAlign:'center' }}>
+                      <img src={p.foto} style={{ width:50, height:50, borderRadius:'50%', border: lineup[selectedSlot]?.id === p.id ? '2px solid #F5C400' : '1px solid #333' }} />
+                      <div style={{ fontSize:9, marginTop:4 }}>{p.short}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
-        {/* ... Adicionar Step de Capitão, Herói e Palpite (mantendo sua lógica visual) ... */}
-      </div>
-
-      {/* Botão de Ação Fixo */}
-      <div style={{ position:'fixed', bottom:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 40%)' }}>
-         <button 
-           onClick={() => {
-              if(step==='escalar') setStep('capitao');
-              else if(step==='capitao') setStep('heroi');
-              else if(step==='heroi') setStep('palpite');
-              else if(step==='palpite') handleFinalizar();
-           }}
-           style={{ width:'100%', padding:20, borderRadius:16, background:'#F5C400', color:'#000', fontWeight:1000, border:'none', fontSize:14 }}
-         >
-           {step === 'palpite' ? (saving ? 'SALVANDO...' : 'CONFIRMAR TUDO 🐯') : 'PRÓXIMA ETAPA →'}
-         </button>
-      </div>
-    </main>
-  );
-}
+        {step === 'capitao' && (
+          <div style={{ textAlign:'center' }}>
+            <h3 style={{ color:'#F5C400', fontWeight:900 }}>QUEM SERÁ O CAPITÃO? 👑</h3>
+            <p style={{ fontSize:12, color:'#666
