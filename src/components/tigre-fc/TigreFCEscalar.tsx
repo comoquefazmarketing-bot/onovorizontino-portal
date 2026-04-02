@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -62,10 +62,12 @@ const FORMATION = [
   { id:'lw',  label:'ATA', x:18, y:22 },
 ];
 
+const RESERVES_SLOTS = ['res1', 'res2', 'res3', 'res4', 'res5'];
+
 type Player = typeof PLAYERS[0];
 type Lineup = Record<string, Player | null>;
 
-function PlayerCard({ player, size, isCapitao, isHeroi, isField }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean, isField?: boolean }) {
+function PlayerCard({ player, size, isCapitao, isHeroi, isField, isSelected }: { player: Player, size: number, isCapitao?: boolean, isHeroi?: boolean, isField?: boolean, isSelected?: boolean }) {
   return (
     <div style={{ width: size, animation: 'card-entry 0.6s ease-out' }}>
       <div style={{
@@ -73,20 +75,23 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isField }: { player: Pla
         background: '#111', borderRadius: '8px', overflow: 'hidden',
         border: `1.5px solid ${isCapitao ? '#F5C400' : isHeroi ? '#00E5FF' : 'rgba(255,255,255,0.1)'}`,
         transform: isField ? 'rotateX(-15deg)' : 'none',
-        boxShadow: isCapitao ? '0 0 15px rgba(245,196,0,0.5)' : isHeroi ? '0 0 15px rgba(0,229,255,0.5)' : 'none'
+        boxShadow: isCapitao ? '0 0 15px rgba(245,196,0,0.5)' : isHeroi ? '0 0 15px rgba(0,229,255,0.5)' : 'none',
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
       }}>
         <div style={{
-          width: '100%', height: '100%', backgroundImage: `url(${player.foto})`,
-          backgroundSize: 'cover', backgroundPosition: 'center',
+          width: '100%', height: '100%', 
+          backgroundImage: `url(${player.foto})`,
+          backgroundSize: '200% 100%', // Define o dobro da largura para a foto dupla
+          backgroundPosition: isSelected || isField ? 'right center' : 'left center', // Slide da esquerda p/ direita
+          transition: 'background-position 0.6s ease-in-out',
           maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
         }} />
         
-        {/* Badges de destaque */}
-        {isCapitao && <div style={{ position:'absolute', top:2, right:2, background:'#F5C400', color:'#000', fontSize:8, fontWeight:900, padding:'2px 4px', borderRadius:4 }}>C</div>}
-        {isHeroi && <div style={{ position:'absolute', top:2, left:2, background:'#00E5FF', color:'#000', fontSize:8, fontWeight:900, padding:'2px 4px', borderRadius:4 }}>H</div>}
+        {isCapitao && <div style={{ position:'absolute', top:2, right:2, background:'#F5C400', color:'#000', fontSize:8, fontWeight:900, padding:'2px 4px', borderRadius:4, zIndex:5 }}>C</div>}
+        {isHeroi && <div style={{ position:'absolute', top:2, left:2, background:'#00E5FF', color:'#000', fontSize:8, fontWeight:900, padding:'2px 4px', borderRadius:4, zIndex:5 }}>H</div>}
 
-        <div style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.9)', padding: '4px 0', textAlign: 'center' }}>
+        <div style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.9)', padding: '4px 0', textAlign: 'center', zIndex:5 }}>
           <div style={{ color: isCapitao ? '#F5C400' : '#fff', fontSize: Math.max(size * 0.14, 9), fontWeight: 900 }}>{player.short}</div>
         </div>
       </div>
@@ -95,8 +100,9 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isField }: { player: Pla
 }
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
-  const [step, setStep] = useState<'login' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'finalizado'>('login');
+  const [step, setStep] = useState<'login' | 'escalar' | 'reserva' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'finalizado'>('login');
   const [lineup, setLineup] = useState<Lineup>({});
+  const [reserves, setReserves] = useState<Lineup>({});
   const [capitao, setCapitao] = useState<number | null>(null);
   const [heroi, setHeroi] = useState<number | null>(null);
   const [palpite, setPalpite] = useState({ mandante: 0, visitante: 0 });
@@ -120,6 +126,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
       user_id: usuario?.id,
       jogo_id: jogoId,
       jogadores: lineup,
+      reservas: reserves,
       capitao_id: capitao,
       heroi_id: heroi,
       palpite: palpite,
@@ -136,19 +143,20 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     </div>
   );
 
-  const filledPlayers = Object.values(lineup).filter(Boolean) as Player[];
+  const filledMain = Object.values(lineup).filter(Boolean) as Player[];
+  const filledReserves = Object.values(reserves).filter(Boolean) as Player[];
+  const allSelectedIds = [...filledMain, ...filledReserves].map(p => p.id);
 
   return (
-    <main style={{ minHeight:'100vh', background:'#050505', color:'#fff', paddingBottom:120 }}>
-      {/* Header com Progresso */}
+    <main style={{ minHeight:'100vh', background:'#050505', color:'#fff', paddingBottom:140 }}>
       <div style={{ background:'#F5C400', padding:16, textAlign:'center', position:'sticky', top:0, zIndex:1000 }}>
         <div style={{ color:'#000', fontWeight:1000, fontSize:12 }}>{step.toUpperCase()}</div>
       </div>
 
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '10px 16px' }}>
         
-        {/* CAMPO 3D (Visível em quase todos os passos para contexto) */}
-        {(['escalar', 'capitao', 'heroi', 'confirmar'].includes(step)) && (
+        {/* CAMPO 3D */}
+        {(['escalar', 'reserva', 'capitao', 'heroi', 'confirmar'].includes(step)) && (
           <div style={{ perspective: '1200px', margin: '20px 0' }}>
             <div style={{
               width: fieldWidth, height: fieldWidth * 1.3, margin: '0 auto',
@@ -159,7 +167,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               {FORMATION.map((slot) => {
                 const p = lineup[slot.id];
                 return (
-                  <div key={slot.id} onClick={() => step === 'escalar' && handleTapSlot(slot.id, p)} style={{
+                  <div key={slot.id} onClick={() => step === 'escalar' && handleTapMain(slot.id, p)} style={{
                     position: 'absolute', left: `${slot.x}%`, top: `${slot.y}%`,
                     transform: 'translate(-50%, -50%)', zIndex: 10, cursor: 'pointer'
                   }}>
@@ -168,7 +176,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                         if(step === 'capitao') setCapitao(p.id);
                         if(step === 'heroi') setHeroi(p.id);
                       }}>
-                        <PlayerCard player={p} size={fieldWidth * 0.16} isField isCapitao={capitao === p.id} isHeroi={heroi === p.id} />
+                        <PlayerCard player={p} size={fieldWidth * 0.16} isField isCapitao={capitao === p.id} isHeroi={heroi === p.id} isSelected />
                       </div>
                     ) : (
                       <div style={{ width: 35, height: 35, borderRadius: '50%', border: '1.5px dashed #F5C400', color: '#F5C400', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</div>
@@ -180,41 +188,53 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           </div>
         )}
 
-        {/* MECÂNICA DE MERCADO */}
-        {step === 'escalar' && (
+        {/* BANCO DE RESERVAS (UI Especial) */}
+        {step === 'reserva' && (
+           <div style={{ background: '#111', borderRadius: 20, padding: 20, marginBottom: 20, border: '1px solid #333' }}>
+             <h4 style={{ color: '#F5C400', fontSize: 12, marginBottom: 15, textAlign: 'center' }}>SELECIONE 5 RESERVAS</h4>
+             <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+               {RESERVES_SLOTS.map(slotId => {
+                 const p = reserves[slotId];
+                 return (
+                   <div key={slotId} onClick={() => handleTapReserve(slotId, p)} style={{ cursor: 'pointer' }}>
+                      {p ? (
+                        <PlayerCard player={p} size={fieldWidth * 0.15} isSelected />
+                      ) : (
+                        <div style={{ width: 50, height: 70, borderRadius: 8, border: '1px dashed #555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555' }}>+</div>
+                      )}
+                   </div>
+                 );
+               })}
+             </div>
+           </div>
+        )}
+
+        {/* MERCADO COM LÓGICA DE OFFSET */}
+        {(step === 'escalar' || step === 'reserva') && (
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:10, background:'#111', padding:15, borderRadius:20 }}>
-            {PLAYERS.filter(p => !filledPlayers.some(fp => fp.id === p.id)).map(p => (
-              <div key={p.id} onClick={() => handleSelectFromMercado(p)} style={{ cursor:'pointer' }}>
+            {PLAYERS.filter(p => !allSelectedIds.includes(p.id)).map(p => (
+              <div key={p.id} onClick={() => step === 'escalar' ? handleSelectMain(p) : handleSelectReserve(p)} style={{ cursor:'pointer' }}>
                 <PlayerCard player={p} size={(fieldWidth/4) - 20} />
               </div>
             ))}
           </div>
         )}
 
-        {/* MECÂNICA DE PALPITE */}
+        {/* PALPITE E FINALIZAÇÃO */}
         {step === 'palpite' && (
           <div style={{ textAlign:'center', padding:40, background:'#111', borderRadius:24, border:'1px solid #F5C400' }}>
             <h3 style={{ color:'#F5C400', marginBottom:30 }}>PLACAR FINAL</h3>
             <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:20 }}>
-              <div>
-                <div style={{ fontSize:10, marginBottom:10 }}>TIGRE</div>
-                <input type="number" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', borderRadius:12, border:'none', fontSize:24, fontWeight:900 }} />
-              </div>
-              <div style={{ fontSize:24, marginTop:20 }}>X</div>
-              <div>
-                <div style={{ fontSize:10, marginBottom:10 }}>ADVERSÁRIO</div>
-                <input type="number" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Number(e.target.value)})} style={{ width:60, height:60, textAlign:'center', borderRadius:12, border:'none', fontSize:24, fontWeight:900 }} />
-              </div>
+              <input type="number" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Number(e.target.value)})} style={{ width:70, height:70, textAlign:'center', borderRadius:15, border:'none', fontSize:28, fontWeight:900 }} />
+              <div style={{ fontSize:24 }}>X</div>
+              <input type="number" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Number(e.target.value)})} style={{ width:70, height:70, textAlign:'center', borderRadius:15, border:'none', fontSize:28, fontWeight:900 }} />
             </div>
           </div>
         )}
 
-        {/* BOTÃO DE AÇÃO DINÂMICO */}
+        {/* CONTROLES FIXOS */}
         <div style={{ position:'fixed', bottom:0, left:0, width:'100%', padding:20, background:'linear-gradient(transparent, #000 70%)', zIndex:2000 }}>
-           <button 
-             onClick={handleNextStep}
-             disabled={saving}
-             style={{ width:'100%', padding:22, borderRadius:16, border:'none', background:'#F5C400', color:'#000', fontWeight:1000, fontSize:14 }}>
+           <button onClick={handleNextStep} disabled={saving} style={{ width:'100%', padding:22, borderRadius:16, border:'none', background:'#F5C400', color:'#000', fontWeight:1000, fontSize:14 }}>
              {getButtonText()}
            </button>
            {step !== 'escalar' && step !== 'finalizado' && (
@@ -226,18 +246,27 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     </main>
   );
 
-  // Funções de Ajuda
-  function handleSelectFromMercado(p: Player) {
-    const firstEmpty = FORMATION.find(slot => !lineup[slot.id]);
-    if(firstEmpty) setLineup({...lineup, [firstEmpty.id]: p});
+  function handleSelectMain(p: Player) {
+    const empty = FORMATION.find(s => !lineup[s.id]);
+    if(empty) setLineup({...lineup, [empty.id]: p});
   }
 
-  function handleTapSlot(slotId: string, player: Player | null) {
-    if(player) setLineup({...lineup, [slotId]: null});
+  function handleTapMain(id: string, p: Player | null) {
+    if(p) setLineup({...lineup, [id]: null});
+  }
+
+  function handleSelectReserve(p: Player) {
+    const empty = RESERVES_SLOTS.find(s => !reserves[s]);
+    if(empty) setReserves({...reserves, [empty]: p});
+  }
+
+  function handleTapReserve(id: string, p: Player | null) {
+    if(p) setReserves({...reserves, [id]: null});
   }
 
   function handleNextStep() {
-    if (step === 'escalar' && filledPlayers.length === 11) setStep('capitao');
+    if (step === 'escalar' && filledMain.length === 11) setStep('reserva');
+    else if (step === 'reserva' && filledReserves.length === 5) setStep('capitao');
     else if (step === 'capitao' && capitao) setStep('heroi');
     else if (step === 'heroi' && heroi) setStep('palpite');
     else if (step === 'palpite') setStep('confirmar');
@@ -245,16 +274,16 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
   }
 
   function handlePrevStep() {
-    const steps: any[] = ['escalar', 'capitao', 'heroi', 'palpite', 'confirmar'];
+    const steps: any[] = ['escalar', 'reserva', 'capitao', 'heroi', 'palpite', 'confirmar'];
     setStep(steps[steps.indexOf(step) - 1]);
   }
 
   function getButtonText() {
     if(saving) return "PROCESSANDO...";
-    if(step === 'escalar') return filledPlayers.length < 11 ? `FALTAM ${11 - filledPlayers.length} JOGADORES` : "ESCOLHER CAPITÃO →";
-    if(step === 'capitao') return !capitao ? "SELECIONE O CAPITÃO" : "ESCOLHER HERÓI →";
-    if(step === 'heroi') return !heroi ? "SELECIONE O HERÓI" : "DAR PALPITE →";
-    if(step === 'palpite') return "REVISAR ESCALAÇÃO →";
+    if(step === 'escalar') return filledMain.length < 11 ? `ESCALAR TITULARES (${filledMain.length}/11)` : "ESCOLHER RESERVAS →";
+    if(step === 'reserva') return filledReserves.length < 5 ? `BANCO DE RESERVAS (${filledReserves.length}/5)` : "ESCOLHER CAPITÃO →";
+    if(step === 'capitao') return !capitao ? "QUEM SERÁ O CAPITÃO?" : "ESCOLHER HERÓI →";
+    if(step === 'heroi') return !heroi ? "QUEM SERÁ O HERÓI?" : "DEFINIR PLACAR →";
     return "CONFIRMAR TUDO 🐯";
   }
 }
