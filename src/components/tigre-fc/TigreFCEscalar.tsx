@@ -56,6 +56,13 @@ const PLAYERS = [
 ];
 
 const FORMATIONS = {
+  '4-2-3-1': [
+    { id: 'gk',  x: 50, y: 88 },
+    { id: 'rb',  x: 82, y: 68 }, { id: 'cb1', x: 62, y: 75 }, { id: 'cb2', x: 38, y: 75 }, { id: 'lb',  x: 18, y: 68 },
+    { id: 'dm1', x: 40, y: 55 }, { id: 'dm2', x: 60, y: 55 },
+    { id: 'rw',  x: 80, y: 32 }, { id: 'am',  x: 50, y: 38 }, { id: 'lw',  x: 20, y: 32 },
+    { id: 'st',  x: 50, y: 15 }
+  ],
   '4-3-3': [
     { id: 'gk', x: 50, y: 88 },
     { id: 'rb', x: 82, y: 68 }, { id: 'cb1', x: 62, y: 75 }, { id: 'cb2', x: 38, y: 75 }, { id: 'lb', x: 18, y: 68 },
@@ -66,6 +73,12 @@ const FORMATIONS = {
     { id: 'gk', x: 50, y: 88 },
     { id: 'rb', x: 82, y: 68 }, { id: 'cb1', x: 62, y: 75 }, { id: 'cb2', x: 38, y: 75 }, { id: 'lb', x: 18, y: 68 },
     { id: 'm1', x: 65, y: 50 }, { id: 'm2', x: 35, y: 50 }, { id: 'm3', x: 85, y: 45 }, { id: 'm4', x: 15, y: 45 },
+    { id: 'st1', x: 60, y: 18 }, { id: 'st2', x: 40, y: 18 }
+  ],
+  '3-5-2': [
+    { id: 'gk', x: 50, y: 88 },
+    { id: 'cb1', x: 50, y: 75 }, { id: 'cb2', x: 75, y: 72 }, { id: 'cb3', x: 25, y: 72 },
+    { id: 'm1', x: 50, y: 55 }, { id: 'm2', x: 72, y: 45 }, { id: 'm3', x: 28, y: 45 }, { id: 'm4', x: 88, y: 40 }, { id: 'm5', x: 12, y: 40 },
     { id: 'st1', x: 60, y: 18 }, { id: 'st2', x: 40, y: 18 }
   ]
 };
@@ -112,7 +125,7 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
   );
 }
 
-export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialFormation = '4-3-3' }: Props) {
+export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialFormation = '4-2-3-1' }: Props) {
   const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -157,20 +170,14 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
-      // Ajuste para a estrutura real do seu banco (coluna lineup como JSON string)
       const lineupData = JSON.stringify(lineup);
 
-      const { error: dbError } = await supabase.from('tigre_fc_escalacoes').insert([{
+      await supabase.from('tigre_fc_escalacoes').insert([{
         usuario_id: session?.user?.id || null, 
         jogo_id: jogoId,
         formacao: formationKey,
         lineup: lineupData
       }]);
-
-      if (dbError) {
-        console.error("Erro no Supabase:", dbError.message);
-      }
 
       if (cardRef.current) {
         const canvas = await html2canvas(cardRef.current, { useCORS: true, scale: 2 });
@@ -183,7 +190,6 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
             text: 'Montei meu time no Tigre FC!',
             files: [file] 
           }).catch(() => {
-             // Fallback download
              const link = document.createElement('a');
              link.href = canvas.toDataURL();
              link.download = 'minha-escalacao.png';
@@ -193,8 +199,7 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
       }
 
       alert("Escalação enviada com sucesso!");
-      router.push('/');
-
+      router.push('/tigre-fc');
     } catch (err) { 
       console.error(err);
       alert("Ocorreu um problema ao salvar."); 
@@ -224,7 +229,7 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
              {specialMode === 'captain' && "🎖️ SELECIONE O CAPITÃO"}
              {specialMode === 'hero' && "⭐ SELECIONE O HERÓI"}
              {selectedSlot && !specialMode && "⚡ SELECIONE QUALQUER ATLETA"}
-             {!selectedSlot && !specialMode && "👉 DEFINA OS LÍDERES E O TIME"}
+             {!selectedSlot && !specialMode && `👉 TÉCNICO: ENDERSON MOREIRA (${formationKey})`}
           </div>
 
           <div className="field" style={{ width: fieldWidth, height: fieldWidth * 1.35 }}>
@@ -329,7 +334,7 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
              <div className="capture-footer">
                 <div className="footer-row">
                   <div className="footer-label">ELITE 26</div>
-                  <div className="footer-author">POR {supabase.auth.getUser() ? 'VOCÊ' : 'FELIPE MAKARIOS'}</div>
+                  <div className="footer-author">POR FELIPE MAKARIOS</div>
                 </div>
              </div>
           </div>
@@ -348,8 +353,8 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
         .elite { font-style: italic; opacity: 0.7; font-size: 14px; }
         .content { display: flex; flex-direction: column; align-items: center; padding: 10px; max-width: 500px; margin: 0 auto; width: 100%; }
         
-        .formation-selector { display: flex; gap: 4px; margin-bottom: 12px; background: #111; padding: 4px; border-radius: 8px; width: 100%; }
-        .formation-selector button { flex: 1; padding: 8px 0; border: none; background: transparent; color: #555; font-weight: 800; font-size: 10px; border-radius: 6px; }
+        .formation-selector { display: flex; gap: 4px; margin-bottom: 12px; background: #111; padding: 4px; border-radius: 8px; width: 100%; overflow-x: auto; }
+        .formation-selector button { flex: 1; padding: 8px 12px; border: none; background: transparent; color: #555; font-weight: 800; font-size: 10px; border-radius: 6px; white-space: nowrap; }
         .formation-selector button.active { background: #F5C400; color: #000; }
 
         .alert { background: #080808; color: #444; width: 100%; text-align: center; padding: 12px; font-weight: 800; font-size: 11px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #111; }
