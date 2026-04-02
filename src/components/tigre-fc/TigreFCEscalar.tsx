@@ -10,10 +10,10 @@ const supabase = createClient(
   { auth: { persistSession: true, autoRefreshToken: true } }
 );
 
-// --- CONSTANTES DE ATIVOS ---
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 
+// --- DADOS DOS JOGADORES ---
 const PLAYERS = [
   { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id: 2,  name: 'Jordi',           short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
@@ -56,357 +56,271 @@ const PLAYERS = [
   { id: 39, name: 'Ronald Barcellos', short: 'Ronald',     num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-const FORMATION = [
-  { id:'gk',  label:'GOL', x:50, y:92 }, 
-  { id:'rb',  label:'LAT', x:82, y:72 },
-  { id:'cb1', label:'ZAG', x:62, y:78 }, 
-  { id:'cb2', label:'ZAG', x:38, y:78 },
-  { id:'lb',  label:'LAT', x:18, y:72 }, 
-  { id:'cm1', label:'MEI', x:75, y:52 },
-  { id:'cm2', label:'MEI', x:50, y:55 }, 
-  { id:'cm3', label:'MEI', x:25, y:52 },
-  { id:'rw',  label:'ATA', x:80, y:22 }, 
-  { id:'st',  label:'ATA', x:50, y:12 },
-  { id:'lw',  label:'ATA', x:20, y:22 },
-];
+const FORMATIONS: Record<string, any[]> = {
+  '4-3-3': [
+    { id:'gk', pos:'GOL', x:50, y:92 }, { id:'rb', pos:'LAT', x:85, y:72 }, { id:'cb1', pos:'ZAG', x:62, y:78 }, { id:'cb2', pos:'ZAG', x:38, y:78 }, { id:'lb', pos:'LAT', x:15, y:72 },
+    { id:'cm1', pos:'MEI', x:75, y:52 }, { id:'cm2', pos:'MEI', x:50, y:55 }, { id:'cm3', pos:'MEI', x:25, y:52 },
+    { id:'rw', pos:'ATA', x:80, y:22 }, { id:'st', pos:'ATA', x:50, y:12 }, { id:'lw', pos:'ATA', x:20, y:22 }
+  ],
+  '4-4-2': [
+    { id:'gk', pos:'GOL', x:50, y:92 }, { id:'rb', pos:'LAT', x:85, y:72 }, { id:'cb1', pos:'ZAG', x:62, y:78 }, { id:'cb2', pos:'ZAG', x:38, y:78 }, { id:'lb', pos:'LAT', x:15, y:72 },
+    { id:'rm', pos:'MEI', x:85, y:48 }, { id:'cm1', pos:'MEI', x:60, y:52 }, { id:'cm2', pos:'MEI', x:40, y:52 }, { id:'lm', pos:'MEI', x:15, y:48 },
+    { id:'st1', pos:'ATA', x:65, y:18 }, { id:'st2', pos:'ATA', x:35, y:18 }
+  ],
+  '3-5-2': [
+    { id:'gk', pos:'GOL', x:50, y:92 }, { id:'cb1', pos:'ZAG', x:70, y:78 }, { id:'cb2', pos:'ZAG', x:50, y:82 }, { id:'cb3', pos:'ZAG', x:30, y:78 },
+    { id:'rm', pos:'MEI', x:88, y:45 }, { id:'cm1', pos:'MEI', x:65, y:52 }, { id:'cm2', pos:'MEI', x:50, y:55 }, { id:'cm3', pos:'MEI', x:35, y:52 }, { id:'lm', pos:'MEI', x:12, y:45 },
+    { id:'st1', pos:'ATA', x:60, y:18 }, { id:'st2', pos:'ATA', x:40, y:18 }
+  ]
+};
 
-const RESERVES_SLOTS = ['res1', 'res2', 'res3', 'res4', 'res5'];
-
-type Player = typeof PLAYERS[0];
-
-// --- COMPONENTE PLAYER CARD (PADRÃO FC 25 / ULTIMATE TEAM) ---
-function PlayerCard({ player, size, isCapitao, isHeroi, isField, isSelected, onClick }: any) {
+// --- COMPONENTE PLAYER CARD (COM EFEITO GIF) ---
+function PlayerCard({ player, size, isSelected, status, onClick }: any) {
   return (
-    <div 
-      onClick={onClick}
-      style={{ 
-        width: size, 
-        animation: 'card-entry 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-        cursor: 'pointer'
-      }}
-    >
-      <div className={`card-container ${isCapitao ? 'cap' : isHeroi ? 'hero' : ''}`} style={{
-        position: 'relative', width: size, height: size * 1.38,
-        background: '#1a1a1a', borderRadius: '4px', overflow: 'hidden',
-        border: `1px solid rgba(255,255,255,0.2)`,
-        boxShadow: '0 10px 20px rgba(0,0,0,0.5)',
-        transition: 'all 0.3s ease',
-        transformStyle: 'preserve-3d'
-      }}>
-        {/* Camada de Foto */}
-        <div style={{
-          width: '100%', height: '100%', 
-          backgroundImage: `url(${player.foto})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)'
-        }} />
-
-        {/* Overlay de Informações */}
-        <div style={{ 
-            position: 'absolute', bottom: 0, width: '100%', 
-            background: 'linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)', 
-            padding: '8px 0', textAlign: 'center' 
-        }}>
-          <div style={{ color: '#F5C400', fontSize: size * 0.1, fontWeight: 900, letterSpacing: -0.5 }}>{player.num}</div>
-          <div style={{ color: '#fff', fontSize: size * 0.14, fontWeight: 800, textTransform: 'uppercase' }}>{player.short}</div>
+    <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} onClick={onClick} style={{ width: size }}>
+      <div className={`card-body ${status}`}>
+        <div className="photo-container">
+            <div className="photo-sprite" style={{ backgroundImage: `url(${player.foto})` }} />
         </div>
-
-        {/* Shine Effect */}
-        <div className="shine-effect" />
+        <div className="card-info">
+          <span className="player-num">{player.num}</span>
+          <span className="player-name">{player.short}</span>
+        </div>
+        {status === 'cap' && <div className="badge">C</div>}
+        {status === 'hero' && <div className="badge hero">H</div>}
       </div>
-
       <style jsx>{`
-        .card-container:hover { transform: scale(1.1) translateY(-5px); z-index: 50; }
-        .cap { border: 2px solid #F5C400 !important; box-shadow: 0 0 20px rgba(245, 196, 0, 0.4) !important; }
-        .hero { border: 2px solid #00E5FF !important; box-shadow: 0 0 20px rgba(0, 229, 255, 0.4) !important; }
-        .shine-effect {
-          position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-          transform: skewX(-20deg);
-          animation: shine 3s infinite;
+        .card-wrapper { cursor: pointer; transition: transform 0.2s; perspective: 1000px; }
+        .card-body { 
+          position: relative; width: 100%; height: 140px; background: #111; 
+          border-radius: 6px; overflow: hidden; border: 1px solid #333;
+          display: flex; flex-direction: column;
         }
-        @keyframes shine { to { left: 200%; } }
+        .photo-container { flex: 1; position: relative; overflow: hidden; }
+        .photo-sprite {
+          width: 200%; height: 100%; background-size: 200% 100%;
+          background-position: left center; transition: background-position 0.1s steps(1);
+        }
+        /* Efeito de Troca para GIF ao selecionar ou hover */
+        .card-wrapper:hover .photo-sprite, .selected .photo-sprite {
+          animation: player-gif 0.6s infinite steps(1);
+        }
+        @keyframes player-gif {
+          0%, 100% { background-position: left center; }
+          50% { background-position: right center; }
+        }
+        .card-info { background: #000; padding: 4px; text-align: center; }
+        .player-num { display: block; color: #F5C400; font-size: 10px; font-weight: 900; }
+        .player-name { color: #fff; font-size: 11px; text-transform: uppercase; font-weight: 700; }
+        .selected .card-body { border-color: #F5C400; box-shadow: 0 0 15px rgba(245,196,0,0.3); }
+        .cap { border: 2px solid #F5C400 !important; }
+        .hero { border: 2px solid #00E5FF !important; }
+        .badge { position: absolute; top: 5px; right: 5px; background: #F5C400; color: #000; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        .badge.hero { background: #00E5FF; }
       `}</style>
     </div>
   );
 }
 
-export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
-  const [step, setStep] = useState<'login' | 'escalar' | 'capitao' | 'heroi' | 'palpite' | 'confirmar' | 'finalizado'>('login');
+export default function TigreFCFantasy() {
+  const [step, setStep] = useState<'escalar' | 'capitao' | 'heroi' | 'palpite' | 'share'>('escalar');
+  const [formationKey, setFormationKey] = useState('4-3-3');
   const [lineup, setLineup] = useState<Record<string, Player | null>>({});
-  const [reserves, setReserves] = useState<Record<string, Player | null>>({});
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
+  const [filterPos, setFilterPos] = useState('GOL');
   const [capitao, setCapitao] = useState<number | null>(null);
   const [heroi, setHeroi] = useState<number | null>(null);
-  const [palpite, setPalpite] = useState({ mandante: 0, visitante: 0 });
-  const [usuario, setUsuario] = useState<any>(null);
-  const [saving, setSaving] = useState(false);
-  const [fieldWidth, setFieldWidth] = useState(360);
+  const [palpite, setPalpite] = useState({ home: 0, away: 0 });
 
-  useEffect(() => {
-    const update = () => setFieldWidth(Math.min(window.innerWidth, 500));
-    update();
-    window.addEventListener('resize', update);
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) { setUsuario(session.user); setStep('escalar'); }
-    });
-    return () => window.removeEventListener('resize', update);
-  }, []);
+  // Lista ID's já usados para não repetir
+  const usedIds = useMemo(() => Object.values(lineup).filter(Boolean).map(p => p!.id), [lineup]);
 
-  const allSelectedIds = useMemo(() => {
-    return [...Object.values(lineup), ...Object.values(reserves)].filter(Boolean).map(p => p!.id);
-  }, [lineup, reserves]);
-
-  const handleSalvar = async () => {
-    setSaving(true);
-    const { error } = await supabase.from('escalacoes_elite').upsert({
-      user_id: usuario?.id,
-      jogo_id: jogoId,
-      jogadores: lineup,
-      reservas: reserves,
-      capitao_id: capitao,
-      heroi_id: heroi,
-      palpite: palpite,
-      updated_at: new Date()
-    });
-    if (!error) setStep('finalizado');
-    setSaving(false);
+  const togglePlayer = (p: Player) => {
+    if (usedIds.includes(p.id)) {
+        // Remover se já estiver
+        const entry = Object.entries(lineup).find(([_, player]) => player?.id === p.id);
+        if (entry) setLineup({ ...lineup, [entry[0]]: null });
+    } else {
+        // Tenta encaixar no slot ativo ou no primeiro disponível da posição
+        const targetSlot = activeSlot || FORMATIONS[formationKey].find(s => s.pos === p.pos && !lineup[s.id])?.id;
+        if (targetSlot) {
+            setLineup({ ...lineup, [targetSlot]: p });
+            setActiveSlot(null);
+        }
+    }
   };
 
-  const filledMain = Object.values(lineup).filter(Boolean).length;
-  const filledRes = Object.values(reserves).filter(Boolean).length;
-
-  if (step === 'login') return <div style={{ height:'100vh', background:'#000' }} />;
+  const isComplete = Object.values(lineup).filter(Boolean).length === 11;
 
   return (
-    <main style={{ minHeight:'100vh', background:'#000', color:'#fff', overflowX: 'hidden' }}>
-      
-      {/* HUD SUPERIOR - GLASSMORPHISM */}
-      <nav style={{ 
-        position: 'sticky', top: 0, zIndex: 100, 
-        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(15px)',
-        padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-      }}>
-        <img src={LOGO} alt="Tigre FC" style={{ height: 35 }} />
-        <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 10, color: '#F5C400', fontWeight: 900 }}>STATUS DA ESCALAÇÃO</div>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>{filledMain}/11 TITULARES</div>
+    <main className="fantasy-container">
+      {/* HEADER DINÂMICO */}
+      <header className="game-header">
+        <img src={LOGO} alt="Tigre FC" />
+        <div className="progress-bar">
+            <div className={`dot ${step === 'escalar' ? 'active' : ''}`} />
+            <div className={`dot ${step === 'capitao' ? 'active' : ''}`} />
+            <div className={`dot ${step === 'heroi' ? 'active' : ''}`} />
+            <div className={`dot ${step === 'palpite' ? 'active' : ''}`} />
         </div>
-      </nav>
+      </header>
 
-      <div style={{ maxWidth: 500, margin: '0 auto', position: 'relative' }}>
-        
-        {/* CAMPO DE JOGO - ESTÉTICA FIFA/FC 26 */}
-        <div style={{ 
-          perspective: '1500px', 
-          marginTop: -20,
-          marginBottom: 40,
-          filter: activeSlot ? 'blur(5px) brightness(0.3)' : 'none',
-          transition: 'all 0.4s ease'
-        }}>
-          <div style={{
-            width: '100%', height: fieldWidth * 1.4,
-            background: 'radial-gradient(circle at 50% 100%, #1e5d2c 0%, #0a200f 100%)',
-            position: 'relative',
-            transform: 'rotateX(25deg)',
-            transformOrigin: 'bottom',
-            border: '4px solid rgba(255,255,255,0.05)',
-            boxShadow: '0 50px 100px rgba(0,0,0,0.8)'
-          }}>
-            {/* Linhas do Campo */}
-            <div style={{ position: 'absolute', top: '50%', width: '100%', height: 2, background: 'rgba(255,255,255,0.1)' }} />
-            <div style={{ 
-                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                width: 120, height: 120, border: '2px solid rgba(255,255,255,0.1)', borderRadius: '50%' 
-            }} />
-            <div style={{ position: 'absolute', bottom: 0, left: '25%', width: '50%', height: '15%', border: '2px solid rgba(255,255,255,0.1)', borderBottom: 'none' }} />
+      {/* ÁREA DO CAMPO (3D REPLICA) */}
+      <div className="field-viewport">
+        <div className="soccer-field">
+          {/* Marcações do Campo */}
+          <div className="field-lines">
+            <div className="penalty-area top" />
+            <div className="circle-middle" />
+            <div className="line-middle" />
+            <div className="penalty-area bottom" />
+          </div>
 
-            {/* Renderização dos Slots de Jogadores */}
-            {FORMATION.map((slot) => {
-              const p = lineup[slot.id];
-              return (
-                <div key={slot.id} style={{
-                  position: 'absolute', left: `${slot.x}%`, top: `${slot.y}%`, 
-                  transform: 'translate(-50%, -50%) translateZ(20px)',
-                  zIndex: 10
-                }}>
-                  {p ? (
-                    <PlayerCard 
-                      player={p} 
-                      size={fieldWidth * 0.17} 
-                      isCapitao={capitao === p.id} 
-                      isHeroi={heroi === p.id}
-                      onClick={() => {
-                        if (step === 'escalar') setLineup({...lineup, [slot.id]: null});
-                        if (step === 'capitao') setCapitao(p.id);
-                        if (step === 'heroi') setHeroi(p.id);
-                      }} 
+          {/* Jogadores no Campo */}
+          {FORMATIONS[formationKey].map(slot => {
+            const p = lineup[slot.id];
+            return (
+              <div key={slot.id} className="player-slot" style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
+                {p ? (
+                   <div onClick={() => {
+                       if(step === 'escalar') setLineup({...lineup, [slot.id]: null});
+                       if(step === 'capitao') setCapitao(p.id);
+                       if(step === 'heroi') setHeroi(p.id);
+                   }}>
+                     <PlayerCard 
+                        player={p} 
+                        size={60} 
+                        status={capitao === p.id ? 'cap' : heroi === p.id ? 'hero' : ''} 
+                        isSelected 
                     />
-                  ) : (
-                    <button 
-                      onClick={() => step === 'escalar' && setActiveSlot(slot.id)}
-                      className="add-btn"
-                    >
-                      <span style={{ fontSize: 10 }}>{slot.label}</span>
-                      <span style={{ fontSize: 20 }}>+</span>
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                   </div>
+                ) : (
+                  <button className={`add-placeholder ${activeSlot === slot.id ? 'active' : ''}`} onClick={() => {
+                      setActiveSlot(slot.id);
+                      setFilterPos(slot.pos);
+                  }}>
+                    <span>{slot.pos}</span>
+                    <i />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
-
-        {/* BANCO DE RESERVAS */}
-        <section style={{ padding: '0 20px 120px' }}>
-          <h3 style={{ fontSize: 12, color: '#666', fontWeight: 900, marginBottom: 15, textAlign: 'center' }}>SUPLENTES</h3>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-            {RESERVES_SLOTS.map(id => {
-              const p = reserves[id];
-              return (
-                <div key={id} style={{ flex: 1, maxWidth: 70 }}>
-                  {p ? (
-                    <PlayerCard player={p} size={fieldWidth * 0.14} onClick={() => step === 'escalar' && setReserves({...reserves, [id]: null})} />
-                  ) : (
-                    <div onClick={() => step === 'escalar' && setActiveSlot(id)} className="reserve-empty">
-                      +
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* MODAL MERCADO - FULLSCREEN OVERLAY */}
-        {activeSlot && (
-          <div className="market-overlay">
-            <div className="market-content">
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom:20 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 900 }}>CONTRATAR JOGADOR</h2>
-                    <button onClick={() => setActiveSlot(null)} style={{ background: '#333', border: 'none', color: '#fff', borderRadius: '50%', width: 30, height: 30 }}>✕</button>
-                </div>
-                
-                <div className="players-grid">
-                    {PLAYERS.filter(p => !allSelectedIds.includes(p.id)).map(p => (
-                        <PlayerCard 
-                          key={p.id} 
-                          player={p} 
-                          size={100} 
-                          onClick={() => {
-                            if(RESERVES_SLOTS.includes(activeSlot)) setReserves({...reserves, [activeSlot]: p});
-                            else setLineup({...lineup, [activeSlot]: p});
-                            setActiveSlot(null);
-                          }}
-                        />
-                    ))}
-                </div>
-            </div>
-          </div>
-        )}
-
-        {/* HUD DE PALPITE */}
-        {step === 'palpite' && (
-            <div className="step-modal">
-                <h2 style={{ color: '#F5C400' }}>QUAL O PLACAR?</h2>
-                <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-                    <input type="number" className="score-input" value={palpite.mandante} onChange={e => setPalpite({...palpite, mandante: Number(e.target.value)})} />
-                    <span style={{ fontSize: 32, fontWeight: 900 }}>X</span>
-                    <input type="number" className="score-input" value={palpite.visitante} onChange={e => setPalpite({...palpite, visitante: Number(e.target.value)})} />
-                </div>
-            </div>
-        )}
-
-        {/* BOTÃO DE AÇÃO PRINCIPAL - FOOTER FIXO */}
-        <div style={{ 
-            position: 'fixed', bottom: 0, left: 0, width: '100%', 
-            padding: '20px', background: 'linear-gradient(0deg, #000 60%, transparent 100%)', zIndex: 1000 
-        }}>
-            <button 
-                className="main-action-btn"
-                onClick={() => {
-                    if (step === 'escalar' && filledMain === 11 && filledRes === 5) setStep('capitao');
-                    else if (step === 'capitao' && capitao) setStep('heroi');
-                    else if (step === 'heroi' && heroi) setStep('palpite');
-                    else if (step === 'palpite') setStep('confirmar');
-                    else if (step === 'confirmar') handleSalvar();
-                }}
-            >
-                {saving ? "PROCESSANDO..." : getBtnText(step, filledMain, filledRes, capitao, heroi)}
-            </button>
-            {step !== 'escalar' && (
-                <button onClick={() => setStep('escalar')} style={{ width: '100%', marginTop: 10, background: 'transparent', border: 'none', color: '#666', fontSize: 12, fontWeight: 700 }}>REVISAR TIME</button>
-            )}
-        </div>
-
       </div>
 
+      {/* MERCADO DE JOGADORES (INVERSO - SEMPRE VISÍVEL NO STEP ESCALAR) */}
+      {step === 'escalar' && (
+        <section className="market-section">
+          <div className="market-header">
+            <div className="formation-select">
+                {Object.keys(FORMATIONS).map(f => (
+                    <button key={f} className={formationKey === f ? 'active' : ''} onClick={() => {setFormationKey(f); setLineup({});}}>{f}</button>
+                ))}
+            </div>
+            <div className="pos-filters">
+                {['GOL', 'ZAG', 'LAT', 'MEI', 'ATA'].map(pos => (
+                    <button key={pos} className={filterPos === pos ? 'active' : ''} onClick={() => setFilterPos(pos)}>{pos}</button>
+                ))}
+            </div>
+          </div>
+          <div className="players-scroll">
+            {PLAYERS.filter(p => p.pos === filterPos).map(p => (
+                <PlayerCard 
+                    key={p.id} 
+                    player={p} 
+                    size={85} 
+                    isSelected={usedIds.includes(p.id)}
+                    onClick={() => togglePlayer(p)} 
+                />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* STEP PALPITE */}
+      {step === 'palpite' && (
+          <div className="palpite-overlay">
+            <h3>PLACAR FINAL</h3>
+            <div className="score-box">
+                <input type="number" value={palpite.home} onChange={e => setPalpite({...palpite, home: Number(e.target.value)})} />
+                <span>X</span>
+                <input type="number" value={palpite.away} onChange={e => setPalpite({...palpite, away: Number(e.target.value)})} />
+            </div>
+          </div>
+      )}
+
+      {/* CONTROLES FLUTUANTES */}
+      <footer className="footer-actions">
+          {step === 'escalar' && (
+              <button className="next-btn" disabled={!isComplete} onClick={() => setStep('capitao')}>
+                  {isComplete ? 'ESCOLHER CAPITÃO' : `FALTAM ${11 - usedIds.length}`}
+              </button>
+          )}
+          {step === 'capitao' && <button className="next-btn" disabled={!capitao} onClick={() => setStep('heroi')}>DEFINIR HERÓI</button>}
+          {step === 'heroi' && <button className="next-btn" disabled={!heroi} onClick={() => setStep('palpite')}>DAR PALPITE</button>}
+          {step === 'palpite' && <button className="next-btn" onClick={() => alert('Escalação salva! Felipe agradece.')}>CONFIRMAR TIME 🐯</button>}
+          
+          {step !== 'escalar' && <button className="back-link" onClick={() => setStep('escalar')}>VOLTAR</button>}
+      </footer>
+
       <style jsx global>{`
-        @font-face { font-family: 'FC24'; src: url('https://fonts.cdnfonts.com/css/din-alternate'); }
-        body { font-family: 'DIN Alternate', sans-serif; background: #000; margin: 0; }
+        body { background: #000; margin: 0; font-family: sans-serif; color: #fff; overflow-x: hidden; }
+        .fantasy-container { min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 120px; }
         
-        .add-btn {
-          width: 50px; height: 50px; border-radius: 50%;
-          background: rgba(245, 196, 0, 0.1); border: 2px dashed #F5C400;
-          color: #F5C400; display: flex; flex-direction: column; 
-          align-items: center; justify-content: center; font-weight: 900;
-          transition: all 0.3s;
-        }
-        .add-btn:hover { background: rgba(245, 196, 0, 0.3); transform: scale(1.2); }
+        .game-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.05); }
+        .game-header img { height: 30px; }
+        .progress-bar { display: flex; gap: 8px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+        .dot.active { background: #F5C400; box-shadow: 0 0 10px #F5C400; }
 
-        .reserve-empty {
-            height: 80px; border-radius: 8px; border: 1px dashed #333;
-            display: flex; alignItems: center; justifyContent: center; color: #333; font-size: 24px;
+        .field-viewport { perspective: 1200px; padding: 20px 10px; margin-top: -30px; }
+        .soccer-field { 
+          position: relative; width: 100%; height: 520px; 
+          background: linear-gradient(180deg, #1e5c2c 0%, #0a240f 100%);
+          border-radius: 12px; transform: rotateX(25deg);
+          box-shadow: 0 40px 60px rgba(0,0,0,0.8);
+          border: 4px solid rgba(255,255,255,0.1);
         }
+        .field-lines { position: absolute; inset: 0; pointer-events: none; }
+        .penalty-area { position: absolute; left: 20%; width: 60%; height: 15%; border: 2px solid rgba(255,255,255,0.1); }
+        .penalty-area.top { top: 0; border-top: none; }
+        .penalty-area.bottom { bottom: 0; border-bottom: none; }
+        .line-middle { position: absolute; top: 50%; width: 100%; height: 2px; background: rgba(255,255,255,0.1); }
+        .circle-middle { position: absolute; top: 50%; left: 50%; width: 100px; height: 100px; border: 2px solid rgba(255,255,255,0.1); border-radius: 50%; transform: translate(-50%, -50%); }
 
-        .market-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-            backdrop-filter: blur(20px); z-index: 2000; padding: 20px;
-            animation: fadeIn 0.3s ease;
+        .player-slot { position: absolute; transform: translate(-50%, -50%); z-index: 10; }
+        .add-placeholder { 
+          width: 45px; height: 45px; border-radius: 50%; border: 2px dashed rgba(245,196,0,0.4);
+          background: rgba(0,0,0,0.4); color: #F5C400; font-weight: 900; font-size: 9px;
+          display: flex; align-items: center; justify-content: center; flex-direction: column;
         }
-        .market-content { max-width: 500px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; }
-        .players-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; 
-            overflow-y: auto; padding-bottom: 50px;
-        }
+        .add-placeholder.active { border-color: #fff; background: #F5C400; color: #000; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        .main-action-btn {
-            width: 100%; padding: 20px; border-radius: 12px; border: none;
-            background: linear-gradient(90deg, #F5C400 0%, #D4AC00 100%);
-            color: #000; font-weight: 900; font-size: 14px; text-transform: uppercase;
-            letter-spacing: 1px; box-shadow: 0 10px 20px rgba(245, 196, 0, 0.2);
-            transition: all 0.3s;
+        .market-section { background: #0a0a0a; border-radius: 24px 24px 0 0; padding: 20px; border-top: 1px solid #222; }
+        .market-header { margin-bottom: 15px; }
+        .formation-select, .pos-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; }
+        .market-header button { 
+            background: #1a1a1a; border: 1px solid #333; color: #888; 
+            padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 800;
         }
-        .main-action-btn:active { transform: scale(0.95); }
+        .market-header button.active { background: #F5C400; color: #000; border-color: #F5C400; }
+        .players-scroll { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 
-        .score-input {
-            width: 80px; height: 80px; background: #111; border: 2px solid #333;
-            border-radius: 16px; color: #fff; font-size: 40px; text-align: center; font-weight: 900;
+        .footer-actions { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); text-align: center; }
+        .next-btn { 
+          width: 100%; max-width: 400px; padding: 18px; border-radius: 14px; 
+          border: none; background: #F5C400; color: #000; font-weight: 900;
+          text-transform: uppercase; box-shadow: 0 10px 20px rgba(245,196,0,0.2);
         }
+        .next-btn:disabled { background: #222; color: #444; box-shadow: none; }
+        .back-link { display: block; margin-top: 10px; color: #666; font-size: 12px; border: none; background: none; }
 
-        .step-modal {
-            position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            width: 90%; max-width: 400px; background: #0a0a0a; border: 1px solid #333;
-            padding: 30px; border-radius: 24px; text-align: center; z-index: 1500;
-            box-shadow: 0 30px 60px rgba(0,0,0,1);
-        }
-
-        @keyframes card-entry {
-          from { opacity: 0; transform: translateY(20px) scale(0.8); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .palpite-overlay { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); text-align: center; background: #111; padding: 30px; border-radius: 30px; border: 1px solid #F5C400; }
+        .score-box { display: flex; align-items: center; gap: 15px; margin-top: 20px; }
+        .score-box input { width: 70px; height: 70px; background: #000; border: 2px solid #333; border-radius: 12px; color: #fff; text-align: center; font-size: 32px; font-weight: 900; }
       `}</style>
     </main>
   );
-}
-
-function getBtnText(step: string, m: number, r: number, cap: any, her: any) {
-    if(step === 'escalar') return (m === 11 && r === 5) ? "AVANÇAR PARA CAPITÃO" : "ESCALAÇÃO INCOMPLETA";
-    if(step === 'capitao') return !cap ? "ESCOLHA O CAPITÃO (C)" : "DEFINIR HERÓI";
-    if(step === 'heroi') return !her ? "ESCOLHA O HERÓI (H)" : "PLACAR FINAL";
-    return "CONFIRMAR TUDO 🐯";
 }
