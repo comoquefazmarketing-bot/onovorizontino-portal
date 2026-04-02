@@ -54,19 +54,18 @@ const PLAYERS = [
   { id: 39, name: 'Ronald Barcellos', short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-// REPOSICIONAMENTO ESTRATÉGICO PARA EVITAR ENCAVALAMENTO
 const FORMATION_4231 = [
   { id: 'gk',  label: 'GOL', x: 50, y: 90 },
-  { id: 'rb',  label: 'LAT', x: 88, y: 72 }, // Mais para a direita
-  { id: 'cb1', label: 'ZAG', x: 65, y: 77 }, // Mais afastado do centro
-  { id: 'cb2', label: 'ZAG', x: 35, y: 77 }, // Mais afastado do centro
-  { id: 'lb',  label: 'LAT', x: 12, y: 72 }, // Mais para a esquerda
-  { id: 'dm1', label: 'VOL', x: 68, y: 58 }, // Linha de volantes mais larga
-  { id: 'dm2', label: 'VOL', x: 32, y: 58 }, 
-  { id: 'am1', label: 'ATA', x: 85, y: 38 }, // Ponta direita
-  { id: 'am2', label: 'MEI', x: 50, y: 40 }, // Meia central
-  { id: 'am3', label: 'ATA', x: 15, y: 38 }, // Ponta esquerda
-  { id: 'st',  label: 'ATA', x: 50, y: 15 }, // Centroavante isolado no topo
+  { id: 'rb',  label: 'LAT', x: 88, y: 72 },
+  { id: 'cb1', label: 'ZAG', x: 65, y: 77 },
+  { id: 'cb2', label: 'ZAG', x: 35, y: 77 },
+  { id: 'lb',  label: 'LAT', x: 12, y: 72 },
+  { id: 'dm1', label: 'VOL', x: 68, y: 58 },
+  { id: 'dm2', label: 'VOL', x: 32, y: 58 },
+  { id: 'am1', label: 'ATA', x: 85, y: 38 },
+  { id: 'am2', label: 'MEI', x: 50, y: 40 },
+  { id: 'am3', label: 'ATA', x: 15, y: 38 },
+  { id: 'st',  label: 'ATA', x: 50, y: 15 },
 ];
 
 type Player = typeof PLAYERS[0];
@@ -82,25 +81,18 @@ function PlayerCard({ player, size, isField, isSelected, isCaptain, isHero }: { 
         background: '#111', borderRadius: '6px', overflow: 'hidden',
         border: isSelected ? '3px solid #F5C400' : isField ? '1.5px solid rgba(245, 196, 0, 0.5)' : '1px solid rgba(255,255,255,0.1)',
         boxShadow: isSelected ? '0 0 25px #F5C400' : '0 4px 10px rgba(0,0,0,0.5)',
-        transition: '0.3s all cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        transition: '0.3s all',
         zIndex: isSelected ? 100 : 1
       }}>
-        {/* FIFA Glossy Effect */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)', zIndex: 2 }} />
-        
         <div style={{
           width: '100%', height: '100%',
           backgroundImage: `url(${player.foto})`,
           backgroundSize: 'cover',
           backgroundPosition: `${backgroundPositionX} top`,
-          maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)'
         }} />
-
-        {/* Badges */}
         {isCaptain && <div className="badge captain">C</div>}
         {isHero && <div className="badge hero">⭐</div>}
-
         <div style={{ 
           position: 'absolute', bottom: 0, width: '100%', 
           background: 'rgba(0,0,0,0.9)', 
@@ -109,14 +101,14 @@ function PlayerCard({ player, size, isField, isSelected, isCaptain, isHero }: { 
           zIndex: 3
         }}>
           <div style={{ color: '#F5C400', fontSize: Math.max(size * 0.12, 7), fontWeight: 900 }}>{player.pos}</div>
-          <div style={{ color: '#fff', fontSize: Math.max(size * 0.14, 8.5), fontWeight: 1000, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{player.short}</div>
+          <div style={{ color: '#fff', fontSize: Math.max(size * 0.14, 8.5), fontWeight: 1000, textTransform: 'uppercase' }}>{player.short}</div>
         </div>
       </div>
       <style jsx>{`
         .badge { position: absolute; top: 5px; right: 5px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; z-index: 10; border: 1px solid #000; }
         .captain { background: #F5C400; color: #000; }
         .hero { background: #fff; color: #000; }
-        .floating { transform: translateY(-10px) scale(1.15); }
+        .floating { transform: translateY(-10px) scale(1.1); }
       `}</style>
     </div>
   );
@@ -138,22 +130,39 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     const update = () => setFieldWidth(Math.min(window.innerWidth - 32, 450));
     update();
     window.addEventListener('resize', update);
-    supabase.auth.getSession().then(({ data: { session } }) => { if (session) setStep('escalar'); });
     return () => window.removeEventListener('resize', update);
   }, []);
 
+  // FUNÇÃO DE MOVIMENTAÇÃO MELHORADA
   const handleSlotClick = (slotId: string) => {
-    if (selectedSlot && lineup[selectedSlot] && lineup[slotId]) {
-      const p1 = lineup[selectedSlot];
-      const p2 = lineup[slotId];
-      setLineup(prev => ({ ...prev, [selectedSlot]: p2, [slotId]: p1 }));
-      setSelectedSlot(null);
-      return;
+    // Se já tem um slot selecionado
+    if (selectedSlot) {
+      // Caso 1: Clicou no mesmo slot (desseleciona)
+      if (selectedSlot === slotId) {
+        setSelectedSlot(null);
+        return;
+      }
+      
+      // Caso 2: Move jogador do slot selecionado para o novo slot (vazio ou não)
+      if (lineup[selectedSlot]) {
+        const playerToMove = lineup[selectedSlot];
+        const targetPlayer = lineup[slotId]; // Pode ser null
+        
+        setLineup(prev => ({
+          ...prev,
+          [selectedSlot]: targetPlayer,
+          [slotId]: playerToMove
+        }));
+        setSelectedSlot(null);
+        return;
+      }
     }
-    setSelectedSlot(slotId === selectedSlot ? null : slotId);
+    
+    // Caso contrário, seleciona o slot clicado
+    setSelectedSlot(slotId);
   };
 
-  const selectPlayer = (player: Player) => {
+  const selectPlayerFromMarket = (player: Player) => {
     if (selectedSlot) {
       setLineup(prev => ({ ...prev, [selectedSlot]: player }));
       setSelectedSlot(null);
@@ -162,27 +171,24 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
   if (!mounted) return null;
 
-  if (step === 'login') return (
-    <div className="fifa-bg" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-      <div className="spotlight" />
-      <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png" width={150} className="glow-logo" />
-      <button onClick={() => setStep('escalar')} className="btn-primary">INICIAR ESCALAÇÃO</button>
-    </div>
-  );
-
   const usedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
-  const filteredPlayers = PLAYERS.filter(p => !usedIds.includes(p.id)).filter(p => filterPos === 'TODOS' || p.pos === filterPos);
   const allSet = usedIds.length === 11;
 
   return (
-    <main className="fifa-bg" style={{ minHeight: '100vh', color: '#fff', paddingBottom: 100 }}>
+    <main className="fifa-bg" style={{ minHeight: '100vh', color: '#fff', paddingBottom: 120 }}>
       <header className="fifa-header">
         <div className="header-content">TIGRE FC <span>ELITE 26</span></div>
       </header>
 
       {step === 'escalar' && (
         <div style={{ maxWidth: 480, margin: '0 auto', padding: 16 }}>
-          {/* CAMPO */}
+          {/* BANNER DE INSTRUÇÃO */}
+          <div className="instruction-banner">
+             {selectedSlot 
+               ? "⚡ AGORA TOQUE EM OUTRO LUGAR DO CAMPO PARA MOVER OU TROCAR" 
+               : "👉 TOQUE EM UM CÍRCULO VAZIO OU JOGADOR NO CAMPO"}
+          </div>
+
           <div className="soccer-field" style={{ width: fieldWidth, height: fieldWidth * 1.5 }}>
             {FORMATION_4231.map((slot) => {
               const p = lineup[slot.id];
@@ -190,13 +196,13 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
               return (
                 <div key={slot.id} onClick={() => handleSlotClick(slot.id)} style={{
                   position: 'absolute', left: `${slot.x}%`, top: `${slot.y}%`,
-                  transform: 'translate(-50%, -50%)', zIndex: active ? 110 : slot.y // zIndex baseado na altura para evitar encavalamento visual
+                  transform: 'translate(-50%, -50%)', zIndex: active ? 110 : slot.y
                 }}>
                   {p ? (
                     <PlayerCard player={p} size={fieldWidth * 0.17} isField isSelected={active} />
                   ) : (
                     <div className={`empty-slot ${active ? 'active' : ''}`} style={{ width: fieldWidth * 0.13, height: fieldWidth * 0.13 }}>
-                      <span className="plus">+</span>
+                      <span className="plus">{active ? '?' : '+'}</span>
                     </div>
                   )}
                 </div>
@@ -204,16 +210,16 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
             })}
           </div>
 
-          {/* MERCADO */}
           <div className="mercado-container">
+            <h3 style={{ textAlign: 'center', color: '#F5C400', fontSize: '14px' }}>ESCOLHA SEUS ATLETAS ABAIXO</h3>
             <div className="mercado-tabs">
               {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(pos => (
                 <button key={pos} onClick={() => setFilterPos(pos)} className={filterPos === pos ? 'tab active' : 'tab'}>{pos}</button>
               ))}
             </div>
             <div className="players-grid">
-              {filteredPlayers.map(p => (
-                <div key={p.id} onClick={() => selectPlayer(p)} style={{ opacity: selectedSlot ? 1 : 0.3 }}>
+              {PLAYERS.filter(p => !usedIds.includes(p.id)).filter(p => filterPos === 'TODOS' || p.pos === filterPos).map(p => (
+                <div key={p.id} onClick={() => selectPlayerFromMarket(p)} style={{ opacity: selectedSlot ? 1 : 0.3 }}>
                   <PlayerCard player={p} size={(fieldWidth / 4) - 15} />
                 </div>
               ))}
@@ -230,7 +236,15 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
 
       {step === 'especiais' && (
         <div className="overlay-step">
-          <h2>QUEM SÃO SEUS LÍDERES?</h2>
+          <div className="instruction-banner gold">
+            🏆 ESCOLHA QUEM COMANDA O TIME E QUEM É O CRAQUE!
+          </div>
+          
+          <div className="explanation-box">
+             <p><strong>CAPITÃO (C):</strong> O líder nato dentro de campo.</p>
+             <p><strong>HERÓI (⭐):</strong> O jogador que decide a partida no último minuto.</p>
+          </div>
+
           <div className="especiais-list">
              {Object.values(lineup).map(p => p && (
                <div key={p.id} className="especial-item">
@@ -242,10 +256,13 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
                </div>
              ))}
           </div>
-          <button disabled={!captain || !hero} onClick={() => setStep('palpite')} className="btn-confirm">PRÓXIMO: PLACAR</button>
+          <div className="footer-action">
+            <button disabled={!captain || !hero} onClick={() => setStep('palpite')} className="btn-confirm">PRÓXIMO: PLACAR ➜</button>
+          </div>
         </div>
       )}
 
+      {/* Restante do código (Palpite e Compartilhar) segue a mesma lógica... */}
       {step === 'palpite' && (
         <div className="overlay-step">
           <h2>PALPITE DO TIGRE</h2>
@@ -279,49 +296,38 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
       )}
 
       <style jsx global>{`
-        body { margin: 0; background: #000; overflow-x: hidden; }
+        body { margin: 0; background: #000; overflow-x: hidden; font-family: sans-serif; }
         .fifa-bg { background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%); position: relative; }
-        .spotlight { position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 100%; height: 60%; background: radial-gradient(ellipse at center, rgba(245,196,0,0.15) 0%, transparent 70%); pointer-events: none; }
+        .fifa-header { background: #F5C400; padding: 15px; box-shadow: 0 5px 20px rgba(245,196,0,0.3); position: sticky; top: 0; z-index: 500; }
+        .header-content { color: #000; font-weight: 1000; text-align: center; font-size: 20px; }
         
-        .fifa-header { background: #F5C400; padding: 15px; box-shadow: 0 5px 20px rgba(245,196,0,0.3); }
-        .header-content { color: #000; font-weight: 1000; text-align: center; font-size: 20px; letter-spacing: -1px; }
-        .header-content span { opacity: 0.7; font-weight: 500; font-size: 14px; }
+        .instruction-banner { background: #1a1a1a; color: #F5C400; padding: 12px; text-align: center; font-weight: 800; font-size: 11px; border-bottom: 2px solid #F5C400; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .instruction-banner.gold { background: #F5C400; color: #000; border: none; font-size: 13px; }
 
-        .soccer-field { position: relative; margin: 0 auto; background: #133313; border-radius: 12px; border: 4px solid #1a4a1a; box-shadow: inset 0 0 100px rgba(0,0,0,0.5), 0 20px 50px rgba(0,0,0,0.8); overflow: hidden; }
-        .empty-slot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); transition: 0.3s; }
-        .empty-slot.active { border-color: #F5C400; background: rgba(245,196,0,0.1); box-shadow: 0 0 15px #F5C400; }
-        .plus { color: rgba(255,255,255,0.5); font-weight: 900; }
+        .explanation-box { padding: 15px; background: rgba(255,255,255,0.05); margin: 10px; border-radius: 8px; font-size: 12px; line-height: 1.6; }
+        .explanation-box strong { color: #F5C400; }
 
-        .mercado-container { margin-top: 25px; }
-        .mercado-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 15px; scrollbar-width: none; }
-        .tab { padding: 10px 20px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; font-weight: 900; font-size: 12px; }
-        .tab.active { background: #F5C400; color: #000; border-color: #F5C400; }
+        .soccer-field { position: relative; margin: 0 auto; background: #133313; border-radius: 12px; border: 4px solid #1a4a1a; box-shadow: inset 0 0 100px rgba(0,0,0,0.5); }
+        .empty-slot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); }
+        .empty-slot.active { border-color: #F5C400; background: rgba(245,196,0,0.2); animation: pulse 1.5s infinite; }
         
-        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
 
-        .footer-action { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); z-index: 200; }
-        .btn-confirm { width: 100%; padding: 20px; background: #F5C400; color: #000; border: none; border-radius: 12px; font-weight: 1000; font-size: 16px; box-shadow: 0 10px 20px rgba(245,196,0,0.3); }
-        .btn-confirm:disabled { background: #1a1a1a; color: #444; box-shadow: none; }
+        .mercado-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; }
+        .tab { padding: 8px 15px; background: #111; border: 1px solid #222; color: #888; border-radius: 4px; font-weight: 900; font-size: 10px; }
+        .tab.active { background: #F5C400; color: #000; }
 
-        .overlay-step { display: flex; flex-direction: column; align-items: center; padding-top: 40px; animation: fadeIn 0.5s; }
-        .especiais-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 100px; padding: 20px; }
-        .especial-item { background: #111; padding: 10px; border-radius: 12px; text-align: center; }
-        .especial-btns { display: flex; gap: 5px; margin-top: 8px; }
-        .especial-btns button { flex: 1; padding: 5px; font-size: 9px; font-weight: 900; border: 1px solid #333; background: #000; color: #fff; border-radius: 4px; }
-        .especial-btns button.active { background: #F5C400; color: #000; }
+        .footer-action { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 30%); z-index: 400; }
+        .btn-confirm { width: 100%; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 8px; font-weight: 1000; font-size: 16px; box-shadow: 0 5px 15px rgba(245,196,0,0.4); }
+        .btn-confirm:disabled { background: #333; color: #666; box-shadow: none; }
 
-        .scoreboard { display: flex; align-items: center; gap: 20px; margin: 40px 0; }
-        .scoreboard input { width: 60px; height: 60px; background: #111; border: 2px solid #F5C400; color: #fff; text-align: center; font-size: 24px; font-weight: 900; border-radius: 10px; }
+        .especiais-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; }
+        .especial-item { background: #111; padding: 8px; border-radius: 8px; }
+        .especial-btns { display: flex; gap: 4px; margin-top: 8px; }
+        .especial-btns button { flex: 1; padding: 8px 2px; font-size: 9px; font-weight: 900; background: #222; color: #fff; border: 1px solid #333; border-radius: 4px; }
+        .especial-btns button.active { background: #F5C400; color: #000; border-color: #F5C400; }
 
-        .final-card { background: #111; border: 4px solid #F5C400; border-radius: 20px; position: relative; overflow: hidden; display: flex; flex-direction: column; }
-        .mini-field { flex: 1; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'), linear-gradient(#133313, #0a0a0a); position: relative; }
-        .card-header { background: #F5C400; color: #000; padding: 10px; text-align: center; font-weight: 1000; }
-        .card-footer { padding: 15px; background: #000; text-align: center; border-top: 2px solid #F5C400; font-weight: 900; }
-        .brand { font-size: 10px; color: #F5C400; margin-top: 5px; }
-
-        .btn-primary { padding: 15px 30px; background: #F5C400; color: #000; font-weight: 1000; border-radius: 30px; border: none; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .scoreboard input { width: 50px; height: 50px; background: #000; border: 2px solid #F5C400; color: #fff; text-align: center; font-size: 20px; border-radius: 8px; }
       `}</style>
     </main>
   );
