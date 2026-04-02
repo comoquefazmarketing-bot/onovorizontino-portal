@@ -78,7 +78,7 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
   const bgPos = isField ? 'right' : 'left';
   return (
     <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} style={{ width: size }}>
-      <div className="card-box" style={{ height: size * 1.35, border: isSelected ? '2px solid #F5C400' : '1px solid #333' }}>
+      <div className="card-box" style={{ height: size * 1.35, border: isSelected ? '3px solid #F5C400' : '1px solid #333' }}>
         <div style={{
           width: '100%', height: '100%',
           backgroundImage: `url(${player.foto})`,
@@ -99,7 +99,7 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
         .badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; z-index: 5; border: 1px solid #000; }
         .cap { background: #F5C400; color: #000; }
         .star { background: #fff; color: #000; }
-        .card-info { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); text-align: center; padding: 2px 0; border-top: 1px solid rgba(245,196,0,0.4); }
+        .card-info { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); text-align: center; padding: 3px 0; border-top: 1px solid rgba(245,196,0,0.4); }
         .pos { color: #F5C400; font-size: 7px; font-weight: 900; line-height: 1; }
         .name { color: #fff; font-size: 9px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; }
       `}</style>
@@ -176,7 +176,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
             {selectedSlot ? "⚡ SELECIONE O ATLETA" : "👉 TOQUE NO (+) PARA ESCALAR"}
           </div>
 
-          <div className="field" style={{ width: fieldWidth, height: fieldWidth * 1.35 }}>
+          <div className="field" style={{ width: fieldWidth, height: fieldWidth * 1.4 }}>
             <div className="pitch-markings">
                 <div className="center-line"></div>
                 <div className="center-circle"></div>
@@ -191,7 +191,9 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
                   {p ? (
                     <PlayerCard player={p} size={fieldWidth * 0.16} isSelected={isSel} isField />
                   ) : (
-                    <div className={`dot ${isSel ? 'active' : ''}`} style={{ width: fieldWidth * 0.1, height: fieldWidth * 0.1 }}>+</div>
+                    <div className={`dot ${isSel ? 'active' : ''}`} style={{ width: fieldWidth * 0.12, height: fieldWidth * 0.12 }}>
+                      <span className="plus">+</span>
+                    </div>
                   )}
                 </div>
               );
@@ -199,17 +201,21 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
           </div>
 
           <div className="market-section">
-            <div className="filters">
-              {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(f => (
-                <button key={f} className={filterPos === f ? 'f-active' : ''} onClick={() => setFilterPos(f)}>{f}</button>
-              ))}
+            <div className="market-sticky-header">
+              <div className="market-title">MERCADO DE ATLETAS</div>
+              <div className="filters">
+                {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(f => (
+                  <button key={f} className={filterPos === f ? 'f-active' : ''} onClick={() => setFilterPos(f)}>{f}</button>
+                ))}
+              </div>
             </div>
+
             <div className="players-grid">
               {PLAYERS.filter(p => !usedIds.includes(p.id))
                       .filter(p => filterPos === 'TODOS' || p.pos === filterPos)
                       .map(p => (
                 <div key={p.id} className="grid-item" onClick={() => selectFromMarket(p)} style={{ opacity: selectedSlot ? 1 : 0.4 }}>
-                  <PlayerCard player={p} size={(fieldWidth / 3) - 8} />
+                  <PlayerCard player={p} size={(fieldWidth / 3) - 16} />
                 </div>
               ))}
             </div>
@@ -220,17 +226,17 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         </div>
       )}
 
-      {/* NOVA EXPERIÊNCIA DE ESCOLHA DE CAPITÃO E HERÓI (UI FIFA 26) */}
+      {/* STEP 2: ESPECIAIS (UI FIFA 26 INSPIRADA) */}
       {step === 'especiais' && (
         <div className="content">
-           <div className="alert highlight">🏆 DESIGNE SEUS LÍDERES ELITE</div>
+           <div className="alert highlight">🏆 QUEM SÃO OS LÍDERES DO TIME?</div>
            
            <div className="special-slots">
                 <div className="special-slot cap" onClick={() => setSpecialGallery('captain')}>
                     {captainObj ? (
                         <PlayerCard player={captainObj} size={100} isField isCaptain />
                     ) : (
-                        <div className="slot-placeholder cap">
+                        <div className="slot-placeholder">
                             <span className="plus-special">+</span>
                             CAPITÃO
                         </div>
@@ -240,7 +246,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
                     {heroObj ? (
                         <PlayerCard player={heroObj} size={100} isField isHero />
                     ) : (
-                        <div className="slot-placeholder star">
+                        <div className="slot-placeholder">
                             <span className="plus-special">+</span>
                             HERÓI
                         </div>
@@ -275,7 +281,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         </div>
       )}
 
-      {/* NOVO PLACAR HUD DE TV (EA FC TRANSMISSION STYLE) */}
+      {/* STEP 3: PLACAR HUD DE TV (GC TRANSMISSION STYLE) */}
       {step === 'palpite' && (
         <div className="content center-flex">
           <div className="match-day-hud">
@@ -301,12 +307,12 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
             <div className="hud-footer">FIFA 26 TRANSMISSION | PREDICTION</div>
           </div>
           <div className="dock">
-            <button className="next-btn" onClick={() => setStep('compartilhar')}>FINALIZAR TUDO ➜</button>
+            <button className="next-btn" onClick={() => setStep('compartilhar')}>GERAR CARD FINAL ➜</button>
           </div>
         </div>
       )}
 
-      {/* NOVO CARD FINAL PREMIUM E SISTEMA DE COMPARTILHAMENTO */}
+      {/* STEP 4: CARD FINAL PREMIUM (EA FC STYLE) */}
       {step === 'compartilhar' && (
         <div className="content">
           <div id="final-card" ref={cardRef} className="card-capture">
@@ -340,36 +346,39 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
       )}
 
       <style jsx global>{`
-        body { background: #000; margin: 0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        body { background: #000; margin: 0; font-family: 'Inter', sans-serif; }
         .container { min-height: 100vh; color: #fff; padding-bottom: 120px; }
-        .header { background: #F5C400; color: #000; text-align: center; padding: 12px; font-weight: 900; font-size: 18px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .header span { opacity: 0.6; font-size: 12px; }
-        .content { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; padding: 10px; }
+        .header { background: #F5C400; color: #000; text-align: center; padding: 12px; font-weight: 1000; font-size: 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .header span { opacity: 0.6; font-weight: 400; margin-left: 5px; }
+        
+        .content { display: flex; flex-direction: column; align-items: center; padding: 10px; width: 100%; max-width: 500px; margin: 0 auto; }
         .center-flex { justify-content: center; height: 80vh; }
-
-        .alert { background: #111; color: #888; width: 100%; text-align: center; padding: 10px; font-weight: 800; font-size: 11px; border-radius: 4px; margin-bottom: 8px; border: 1px solid #222; }
+        
+        .alert { background: #111; color: #666; width: 100%; text-align: center; padding: 12px; font-weight: 800; font-size: 11px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #222; transition: 0.3s; }
         .alert.highlight { background: #F5C400; color: #000; border-color: #F5C400; }
 
-        .field { position: relative; background: #1a4a1a; background-image: repeating-linear-gradient(0deg, #1a4a1a, #1a4a1a 10%, #1e531e 10%, #1e531e 20%); border: 2px solid #fff; border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
-        .pitch-markings { position: absolute; inset: 0; pointer-events: none; opacity: 0.4; }
+        .field { position: relative; background: #133313; border: 3px solid #1a4a1a; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 80px #000; margin-bottom: 20px; }
+        .pitch-markings { position: absolute; inset: 0; pointer-events: none; opacity: 0.3; }
         .center-line { position: absolute; top: 50%; width: 100%; height: 2px; background: #fff; }
         .center-circle { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); }
         .area { position: absolute; left: 50%; width: 50%; height: 12%; border: 2px solid #fff; transform: translateX(-50%); }
         .area.top { top: 0; border-top: none; } .area.bottom { bottom: 0; border-bottom: none; }
         .slot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; }
-        .dot { border-radius: 50%; border: 1px dashed #fff; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; }
-        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.2); }
+        .dot { border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); color: #fff; }
+        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.15); }
+        .plus { font-size: 20px; opacity: 0.3; }
 
-        .market-section { width: 100%; background: #080808; border-radius: 8px; padding: 5px; }
-        .filters { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
-        .filters button { background: #151515; border: 1px solid #222; color: #666; padding: 6px 10px; border-radius: 4px; font-size: 9px; font-weight: 800; }
-        .filters button.f-active { background: #F5C400; color: #000; }
-        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .market-section { width: 100%; background: #080808; border-radius: 12px 12px 0 0; padding-top: 10px; }
+        .market-sticky-header { position: sticky; top: 55px; background: #080808; z-index: 80; padding: 10px 0; }
+        .market-title { color: #F5C400; font-size: 11px; font-weight: 900; text-align: center; letter-spacing: 1px; margin-bottom: 10px; }
+        .filters { display: flex; gap: 6px; overflow-x: auto; padding: 0 10px 10px; scrollbar-width: none; }
+        .filters button { background: #151515; border: 1px solid #222; color: #666; padding: 8px 16px; border-radius: 20px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+        .filters button.f-active { background: #F5C400; color: #000; border-color: #F5C400; }
+        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
 
-        /* ESPECIAIS (UI FIFA 26) */
+        /* STEP 2: ESPECIAIS UI FIFA */
         .special-slots { display: flex; gap: 20px; width: 100%; justify-content: center; margin-top: 40px; }
-        .special-slot { position: relative; border-radius: 12px; transition: 0.3s; cursor: pointer; }
-        .special-slot:hover { transform: translateY(-5px); }
+        .special-slot { position: relative; cursor: pointer; }
         .special-slot.cap { background: radial-gradient(circle at center, rgba(245,196,0,0.1) 0%, transparent 80%); }
         .special-slot.star { background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 80%); }
         .slot-placeholder { width: 100px; height: 135px; border-radius: 6px; border: 3px dashed #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #666; gap: 10px; }
@@ -381,7 +390,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         .close-gallery { position: absolute; right: 0; top: -5px; background: transparent; border: none; color: #fff; font-size: 20px; font-weight: 1000; }
         .gallery-grid { padding-top: 20px; }
 
-        /* MATCH DAY HUD TV */
+        /* STEP 3: PLACAR HUD TV */
         .match-day-hud { width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: rgba(10,10,10,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); overflow: hidden; position: relative; box-shadow: 0 0 50px rgba(245,196,0,0.05); }
         .match-day-hud::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(245,196,0,0.05) 0%, transparent 40%); pointer-events: none; }
         .hud-header { border-bottom: 2px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; font-size: 8px; font-weight: 900; color: #444; letter-spacing: 2px; }
@@ -389,7 +398,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         .hud-scoreboard { display: flex; align-items: center; justify-content: space-between; padding: 30px 15px; gap: 20px; }
         .hud-team { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; }
         .hud-team img, .adv-shield-placeholder { width: 60px; height: 60px; border-radius: 12px; border: 3px solid rgba(255,255,255,0.05); background: #000; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #444; }
-        .hud-team.tigre img { border-color: #F5C400; }
+        .hud-team.hud-home img { border-color: #F5C400; }
         .hud-name { font-weight: 1000; font-size: 12px; color: #fff; }
         .hud-inputs { display: flex; align-items: center; gap: 10px; }
         .hud-inputs input { width: 60px; height: 80px; background: #000; border: 2px solid #333; border-radius: 6px; color: #F5C400; text-align: center; font-size: 48px; font-weight: 900; font-family: 'Mono', monospace; }
@@ -398,7 +407,7 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         .vs-badge { font-weight: 900; font-size: 14px; color: #444; }
         .hud-footer { border-top: 2px solid rgba(255,255,255,0.05); text-align: center; padding: 10px; font-size: 7px; font-weight: 800; color: #222; letter-spacing: 3px; }
 
-        /* CAPTURE CARD (INSTAGRAMÁVEL) */
+        /* STEP 4: COMPARTILHAR PREMIUM */
         .card-capture { width: 380px; background: #000; border: 6px solid #F5C400; padding: 20px; position: relative; }
         .capture-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 15px; }
         .header-logo { font-weight: 1000; color: #F5C400; font-size: 20px; }
@@ -414,12 +423,12 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         .download-btn { background: #00C853; color: #fff; border: none; padding: 18px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; }
         .back-btn { background: transparent; border: 1px solid #333; color: #888; padding: 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
 
-        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(transparent, #000 40%); z-index: 200; display: flex; justify-content: center; }
-        .next-btn { width: 100%; max-width: 400px; padding: 15px; background: #F5C400; color: #000; border: none; border-radius: 8px; font-weight: 900; font-size: 14px; box-shadow: 0 10px 30px rgba(245,196,0,0.3); }
+        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); z-index: 200; display: flex; justify-content: center; }
+        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 12px; font-weight: 1000; font-size: 16px; box-shadow: 0 10px 30px rgba(245,196,0,0.3); }
         .next-btn:disabled { background: #222; color: #444; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes blinking { 50% { opacity: 0.5; } }
+        @keyframes blink { 50% { opacity: 0.5; } }
       `}</style>
     </main>
   );
