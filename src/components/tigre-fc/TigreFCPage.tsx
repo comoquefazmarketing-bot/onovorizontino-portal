@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, use } from 'react'; // Importado 'use'
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
@@ -32,7 +32,11 @@ interface UsuarioRanking {
   pontos_total: number;
 }
 
-export default function TigreFCPage() {
+// 1. Ajuste na assinatura da função para aceitar params do Next.js 15
+export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
+  // 2. Desempacotando os params (caso você queira usar o jogoId da URL nesta página principal)
+  const resolvedParams = use(params);
+  
   const [mounted, setMounted] = useState(false);
   const [jogo, setJogo] = useState<Jogo | null>(null);
   const [ranking, setRanking] = useState<UsuarioRanking[]>([]);
@@ -44,7 +48,9 @@ export default function TigreFCPage() {
   // Inicialização básica
   useEffect(() => {
     setMounted(true);
-    window.scrollTo(0, 0);
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
   }, []);
 
   // Busca de Dados (Supabase e API)
@@ -87,7 +93,6 @@ export default function TigreFCPage() {
     if (!jogo) return;
     
     const calculateTime = () => {
-      // Ajuste para garantir parsing correto da data
       const gameTime = new Date(jogo.data_hora.replace(' ', 'T')).getTime();
       const lockTime = gameTime - (90 * 60 * 1000); 
       const now = Date.now();
@@ -106,7 +111,7 @@ export default function TigreFCPage() {
     };
 
     const timer = setInterval(calculateTime, 1000);
-    calculateTime(); // Chamada inicial
+    calculateTime(); 
     return () => clearInterval(timer);
   }, [jogo]);
 
@@ -188,7 +193,7 @@ export default function TigreFCPage() {
                 </div>
               </div>
 
-              {/* Link para Escalação: O ID é passado na rota */}
+              {/* Link para Escalação */}
               <Link href={`/tigre-fc/escalar/${jogo.id}`} className="relative flex items-center justify-center bg-[#F5C400] text-black py-7 rounded-[35px] font-[1000] uppercase italic text-sm shadow-[0_20px_40px_rgba(245,196,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all overflow-hidden group">
                 <span className="relative z-10 tracking-[0.2em]">CONVOCAR TITULARES →</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 skew-x-12" />
