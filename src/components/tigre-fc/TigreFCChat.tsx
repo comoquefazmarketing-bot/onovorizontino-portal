@@ -13,30 +13,24 @@ const NIVEL_COLOR: Record<string,string> = { Novato:'#6b7280', Fiel:'#F5C400', G
 type Props = { usuarioId?: string | null; usuarioNivel?: string };
 
 export default function TigreFCChat({ usuarioId, usuarioNivel }: Props) {
-  const [msgs, setMsgs]       = useState<any[]>([]);
-  const [texto, setTexto]     = useState('');
-  const [enviando, setEnv]    = useState(false);
-  const [loading, setLoad]    = useState(true);
-  const [erro, setErro]       = useState(''); // FIX 4: mostra erro
-  const endRef                = useRef<HTMLDivElement>(null);
+  const [msgs, setMsgs]     = useState<any[]>([]);
+  const [texto, setTexto]   = useState('');
+  const [enviando, setEnv]  = useState(false);
+  const [loading, setLoad]  = useState(true);
+  const [erro, setErro]     = useState('');
+  const scrollRef           = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // FIX 4: tratamento de erro explícito
     supabase.from('tigre_fc_chat_geral')
       .select('*, usuario:usuario_id(apelido,nome,avatar_url,nivel)')
       .order('criado_em', { ascending: false })
       .limit(50)
       .then(({ data, error }) => {
-        if (error) {
-          setErro('Chat temporariamente indisponível.');
-          console.error('Chat error:', error.message);
-        } else {
-          setMsgs((data || []).reverse());
-        }
+        if (error) { setErro('Chat temporariamente indisponível.'); }
+        else { setMsgs((data || []).reverse()); }
         setLoad(false);
       });
 
-    // Realtime
     const channel = supabase.channel('chat-geral')
       .on('postgres_changes', { event:'INSERT', schema:'public', table:'tigre_fc_chat_geral' },
         async (payload) => {
@@ -48,8 +42,12 @@ export default function TigreFCChat({ usuarioId, usuarioNivel }: Props) {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // FIX SCROLL: scrollIntoView com block:'nearest' para NÃO mover a página
+  // Apenas rola dentro do container do chat
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
   }, [msgs]);
 
   const enviar = async () => {
@@ -70,7 +68,11 @@ export default function TigreFCChat({ usuarioId, usuarioNivel }: Props) {
         <div style={{ marginLeft:'auto', fontSize:10, color:'#555' }}>{msgs.length} msgs</div>
       </div>
 
-      <div style={{ flex:1, overflowY:'auto', padding:'12px 16px', display:'flex', flexDirection:'column', gap:10 }}>
+      {/* FIX: overflow:'auto' no container correto para scroll interno */}
+      <div
+        ref={scrollRef}
+        style={{ flex:1, overflowY:'auto', padding:'12px 16px', display:'flex', flexDirection:'column', gap:10 }}
+      >
         {loading ? (
           <div style={{ textAlign:'center', color:'#555', fontSize:13, paddingTop:20 }}>Carregando chat...</div>
         ) : erro ? (
@@ -94,7 +96,7 @@ export default function TigreFCChat({ usuarioId, usuarioNivel }: Props) {
                   {(u?.apelido||u?.nome||'?').charAt(0)}
                 </div>
               )}
-              <div style={{ maxWidth:'72%', background: isLenda?'linear-gradient(135deg,#1a1200,#111)':isMe?'#1a1a1a':'#111', border: isLenda?'1px solid #FFD70040':isMe?'1px solid #222':'1px solid #1a1a1a', borderRadius: isMe?'12px 2px 12px 12px':'2px 12px 12px 12px', padding:'8px 12px', boxShadow: isLenda?'0 0 8px rgba(255,215,0,0.15)':'none' }}>
+              <div style={{ maxWidth:'72%', background: isLenda?'linear-gradient(135deg,#1a1200,#111)':isMe?'#1a1a1a':'#111', border: isLenda?'1px solid #FFD70040':isMe?'1px solid #222':'1px solid #1a1a1a', borderRadius: isMe?'12px 2px 12px 12px':'2px 12px 12px 12px', padding:'8px 12px' }}>
                 <div style={{ fontSize:10, fontWeight:900, color:cor, marginBottom:3, display:'flex', alignItems:'center', gap:4 }}>
                   {NIVEL_ICON[u?.nivel]} {u?.apelido || u?.nome}
                   {isLenda && <span>👑</span>}
@@ -107,7 +109,6 @@ export default function TigreFCChat({ usuarioId, usuarioNivel }: Props) {
             </div>
           );
         })}
-        <div ref={endRef} />
       </div>
 
       <div style={{ padding:'10px 16px 16px', borderTop:'1px solid #111', flexShrink:0, background:'#0a0a0a' }}>
