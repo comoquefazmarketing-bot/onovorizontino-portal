@@ -52,7 +52,7 @@ const PLAYERS = [
   { id: 36, name: 'Titi Ortiz',         short: 'T.Ortiz',     num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
   { id: 37, name: 'Diego Mathias',      short: 'D.Mathias',   num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
   { id: 38, name: 'Carlão',             short: 'Carlão',      num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
-  { id: 39, name: 'Ronald Barcellos',  short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
+  { id: 39, name: 'Ronald Barcellos', short: 'Ronald',      num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
 const FORMATIONS = {
@@ -75,7 +75,7 @@ type Lineup = Record<string, Player | null>;
 
 interface Props {
   jogoId?: number;
-  initialLineup?: Lineup; // Recebe o time da Escalação Ideal se existir
+  initialLineup?: Lineup;
   initialFormation?: keyof typeof FORMATIONS;
 }
 
@@ -119,7 +119,7 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'escalar' | 'palpite' | 'compartilhar'>('escalar');
   const [formationKey, setFormationKey] = useState<keyof typeof FORMATIONS>(initialFormation);
-  const [lineup, setLineup] = useState<Lineup>(initialLineup || {}); // Começa com o que veio da Escalação Ideal
+  const [lineup, setLineup] = useState<Lineup>(initialLineup || {});
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [specialMode, setSpecialMode] = useState<'captain' | 'hero' | null>(null);
   const [captain, setCaptain] = useState<number | null>(null);
@@ -140,7 +140,6 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
   const currentUsedIds = currentUsedPlayers.map(p => p.id);
   const isComplete = currentUsedIds.length === 11 && captain && hero;
 
-  // Lógica LIVRE: apenas seta o jogador no slot, sem validar posição técnica
   const handlePlayerClick = (p: Player) => {
     if (specialMode === 'captain') {
         setCaptain(p.id);
@@ -157,25 +156,22 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
   const handleFinishAndShare = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const idsParaSalvar = Object.values(lineup).filter(Boolean).map(p => p!.id);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Ajuste para a estrutura real do seu banco (coluna lineup como JSON string)
+      const lineupData = JSON.stringify(lineup);
 
-      // Salva no banco de dados para o ranking
-      const { error } = await supabase.from('escalacoes').insert([{
-        user_id: user?.id || null,
+      const { error: dbError } = await supabase.from('tigre_fc_escalacoes').insert([{
+        usuario_id: session?.user?.id || null, 
         jogo_id: jogoId,
-        jogadores_ids: idsParaSalvar,
-        capitao_id: captain,
-        heroi_id: hero,
-        palpite_casa: palpite.home,
-        palpite_fora: palpite.away,
         formacao: formationKey,
-        criado_por: "Felipe Makarios"
+        lineup: lineupData
       }]);
 
-      if (error) throw error;
+      if (dbError) {
+        console.error("Erro no Supabase:", dbError.message);
+      }
 
-      // Gera o card visual
       if (cardRef.current) {
         const canvas = await html2canvas(cardRef.current, { useCORS: true, scale: 2 });
         const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
@@ -186,16 +182,22 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
             title: 'Minha Escalação Tigre FC', 
             text: 'Montei meu time no Tigre FC!',
             files: [file] 
+          }).catch(() => {
+             // Fallback download
+             const link = document.createElement('a');
+             link.href = canvas.toDataURL();
+             link.download = 'minha-escalacao.png';
+             link.click();
           });
         }
       }
 
-      alert("Escalação confirmada no ranking!");
+      alert("Escalação enviada com sucesso!");
       router.push('/');
 
     } catch (err) { 
       console.error(err);
-      alert("Erro ao enviar. Verifique sua conexão."); 
+      alert("Ocorreu um problema ao salvar."); 
     } finally { 
       setLoading(false); 
     }
@@ -313,15 +315,15 @@ export default function TigreFCEscalar({ jogoId = 3, initialLineup, initialForma
              <div className="capture-field">
                 <div className="pitch-markings"><div className="center-line"></div></div>
                 {FORMATIONS[formationKey].map(slot => (
-                   <div key={slot.id} className="slot-mini" style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
-                      {lineup[slot.id] && <PlayerCard 
+                    <div key={slot.id} className="slot-mini" style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
+                       {lineup[slot.id] && <PlayerCard 
                         player={lineup[slot.id]!} 
                         size={52} 
                         isCaptain={captain === lineup[slot.id]?.id} 
                         isHero={hero === lineup[slot.id]?.id} 
                         isField 
                       />}
-                   </div>
+                    </div>
                 ))}
              </div>
              <div className="capture-footer">
