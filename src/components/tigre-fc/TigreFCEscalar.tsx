@@ -175,20 +175,20 @@ function PlayerCard({ player, size, isCapitao, isHeroi, isList }: { player: Play
 }
 
 export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
-  const [mounted, setMounted]         = useState(false);
-  const [step, setStep]                = useState<Step>('login');
-  const [prevStep, setPrevStep]        = useState<Step | null>(null);
-  const [usuario, setUsuario]          = useState<any>(null);
-  const [apelido, setApelido]          = useState('');
-  const [formation, setFormation]      = useState('4-3-3');
-  const [lineup, setLineup]            = useState<Lineup>({});
-  const [selected, setSelected]        = useState<{ player: Player; from: string } | null>(null);
-  const [filterPos, setFilterPos]      = useState('TODOS');
-  const [capitao, setCapitao]          = useState<Player | null>(null);
-  const [heroi, setHeroi]              = useState<Player | null>(null);
-  const [palpite, setPalpite]          = useState({ mandante: 1, visitante: 0 });
-  const [jogo, setJogo]                = useState<any>(null);
-  const [saving, setSaving]            = useState(false);
+  const [mounted, setMounted]          = useState(false);
+  const [step, setStep]                 = useState<Step>('login');
+  const [prevStep, setPrevStep]         = useState<Step | null>(null);
+  const [usuario, setUsuario]           = useState<any>(null);
+  const [apelido, setApelido]           = useState('');
+  const [formation, setFormation]       = useState('4-3-3');
+  const [lineup, setLineup]             = useState<Lineup>({});
+  const [selected, setSelected]         = useState<{ player: Player; from: string } | null>(null);
+  const [filterPos, setFilterPos]       = useState('TODOS');
+  const [capitao, setCapitao]           = useState<Player | null>(null);
+  const [heroi, setHeroi]               = useState<Player | null>(null);
+  const [palpite, setPalpite]           = useState({ mandante: 1, visitante: 0 });
+  const [jogo, setJogo]                 = useState<any>(null);
+  const [saving, setSaving]             = useState(false);
   const [fieldWidth, setFieldWidth]   = useState(340);
   const [perfilUsuario, setPerfilUsuario] = useState<any>(null);
 
@@ -331,7 +331,6 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
     </main>
   );
 
-  // NOVO: Render do Modal de Perfil/Cornetar com alta prioridade de Z-Index
   if (step === 'perfil') return (
     <div style={{ position:'fixed', inset:0, background:'#080808', zIndex: 9999, padding: 20, display:'flex', flexDirection:'column' }}>
        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20 }}>
@@ -342,9 +341,8 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
           <div style={{ fontSize: 40 }}>🐯</div>
           <h1 style={{ fontSize: 24, fontWeight: 900, margin: '10px 0' }}>{perfilUsuario?.apelido}</h1>
           <p style={{ color: '#666' }}>Bora cornetar a escalação?</p>
-          {/* Adicione aqui os detalhes da escalação do outro usuário */}
           <div style={{ marginTop: 40, padding: 20, border: '1px dashed #333', borderRadius: 16 }}>
-             EM BREVE: CORNETÔMETRO 🎺
+              EM BREVE: CORNETÔMETRO 🎺
           </div>
        </div>
     </div>
@@ -511,7 +509,7 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: number }) {
         )}
       </div>
 
-      {/* Botões de Navegação Flutuantes Internos (Z-Index Ajustado) */}
+      {/* Botões de Navegação Flutuantes */}
       {['escalar','capitao','heroi','palpite','confirmar'].includes(step) && (
         <div style={{ position:'fixed', bottom:0, left:0, right:0, padding:20, background:'linear-gradient(transparent, #000 30%)', zIndex: 1000 }}>
           <button 
