@@ -1,20 +1,29 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
+
+// --- INTERFACES ---
+interface Player {
+  id: number;
+  name: string;
+  short: string;
+  num: number;
+  pos: string;
+  foto: string;
+}
 
 // --- CONFIGURAÇÃO SUPABASE ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  { auth: { persistSession: true, autoRefreshToken: true } }
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 
 // --- DADOS DOS JOGADORES ---
-const PLAYERS = [
+const PLAYERS: Player[] = [
   { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id: 2,  name: 'Jordi',           short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
   { id: 3,  name: 'João Scapin',     short: 'Scapin',     num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
@@ -58,23 +67,18 @@ const PLAYERS = [
 
 const FORMATIONS: Record<string, any[]> = {
   '4-3-3': [
-    { id:'gk', pos:'GOL', x:50, y:92 }, { id:'rb', pos:'LAT', x:85, y:72 }, { id:'cb1', pos:'ZAG', x:62, y:78 }, { id:'cb2', pos:'ZAG', x:38, y:78 }, { id:'lb', pos:'LAT', x:15, y:72 },
-    { id:'cm1', pos:'MEI', x:75, y:52 }, { id:'cm2', pos:'MEI', x:50, y:55 }, { id:'cm3', pos:'MEI', x:25, y:52 },
-    { id:'rw', pos:'ATA', x:80, y:22 }, { id:'st', pos:'ATA', x:50, y:12 }, { id:'lw', pos:'ATA', x:20, y:22 }
+    { id:'gk', pos:'GOL', x:50, y:90 }, { id:'rb', pos:'LAT', x:85, y:70 }, { id:'cb1', pos:'ZAG', x:62, y:75 }, { id:'cb2', pos:'ZAG', x:38, y:75 }, { id:'lb', pos:'LAT', x:15, y:70 },
+    { id:'cm1', pos:'MEI', x:75, y:48 }, { id:'cm2', pos:'MEI', x:50, y:52 }, { id:'cm3', pos:'MEI', x:25, y:48 },
+    { id:'rw', pos:'ATA', x:80, y:20 }, { id:'st', pos:'ATA', x:50, y:12 }, { id:'lw', pos:'ATA', x:20, y:20 }
   ],
   '4-4-2': [
-    { id:'gk', pos:'GOL', x:50, y:92 }, { id:'rb', pos:'LAT', x:85, y:72 }, { id:'cb1', pos:'ZAG', x:62, y:78 }, { id:'cb2', pos:'ZAG', x:38, y:78 }, { id:'lb', pos:'LAT', x:15, y:72 },
-    { id:'rm', pos:'MEI', x:85, y:48 }, { id:'cm1', pos:'MEI', x:60, y:52 }, { id:'cm2', pos:'MEI', x:40, y:52 }, { id:'lm', pos:'MEI', x:15, y:48 },
+    { id:'gk', pos:'GOL', x:50, y:90 }, { id:'rb', pos:'LAT', x:85, y:70 }, { id:'cb1', pos:'ZAG', x:62, y:75 }, { id:'cb2', pos:'ZAG', x:38, y:75 }, { id:'lb', pos:'LAT', x:15, y:70 },
+    { id:'rm', pos:'MEI', x:85, y:45 }, { id:'cm1', pos:'MEI', x:60, y:50 }, { id:'cm2', pos:'MEI', x:40, y:50 }, { id:'lm', pos:'MEI', x:15, y:45 },
     { id:'st1', pos:'ATA', x:65, y:18 }, { id:'st2', pos:'ATA', x:35, y:18 }
-  ],
-  '3-5-2': [
-    { id:'gk', pos:'GOL', x:50, y:92 }, { id:'cb1', pos:'ZAG', x:70, y:78 }, { id:'cb2', pos:'ZAG', x:50, y:82 }, { id:'cb3', pos:'ZAG', x:30, y:78 },
-    { id:'rm', pos:'MEI', x:88, y:45 }, { id:'cm1', pos:'MEI', x:65, y:52 }, { id:'cm2', pos:'MEI', x:50, y:55 }, { id:'cm3', pos:'MEI', x:35, y:52 }, { id:'lm', pos:'MEI', x:12, y:45 },
-    { id:'st1', pos:'ATA', x:60, y:18 }, { id:'st2', pos:'ATA', x:40, y:18 }
   ]
 };
 
-// --- COMPONENTE PLAYER CARD (COM EFEITO GIF) ---
+// --- COMPONENTE CARD ---
 function PlayerCard({ player, size, isSelected, status, onClick }: any) {
   return (
     <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} onClick={onClick} style={{ width: size }}>
@@ -90,32 +94,32 @@ function PlayerCard({ player, size, isSelected, status, onClick }: any) {
         {status === 'hero' && <div className="badge hero">H</div>}
       </div>
       <style jsx>{`
-        .card-wrapper { cursor: pointer; transition: transform 0.2s; perspective: 1000px; }
+        .card-wrapper { cursor: pointer; transition: transform 0.2s; position: relative; }
         .card-body { 
-          position: relative; width: 100%; height: 140px; background: #111; 
+          position: relative; width: 100%; height: 110px; background: #111; 
           border-radius: 6px; overflow: hidden; border: 1px solid #333;
           display: flex; flex-direction: column;
         }
-        .photo-container { flex: 1; position: relative; overflow: hidden; }
+        .photo-container { flex: 1; position: relative; overflow: hidden; background: #0a0a0a; }
         .photo-sprite {
-          width: 200%; height: 100%; background-size: 200% 100%;
+          width: 200%; height: 100%; background-size: cover;
           background-position: left center; transition: background-position 0.1s steps(1);
         }
-        /* Efeito de Troca para GIF ao selecionar ou hover */
+        /* Efeito GIF: Alterna entre a pose da esquerda e direita */
         .card-wrapper:hover .photo-sprite, .selected .photo-sprite {
-          animation: player-gif 0.6s infinite steps(1);
+          animation: player-gif 0.8s infinite steps(1);
         }
         @keyframes player-gif {
           0%, 100% { background-position: left center; }
           50% { background-position: right center; }
         }
-        .card-info { background: #000; padding: 4px; text-align: center; }
-        .player-num { display: block; color: #F5C400; font-size: 10px; font-weight: 900; }
-        .player-name { color: #fff; font-size: 11px; text-transform: uppercase; font-weight: 700; }
-        .selected .card-body { border-color: #F5C400; box-shadow: 0 0 15px rgba(245,196,0,0.3); }
+        .card-info { background: #000; padding: 2px; text-align: center; }
+        .player-num { display: block; color: #F5C400; font-size: 9px; font-weight: 900; }
+        .player-name { color: #fff; font-size: 9px; text-transform: uppercase; font-weight: 700; white-space: nowrap; overflow: hidden; }
+        .selected .card-body { border-color: #F5C400; box-shadow: 0 0 10px rgba(245,196,0,0.4); }
         .cap { border: 2px solid #F5C400 !important; }
         .hero { border: 2px solid #00E5FF !important; }
-        .badge { position: absolute; top: 5px; right: 5px; background: #F5C400; color: #000; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        .badge { position: absolute; top: -5px; right: -5px; background: #F5C400; color: #000; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; z-index: 10; }
         .badge.hero { background: #00E5FF; }
       `}</style>
     </div>
@@ -123,6 +127,7 @@ function PlayerCard({ player, size, isSelected, status, onClick }: any) {
 }
 
 export default function TigreFCFantasy() {
+  // ESTADOS
   const [step, setStep] = useState<'escalar' | 'capitao' | 'heroi' | 'palpite' | 'share'>('escalar');
   const [formationKey, setFormationKey] = useState('4-3-3');
   const [lineup, setLineup] = useState<Record<string, Player | null>>({});
@@ -131,17 +136,19 @@ export default function TigreFCFantasy() {
   const [capitao, setCapitao] = useState<number | null>(null);
   const [heroi, setHeroi] = useState<number | null>(null);
   const [palpite, setPalpite] = useState({ home: 0, away: 0 });
+  const [saving, setSaving] = useState(false);
 
-  // Lista ID's já usados para não repetir
+  // Cálculos derivados
+  const filledCount = useMemo(() => Object.values(lineup).filter(Boolean).length, [lineup]);
   const usedIds = useMemo(() => Object.values(lineup).filter(Boolean).map(p => p!.id), [lineup]);
 
   const togglePlayer = (p: Player) => {
-    if (usedIds.includes(p.id)) {
-        // Remover se já estiver
+    const isAlreadySelected = usedIds.includes(p.id);
+    
+    if (isAlreadySelected) {
         const entry = Object.entries(lineup).find(([_, player]) => player?.id === p.id);
         if (entry) setLineup({ ...lineup, [entry[0]]: null });
     } else {
-        // Tenta encaixar no slot ativo ou no primeiro disponível da posição
         const targetSlot = activeSlot || FORMATIONS[formationKey].find(s => s.pos === p.pos && !lineup[s.id])?.id;
         if (targetSlot) {
             setLineup({ ...lineup, [targetSlot]: p });
@@ -150,25 +157,29 @@ export default function TigreFCFantasy() {
     }
   };
 
-  const isComplete = Object.values(lineup).filter(Boolean).length === 11;
+  const handleFinalizar = () => {
+      setSaving(true);
+      // Aqui entraria sua lógica de supabase.from('escalacoes').insert(...)
+      setTimeout(() => {
+          setSaving(false);
+          alert("Escalação salva com sucesso!");
+      }, 1500);
+  };
 
   return (
     <main className="fantasy-container">
-      {/* HEADER DINÂMICO */}
       <header className="game-header">
         <img src={LOGO} alt="Tigre FC" />
-        <div className="progress-bar">
-            <div className={`dot ${step === 'escalar' ? 'active' : ''}`} />
-            <div className={`dot ${step === 'capitao' ? 'active' : ''}`} />
-            <div className={`dot ${step === 'heroi' ? 'active' : ''}`} />
-            <div className={`dot ${step === 'palpite' ? 'active' : ''}`} />
+        <div className="step-indicator">
+            {['Escalar', 'Capitão', 'Herói', 'Palpite'].map((s, i) => (
+                <div key={s} className={`dot ${i <= ['escalar', 'capitao', 'heroi', 'palpite'].indexOf(step) ? 'active' : ''}`} />
+            ))}
         </div>
       </header>
 
-      {/* ÁREA DO CAMPO (3D REPLICA) */}
+      {/* CAMPO EM PERSPECTIVA */}
       <div className="field-viewport">
         <div className="soccer-field">
-          {/* Marcações do Campo */}
           <div className="field-lines">
             <div className="penalty-area top" />
             <div className="circle-middle" />
@@ -176,7 +187,6 @@ export default function TigreFCFantasy() {
             <div className="penalty-area bottom" />
           </div>
 
-          {/* Jogadores no Campo */}
           {FORMATIONS[formationKey].map(slot => {
             const p = lineup[slot.id];
             return (
@@ -189,7 +199,7 @@ export default function TigreFCFantasy() {
                    }}>
                      <PlayerCard 
                         player={p} 
-                        size={60} 
+                        size={55} 
                         status={capitao === p.id ? 'cap' : heroi === p.id ? 'hero' : ''} 
                         isSelected 
                     />
@@ -200,7 +210,6 @@ export default function TigreFCFantasy() {
                       setFilterPos(slot.pos);
                   }}>
                     <span>{slot.pos}</span>
-                    <i />
                   </button>
                 )}
               </div>
@@ -209,27 +218,27 @@ export default function TigreFCFantasy() {
         </div>
       </div>
 
-      {/* MERCADO DE JOGADORES (INVERSO - SEMPRE VISÍVEL NO STEP ESCALAR) */}
+      {/* SELEÇÃO INVERSA (CARDS ABAIXO DO CAMPO) */}
       {step === 'escalar' && (
         <section className="market-section">
-          <div className="market-header">
-            <div className="formation-select">
+          <div className="market-controls">
+            <div className="group">
                 {Object.keys(FORMATIONS).map(f => (
                     <button key={f} className={formationKey === f ? 'active' : ''} onClick={() => {setFormationKey(f); setLineup({});}}>{f}</button>
                 ))}
             </div>
-            <div className="pos-filters">
+            <div className="group">
                 {['GOL', 'ZAG', 'LAT', 'MEI', 'ATA'].map(pos => (
                     <button key={pos} className={filterPos === pos ? 'active' : ''} onClick={() => setFilterPos(pos)}>{pos}</button>
                 ))}
             </div>
           </div>
-          <div className="players-scroll">
+          <div className="players-grid">
             {PLAYERS.filter(p => p.pos === filterPos).map(p => (
                 <PlayerCard 
                     key={p.id} 
                     player={p} 
-                    size={85} 
+                    size={'100%'} 
                     isSelected={usedIds.includes(p.id)}
                     onClick={() => togglePlayer(p)} 
                 />
@@ -238,88 +247,78 @@ export default function TigreFCFantasy() {
         </section>
       )}
 
-      {/* STEP PALPITE */}
+      {/* INPUT DE PALPITE */}
       {step === 'palpite' && (
-          <div className="palpite-overlay">
-            <h3>PLACAR FINAL</h3>
-            <div className="score-box">
-                <input type="number" value={palpite.home} onChange={e => setPalpite({...palpite, home: Number(e.target.value)})} />
+          <div className="palpite-box">
+              <h3>PLACAR DO JOGO</h3>
+              <div className="inputs">
+                <input type="number" placeholder="0" onChange={e => setPalpite({...palpite, home: +e.target.value})} />
                 <span>X</span>
-                <input type="number" value={palpite.away} onChange={e => setPalpite({...palpite, away: Number(e.target.value)})} />
-            </div>
+                <input type="number" placeholder="0" onChange={e => setPalpite({...palpite, away: +e.target.value})} />
+              </div>
           </div>
       )}
 
-      {/* CONTROLES FLUTUANTES */}
-      <footer className="footer-actions">
-          {step === 'escalar' && (
-              <button className="next-btn" disabled={!isComplete} onClick={() => setStep('capitao')}>
-                  {isComplete ? 'ESCOLHER CAPITÃO' : `FALTAM ${11 - usedIds.length}`}
-              </button>
-          )}
-          {step === 'capitao' && <button className="next-btn" disabled={!capitao} onClick={() => setStep('heroi')}>DEFINIR HERÓI</button>}
-          {step === 'heroi' && <button className="next-btn" disabled={!heroi} onClick={() => setStep('palpite')}>DAR PALPITE</button>}
-          {step === 'palpite' && <button className="next-btn" onClick={() => alert('Escalação salva! Felipe agradece.')}>CONFIRMAR TIME 🐯</button>}
-          
-          {step !== 'escalar' && <button className="back-link" onClick={() => setStep('escalar')}>VOLTAR</button>}
+      {/* BOTÃO DE AÇÃO FIXO */}
+      <footer className="action-footer">
+          <button 
+            className="main-button"
+            disabled={saving || (step === 'escalar' && filledCount < 11)}
+            onClick={() => {
+                if (step === 'escalar') setStep('capitao');
+                else if (step === 'capitao' && capitao) setStep('heroi');
+                else if (step === 'heroi' && heroi) setStep('palpite');
+                else if (step === 'palpite') handleFinalizar();
+            }}
+          >
+              {saving ? 'PROCESSANDO...' : 
+               step === 'escalar' ? (filledCount < 11 ? `FALTAM ${11 - filledCount} JOGADORES` : 'ESCOLHER CAPITÃO →') :
+               step === 'capitao' ? 'CONFIRMAR CAPITÃO' :
+               step === 'heroi' ? 'CONFIRMAR HERÓI' : 'SALVAR ESCALAÇÃO'}
+          </button>
+          {step !== 'escalar' && <button className="back-btn" onClick={() => setStep('escalar')}>Recomeçar</button>}
       </footer>
 
       <style jsx global>{`
-        body { background: #000; margin: 0; font-family: sans-serif; color: #fff; overflow-x: hidden; }
-        .fantasy-container { min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 120px; }
-        
-        .game-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.05); }
-        .game-header img { height: 30px; }
-        .progress-bar { display: flex; gap: 8px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
-        .dot.active { background: #F5C400; box-shadow: 0 0 10px #F5C400; }
+        .fantasy-container { background: #000; min-height: 100vh; color: #fff; padding-bottom: 120px; }
+        .game-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .game-header img { height: 25px; }
+        .step-indicator { display: flex; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #222; }
+        .dot.active { background: #F5C400; box-shadow: 0 0 8px #F5C400; }
 
-        .field-viewport { perspective: 1200px; padding: 20px 10px; margin-top: -30px; }
+        .field-viewport { perspective: 1000px; padding: 10px; margin-top: -20px; }
         .soccer-field { 
-          position: relative; width: 100%; height: 520px; 
-          background: linear-gradient(180deg, #1e5c2c 0%, #0a240f 100%);
-          border-radius: 12px; transform: rotateX(25deg);
-          box-shadow: 0 40px 60px rgba(0,0,0,0.8);
-          border: 4px solid rgba(255,255,255,0.1);
+          position: relative; width: 100%; height: 450px; background: #1a4a1a; 
+          border-radius: 8px; transform: rotateX(20deg); border: 2px solid rgba(255,255,255,0.1);
+          background-image: linear-gradient(#225c22 50%, #1a4a1a 50%); background-size: 100% 40px;
         }
-        .field-lines { position: absolute; inset: 0; pointer-events: none; }
-        .penalty-area { position: absolute; left: 20%; width: 60%; height: 15%; border: 2px solid rgba(255,255,255,0.1); }
-        .penalty-area.top { top: 0; border-top: none; }
-        .penalty-area.bottom { bottom: 0; border-bottom: none; }
-        .line-middle { position: absolute; top: 50%; width: 100%; height: 2px; background: rgba(255,255,255,0.1); }
-        .circle-middle { position: absolute; top: 50%; left: 50%; width: 100px; height: 100px; border: 2px solid rgba(255,255,255,0.1); border-radius: 50%; transform: translate(-50%, -50%); }
-
-        .player-slot { position: absolute; transform: translate(-50%, -50%); z-index: 10; }
+        .field-lines { position: absolute; inset: 0; border: 1px solid rgba(255,255,255,0.2); }
+        .line-middle { position: absolute; top: 50%; width: 100%; height: 1px; background: rgba(255,255,255,0.2); }
+        .player-slot { position: absolute; transform: translate(-50%, -50%); z-index: 5; }
+        
         .add-placeholder { 
-          width: 45px; height: 45px; border-radius: 50%; border: 2px dashed rgba(245,196,0,0.4);
-          background: rgba(0,0,0,0.4); color: #F5C400; font-weight: 900; font-size: 9px;
-          display: flex; align-items: center; justify-content: center; flex-direction: column;
+          width: 40px; height: 40px; border-radius: 50%; border: 1px dashed #F5C400;
+          background: rgba(0,0,0,0.6); color: #F5C400; font-size: 8px; font-weight: 900;
         }
-        .add-placeholder.active { border-color: #fff; background: #F5C400; color: #000; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .add-placeholder.active { background: #F5C400; color: #000; border-style: solid; }
 
-        .market-section { background: #0a0a0a; border-radius: 24px 24px 0 0; padding: 20px; border-top: 1px solid #222; }
-        .market-header { margin-bottom: 15px; }
-        .formation-select, .pos-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; }
-        .market-header button { 
-            background: #1a1a1a; border: 1px solid #333; color: #888; 
-            padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 800;
-        }
-        .market-header button.active { background: #F5C400; color: #000; border-color: #F5C400; }
-        .players-scroll { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .market-section { padding: 20px; background: #050505; border-radius: 20px 20px 0 0; margin-top: -20px; position: relative; z-index: 20; }
+        .market-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .group { display: flex; gap: 8px; overflow-x: auto; }
+        .group button { padding: 8px 15px; border-radius: 20px; border: 1px solid #222; background: #111; color: #666; font-size: 11px; font-weight: 800; }
+        .group button.active { background: #F5C400; color: #000; border-color: #F5C400; }
+        
+        .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 
-        .footer-actions { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); text-align: center; }
-        .next-btn { 
-          width: 100%; max-width: 400px; padding: 18px; border-radius: 14px; 
-          border: none; background: #F5C400; color: #000; font-weight: 900;
-          text-transform: uppercase; box-shadow: 0 10px 20px rgba(245,196,0,0.2);
-        }
-        .next-btn:disabled { background: #222; color: #444; box-shadow: none; }
-        .back-link { display: block; margin-top: 10px; color: #666; font-size: 12px; border: none; background: none; }
+        .action-footer { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 30%); z-index: 100; text-align: center; }
+        .main-button { width: 100%; max-width: 400px; padding: 18px; border-radius: 15px; background: #F5C400; color: #000; border: none; font-weight: 900; }
+        .main-button:disabled { background: #222; color: #444; }
+        .back-btn { margin-top: 10px; background: none; border: none; color: #666; font-size: 12px; }
 
-        .palpite-overlay { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); text-align: center; background: #111; padding: 30px; border-radius: 30px; border: 1px solid #F5C400; }
-        .score-box { display: flex; align-items: center; gap: 15px; margin-top: 20px; }
-        .score-box input { width: 70px; height: 70px; background: #000; border: 2px solid #333; border-radius: 12px; color: #fff; text-align: center; font-size: 32px; font-weight: 900; }
+        .palpite-box { text-align: center; padding: 40px 20px; }
+        .inputs { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px; }
+        .inputs input { width: 80px; height: 80px; background: #111; border: 2px solid #F5C400; border-radius: 15px; color: #fff; text-align: center; font-size: 32px; font-weight: 900; }
       `}</style>
     </main>
   );
