@@ -6,22 +6,35 @@ import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
 import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa'; 
 
-// URL DA GARRA (PATA) ATUALIZADA
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SB_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+// Interfaces para melhor manutenção
+interface Time {
+  nome: string;
+  escudo_url: string;
+}
+
 interface Jogo {
   id: number;
   data_hora: string;
-  mandante: { nome: string; escudo_url: string };
-  visitante: { nome: string; escudo_url: string };
+  mandante: Time;
+  visitante: Time;
+}
+
+interface UsuarioRanking {
+  id: string;
+  nome: string;
+  apelido: string | null;
+  avatar_url: string | null;
+  pontos_total: number;
 }
 
 export default function TigreFCPage() {
   const [mounted, setMounted] = useState(false);
   const [jogo, setJogo] = useState<Jogo | null>(null);
-  const [ranking, setRanking] = useState<any[]>([]);
+  const [ranking, setRanking] = useState<UsuarioRanking[]>([]);
   const [meuId, setMeuId] = useState<string | null>(null);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
@@ -37,36 +50,46 @@ export default function TigreFCPage() {
     const sb = createClient(SB_URL, SB_KEY);
 
     async function init() {
+      // Busca sessão do usuário de forma segura
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user) {
-        const { data: u } = await sb.from('tigre_fc_usuarios').select('id').eq('google_id', session.user.id).maybeSingle();
+        const { data: u } = await sb.from('tigre_fc_usuarios')
+          .select('id')
+          .eq('google_id', session.user.id)
+          .maybeSingle();
         if (u) setMeuId(u.id);
       }
 
       try {
         const [resJogo, { data: rankData }] = await Promise.all([
           fetch('/api/proximo-jogo').then(r => r.json()),
-          sb.from('tigre_fc_usuarios').select('*').order('pontos_total', { ascending: false }).limit(10)
+          sb.from('tigre_fc_usuarios')
+            .select('id, nome, apelido, avatar_url, pontos_total')
+            .order('pontos_total', { ascending: false })
+            .limit(10)
         ]);
+        
         if (resJogo.jogos?.[0]) setJogo(resJogo.jogos[0]);
-        if (rankData) setRanking(rankData);
+        if (rankData) setRanking(rankData as UsuarioRanking[]);
       } catch (e) {
-        console.error("Erro ao carregar dados:", e);
+        console.error("Erro ao carregar dados do portal:", e);
       }
     }
     init();
   }, [mounted]);
 
+  // Timer otimizado
   useEffect(() => {
     if (!jogo) return;
-    const timer = setInterval(() => {
+    
+    const calculateTime = () => {
       const gameTime = new Date(jogo.data_hora.replace(' ', 'T')).getTime();
       const lockTime = gameTime - (90 * 60 * 1000); 
       const diff = lockTime - Date.now();
       
       if (diff <= 0) {
         setTimeLeft({ h: '00', m: '00', s: '00' });
-        return;
+        return false;
       }
       
       setTimeLeft({
@@ -74,7 +97,11 @@ export default function TigreFCPage() {
         m: String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0'),
         s: String(Math.floor((diff % 60000) / 1000)).padStart(2, '0')
       });
-    }, 1000);
+      return true;
+    };
+
+    calculateTime();
+    const timer = setInterval(calculateTime, 1000);
     return () => clearInterval(timer);
   }, [jogo]);
 
@@ -85,13 +112,11 @@ export default function TigreFCPage() {
       
       {/* 🏆 HEADER ULTRA-PREMIUM */}
       <header ref={topRef} className="bg-[#F5C400] pt-20 pb-32 px-6 border-b-[12px] border-black text-center relative overflow-hidden">
-        {/* Camada de Textura e Gradiente */}
         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/20" />
         
         <div className="max-w-md mx-auto relative z-10">
           <div className="relative inline-block mb-4 group">
-             {/* Glow de fundo da Garra */}
              <div className="absolute inset-0 bg-black blur-[60px] opacity-20 group-hover:opacity-40 transition-opacity duration-700 rounded-full scale-150" />
              <img 
                 src={PATA_LOGO} 
@@ -114,22 +139,24 @@ export default function TigreFCPage() {
 
       <div className="max-w-md mx-auto px-4 -mt-20 relative z-20">
         
-        {/* ⚡ CARD DO PRÓXIMO JOGO (DESIGN REFORMULADO) */}
+        {/* ⚡ CARD DO PRÓXIMO JOGO */}
         {jogo && (
           <section className="mb-20">
-            <div className="bg-zinc-900/90 backdrop-blur-3xl rounded-[60px] border border-white/10 p-10 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] relative overflow-hidden">
+            <div className="bg-zinc-900/90 backdrop-blur-3xl rounded-[60px] border border-white/10 p-10 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
               
-              {/* Cronômetro com mais peso */}
+              {/* Cronômetro */}
               <div className="flex justify-center gap-6 mb-12 relative z-10">
-                {['h', 'm', 's'].map(unit => (
+                {(['h', 'm', 's'] as const).map(unit => (
                   <div key={unit} className="flex flex-col items-center">
-                    <div className="bg-black/40 px-3 py-2 rounded-2xl border border-white/5">
+                    <div className="bg-black/40 px-3 py-2 rounded-2xl border border-white/5 min-w-[70px] text-center">
                       <span className="text-5xl font-[1000] font-mono leading-none text-white tracking-tighter">
-                        {timeLeft[unit as keyof typeof timeLeft]}
+                        {timeLeft[unit]}
                       </span>
                     </div>
-                    <span className="text-[8px] text-zinc-500 font-black uppercase mt-3 tracking-[0.4em]">{unit === 'h' ? 'HORAS' : unit === 'm' ? 'MINUTOS' : 'SEGUNDOS'}</span>
+                    <span className="text-[8px] text-zinc-500 font-black uppercase mt-3 tracking-[0.4em]">
+                        {unit === 'h' ? 'HORAS' : unit === 'm' ? 'MINUTOS' : 'SEGUNDOS'}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -138,7 +165,7 @@ export default function TigreFCPage() {
               <div className="flex justify-between items-center mb-12 relative z-10">
                 <div className="flex flex-col items-center flex-1">
                   <div className="w-24 h-24 bg-gradient-to-b from-zinc-800 to-black rounded-[35px] p-4 flex items-center justify-center mb-4 border border-white/10 shadow-2xl group-hover:rotate-3 transition-transform">
-                    <img src={jogo.mandante.escudo_url} className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
+                    <img src={jogo.mandante.escudo_url} alt="Mandante" className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
                   </div>
                   <p className="text-[10px] font-black uppercase text-zinc-400 text-center leading-tight h-8 flex items-center">{jogo.mandante.nome}</p>
                 </div>
@@ -150,7 +177,7 @@ export default function TigreFCPage() {
 
                 <div className="flex flex-col items-center flex-1">
                   <div className="w-24 h-24 bg-gradient-to-b from-zinc-800 to-black rounded-[35px] p-4 flex items-center justify-center mb-4 border border-white/10 shadow-2xl group-hover:-rotate-3 transition-transform">
-                    <img src={jogo.visitante.escudo_url} className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
+                    <img src={jogo.visitante.escudo_url} alt="Visitante" className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
                   </div>
                   <p className="text-[10px] font-black uppercase text-zinc-400 text-center leading-tight h-8 flex items-center">{jogo.visitante.nome}</p>
                 </div>
@@ -167,14 +194,14 @@ export default function TigreFCPage() {
         {/* 🌟 DESTAQUES (CARTA DO FIFA) */}
         <DestaquesFifa />
 
-        {/* 🔍 RAIO-X TÁTICO (WIDGET INTEGRADO) */}
+        {/* 🔍 RAIO-X TÁTICO */}
         <section className="mt-28">
           <div className="flex flex-col items-center mb-8 px-6 text-center">
              <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-yellow-500/80 mb-2 italic">Tactical View</h2>
              <p className="text-2xl font-[1000] uppercase italic tracking-tighter text-white">Análise do Campo</p>
           </div>
           <div className="bg-[#0a0a0a] rounded-[50px] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] border-[8px] border-zinc-900 relative h-[600px]">
-            <div className="absolute top-0 left-0 right-0 h-10 bg-zinc-900 flex items-center justify-center gap-2">
+            <div className="absolute top-0 left-0 right-0 h-10 bg-zinc-900 flex items-center justify-center gap-2 z-10">
                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Live Radar System</span>
             </div>
@@ -220,6 +247,7 @@ export default function TigreFCPage() {
                 <div className="relative mr-5">
                     <img 
                       src={u.avatar_url || PATA_LOGO} 
+                      alt={u.apelido || 'Avatar'}
                       className={`w-16 h-16 rounded-[22px] object-cover transition-all duration-700
                         ${i === 0 ? 'border-4 border-black/20 shadow-xl' : 'bg-black border-2 border-white/5'}
                       `} 
@@ -251,7 +279,7 @@ export default function TigreFCPage() {
           </div>
         </section>
 
-        {/* 💬 CHAT VESTIÁRIO (DESIGN INTEGRADO) */}
+        {/* 💬 CHAT VESTIÁRIO */}
         <section className="mt-32">
           <div className="flex items-center justify-between mb-8 px-6">
             <div>
