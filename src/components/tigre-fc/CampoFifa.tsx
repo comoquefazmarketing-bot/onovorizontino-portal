@@ -1,314 +1,328 @@
 'use client';
 
+/**
+ * CampoFifa v3 — Templo do Tigre
+ * Top-down inclinado, listras de gramado, linhas neon, névoa de estádio,
+ * logo Pata como marca d'água central, iluminação volumétrica de refletores.
+ */
+
 import React from 'react';
 
-// Texturas realistas e sutis para dar profundidade e brilho ao gramado
-const TEXTURA_GRAMADO_HD = 'https://www.transparenttextures.com/patterns/dark-dotted-2.png';
-const EFEITO_LUMINOSO_ESTADIO = 'https://www.transparenttextures.com/patterns/white-diamond.png';
+const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
+
+// Cores de borda por posição — usadas nos player slots
+export const POS_CORES: Record<string, string> = {
+  GOL: '#F5C400',   // ouro
+  ZAG: '#3B82F6',   // azul
+  LAT: '#06B6D4',   // ciano
+  MEI: '#22C55E',   // verde
+  ATA: '#EF4444',   // vermelho
+};
+
+export const POS_GLOW: Record<string, string> = {
+  GOL: 'rgba(245,196,0,0.6)',
+  ZAG: 'rgba(59,130,246,0.6)',
+  LAT: 'rgba(6,182,212,0.6)',
+  MEI: 'rgba(34,197,94,0.6)',
+  ATA: 'rgba(239,68,68,0.6)',
+};
 
 export default function CampoFifa() {
   return (
-    <div className="perspective-wrapper">
-      <div className="fifa-stadium-experience">
-        
-        {/* Sombra projetada do campo (Ground Shadow) para efeito 3D flutuante */}
-        <div className="field-shadow-3d" />
-        
-        {/* Container principal do campo com inclinação 3D dramática */}
-        <div className="field-tilt-cinematic">
-          
-          {/* --- O GRAMADO REALISTA (PADRÃO FIFA HD) --- */}
-          <div className="grass-pattern-hd">
-            <div className="texture-overlay-hd" />
-            
-            {/* Faixas Horizontais Alternadas (Padrão de Corte Profissional) */}
-            {[...Array(10)].map((_, i) => (
-              <div key={`h-${i}`} className="grass-stripe-h-hd" />
-            ))}
-            
-            {/* Faixas Verticais (Completando o Xadrez Xtra-Deep) */}
-            <div className="vertical-stripes-container-hd">
-              {[...Array(6)].map((_, i) => (
-                <div key={`v-${i}`} className="grass-stripe-v-hd" />
-              ))}
-            </div>
-            
-            {/* Efeito de Reflexão de Luz no Gramado Molhado */}
-            <div className="grass-wet-reflection" />
-          </div>
+    <div className="campo-wrapper">
 
-          {/* --- MARCAÇÕES BRANCAS CRISTALINAS (EM PERSPECTIVA) --- */}
-          <div className="field-lines-crisp">
-            <div className="border-lines-crisp" />
-            <div className="mid-line-crisp" />
-            
-            <div className="center-circle-crisp">
-              <div className="center-point-crisp" />
-            </div>
-            
-            <div className="penalty-area-crisp top">
-              <div className="goal-area-crisp" />
-              <div className="penalty-arc-crisp" />
-              <div className="penalty-point-crisp" />
-            </div>
-            
-            <div className="penalty-area-crisp bottom">
-              <div className="goal-area-crisp" />
-              <div className="penalty-arc-crisp" />
-              <div className="penalty-point-crisp" />
-            </div>
-          </div>
+      {/* Sombra projetada no "chão" — efeito 3D flutuante */}
+      <div className="campo-ground-shadow" />
 
-          {/* --- ILUMINAÇÃO DRAMÁTICA DE ESTÁDIO (FLOODLIGHTS FX) --- */}
-          {/* Gradiente complexo simulando 4 refletores laterais e luz global */}
-          <div className="stadium-lighting-fx" />
-          
-          {/* Brilho neon suave nas linhas do campo (efeito game) */}
-          <div className="field-lines-neon-glow" />
-          
+      {/* Container 3D */}
+      <div className="campo-tilt">
+
+        {/* ── GRAMADO ── */}
+        <div className="campo-grass">
+          {/* Listras horizontais alternadas — corte profissional */}
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="campo-stripe" data-even={i % 2 === 0 ? 'true' : 'false'} />
+          ))}
+
+          {/* Textura sutil */}
+          <div className="campo-texture" />
+
+          {/* Névoa de borda (refletores) */}
+          <div className="campo-vignette" />
+
+          {/* Iluminação volumétrica central */}
+          <div className="campo-spotlight" />
         </div>
+
+        {/* ── LINHAS NEON ── */}
+        <div className="campo-lines">
+          {/* Borda externa */}
+          <div className="line-border" />
+
+          {/* Linha do meio */}
+          <div className="line-mid" />
+
+          {/* Círculo central */}
+          <div className="line-circle">
+            <div className="line-dot" />
+          </div>
+
+          {/* Área superior */}
+          <div className="line-area top">
+            <div className="line-small-area" />
+            <div className="line-penalty-dot top-dot" />
+            <div className="line-arc top-arc" />
+          </div>
+
+          {/* Área inferior */}
+          <div className="line-area bottom">
+            <div className="line-small-area" />
+            <div className="line-penalty-dot bot-dot" />
+            <div className="line-arc bot-arc" />
+          </div>
+
+          {/* Cantos */}
+          <div className="corner corner-tl" />
+          <div className="corner corner-tr" />
+          <div className="corner corner-bl" />
+          <div className="corner corner-br" />
+        </div>
+
+        {/* ── LOGO MARCA D'ÁGUA ── */}
+        <div className="campo-watermark">
+          <img src={PATA_LOGO} alt="Tigre FC" className="watermark-img" />
+        </div>
+
       </div>
 
       <style jsx>{`
-        /* --- AMBIENTE 3D CINEMATOGRÁFICO --- */
-        .perspective-wrapper {
-          perspective: 2500px; /* Profundidade extrema para sensação de escala */
-          width: 100%;
-          display: flex;
-          justify-content: center;
-          padding: 60px 0; /* Mais espaço para o campo "respirar" no 3D */
-          overflow: hidden;
-          background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%); /* Fundo escuro total */
-        }
-
-        .fifa-stadium-experience {
-          position: relative;
-          width: 95%;
-          max-width: 450px;
-          aspect-ratio: 1 / 1.3; /* Proporção de game card, achatada pela perspectiva */
-        }
-
-        /* --- GROUND SHADOW --- */
-        .field-shadow-3d {
+        /* ── WRAPPER ── */
+        .campo-wrapper {
           position: absolute;
-          bottom: -50px;
-          left: 5%;
-          width: 90%;
-          height: 80px;
-          background: rgba(0, 0, 0, 0.85);
+          inset: 0;
+          perspective: 1800px;
+          perspective-origin: 50% 30%;
+          overflow: hidden;
+        }
+
+        .campo-ground-shadow {
+          position: absolute;
+          bottom: -30px;
+          left: 10%;
+          right: 10%;
+          height: 60px;
+          background: rgba(0,0,0,0.7);
           border-radius: 50%;
-          filter: blur(35px); /* Desfoque pesado para sombra flutuante realista */
-          transform: rotateX(70deg);
+          filter: blur(30px);
+          z-index: 0;
+        }
+
+        /* ── TILT 3D ── */
+        .campo-tilt {
+          position: absolute;
+          inset: 0;
+          transform: rotateX(38deg) rotateY(0deg);
+          transform-origin: center 60%;
+          transform-style: preserve-3d;
+          border-radius: 14px;
+          overflow: hidden;
+          border: 3px solid rgba(255,255,255,0.12);
+          box-shadow:
+            0 30px 60px rgba(0,0,0,0.9),
+            inset 0 0 80px rgba(0,0,0,0.3);
           z-index: 1;
         }
 
-        /* --- O MOCKUP DO CAMPO 3D (TILT CINEMÁTICO) --- */
-        .field-tilt-cinematic {
+        /* ── GRAMADO ── */
+        .campo-grass {
           position: absolute;
           inset: 0;
-          background: #143d14; /* Verde Escuro Base */
-          border-radius: 16px;
-          /* Inclinação acentuada no eixo X para deitar o campo e leve ângulo lateral em Y */
-          transform: rotateX(45deg) rotateY(-8deg) rotateZ(0deg);
-          transform-style: preserve-3d;
-          
-          /* Efeito de Espessura Lateral (Chassis do Game Card) */
-          box-shadow: 
-            -1px 1px 0 #111,
-            -2px 2px 0 #111,
-            -3px 3px 0 #222,
-            -4px 4px 0 #222,
-            -5px 5px 0 #333, /* Espessura lateral 3D */
-            0 25px 50px rgba(0,0,0,0.9); /* Sombra projetada pesada do card */
-          
-          border: 4px solid rgba(255,255,255,0.05); /* Borda externa quase invisível do mockup */
-          overflow: hidden;
-          z-index: 2;
-          transition: transform 0.5s ease-out; /* Suavidade para interações futuras */
-        }
-
-        /* --- ESTILIZAÇÃO DO GRAMADO HD REALISTA --- */
-        .grass-pattern-hd {
-          position: absolute;
-          inset: 0;
-          background-color: #1a521a; /* Verde Profundo */
+          background: #1a5218;
           display: flex;
           flex-direction: column;
         }
 
-        /* Sobreposição de Textura HD (Gramado Real) */
-        .texture-overlay-hd {
+        .campo-stripe {
+          flex: 1;
+        }
+        .campo-stripe[data-even="true"] {
+          background: #1f6b1d;
+        }
+
+        .campo-texture {
           position: absolute;
           inset: 0;
-          background-image: url(${TEXTURA_GRAMADO_HD});
-          opacity: 0.25;
-          mix-blend-mode: overlay;
-          z-index: 1;
+          background-image:
+            repeating-linear-gradient(
+              90deg,
+              transparent,
+              transparent 3px,
+              rgba(0,0,0,0.04) 3px,
+              rgba(0,0,0,0.04) 6px
+            );
+          opacity: 0.8;
         }
 
-        /* Sobreposição de Micro Textura de Brilho (Estádio) */
-        .texture-overlay-stadium-brilliance {
-            position: absolute;
-            inset: 0;
-            background-image: url(${EFEITO_LUMINOSO_ESTADIO});
-            opacity: 0.1;
-            mix-blend-mode: color-dodge;
-            z-index: 2;
+        /* Névoa de bordas — simula profundidade de noite */
+        .campo-vignette {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(
+            ellipse at center,
+            transparent 35%,
+            rgba(0,0,0,0.55) 100%
+          );
+          pointer-events: none;
         }
 
-        /* Faixas Horizontais (Corte Profissional) */
-        .grass-stripe-h-hd {
-          flex: 1;
-          width: 100%;
-          z-index: 0;
-        }
-        .grass-stripe-h-hd:nth-child(even) {
-          background-color: #216621; /* Verde Médio */
+        /* Foco central — refletores apontando ao centro */
+        .campo-spotlight {
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse at 50% 50%, rgba(255,255,220,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse at 10% 5%,  rgba(255,255,200,0.12) 0%, transparent 40%),
+            radial-gradient(ellipse at 90% 5%,  rgba(200,240,255,0.12) 0%, transparent 40%);
+          mix-blend-mode: screen;
+          pointer-events: none;
         }
 
-        /* Faixas Verticais (Padrão Xadrez Profundo) */
-        .vertical-stripes-container-hd {
+        /* ── LINHAS ── */
+        .campo-lines {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+
+        /* Linha branca neon compartilhada */
+        .campo-lines * {
+          box-sizing: border-box;
+        }
+
+        .line-border {
+          position: absolute;
+          inset: 14px;
+          border: 2px solid rgba(255,255,255,0.75);
+          border-radius: 3px;
+          box-shadow: 0 0 8px rgba(255,255,255,0.25), inset 0 0 8px rgba(255,255,255,0.05);
+        }
+
+        .line-mid {
+          position: absolute;
+          top: 50%;
+          left: 14px;
+          right: 14px;
+          height: 2px;
+          background: rgba(255,255,255,0.75);
+          transform: translateY(-50%);
+          box-shadow: 0 0 6px rgba(255,255,255,0.3);
+        }
+
+        .line-circle {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 90px;
+          height: 90px;
+          border: 2px solid rgba(255,255,255,0.75);
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          box-shadow: 0 0 8px rgba(255,255,255,0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .line-dot {
+          width: 6px;
+          height: 6px;
+          background: rgba(255,255,255,0.9);
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+
+        /* Áreas de pênalti */
+        .line-area {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 58%;
+          height: 22%;
+          border: 2px solid rgba(255,255,255,0.75);
+          box-shadow: 0 0 6px rgba(255,255,255,0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .line-area.top    { top: 14px;    border-top: none; }
+        .line-area.bottom { bottom: 14px; border-bottom: none; }
+
+        .line-small-area {
+          position: absolute;
+          width: 50%;
+          height: 55%;
+          border: 2px solid rgba(255,255,255,0.75);
+        }
+        .line-area.top    .line-small-area { top: 0;    border-top: none; }
+        .line-area.bottom .line-small-area { bottom: 0; border-bottom: none; }
+
+        .line-penalty-dot {
+          position: absolute;
+          width: 5px;
+          height: 5px;
+          background: rgba(255,255,255,0.9);
+          border-radius: 50%;
+          left: 50%;
+          transform: translateX(-50%);
+          box-shadow: 0 0 8px rgba(255,255,255,0.8);
+        }
+        .top-dot { bottom: 28%; }
+        .bot-dot { top: 28%; }
+
+        /* Arco da grande área */
+        .line-arc {
+          position: absolute;
+          left: 50%;
+          width: 60px;
+          height: 30px;
+          border: 2px solid rgba(255,255,255,0.6);
+          border-radius: 50%;
+          transform: translateX(-50%);
+          clip-path: inset(50% 0 0 0);
+        }
+        .top-arc { bottom: -17px; clip-path: inset(50% 0 0 0); }
+        .bot-arc { top: -17px;    clip-path: inset(0 0 50% 0); }
+
+        /* Cantos */
+        .corner {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          border: 2px solid rgba(255,255,255,0.6);
+          border-radius: 50%;
+        }
+        .corner-tl { top: 12px;    left: 12px;  border-bottom: none; border-right: none; }
+        .corner-tr { top: 12px;    right: 12px; border-bottom: none; border-left: none; }
+        .corner-bl { bottom: 12px; left: 12px;  border-top: none;    border-right: none; }
+        .corner-br { bottom: 12px; right: 12px; border-top: none;    border-left: none; }
+
+        /* ── MARCA D'ÁGUA ── */
+        .campo-watermark {
           position: absolute;
           inset: 0;
           display: flex;
-          mix-blend-mode: soft-light; /* Blend sutil para não sobrecarregar */
-          opacity: 0.4;
-          z-index: 1;
-        }
-
-        .grass-stripe-v-hd {
-          flex: 1;
-          height: 100%;
-        }
-        .grass-stripe-v-hd:nth-child(even) {
-          background-color: rgba(0, 0, 0, 0.4); /* Escurece para o xadrez */
-        }
-
-        /* Efeito de Brilho de Água/Suor no Gramado (FIFA Style) */
-        .grass-wet-reflection {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
-          mix-blend-mode: plus-lighter;
-          opacity: 0.6;
+          align-items: center;
+          justify-content: center;
+          pointer-events: none;
           z-index: 2;
         }
 
-        /* --- MARCAÇÕES BRANCAS CRISTALINAS (HD) --- */
-        .field-lines-crisp {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          z-index: 3;
-        }
-
-        .border-lines-crisp {
-          position: absolute;
-          inset: 20px; /* Mais margem para as linhas não encostarem na borda */
-          border: 3px solid rgba(255,255,255,0.9);
-          filter: drop-shadow(0 0 2px rgba(255,255,255,0.5)); /* Leve difusão */
-        }
-
-        .mid-line-crisp {
-          position: absolute;
-          top: 50%;
-          left: 20px;
-          right: 20px;
-          height: 3px;
-          background: rgba(255,255,255,0.9);
-          transform: translateY(-50%);
-        }
-
-        .center-circle-crisp {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 100px; /* Círculo maior para escala */
-          height: 100px;
-          border: 3px solid rgba(255,255,255,0.9);
-          border-radius: 50%;
-          transform: translate(-50%, -50%);
-        }
-
-        .center-point-crisp, .penalty-point-crisp {
-          position: absolute;
-          width: 6px;
-          height: 6px;
-          background: #fff;
-          border-radius: 50%;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          box-shadow: 0 0 10px #fff;
-        }
-
-        /* Áreas de Pênalti HD */
-        .penalty-area-crisp {
-          position: absolute;
-          left: 20px;
-          right: 20px;
-          height: 28%; /* Áreas maiores para realismo */
-          display: flex;
-          justify-content: center;
-        }
-        
-        .penalty-area-crisp.top {
-          top: 20px;
-        }
-
-        .penalty-area-crisp.bottom {
-          bottom: 20px;
-          transform: rotate(180deg);
-        }
-
-        .goal-area-crisp {
-          position: absolute;
-          top: 0;
-          width: 65%;
-          height: 100%;
-          border: 3px solid rgba(255,255,255,0.9);
-          border-top: none;
-        }
-
-        .penalty-arc-crisp {
-          position: absolute;
-          bottom: -30px;
-          width: 70px;
-          height: 50px;
-          border: 3px solid rgba(255,255,255,0.9);
-          border-radius: 50%;
-          clip-path: inset(50% 0 0 0); /* Corta metade */
-        }
-
-        .penalty-point-crisp {
-          top: 75%;
-        }
-
-        /* --- ILUMINAÇÃO DRAMÁTICA DE ESTÁDIO (FLOODLIGHTS FX) --- */
-        .stadium-lighting-fx {
-          position: absolute;
-          inset: 0;
-          /* Gradiente radial complexo simulando luz vindo de múltiplos refletores laterais */
-          background: 
-            radial-gradient(circle at 10% 10%, rgba(255, 253, 230, 0.25) 0%, transparent 50%),
-            radial-gradient(circle at 90% 10%, rgba(230, 253, 255, 0.25) 0%, transparent 50%),
-            radial-gradient(circle at 10% 90%, rgba(230, 255, 230, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 90% 90%, rgba(255, 230, 253, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
-          mix-blend-mode: screen; /* Brilho em cima do gramado */
-          pointer-events: none;
-          z-index: 4;
-        }
-
-        /* Brilho Neon suave nas linhas (Estilo Game Card Premium) */
-        .field-lines-neon-glow {
-            position: absolute;
-            inset: 20px;
-            border: 2px solid rgba(255,255,255,0.05);
-            border-radius: 4px;
-            box-shadow: 0 0 25px rgba(255,255,255,0.15); /* Difusão de luz suave no gramado */
-            pointer-events: none;
-            z-index: 5;
+        .watermark-img {
+          width: 80px;
+          height: 80px;
+          object-fit: contain;
+          opacity: 0.07;
+          filter: brightness(10) saturate(0);
         }
       `}</style>
     </div>
