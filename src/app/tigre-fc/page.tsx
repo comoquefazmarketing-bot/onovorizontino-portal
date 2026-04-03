@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, use } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence, useScroll, useTransform, type Transition } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, type Transition, type TargetAndTransition } from 'framer-motion';
 import { supabase as sb } from '@/lib/supabase';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
@@ -192,7 +192,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   if (!mounted) return <div className="min-h-screen bg-[#050505]" />;
 
   const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
-  const stagger = (i: number): { initial: object; animate: object; transition: Transition } => ({
+  const stagger = (i: number): { initial: TargetAndTransition; animate: TargetAndTransition; transition: Transition } => ({
     initial: { opacity: 0, y: 28 },
     animate: { opacity: 1, y: 0 },
     transition: { delay: 0.1 + i * 0.08, duration: 0.5, ease: EASE },
