@@ -10,12 +10,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
-interface Props {
-  onSelect: (type: 'CAPTAIN' | 'HERO') => void;
-  captainName?: string;
-  heroName?: string;
-  captainFoto?: string;
-  heroFoto?: string;
+interface PalpiteProps {
+  scoreTigre: number;
+  scoreAdversario: number;
+  setScoreTigre: (v: number) => void;
+  setScoreAdversario: (v: number) => void;
+  isLocked: boolean;
+  onLock: () => Promise<void>;
 }
 
 export default function CapitaoEHeroi({ onSelect, captainName, heroName, captainFoto, heroFoto }: Props) {
