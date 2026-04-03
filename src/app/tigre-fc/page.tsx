@@ -114,6 +114,19 @@ function AuthGate({ onAuthenticated }: { onAuthenticated: (uid: string) => void 
     return () => subscription.unsubscribe();
   }, []); // eslint-disable-line
 
+  const handleGoogle = () => {
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // ✅ CORRIGIDO: sempre redireciona para a HOME do Tigre FC.
+        // NUNCA usar window.location.href — se o usuário chegou pelo link
+        // /tigre-fc/escalar/123, o href seria esse e cairia direto na escalação
+        // sem passar pela home (jogo, sofascore, ranking, chat).
+        redirectTo: `${window.location.origin}/tigre-fc`,
+      },
+    });
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
       <div className="w-10 h-10 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
@@ -130,7 +143,7 @@ function AuthGate({ onAuthenticated }: { onAuthenticated: (uid: string) => void 
           <p className="text-zinc-500 text-sm mt-1 font-medium">Entre no clube. Faça sua escalação.</p>
         </div>
         <button
-          onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } })}
+          onClick={handleGoogle}
           className="flex items-center gap-3 bg-white text-black font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -141,6 +154,9 @@ function AuthGate({ onAuthenticated }: { onAuthenticated: (uid: string) => void 
           </svg>
           Entrar com Google
         </button>
+        <p className="text-zinc-700 text-[11px] font-medium">
+          Você verá o jogo, ranking e chat antes de escalar.
+        </p>
       </motion.div>
     </div>
   );
@@ -539,7 +555,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </div>
       </div>
 
-      {/* MODAL SHARE — TigreFCShare substitui FinalCardReveal */}
+      {/* MODAL SHARE */}
       {showFinalCard && (
         <TigreFCShare
           usuario={{
