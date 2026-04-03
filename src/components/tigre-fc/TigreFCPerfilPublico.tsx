@@ -1,243 +1,323 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import TigreFCPlayerCard from '@/components/tigre-fc/TigreFCPlayerCard';
-import html2canvas from 'html2canvas';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+/**
+ * TigreFCPerfilPublico
+ * 
+ * Permite que qualquer usuário veja a escalação de outro jogador.
+ * Engajamento: botão de "Corneta" para provocação amigável.
+ * Visível sem autenticação — dados públicos via RLS policy.
+ */
 
-const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
-const PLAYERS: Record<number, any> = {
-  1:  { id:1,  name:'César Augusto',   short:'César',      num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
-  2:  { id:2,  name:'Jordi',           short:'Jordi',      num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
-  3:  { id:3,  name:'João Scapin',     short:'Scapin',     num:12, pos:'GOL', foto:BASE+'JOAO-SCAPIN.jpg.webp' },
-  4:  { id:4,  name:'Lucas Ribeiro',   short:'Lucas',      num:1,  pos:'GOL', foto:BASE+'LUCAS-RIBEIRO.jpg.webp' },
-  5:  { id:5,  name:'Lora',            short:'Lora',       num:2,  pos:'LAT', foto:BASE+'LORA.jpg.webp' },
-  6:  { id:6,  name:'Castrillón',      short:'Castrillón', num:6,  pos:'LAT', foto:BASE+'CASTRILLON.jpg.webp' },
-  7:  { id:7,  name:'Arthur Barbosa',  short:'A.Barbosa',  num:22, pos:'LAT', foto:BASE+'ARTHUR-BARBOSA.jpg.webp' },
-  8:  { id:8,  name:'Mayk',            short:'Mayk',       num:26, pos:'LAT', foto:BASE+'MAYK.jpg.webp' },
-  9:  { id:9,  name:'Maykon Jesus',    short:'Maykon',     num:27, pos:'LAT', foto:BASE+'MAYKON-JESUS.jpg.webp' },
-  10: { id:10, name:'Dantas',          short:'Dantas',     num:3,  pos:'ZAG', foto:BASE+'DANTAAS.jpg.webp' },
-  11: { id:11, name:'Eduardo Brock',   short:'E.Brock',    num:5,  pos:'ZAG', foto:BASE+'EDUARDO-BROCK.jpg.webp' },
-  12: { id:12, name:'Patrick',         short:'Patrick',    num:4,  pos:'ZAG', foto:BASE+'PATRICK.jpg.webp' },
-  13: { id:13, name:'Gabriel Bahia',   short:'G.Bahia',    num:14, pos:'ZAG', foto:BASE+'GABRIEL-BAHIA.jpg.webp' },
-  14: { id:14, name:'Carlinhos',       short:'Carlinhos',  num:25, pos:'ZAG', foto:BASE+'CARLINHOS.jpg.webp' },
-  15: { id:15, name:'Alemão',          short:'Alemão',     num:28, pos:'ZAG', foto:BASE+'ALEMAO.jpg.webp' },
-  16: { id:16, name:'Renato Palm',     short:'R.Palm',     num:24, pos:'ZAG', foto:BASE+'RENATO-PALM.jpg.webp' },
-  17: { id:17, name:'Alvariño',        short:'Alvariño',   num:35, pos:'ZAG', foto:BASE+'IVAN-ALVARINO.jpg.webp' },
-  18: { id:18, name:'Bruno Santana',   short:'B.Santana',  num:33, pos:'ZAG', foto:BASE+'BRUNO-SANTANA.jpg.webp' },
-  19: { id:19, name:'Luís Oyama',      short:'Oyama',      num:8,  pos:'MEI', foto:BASE+'LUIS-OYAMA.jpg.webp' },
-  20: { id:20, name:'Léo Naldi',       short:'L.Naldi',    num:7,  pos:'MEI', foto:BASE+'LEO-NALDI.jpg.webp' },
-  21: { id:21, name:'Rômulo',          short:'Rômulo',     num:10, pos:'MEI', foto:BASE+'ROMULO.jpg.webp' },
-  22: { id:22, name:'Matheus Bianqui', short:'Bianqui',    num:11, pos:'MEI', foto:BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  23: { id:23, name:'Juninho',         short:'Juninho',    num:20, pos:'MEI', foto:BASE+'JUNINHO.jpg.webp' },
-  24: { id:24, name:'Tavinho',         short:'Tavinho',    num:17, pos:'MEI', foto:BASE+'TAVINHO.jpg.webp' },
-  25: { id:25, name:'Diego Galo',      short:'D.Galo',     num:29, pos:'MEI', foto:BASE+'DIEGO-GALO.jpg.webp' },
-  26: { id:26, name:'Marlon',          short:'Marlon',     num:30, pos:'MEI', foto:BASE+'MARLON.jpg.webp' },
-  27: { id:27, name:'Hector Bianchi',  short:'Hector',     num:16, pos:'MEI', foto:BASE+'HECTOR-BIACHI.jpg.webp' },
-  28: { id:28, name:'Nogueira',        short:'Nogueira',   num:36, pos:'MEI', foto:BASE+'NOGUEIRA.jpg.webp' },
-  29: { id:29, name:'Luiz Gabriel',    short:'L.Gabriel',  num:37, pos:'MEI', foto:BASE+'LUIZ-GABRIEL.jpg.webp' },
-  30: { id:30, name:'Jhones Kauê',     short:'J.Kauê',     num:50, pos:'MEI', foto:BASE+'JHONES-KAUE.jpg.webp' },
-  31: { id:31, name:'Robson',          short:'Robson',     num:9,  pos:'ATA', foto:BASE+'ROBSON.jpg.webp' },
-  32: { id:32, name:'Vinícius Paiva',  short:'V.Paiva',    num:13, pos:'ATA', foto:BASE+'VINICIUS-PAIVA.jpg.webp' },
-  33: { id:33, name:'Hélio Borges',    short:'H.Borges',   num:18, pos:'ATA', foto:BASE+'HELIO-BORGES.jpg.webp' },
-  34: { id:34, name:'Jardiel',         short:'Jardiel',    num:19, pos:'ATA', foto:BASE+'JARDIEL.jpg.webp' },
-  35: { id:35, name:'Nicolas Careca',  short:'N.Careca',   num:21, pos:'ATA', foto:BASE+'NICOLAS-CARECA.jpg.webp' },
-  36: { id:36, name:'Titi Ortiz',      short:'T.Ortiz',    num:15, pos:'ATA', foto:BASE+'TITI-ORTIZ.jpg.webp' },
-  37: { id:37, name:'Diego Mathias',   short:'D.Mathias',  num:41, pos:'ATA', foto:BASE+'DIEGO-MATHIAS.jpg.webp' },
-  38: { id:38, name:'Carlão',          short:'Carlão',     num:90, pos:'ATA', foto:BASE+'CARLAO.jpg.webp' },
-  39: { id:39, name:'Ronald Barcellos', short:'Ronald',     num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import confetti from 'canvas-confetti';
+import { NIVEL_CORES, NIVEL_ICONES } from '@/hooks/useLigas'; // Ajuste o path
+
+// ─── Tipos inline (evita dependência circular) ───────────────────────────────
+
+type Player = {
+  id: number; short: string; pos: string; foto: string; num: number;
 };
 
-const SLOTS: Record<string, { id:string; x:number; y:number }[]> = {
-  '4-3-3':   [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'cm1',x:72,y:50},{id:'cm2',x:50,y:46},{id:'cm3',x:28,y:50},{id:'rw',x:76,y:24},{id:'st',x:50,y:18},{id:'lw',x:24,y:24}],
-  '4-4-2':   [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'rm',x:80,y:50},{id:'cm1',x:60,y:50},{id:'cm2',x:40,y:50},{id:'lm',x:20,y:50},{id:'st1',x:64,y:22},{id:'st2',x:36,y:22}],
-  '3-5-2':   [{id:'gk',x:50,y:88},{id:'cb1',x:70,y:72},{id:'cb2',x:50,y:75},{id:'cb3',x:30,y:72},{id:'rb',x:86,y:52},{id:'cm1',x:68,y:50},{id:'cm2',x:50,y:46},{id:'cm3',x:32,y:50},{id:'lb',x:14,y:52},{id:'st1',x:64,y:22},{id:'st2',x:36,y:22}],
-  '4-2-3-1': [{id:'gk',x:50,y:88},{id:'rb',x:82,y:70},{id:'cb1',x:62,y:70},{id:'cb2',x:38,y:70},{id:'lb',x:18,y:70},{id:'dm1',x:64,y:57},{id:'dm2',x:36,y:57},{id:'rm',x:76,y:38},{id:'am',x:50,y:36},{id:'lm',x:24,y:38},{id:'st',x:50,y:18}],
+type FormationSlot = { id: string; x: number; y: number; pos: string };
+
+const ESCUDO_TIGRE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDOS/novorizontino.png';
+const PATA_LOGO    = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
+
+const FORMATIONS: Record<string, FormationSlot[]> = {
+  '4-2-3-1': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL' },
+    { id: 'rb', x: 82, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 18, y: 68, pos: 'LAT' },
+    { id: 'dm1', x: 35, y: 58, pos: 'MEI' }, { id: 'dm2', x: 65, y: 58, pos: 'MEI' },
+    { id: 'am1', x: 50, y: 38, pos: 'MEI' }, { id: 'rw', x: 82, y: 30, pos: 'ATA' }, { id: 'lw', x: 18, y: 30, pos: 'ATA' },
+    { id: 'st', x: 50, y: 15, pos: 'ATA' }
+  ],
+  '4-3-3': [
+    { id: 'gk', x: 50, y: 85, pos: 'GOL' },
+    { id: 'rb', x: 82, y: 65, pos: 'LAT' }, { id: 'cb1', x: 62, y: 72, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 72, pos: 'ZAG' }, { id: 'lb', x: 18, y: 65, pos: 'LAT' },
+    { id: 'm1', x: 50, y: 50, pos: 'MEI' }, { id: 'm2', x: 75, y: 42, pos: 'MEI' }, { id: 'm3', x: 25, y: 42, pos: 'MEI' },
+    { id: 'st', x: 50, y: 12, pos: 'ATA' }, { id: 'rw', x: 82, y: 20, pos: 'ATA' }, { id: 'lw', x: 18, y: 20, pos: 'ATA' }
+  ],
+  '4-4-2': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL' },
+    { id: 'rb', x: 85, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 15, y: 68, pos: 'LAT' },
+    { id: 'm1', x: 20, y: 48, pos: 'MEI' }, { id: 'm2', x: 40, y: 48, pos: 'MEI' }, { id: 'm3', x: 60, y: 48, pos: 'MEI' }, { id: 'm4', x: 80, y: 48, pos: 'MEI' },
+    { id: 'st1', x: 35, y: 18, pos: 'ATA' }, { id: 'st2', x: 65, y: 18, pos: 'ATA' }
+  ],
+  '3-5-2': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL' },
+    { id: 'cb1', x: 50, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 75, y: 72, pos: 'ZAG' }, { id: 'cb3', x: 25, y: 72, pos: 'ZAG' },
+    { id: 'm1', x: 50, y: 52, pos: 'MEI' }, { id: 'm2', x: 25, y: 48, pos: 'MEI' }, { id: 'm3', x: 75, y: 48, pos: 'MEI' }, { id: 'm4', x: 10, y: 38, pos: 'MEI' }, { id: 'm5', x: 90, y: 38, pos: 'MEI' },
+    { id: 'st1', x: 40, y: 18, pos: 'ATA' }, { id: 'st2', x: 60, y: 18, pos: 'ATA' }
+  ],
 };
 
-export default function TigreFCPerfilPublico({ targetUserId, jogoId, onClose }: any) {
-  const [perfil, setPerfil] = useState<any>(null);
-  const [escalacao, setEscalacao] = useState<any>(null);
-  const [pontuacoes, setPontuacoes] = useState<Record<number, number>>({}); 
-  const [loading, setLoading] = useState(true);
-  const [sharing, setSharing] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
+// ─── Corneta Toast ────────────────────────────────────────────────────────────
+
+const CORNETAS = [
+  '📯 Essa escalação tá de chorar! 😂',
+  '🔥 Caprichoso, hein? Minha avó escala melhor!',
+  '⚡ Aposta aí que eu ganho de vocês!',
+  '🦁 Isso é time? Parece pelada de domingo!',
+  '👑 Copiou a minha esquema e ainda errou!',
+  '🏆 Com esse time você não ganha nem no videogame!',
+];
+
+// ─── MiniPlayerCard ───────────────────────────────────────────────────────────
+
+function MiniPlayerCard({ player, isCaptain, isHero }: { player: Player; isCaptain: boolean; isHero: boolean }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className={`relative w-9 h-12 rounded-md overflow-hidden border-2 ${
+        isCaptain ? 'border-yellow-500 shadow-[0_0_8px_#F5C400]' :
+        isHero    ? 'border-cyan-400  shadow-[0_0_8px_#00F3FF]'  :
+                    'border-zinc-700'
+      }`}>
+        <img src={player.foto} className="w-full h-full object-cover object-top" alt={player.short} />
+        {isCaptain && (
+          <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[5px] font-black px-0.5 rounded-bl leading-tight">C</div>
+        )}
+        {isHero && (
+          <div className="absolute top-0 right-0 bg-cyan-400 text-black text-[5px] font-black px-0.5 rounded-bl leading-tight">H</div>
+        )}
+        <div className="absolute bottom-0 w-full bg-black/85 text-center py-[2px]">
+          <span className="text-white text-[5px] font-black uppercase truncate block px-0.5">{player.short}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Componente Principal ─────────────────────────────────────────────────────
+
+interface TigreFCPerfilPublicoProps {
+  targetUsuarioId: string;
+  viewerUsuarioId?: string | null; // null = visitante não logado
+}
+
+export default function TigreFCPerfilPublico({ targetUsuarioId, viewerUsuarioId }: TigreFCPerfilPublicoProps) {
+  const supabase = createClientComponentClient();
+
+  const [dados, setDados]         = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [corneta, setCorneta]     = useState<string | null>(null);
+  const [cornetaCount, setCornetaCount] = useState(0);
+
+  const isSelfView = viewerUsuarioId === targetUsuarioId;
 
   useEffect(() => {
-    async function loadData() {
-      if (!targetUserId || !jogoId) return;
-      try {
-        const { data: uData } = await supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUserId).single();
-        setPerfil(uData);
+    async function load() {
+      setIsLoading(true);
 
-        const { data: escData } = await supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUserId).eq('jogo_id', jogoId).maybeSingle();
-        setEscalacao(escData);
+      // Busca escalação + perfil em JOIN
+      const { data: escData } = await supabase
+        .from('tigre_fc_escalacoes')
+        .select(`
+          formacao, lineup_json, capitan_id, heroi_id,
+          score_tigre, score_adv, score_locked, updated_at,
+          tigre_fc_usuarios ( display_name, avatar_url, xp, nivel )
+        `)
+        .eq('usuario_id', targetUsuarioId)
+        .maybeSingle();
 
-        const { data: scoutData } = await supabase.from('tigre_fc_scouts_jogadores').select('jogador_id, pontos').eq('jogo_id', jogoId);
-        const ptsMap: Record<number, number> = {};
-        scoutData?.forEach(s => ptsMap[Number(s.jogador_id)] = s.pontos);
-        setPontuacoes(ptsMap);
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
+      setDados(escData ?? null);
+      setIsLoading(false);
     }
-    loadData();
-  }, [targetUserId, jogoId]);
+    load();
+  }, [targetUsuarioId, supabase]);
 
-  const handleShare = async () => {
-    if (!cardRef.current) return;
-    setSharing(true);
-    
-    setTimeout(async () => {
-      const canvas = await html2canvas(cardRef.current!, {
-        backgroundColor: '#050505',
-        useCORS: true,
-        scale: 2
-      });
-      
-      const image = canvas.toDataURL('image/png');
-      setSharing(false);
+  const dispararCorneta = useCallback(() => {
+    const msg = CORNETAS[Math.floor(Math.random() * CORNETAS.length)];
+    setCorneta(msg);
+    setCornetaCount(c => c + 1);
+    setTimeout(() => setCorneta(null), 3500);
 
-      if (navigator.share) {
-        const blob = await (await fetch(image)).blob();
-        const file = new File([blob], 'resenha-tigre.png', { type: 'image/png' });
-        navigator.share({
-          title: 'Minha Resenha no Tigre FC',
-          text: `Olha minha escalação na Rodada #${jogoId}!`,
-          files: [file],
-        }).catch(console.error);
-      } else {
-        const link = document.createElement('a');
-        link.href = image;
-        link.download = 'minha-resenha-tigre.png';
-        link.click();
-      }
-    }, 100);
-  };
+    // Confetes de corneta 🎺
+    confetti({
+      particleCount: 60,
+      spread: 80,
+      origin: { y: 0.7 },
+      colors: ['#F5C400', '#EF4444', '#ffffff'],
+    });
+  }, []);
 
-  if (loading) return null;
+  // ── Loading ───────────────────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96 bg-black rounded-3xl">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-500 text-xs font-black uppercase tracking-widest">Buscando escalação...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const lineup = escalacao?.lineup || {};
-  const slots = SLOTS[escalacao?.formacao || '4-3-3'];
-  const capitaoId = Number(escalacao?.capitao_id);
+  // ── Sem escalação ─────────────────────────────────────────────────────────
+  if (!dados) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 bg-zinc-950 rounded-3xl border border-zinc-900 gap-4">
+        <span className="text-5xl">⚽</span>
+        <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest">Este torcedor ainda não escalou o time</p>
+      </div>
+    );
+  }
 
-  const playerScores = Object.keys(lineup).map((key) => {
-    const val = lineup[key];
-    const id = Number(typeof val === 'object' ? val.id : val);
-    return { id, score: (pontuacoes[id] || 0) as number };
-  }).filter(p => p.id > 0);
+  const perfil    = dados.tigre_fc_usuarios ?? {};
+  const formacao  = dados.formacao ?? '4-2-3-1';
+  const slots     = FORMATIONS[formacao] ?? FORMATIONS['4-2-3-1'];
+  const lineup    = (dados.lineup_json ?? {}) as Record<string, Player | null>;
+  const captainId = dados.capitan_id;
+  const heroId    = dados.heroi_id;
+  const nivelCor  = NIVEL_CORES[perfil.nivel ?? 'Novato'] ?? '#71717A';
+  const nivelIcon = NIVEL_ICONES[perfil.nivel ?? 'Novato'] ?? '🌱';
 
-  const heroiId = playerScores.length > 0 
-    ? playerScores.reduce((prev, current) => (prev.score > current.score) ? prev : current).id 
-    : null;
-
-  const totalPontosEscalados: number = playerScores.reduce((acc, p) => {
-    const multiplicador = p.id === capitaoId ? 1.5 : 1;
-    return acc + (p.score * multiplicador);
-  }, 0);
-
-  const getNotaColor = (n: number) => {
-    if (n >= 8) return '#4ade80';
-    if (n >= 5) return '#facc15';
-    if (n > 0) return '#fb923c';
-    return '#94a3b8';
-  };
+  const playersInField = slots.filter(s => lineup[s.id]);
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.97)', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(20px)', padding:10 }}>
-      
-      {/* AREA DE CAPTURA - O CARD VIRAL */}
-      <div ref={cardRef} style={{ width:'100%', maxWidth:440, background:'#050505', borderRadius:32, border:'1px solid #222', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'0 25px 50px -12px rgba(0,0,0,1)' }}>
-        
-        {/* Header Estilizado */}
-        <div style={{ background:'linear-gradient(135deg, #F5C400 0%, #D4A900 100%)', padding:'20px 25px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'4px solid #000' }}>
-          <div>
-            <div style={{ fontSize:10, fontWeight:1000, color:'rgba(0,0,0,0.4)', textTransform:'uppercase', letterSpacing:'1px' }}>Escalação Oficial</div>
-            <div style={{ fontSize:22, fontWeight:1000, color:'#000', textTransform:'uppercase', fontStyle:'italic' }}>
-              {perfil?.apelido || 'TREINADOR'}
-            </div>
+    <div className="relative bg-black rounded-[2rem] border border-zinc-900 overflow-hidden">
+
+      {/* HEADER DO PERFIL */}
+      <div className="flex items-center gap-4 p-6 border-b border-zinc-900">
+        {perfil.avatar_url ? (
+          <img
+            src={perfil.avatar_url}
+            className="w-14 h-14 rounded-full border-2 object-cover"
+            style={{ borderColor: nivelCor }}
+            alt={perfil.display_name}
+          />
+        ) : (
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center text-2xl border-2"
+            style={{ borderColor: nivelCor, background: `${nivelCor}20` }}
+          >
+            {nivelIcon}
           </div>
-          {!sharing && (
-            <button onClick={onClose} style={{ background:'#000', color:'#F5C400', border:'none', width:36, height:36, borderRadius:'50%', fontWeight:1000, cursor:'pointer' }}>✕</button>
-          )}
-        </div>
+        )}
 
-        <div style={{ overflowY:'auto', flex:1, padding:'20px 0' }}>
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
-            
-            {/* Campo de Futebol */}
-            <div style={{ 
-              position:'relative', width:360, height:460, borderRadius:24, border:'4px solid #1a1a1a', overflow:'hidden',
-              background: 'radial-gradient(circle at center, #1a4a1a 0%, #0d2b0d 100%)',
-              boxShadow: 'inset 0 0 80px rgba(0,0,0,0.6)'
-            }}>
-              {/* Linhas do Campo */}
-              <div style={{ position:'absolute', inset:20, border:'1px solid rgba(255,255,255,0.08)' }} />
-              <div style={{ position:'absolute', top:'50%', width:'100%', height:'1px', background:'rgba(255,255,255,0.08)' }} />
-              
-              {slots.map(slot => {
-                const pData = lineup[slot.id];
-                const pId = Number(typeof pData === 'object' ? pData?.id : pData);
-                const p = PLAYERS[pId];
-                if (!p) return null;
-
-                const nota = pontuacoes[pId] || 0;
-                const isCap = pId === capitaoId;
-                const isHer = pId === heroiId;
-
-                return (
-                  <div key={slot.id} style={{ position:'absolute', left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%, -50%)', zIndex: isCap ? 50 : 10 }}>
-                    <div style={{ position:'relative' }}>
-                      <TigreFCPlayerCard player={p} size={56} isCapitao={isCap} isHeroi={isHer} />
-                      <div style={{ 
-                        position:'absolute', top:-6, right:-10, background: getNotaColor(nota), color:'#000', 
-                        fontSize:10, fontWeight:1000, padding:'2px 5px', borderRadius:5, border:'1.5px solid #000',
-                        boxShadow:'0 4px 8px rgba(0,0,0,0.4)'
-                      }}>
-                        {nota.toFixed(1)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Painel de Pontuação e CTA */}
-            <div style={{ width:'100%', padding:'0 25px', marginTop:20 }}>
-              <div style={{ background:'#111', borderRadius:24, border:'1px solid #222', padding:20 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:15 }}>
-                  <div style={{ color:'#666', fontSize:11, fontWeight:900, textTransform:'uppercase' }}>PONTOS TOTAIS</div>
-                  <div style={{ color:'#fff', fontSize:26, fontWeight:1000, fontStyle:'italic' }}>
-                    {totalPontosEscalados.toFixed(1)} <span style={{fontSize: 12, color: '#F5C400'}}>PTS</span>
-                  </div>
-                </div>
-
-                {sharing && (
-                  <div style={{ background:'rgba(245,196,0,0.1)', border:'1px dashed #F5C400', padding:10, borderRadius:14, textAlign:'center' }}>
-                     <div style={{ fontSize:12, color:'#fff', fontWeight:900 }}>VEM PRO TIGRE FC! 🐯</div>
-                     <div style={{ fontSize:10, color:'#F5C400' }}>www.tigrefc.app</div>
-                  </div>
-                )}
-
-                {!sharing && (
-                  <button onClick={handleShare} style={{ width:'100%', background:'#fff', color:'#000', border:'none', padding:16, borderRadius:16, fontWeight:1000, textTransform:'uppercase', fontSize:13, cursor:'pointer' }}>
-                    Compartilhar no Story 📸
-                  </button>
-                )}
-              </div>
-            </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-white font-black text-lg uppercase tracking-tight truncate">
+              {perfil.display_name ?? 'Torcedor'}
+            </h3>
+            {isSelfView && (
+              <span className="text-[9px] font-black bg-yellow-500 text-black px-2 py-0.5 rounded-full uppercase">Você</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[10px] font-black uppercase" style={{ color: nivelCor }}>
+              {nivelIcon} {perfil.nivel ?? 'Novato'}
+            </span>
+            <span className="text-zinc-600 text-[10px]">•</span>
+            <span className="text-zinc-500 text-[10px] font-bold">{perfil.xp ?? 0} XP</span>
           </div>
         </div>
 
-        {/* Branding Invisível na Tela, Visível no Print */}
-        <div style={{ padding:'12px', textAlign:'center', background:'#050505', opacity: 0.4 }}>
-          <span style={{ color:'#fff', fontSize:9, fontWeight:1000, letterSpacing:2 }}>
-            TIGRE FC • SEASON 2026
+        {/* PLACAR DO PALPITE */}
+        {dados.score_locked && (
+          <div className="flex flex-col items-center">
+            <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mb-1">Palpite</span>
+            <div className="flex items-center gap-1">
+              <span className="text-yellow-500 text-2xl font-black italic">{dados.score_tigre}</span>
+              <span className="text-zinc-700 font-black text-sm">x</span>
+              <span className="text-zinc-400 text-2xl font-black italic">{dados.score_adv}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* CAMPO COM TIME */}
+      <div className="relative p-4">
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center gap-2">
+            <img src={ESCUDO_TIGRE} className="w-5 h-5 object-contain" alt="Tigre" />
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{formacao}</span>
+          </div>
+          <span className="text-[9px] text-zinc-700 font-medium">
+            {playersInField.length}/11 escalados
           </span>
         </div>
+
+        {/* CAMPO */}
+        <div className="relative w-full aspect-[1/1.2] rounded-2xl overflow-hidden bg-[#1a521a] border border-white/10">
+          {/* Textura gramado */}
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-dotted-2.png')] opacity-15" />
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className={`absolute w-full ${i % 2 === 0 ? 'bg-[#216621]' : ''}`}
+              style={{ height: '16.66%', top: `${i * 16.66}%` }} />
+          ))}
+          {/* Linhas */}
+          <div className="absolute inset-3 border border-white/20 rounded" />
+          <div className="absolute top-1/2 left-3 right-3 h-px bg-white/20" />
+          <div className="absolute top-1/2 left-1/2 w-16 h-16 border border-white/20 rounded-full -translate-x-1/2 -translate-y-1/2" />
+
+          {/* Jogadores */}
+          {slots.map(slot => {
+            const player = lineup[slot.id];
+            if (!player) return (
+              <div key={slot.id}
+                className="absolute -translate-x-1/2 -translate-y-1/2 w-7 h-9 rounded border border-dashed border-white/10 flex items-center justify-center"
+                style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
+              >
+                <span className="text-[6px] text-zinc-700 font-black">{slot.pos}</span>
+              </div>
+            );
+            return (
+              <div key={slot.id}
+                className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
+                style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
+              >
+                <MiniPlayerCard
+                  player={player}
+                  isCaptain={player.id === captainId}
+                  isHero={player.id === heroId}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* AÇÃO: CORNETA (apenas para outros usuários) */}
+      {!isSelfView && (
+        <div className="px-4 pb-6 flex flex-col items-center gap-3">
+          <button
+            onClick={dispararCorneta}
+            className="group relative w-full py-4 bg-zinc-950 border-2 border-zinc-800 rounded-2xl font-black text-sm uppercase italic tracking-widest
+              hover:border-yellow-500 hover:text-yellow-500 transition-all active:scale-95"
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              📯 Corneta!
+              {cornetaCount > 0 && (
+                <span className="bg-yellow-500 text-black text-[9px] font-black rounded-full px-1.5 py-0.5">
+                  {cornetaCount}
+                </span>
+              )}
+            </span>
+          </button>
+
+          <AnimatePresence>
+            {corneta && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0,  scale: 1 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="w-full bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 text-center"
+              >
+                <p className="text-yellow-400 text-xs font-bold">{corneta}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Timestamp discreta */}
+      <div className="absolute bottom-3 right-4 flex items-center gap-1 opacity-30">
+        <img src={PATA_LOGO} className="w-3 h-3 object-contain" alt="" />
+        <span className="text-[8px] text-zinc-600 font-medium">
+          {dados.updated_at ? new Date(dados.updated_at).toLocaleDateString('pt-BR') : ''}
+        </span>
       </div>
     </div>
   );
