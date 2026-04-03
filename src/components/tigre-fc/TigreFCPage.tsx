@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, use } from 'react';
 import Link from 'next/link';
-// IMPORTANTE: Use a instância centralizada para evitar o erro de múltiplas instâncias
 import { supabase as sb } from '@/lib/supabase'; 
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
@@ -35,6 +34,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   const resolvedParams = use(params);
   
   const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [jogo, setJogo] = useState<Jogo | null>(null);
   const [ranking, setRanking] = useState<UsuarioRanking[]>([]);
   const [meuId, setMeuId] = useState<string | null>(null);
@@ -45,15 +45,8 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   // Controle de montagem e Scroll inicial
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-    
-    const timer = setTimeout(() => {
-      topRef.current?.focus();
-    }, 100);
-
-    return () => clearTimeout(timer);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    topRef.current?.focus();
   }, []);
 
   // Inicialização de Dados
@@ -61,24 +54,24 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     if (!mounted) return;
 
     async function init() {
-      // 1. Pegar Sessão do Usuário de forma segura
-      const { data: { session } } = await sb.auth.getSession();
-      
-      if (session?.user?.id) {
-        const { data: u, error: uError } = await sb.from('tigre_fc_usuarios')
-          .select('id')
-          .eq('google_id', session.user.id)
-          .maybeSingle();
-        
-        if (u && !uError) setMeuId(u.id);
-      }
-
-      // 2. Carregar Jogo e Ranking
+      setIsLoading(true);
       try {
+        // 1. Sessão do Usuário
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.user?.id) {
+          const { data: u } = await sb.from('tigre_fc_usuarios')
+            .select('id')
+            .eq('google_id', session.user.id)
+            .maybeSingle();
+          if (u) setMeuId(u.id);
+        }
+
+        // 2. Carregar Jogo e Ranking em paralelo
         const [resJogo, resRank] = await Promise.all([
-          fetch('/api/proximo-jogo').then(r => r.json()),
+          fetch('/api/proximo-jogo').then(r => r.json()).catch(() => null),
           sb.from('tigre_fc_usuarios')
             .select('id, nome, apelido, avatar_url, pontos_total')
+            .not('pontos_total', 'is', null)
             .order('pontos_total', { ascending: false })
             .limit(10)
         ]);
@@ -87,18 +80,20 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (resRank.data) setRanking(resRank.data as UsuarioRanking[]);
       } catch (e) {
         console.error("Erro ao carregar dados do Tigre FC:", e);
+      } finally {
+        setIsLoading(false);
       }
     }
     init();
   }, [mounted]);
 
-  // Timer do Jogo
+  // Timer do Jogo (Lógica de bloqueio 1h30 antes)
   useEffect(() => {
     if (!jogo?.data_hora) return;
     
     const calculateTime = () => {
       const gameTime = new Date(jogo.data_hora.replace(' ', 'T')).getTime();
-      const lockTime = gameTime - (90 * 60 * 1000); // 1h30 antes do jogo
+      const lockTime = gameTime - (90 * 60 * 1000); 
       const now = Date.now();
       const diff = lockTime - now;
       
@@ -139,7 +134,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
              <img 
                 src={PATA_LOGO} 
                 className="w-24 h-auto mx-auto relative z-10 drop-shadow-[0_15px_30px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-500" 
-                alt="Tigre FC Garra" 
+                alt="Tigre FC Logo" 
               />
           </div>
           
@@ -158,7 +153,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       <div className="max-w-md mx-auto px-4 -mt-20 relative z-20">
         
         {/* ⚡ CARD DO PRÓXIMO JOGO */}
-        {jogo && (
+        {jogo ? (
           <section className="mb-20">
             <div className="bg-zinc-900/90 backdrop-blur-3xl rounded-[60px] border border-white/10 p-10 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
@@ -181,7 +176,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               <div className="flex justify-between items-center mb-12 relative z-10">
                 <div className="flex flex-col items-center flex-1">
                   <div className="w-24 h-24 bg-gradient-to-b from-zinc-800 to-black rounded-[35px] p-4 flex items-center justify-center mb-4 border border-white/10 shadow-2xl group-hover:rotate-3 transition-transform">
-                    <img src={jogo.mandante.escudo_url} alt="Mandante" className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
+                    <img src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
                   </div>
                   <p className="text-[10px] font-black uppercase text-zinc-400 text-center leading-tight h-8 flex items-center">{jogo.mandante.nome}</p>
                 </div>
@@ -193,7 +188,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
                 <div className="flex flex-col items-center flex-1">
                   <div className="w-24 h-24 bg-gradient-to-b from-zinc-800 to-black rounded-[35px] p-4 flex items-center justify-center mb-4 border border-white/10 shadow-2xl group-hover:-rotate-3 transition-transform">
-                    <img src={jogo.visitante.escudo_url} alt="Visitante" className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
+                    <img src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
                   </div>
                   <p className="text-[10px] font-black uppercase text-zinc-400 text-center leading-tight h-8 flex items-center">{jogo.visitante.nome}</p>
                 </div>
@@ -205,6 +200,10 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               </Link>
             </div>
           </section>
+        ) : !isLoading && (
+          <div className="mb-20 p-10 bg-zinc-900/50 rounded-[40px] text-center border border-white/5">
+            <p className="text-zinc-500 font-black uppercase text-xs tracking-widest">Nenhuma partida agendada</p>
+          </div>
         )}
 
         <DestaquesFifa />
@@ -212,8 +211,8 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         {/* 🔍 RAIO-X TÁTICO */}
         <section className="mt-28">
           <div className="flex flex-col items-center mb-8 px-6 text-center">
-             <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-yellow-500/80 mb-2 italic">Tactical View</h2>
-             <p className="text-2xl font-[1000] uppercase italic tracking-tighter text-white">Análise do Campo</p>
+              <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-yellow-500/80 mb-2 italic">Tactical View</h2>
+              <p className="text-2xl font-[1000] uppercase italic tracking-tighter text-white">Análise do Campo</p>
           </div>
           <div className="bg-[#0a0a0a] rounded-[50px] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] border-[8px] border-zinc-900 relative h-[600px]">
             <div className="absolute top-0 left-0 right-0 h-10 bg-zinc-900 flex items-center justify-center gap-2 z-10">
@@ -225,6 +224,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               className="w-full h-full border-none pt-10"
               scrolling="no"
               loading="lazy"
+              title="Tactical Lineups"
             />
           </div>
         </section>
@@ -262,7 +262,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                 <div className="relative mr-5">
                     <img 
                       src={u.avatar_url || PATA_LOGO} 
-                      alt={u.apelido || 'Avatar'}
+                      alt={u.apelido || u.nome}
                       className={`w-16 h-16 rounded-[22px] object-cover transition-all duration-700
                         ${i === 0 ? 'border-4 border-black/20 shadow-xl' : 'bg-black border-2 border-white/5'}
                       `} 
@@ -285,7 +285,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
                 <div className="text-right">
                   <p className={`font-[1000] text-3xl leading-none tracking-tighter ${i === 0 ? 'text-black' : 'text-yellow-500'}`}>
-                    {u.pontos_total}
+                    {u.pontos_total || 0}
                   </p>
                   <p className={`text-[9px] font-black uppercase mt-1 ${i === 0 ? 'text-black/50' : 'text-zinc-600'}`}>PTS</p>
                 </div>
@@ -312,7 +312,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </section>
       </div>
 
-      {/* MODAL DE PERFIL - CORRIGIDO */}
+      {/* MODAL DE PERFIL */}
       {perfilAberto && (
         <TigreFCPerfilPublico 
           targetUsuarioId={perfilAberto} 
