@@ -140,8 +140,8 @@ function EmptySlot({pos,active,onClick}:{pos:string;active:boolean;onClick:()=>v
 }
 
 // ── CARD NO CAMPO ─────────────────────────────────────────────────────────────
-function CardOnField({player,isCaptain,isHero,pulsing,onClick}:{
-  player:Player;isCaptain:boolean;isHero:boolean;pulsing:boolean;onClick:()=>void;
+function CardOnField({player,isCaptain,isHero,pulsing,active:_active,onClick}:{
+  player:Player;isCaptain:boolean;isHero:boolean;pulsing:boolean;active?:boolean;onClick:()=>void;
 }) {
   const col=isCaptain?'#F5C400':isHero?'#00F3FF':(POS_COLORS[player.pos]??'#888');
   return (
