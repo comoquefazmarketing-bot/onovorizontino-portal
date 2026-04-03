@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useRef, use } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import FinalCardReveal from './FinalCardReveal'; 
+import FinalCardReveal from '@/components/tigre-fc/FinalCardReveal'; 
 
 // --- CONFIGURAÇÕES DE IMAGENS E DADOS ---
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
