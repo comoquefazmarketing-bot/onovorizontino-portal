@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, use } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { supabase as sb } from '@/lib/supabase'; 
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
@@ -20,6 +21,9 @@ interface Jogo {
   data_hora: string;
   mandante: Time;
   visitante: Time;
+  competicao?: string;
+  rodada?: string;
+  local?: string;
 }
 
 interface UsuarioRanking {
@@ -45,7 +49,9 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   // Controle de montagem e Scroll inicial
   useEffect(() => {
     setMounted(true);
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
     topRef.current?.focus();
   }, []);
 
@@ -66,18 +72,39 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           if (u) setMeuId(u.id);
         }
 
-        // 2. Carregar Jogo e Ranking em paralelo
-        const [resJogo, resRank] = await Promise.all([
-          fetch('/api/proximo-jogo').then(r => r.json()).catch(() => null),
-          sb.from('tigre_fc_usuarios')
+        // 2. Carregar Jogo (Prioridade para o jogo do CRB ID: 3 se não vier da API)
+        const resJogo = await fetch('/api/proximo-jogo').then(r => r.json()).catch(() => null);
+        
+        if (resJogo?.jogos?.length > 0) {
+          setJogo(resJogo.jogos[0]);
+        } else {
+          // Fallback manual para o jogo do CRB baseado no seu jogos_rows.json
+          setJogo({
+            id: 3,
+            data_hora: "2026-04-05 21:00:00+00",
+            competicao: "Série B",
+            rodada: "3ª Rodada",
+            local: "Jorjão • Novo Horizonte",
+            mandante: { 
+              nome: "Novorizontino", 
+              escudo_url: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/escudos/novorizontino.png" 
+            },
+            visitante: { 
+              nome: "CRB", 
+              escudo_url: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/escudos/crb.png" 
+            }
+          });
+        }
+
+        // 3. Ranking
+        const { data: resRank } = await sb.from('tigre_fc_usuarios')
             .select('id, nome, apelido, avatar_url, pontos_total')
             .not('pontos_total', 'is', null)
             .order('pontos_total', { ascending: false })
-            .limit(10)
-        ]);
+            .limit(10);
         
-        if (resJogo?.jogos?.[0]) setJogo(resJogo.jogos[0]);
-        if (resRank.data) setRanking(resRank.data as UsuarioRanking[]);
+        if (resRank) setRanking(resRank as UsuarioRanking[]);
+
       } catch (e) {
         console.error("Erro ao carregar dados do Tigre FC:", e);
       } finally {
@@ -152,58 +179,79 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       <div className="max-w-md mx-auto px-4 -mt-20 relative z-20">
         
-        {/* ⚡ CARD DO PRÓXIMO JOGO */}
-        {jogo ? (
-          <section className="mb-20">
-            <div className="bg-zinc-900/90 backdrop-blur-3xl rounded-[60px] border border-white/10 p-10 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-              
-              <div className="flex justify-center gap-6 mb-12 relative z-10">
-                {(['h', 'm', 's'] as const).map(unit => (
-                  <div key={unit} className="flex flex-col items-center">
-                    <div className="bg-black/40 px-3 py-2 rounded-2xl border border-white/5 min-w-[70px] text-center">
-                      <span className="text-5xl font-[1000] font-mono leading-none text-white tracking-tighter">
-                        {timeLeft[unit]}
-                      </span>
+        {/* ⚡ WIDGET PRÓXIMA PARTIDA (GLASS CHUMBO) */}
+        {jogo && (
+          <motion.section 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-20"
+          >
+            <div style={{
+              position: 'relative',
+              padding: '30px',
+              background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.8) 0%, rgba(10, 10, 10, 0.95) 100%)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              borderRadius: '45px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: '0 30px 60px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.05)',
+              overflow: 'hidden'
+            }}>
+              {/* Efeito de Reflexo de Vidro */}
+              <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+
+              <div className="relative z-10 text-center">
+                <div className="flex justify-center gap-4 mb-8">
+                  {(['h', 'm', 's'] as const).map(unit => (
+                    <div key={unit} className="flex flex-col items-center">
+                      <div className="bg-black/60 w-14 h-14 flex items-center justify-center rounded-2xl border border-white/5 shadow-inner">
+                        <span className="text-3xl font-[1000] font-mono text-white leading-none">
+                          {timeLeft[unit]}
+                        </span>
+                      </div>
+                      <span className="text-[7px] text-zinc-500 font-black uppercase mt-2 tracking-widest">{unit === 'h' ? 'HRS' : unit === 'm' ? 'MIN' : 'SEG'}</span>
                     </div>
-                    <span className="text-[8px] text-zinc-500 font-black uppercase mt-3 tracking-[0.4em]">
-                        {unit === 'h' ? 'HORAS' : unit === 'm' ? 'MINUTOS' : 'SEGUNDOS'}
-                    </span>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between mb-8 px-2">
+                  <div className="flex flex-col items-center flex-1">
+                    <motion.img 
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      src={jogo.mandante.escudo_url} 
+                      className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(245,196,0,0.3)]" 
+                    />
+                    <span className="text-[9px] font-black text-white uppercase mt-3 tracking-tighter opacity-80">{jogo.mandante.nome}</span>
                   </div>
-                ))}
+
+                  <div className="flex flex-col items-center">
+                    <span className="text-xl font-[1000] italic text-zinc-700">VS</span>
+                    <div className="h-8 w-[1px] bg-yellow-500/20 my-1" />
+                  </div>
+
+                  <div className="flex flex-col items-center flex-1">
+                    <motion.img 
+                      whileHover={{ scale: 1.1, rotate: -5 }}
+                      src={jogo.visitante.escudo_url} 
+                      className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
+                    />
+                    <span className="text-[9px] font-black text-white uppercase mt-3 tracking-tighter opacity-80">{jogo.visitante.nome}</span>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-yellow-500 font-black uppercase tracking-[0.3em] mb-8">
+                  {jogo.competicao} • {jogo.rodada}
+                </p>
+
+                <Link 
+                  href={`/tigre-fc/escalar/${jogo.id}`} 
+                  className="block w-full py-5 rounded-2xl bg-gradient-to-r from-[#F5C400] to-[#D4A200] text-black font-[1000] text-xs uppercase italic tracking-[0.2em] shadow-[0_15px_30px_rgba(245,196,0,0.2)] hover:brightness-110 active:scale-95 transition-all"
+                >
+                  ⚡ Escalar meu Time
+                </Link>
               </div>
-
-              <div className="flex justify-between items-center mb-12 relative z-10">
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-24 h-24 bg-gradient-to-b from-zinc-800 to-black rounded-[35px] p-4 flex items-center justify-center mb-4 border border-white/10 shadow-2xl group-hover:rotate-3 transition-transform">
-                    <img src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
-                  </div>
-                  <p className="text-[10px] font-black uppercase text-zinc-400 text-center leading-tight h-8 flex items-center">{jogo.mandante.nome}</p>
-                </div>
-                
-                <div className="px-4 flex flex-col items-center">
-                    <div className="text-2xl font-[1000] italic text-zinc-800 select-none">VS</div>
-                    <div className="h-10 w-[1px] bg-gradient-to-b from-transparent via-yellow-500/50 to-transparent my-2" />
-                </div>
-
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-24 h-24 bg-gradient-to-b from-zinc-800 to-black rounded-[35px] p-4 flex items-center justify-center mb-4 border border-white/10 shadow-2xl group-hover:-rotate-3 transition-transform">
-                    <img src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} className="w-16 h-16 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" />
-                  </div>
-                  <p className="text-[10px] font-black uppercase text-zinc-400 text-center leading-tight h-8 flex items-center">{jogo.visitante.nome}</p>
-                </div>
-              </div>
-
-              <Link href={`/tigre-fc/escalar/${jogo.id}`} className="relative flex items-center justify-center bg-[#F5C400] text-black py-7 rounded-[35px] font-[1000] uppercase italic text-sm shadow-[0_20px_40px_rgba(245,196,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all overflow-hidden group">
-                <span className="relative z-10 tracking-[0.2em]">CONVOCAR TITULARES →</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 skew-x-12" />
-              </Link>
             </div>
-          </section>
-        ) : !isLoading && (
-          <div className="mb-20 p-10 bg-zinc-900/50 rounded-[40px] text-center border border-white/5">
-            <p className="text-zinc-500 font-black uppercase text-xs tracking-widest">Nenhuma partida agendada</p>
-          </div>
+          </motion.section>
         )}
 
         <DestaquesFifa />
@@ -324,6 +372,11 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       <style jsx global>{`
         ::-webkit-scrollbar { width: 0px; }
         body { background-color: #050505; }
+        @keyframes pulse-gold {
+          0% { box-shadow: 0 0 0 0 rgba(245, 196, 0, 0.4); }
+          70% { box-shadow: 0 0 0 20px rgba(245, 196, 0, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(245, 196, 0, 0); }
+        }
       `}</style>
     </main>
   );
