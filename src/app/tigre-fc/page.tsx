@@ -1,269 +1,299 @@
 'use client';
 
 /**
- * tigre-fc/page.tsx — v2.0
- * 
- * Integração completa com:
- *   - useEscalacao: auto-save + load persistente
- *   - SaveStatusBadge: feedback visual do save em tempo real
- *   - VFX: Shockwave ao encher o time (isFullTeam), partículas de encaixe
- *   - Botões de Capitão/Herói com spring animation e glow neon
+ * tigre-fc/page.tsx v3
+ *
+ * Mobile-First: Campo no topo, Mercado abaixo como painel de controle.
+ * Auth gate: redireciona para login se não autenticado.
+ * Formation pills: sem dropdowns.
+ * Bench: 5 slots de reservas abaixo do campo.
+ * Player cards: borda neon por posição, foto à esquerda (mercado) / direita (campo).
  */
 
+'use client';
+
 import React, { useState, useMemo, useEffect, use } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { createBrowserClient } from '@supabase/ssr';
 import confetti from 'canvas-confetti';
+import CampoFifa, { POS_CORES, POS_GLOW } from '@/components/tigre-fc/CampoFifa';
+import CapitaoEHeroi from '@/components/tigre-fc/CapitaoEHeroi';
+import Palpite from '@/components/tigre-fc/Palpite';
 import FinalCardReveal from '@/components/tigre-fc/FinalCardReveal';
-import { useEscalacao, Player } from '@/hooks/useEscalacao'; // Ajuste path
+import { useEscalacao, Player } from '@/hooks/useEscalacao';
 
 // ─── Dados ────────────────────────────────────────────────────────────────────
 
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
-const TEXTURA_GRAMADO = 'https://www.transparenttextures.com/patterns/dark-dotted-2.png';
+const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
 const PLAYERS: Player[] = [
-  { id: 1,  name: 'César Augusto',   short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
-  { id: 2,  name: 'Jordi',           short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
-  { id: 3,  name: 'João Scapin',     short: 'Scapin',     num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
-  { id: 4,  name: 'Lucas Ribeiro',   short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
-  { id: 5,  name: 'Lora',            short: 'Lora',       num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
-  { id: 6,  name: 'Castrillón',      short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
-  { id: 7,  name: 'Arthur Barbosa',  short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
-  { id: 8,  name: 'Sander',          short: 'Sander',     num: 33, pos: 'LAT', foto: BASE+'SANDER.jpg.webp' },
-  { id: 9,  name: 'Maykon Jesus',    short: 'Maykon',     num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
-  { id: 10, name: 'Dantas',          short: 'Dantas',     num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
-  { id: 11, name: 'Eduardo Brock',   short: 'E.Brock',    num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
-  { id: 12, name: 'Patrick',         short: 'Patrick',    num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
-  { id: 13, name: 'Gabriel Bahia',   short: 'G.Bahia',    num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
-  { id: 14, name: 'Carlinhos',       short: 'Carlinhos',  num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
-  { id: 15, name: 'Alemão',          short: 'Alemão',     num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
-  { id: 16, name: 'Renato Palm',     short: 'R.Palm',     num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
-  { id: 17, name: 'Alvariño',        short: 'Alvariño',   num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
-  { id: 18, name: 'Bruno Santana',   short: 'B.Santana',  num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
-  { id: 19, name: 'Luís Oyama',      short: 'Oyama',      num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
-  { id: 20, name: 'Léo Naldi',       short: 'L.Naldi',    num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
-  { id: 21, name: 'Rômulo',          short: 'Rômulo',     num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
-  { id: 22, name: 'Matheus Bianqui', short: 'Bianqui',    num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  { id: 23, name: 'Juninho',         short: 'Juninho',    num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
-  { id: 24, name: 'Tavinho',         short: 'Tavinho',    num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
-  { id: 25, name: 'Diego Galo',      short: 'D.Galo',     num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
-  { id: 26, name: 'Marlon',          short: 'Marlon',     num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
-  { id: 27, name: 'Hector Bianchi',  short: 'Hector',     num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
-  { id: 28, name: 'Nogueira',        short: 'Nogueira',   num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
-  { id: 29, name: 'Luiz Gabriel',    short: 'L.Gabriel',  num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
-  { id: 30, name: 'Jhones Kauê',     short: 'J.Kauê',     num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
-  { id: 31, name: 'Robson',          short: 'Robson',     num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
-  { id: 32, name: 'Vinícius Paiva',  short: 'V.Paiva',    num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
-  { id: 33, name: 'Hélio Borges',    short: 'H.Borges',   num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
-  { id: 34, name: 'Jardiel',         short: 'Jardiel',    num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
-  { id: 35, name: 'Nicolas Careca',  short: 'N.Careca',   num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
-  { id: 36, name: 'Titi Ortiz',      short: 'T.Ortiz',    num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
-  { id: 37, name: 'Diego Mathias',   short: 'D.Mathias',  num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
-  { id: 38, name: 'Carlão',          short: 'Carlão',     num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
-  { id: 39, name: 'Ronald Barcellos', short: 'Ronald',    num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
+  { id: 1,  name: 'César Augusto',    short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
+  { id: 2,  name: 'Jordi',            short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
+  { id: 3,  name: 'João Scapin',      short: 'Scapin',     num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
+  { id: 4,  name: 'Lucas Ribeiro',    short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
+  { id: 5,  name: 'Lora',             short: 'Lora',       num: 2,  pos: 'LAT', foto: BASE+'LORA.jpg.webp' },
+  { id: 6,  name: 'Castrillón',       short: 'Castrillón', num: 6,  pos: 'LAT', foto: BASE+'CASTRILLON.jpg.webp' },
+  { id: 7,  name: 'Arthur Barbosa',   short: 'A.Barbosa',  num: 22, pos: 'LAT', foto: BASE+'ARTHUR-BARBOSA.jpg.webp' },
+  { id: 8,  name: 'Sander',           short: 'Sander',     num: 33, pos: 'LAT', foto: BASE+'SANDER.jpg.webp' },
+  { id: 9,  name: 'Maykon Jesus',     short: 'Maykon',     num: 27, pos: 'LAT', foto: BASE+'MAYKON-JESUS.jpg.webp' },
+  { id: 10, name: 'Dantas',           short: 'Dantas',     num: 3,  pos: 'ZAG', foto: BASE+'DANTAAS.jpg.webp' },
+  { id: 11, name: 'Eduardo Brock',    short: 'E.Brock',    num: 5,  pos: 'ZAG', foto: BASE+'EDUARDO-BROCK.jpg.webp' },
+  { id: 12, name: 'Patrick',          short: 'Patrick',    num: 4,  pos: 'ZAG', foto: BASE+'PATRICK.jpg.webp' },
+  { id: 13, name: 'Gabriel Bahia',    short: 'G.Bahia',    num: 14, pos: 'ZAG', foto: BASE+'GABRIEL-BAHIA.jpg.webp' },
+  { id: 14, name: 'Carlinhos',        short: 'Carlinhos',  num: 25, pos: 'ZAG', foto: BASE+'CARLINHOS.jpg.webp' },
+  { id: 15, name: 'Alemão',           short: 'Alemão',     num: 28, pos: 'ZAG', foto: BASE+'ALEMAO.jpg.webp' },
+  { id: 16, name: 'Renato Palm',      short: 'R.Palm',     num: 24, pos: 'ZAG', foto: BASE+'RENATO-PALM.jpg.webp' },
+  { id: 17, name: 'Alvariño',         short: 'Alvariño',   num: 35, pos: 'ZAG', foto: BASE+'IVAN-ALVARINO.jpg.webp' },
+  { id: 18, name: 'Bruno Santana',    short: 'B.Santana',  num: 33, pos: 'ZAG', foto: BASE+'BRUNO-SANTANA.jpg.webp' },
+  { id: 19, name: 'Luís Oyama',       short: 'Oyama',      num: 8,  pos: 'MEI', foto: BASE+'LUIS-OYAMA.jpg.webp' },
+  { id: 20, name: 'Léo Naldi',        short: 'L.Naldi',    num: 7,  pos: 'MEI', foto: BASE+'LEO-NALDI.jpg.webp' },
+  { id: 21, name: 'Rômulo',           short: 'Rômulo',     num: 10, pos: 'MEI', foto: BASE+'ROMULO.jpg.webp' },
+  { id: 22, name: 'Matheus Bianqui',  short: 'Bianqui',    num: 11, pos: 'MEI', foto: BASE+'MATHEUS-BIANQUI.jpg.webp' },
+  { id: 23, name: 'Juninho',          short: 'Juninho',    num: 20, pos: 'MEI', foto: BASE+'JUNINHO.jpg.webp' },
+  { id: 24, name: 'Tavinho',          short: 'Tavinho',    num: 17, pos: 'MEI', foto: BASE+'TAVINHO.jpg.webp' },
+  { id: 25, name: 'Diego Galo',       short: 'D.Galo',     num: 29, pos: 'MEI', foto: BASE+'DIEGO-GALO.jpg.webp' },
+  { id: 26, name: 'Marlon',           short: 'Marlon',     num: 30, pos: 'MEI', foto: BASE+'MARLON.jpg.webp' },
+  { id: 27, name: 'Hector Bianchi',   short: 'Hector',     num: 16, pos: 'MEI', foto: BASE+'HECTOR-BIACHI.jpg.webp' },
+  { id: 28, name: 'Nogueira',         short: 'Nogueira',   num: 36, pos: 'MEI', foto: BASE+'NOGUEIRA.jpg.webp' },
+  { id: 29, name: 'Luiz Gabriel',     short: 'L.Gabriel',  num: 37, pos: 'MEI', foto: BASE+'LUIZ-GABRIEL.jpg.webp' },
+  { id: 30, name: 'Jhones Kauê',      short: 'J.Kauê',     num: 50, pos: 'MEI', foto: BASE+'JHONES-KAUE.jpg.webp' },
+  { id: 31, name: 'Robson',           short: 'Robson',     num: 9,  pos: 'ATA', foto: BASE+'ROBSON.jpg.webp' },
+  { id: 32, name: 'Vinícius Paiva',   short: 'V.Paiva',    num: 13, pos: 'ATA', foto: BASE+'VINICIUS-PAIVA.jpg.webp' },
+  { id: 33, name: 'Hélio Borges',     short: 'H.Borges',   num: 18, pos: 'ATA', foto: BASE+'HELIO-BORGES.jpg.webp' },
+  { id: 34, name: 'Jardiel',          short: 'Jardiel',    num: 19, pos: 'ATA', foto: BASE+'JARDIEL.jpg.webp' },
+  { id: 35, name: 'Nicolas Careca',   short: 'N.Careca',   num: 21, pos: 'ATA', foto: BASE+'NICOLAS-CARECA.jpg.webp' },
+  { id: 36, name: 'Titi Ortiz',       short: 'T.Ortiz',    num: 15, pos: 'ATA', foto: BASE+'TITI-ORTIZ.jpg.webp' },
+  { id: 37, name: 'Diego Mathias',    short: 'D.Mathias',  num: 41, pos: 'ATA', foto: BASE+'DIEGO-MATHIAS.jpg.webp' },
+  { id: 38, name: 'Carlão',           short: 'Carlão',     num: 90, pos: 'ATA', foto: BASE+'CARLAO.jpg.webp' },
+  { id: 39, name: 'Ronald Barcellos', short: 'Ronald',     num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-const FORMATIONS: Record<string, any[]> = {
+const FORMATIONS: Record<string, { id: string; x: number; y: number; pos: string }[]> = {
   '4-2-3-1': [
     { id: 'gk',  x: 50, y: 88, pos: 'GOL' },
     { id: 'rb',  x: 82, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 18, y: 68, pos: 'LAT' },
-    { id: 'dm1', x: 35, y: 58, pos: 'MEI' }, { id: 'dm2', x: 65, y: 58, pos: 'MEI' },
-    { id: 'am1', x: 50, y: 38, pos: 'MEI' }, { id: 'rw',  x: 82, y: 30, pos: 'ATA' }, { id: 'lw', x: 18, y: 30, pos: 'ATA' },
-    { id: 'st',  x: 50, y: 15, pos: 'ATA' },
+    { id: 'dm1', x: 35, y: 57, pos: 'MEI' }, { id: 'dm2', x: 65, y: 57, pos: 'MEI' },
+    { id: 'am1', x: 50, y: 38, pos: 'MEI' }, { id: 'rw',  x: 80, y: 28, pos: 'ATA' }, { id: 'lw', x: 20, y: 28, pos: 'ATA' },
+    { id: 'st',  x: 50, y: 13, pos: 'ATA' },
   ],
   '4-3-3': [
     { id: 'gk',  x: 50, y: 85, pos: 'GOL' },
     { id: 'rb',  x: 82, y: 65, pos: 'LAT' }, { id: 'cb1', x: 62, y: 72, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 72, pos: 'ZAG' }, { id: 'lb', x: 18, y: 65, pos: 'LAT' },
-    { id: 'm1',  x: 50, y: 50, pos: 'MEI' }, { id: 'm2', x: 75, y: 42, pos: 'MEI' }, { id: 'm3', x: 25, y: 42, pos: 'MEI' },
-    { id: 'st',  x: 50, y: 12, pos: 'ATA' }, { id: 'rw', x: 82, y: 20, pos: 'ATA' }, { id: 'lw', x: 18, y: 20, pos: 'ATA' },
+    { id: 'm1',  x: 50, y: 50, pos: 'MEI' }, { id: 'm2',  x: 75, y: 42, pos: 'MEI' }, { id: 'm3', x: 25, y: 42, pos: 'MEI' },
+    { id: 'st',  x: 50, y: 13, pos: 'ATA' }, { id: 'rw',  x: 80, y: 20, pos: 'ATA' }, { id: 'lw', x: 20, y: 20, pos: 'ATA' },
   ],
   '4-4-2': [
     { id: 'gk',  x: 50, y: 88, pos: 'GOL' },
     { id: 'rb',  x: 85, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 15, y: 68, pos: 'LAT' },
-    { id: 'm1',  x: 20, y: 48, pos: 'MEI' }, { id: 'm2', x: 40, y: 48, pos: 'MEI' }, { id: 'm3', x: 60, y: 48, pos: 'MEI' }, { id: 'm4', x: 80, y: 48, pos: 'MEI' },
+    { id: 'm1',  x: 20, y: 48, pos: 'MEI' }, { id: 'm2',  x: 40, y: 48, pos: 'MEI' }, { id: 'm3', x: 60, y: 48, pos: 'MEI' }, { id: 'm4', x: 80, y: 48, pos: 'MEI' },
     { id: 'st1', x: 35, y: 18, pos: 'ATA' }, { id: 'st2', x: 65, y: 18, pos: 'ATA' },
   ],
   '3-5-2': [
     { id: 'gk',  x: 50, y: 88, pos: 'GOL' },
     { id: 'cb1', x: 50, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 75, y: 72, pos: 'ZAG' }, { id: 'cb3', x: 25, y: 72, pos: 'ZAG' },
-    { id: 'm1',  x: 50, y: 52, pos: 'MEI' }, { id: 'm2', x: 25, y: 48, pos: 'MEI' }, { id: 'm3', x: 75, y: 48, pos: 'MEI' }, { id: 'm4', x: 10, y: 38, pos: 'MEI' }, { id: 'm5', x: 90, y: 38, pos: 'MEI' },
-    { id: 'st1', x: 40, y: 18, pos: 'ATA' }, { id: 'st2', x: 60, y: 18, pos: 'ATA' },
+    { id: 'm1',  x: 50, y: 52, pos: 'MEI' }, { id: 'm2',  x: 25, y: 46, pos: 'MEI' }, { id: 'm3', x: 75, y: 46, pos: 'MEI' }, { id: 'm4', x: 10, y: 38, pos: 'MEI' }, { id: 'm5', x: 90, y: 38, pos: 'MEI' },
+    { id: 'st1', x: 38, y: 18, pos: 'ATA' }, { id: 'st2', x: 62, y: 18, pos: 'ATA' },
   ],
   '5-4-1': [
     { id: 'gk',  x: 50, y: 88, pos: 'GOL' },
     { id: 'cb1', x: 50, y: 78, pos: 'ZAG' }, { id: 'cb2', x: 70, y: 75, pos: 'ZAG' }, { id: 'cb3', x: 30, y: 75, pos: 'ZAG' }, { id: 'rb', x: 88, y: 68, pos: 'LAT' }, { id: 'lb', x: 12, y: 68, pos: 'LAT' },
-    { id: 'm1',  x: 35, y: 48, pos: 'MEI' }, { id: 'm2', x: 65, y: 48, pos: 'MEI' }, { id: 'm3', x: 15, y: 42, pos: 'MEI' }, { id: 'm4', x: 85, y: 42, pos: 'MEI' },
+    { id: 'm1',  x: 35, y: 48, pos: 'MEI' }, { id: 'm2',  x: 65, y: 48, pos: 'MEI' }, { id: 'm3', x: 15, y: 40, pos: 'MEI' }, { id: 'm4', x: 85, y: 40, pos: 'MEI' },
     { id: 'st',  x: 50, y: 18, pos: 'ATA' },
   ],
 };
 
-// ─── Sub-componentes ──────────────────────────────────────────────────────────
+const FORMATION_LABELS: Record<string, string> = {
+  '4-2-3-1': '4·2·3·1',
+  '4-3-3':   '4·3·3',
+  '4-4-2':   '4·4·2',
+  '3-5-2':   '3·5·2',
+  '5-4-1':   '5·4·1',
+};
 
-// Badge de status de save em tempo real
-function SaveStatusBadge({ status }: { status: 'idle' | 'saving' | 'saved' | 'error' }) {
-  if (status === 'idle') return null;
-  const config = {
-    saving: { text: 'Salvando...', color: 'text-zinc-500', dot: 'bg-zinc-500 animate-pulse' },
-    saved:  { text: 'Salvo ✓',    color: 'text-green-500', dot: 'bg-green-500' },
-    error:  { text: 'Erro ao salvar', color: 'text-red-400', dot: 'bg-red-400' },
-  };
-  const c = config[status];
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }}
-        className="flex items-center gap-1.5"
-      >
-        <div className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
-        <span className={`text-[9px] font-black uppercase tracking-widest ${c.color}`}>{c.text}</span>
-      </motion.div>
-    </AnimatePresence>
+// ─── Auth Gate ────────────────────────────────────────────────────────────────
+
+function AuthGate({ onAuthenticated }: { onAuthenticated: (uid: string) => void }) {
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
-}
+  const [loading, setLoading] = useState(true);
 
-// Campo de Jogo com efeito 3D e linhas neon
-function CampoFifa() {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) { onAuthenticated(session.user.id); }
+      setLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      if (session?.user) onAuthenticated(session.user.id);
+    });
+    return () => subscription.unsubscribe();
+  }, []); // eslint-disable-line
+
+  if (loading) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="w-10 h-10 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
   return (
-    <div className="absolute inset-0" style={{ perspective: '2000px' }}>
-      <div className="absolute inset-0 bg-[#1e5c1e] rounded-xl overflow-hidden shadow-2xl border-2 border-white/10"
-        style={{ transform: 'rotateX(40deg)', transformStyle: 'preserve-3d' }}>
-        
-        {/* Sombra projetada do campo (efeito 3D flutuante) */}
-        <div className="absolute inset-0 flex flex-col">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className={`flex-1 ${i % 2 === 0 ? 'bg-[#246b24]' : ''}`} />
-          ))}
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 gap-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center gap-6 text-center"
+      >
+        <img src={PATA_LOGO} className="w-20 h-20 object-contain" alt="Tigre FC" />
+        <div>
+          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">
+            Tigre FC
+          </h1>
+          <p className="text-zinc-500 text-sm mt-1 font-medium">
+            Entre no clube. Faça sua escalação.
+          </p>
         </div>
-
-        {/* Textura */}
-        <div className="absolute inset-0 opacity-15 bg-repeat"
-          style={{ backgroundImage: `url(${TEXTURA_GRAMADO})` }} />
-
-        {/* Linhas do campo com glow neon dourado */}
-        <div className="absolute inset-4 border border-white/30"
-          style={{ boxShadow: '0 0 8px rgba(245,196,0,0.15), inset 0 0 8px rgba(245,196,0,0.08)' }} />
-        <div className="absolute top-1/2 left-4 right-4 h-px bg-white/30"
-          style={{ boxShadow: '0 0 6px rgba(245,196,0,0.2)' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border border-white/30 rounded-full"
-          style={{ boxShadow: '0 0 10px rgba(245,196,0,0.15)' }} />
-
-        {/* Iluminação de refletores (floodlights) */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{
-            background: `
-              radial-gradient(circle at 15% 10%, rgba(255,253,200,0.15) 0%, transparent 45%),
-              radial-gradient(circle at 85% 10%, rgba(200,240,255,0.15) 0%, transparent 45%),
-              radial-gradient(center, rgba(255,255,255,0.05) 0%, transparent 70%)
-            `,
-            mixBlendMode: 'screen',
-          }} />
-      </div>
+        <button
+          onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } })}
+          className="flex items-center gap-3 bg-white text-black font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.15)]"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Entrar com Google
+        </button>
+      </motion.div>
     </div>
   );
 }
 
-// Card de jogador — versão campo com fade-in spring ao encaixar
-function PlayerCard({ player, size, isCaptain, isHero, isField, isNew }: any) {
+// ─── Player Card — Mercado (foto esquerda, info direita) ─────────────────────
+
+function PlayerCardMercado({ player, onClick }: { player: Player; onClick: () => void }) {
+  const cor  = POS_CORES[player.pos] ?? '#71717A';
+  const glow = POS_GLOW[player.pos]  ?? 'rgba(113,113,122,0.4)';
+
   return (
     <motion.div
-      initial={isNew ? { scale: 0.2, opacity: 0 } : false}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-      className="relative"
-      style={{ width: size }}
+      whileHover={{ scale: 1.03, y: -2 }}
+      whileTap={{ scale: 0.96 }}
+      onClick={onClick}
+      className="relative flex items-center gap-2 bg-zinc-950 rounded-xl overflow-hidden cursor-pointer border border-zinc-900 hover:border-zinc-700 transition-all"
+      style={{ boxShadow: `0 0 0 0 ${glow}` }}
+      whileHover={{ boxShadow: `0 0 12px ${glow}` } as any}
     >
-      <div className={`bg-zinc-900 rounded-lg overflow-hidden border ${
-        isCaptain ? 'border-yellow-500 shadow-[0_0_18px_rgba(245,196,0,0.7)]' :
-        isHero    ? 'border-cyan-400  shadow-[0_0_18px_rgba(0,243,255,0.7)]'  :
-                    'border-zinc-800'
-      }`} style={{ height: size * 1.3 }}>
+      {/* Barra lateral de posição */}
+      <div className="w-1 self-stretch rounded-l-xl" style={{ background: cor }} />
+
+      {/* Foto alinhada à ESQUERDA — "preparação/espera" */}
+      <div className="relative w-12 h-14 shrink-0 overflow-hidden">
         <img
           src={player.foto}
           className="w-full h-full object-cover"
-          style={{ objectPosition: isField ? 'center top' : 'left top' }}
+          style={{ objectPosition: 'left top' }}
           alt={player.short}
         />
-        <div className="absolute bottom-0 w-full bg-black/85 py-1 text-center">
-          <div className="text-yellow-500 text-[6px] font-black">{player.pos}</div>
-          <div className="text-white text-[8px] font-black uppercase truncate px-1">{player.short}</div>
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0 py-2 pr-2">
+        <div className="text-white text-[11px] font-black uppercase truncate">{player.short}</div>
+        <div className="text-[9px] font-black uppercase tracking-wider" style={{ color: cor }}>
+          {player.pos}
+        </div>
+        <div className="text-zinc-700 text-[9px] font-medium">#{player.num}</div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Player Card — Campo (foto direita, "comemoração/ação") ──────────────────
+
+function PlayerCardCampo({ player, isCaptain, isHero, isSpecialTarget, size = 60 }: {
+  player: Player; isCaptain: boolean; isHero: boolean; isSpecialTarget?: boolean; size?: number;
+}) {
+  const cor  = POS_CORES[player.pos] ?? '#71717A';
+
+  return (
+    <motion.div
+      initial={{ scale: 0.3, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+      className="relative"
+      style={{ width: size }}
+    >
+      {/* Aura pulsante para modo especial */}
+      {isSpecialTarget && (
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 0.8, repeat: Infinity }}
+          className="absolute -inset-2 rounded-xl"
+          style={{
+            background: isCaptain
+              ? 'radial-gradient(circle, rgba(245,196,0,0.5) 0%, transparent 70%)'
+              : 'radial-gradient(circle, rgba(0,243,255,0.5) 0%, transparent 70%)',
+          }}
+        />
+      )}
+
+      <div
+        className="relative bg-zinc-900 rounded-lg overflow-hidden border-2"
+        style={{
+          height: size * 1.35,
+          borderColor: isCaptain ? '#F5C400' : isHero ? '#00F3FF' : cor,
+          boxShadow: isCaptain
+            ? '0 0 16px rgba(245,196,0,0.7)'
+            : isHero
+            ? '0 0 16px rgba(0,243,255,0.7)'
+            : `0 0 8px ${POS_GLOW[player.pos] ?? 'transparent'}`,
+        }}
+      >
+        {/* Foto alinhada à DIREITA — "comemoração/ação" */}
+        <img
+          src={player.foto}
+          className="w-full h-full object-cover"
+          style={{ objectPosition: 'right top' }}
+          alt={player.short}
+        />
+        <div className="absolute bottom-0 w-full bg-black/85 text-center py-[2px]">
+          <div className="text-[6px] font-black" style={{ color: cor }}>{player.pos}</div>
+          <div className="text-white text-[7px] font-black uppercase truncate px-0.5">{player.short}</div>
         </div>
         {isCaptain && (
-          <div className="absolute top-1 right-1 bg-yellow-500 text-black text-[7px] font-black rounded px-1 leading-tight">C</div>
+          <div className="absolute top-1 right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(245,196,0,0.8)]">
+            <span className="text-black text-[7px] font-black">C</span>
+          </div>
         )}
         {isHero && (
-          <div className="absolute top-1 right-1 bg-cyan-400 text-black text-[7px] font-black rounded px-1 leading-tight">H</div>
+          <div className="absolute top-1 right-1 w-4 h-4 bg-cyan-400 rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(0,243,255,0.8)]">
+            <span className="text-black text-[7px] font-black">H</span>
+          </div>
         )}
       </div>
     </motion.div>
   );
 }
 
-// Shockwave overlay quando o time está completo
-function ShockwaveEffect({ trigger }: { trigger: boolean }) {
-  return (
-    <AnimatePresence>
-      {trigger && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0.8 }}
-          animate={{ scale: 4, opacity: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full pointer-events-none z-50"
-          style={{
-            background: 'radial-gradient(circle, rgba(245,196,0,0.6) 0%, transparent 70%)',
-            boxShadow: '0 0 80px 40px rgba(245,196,0,0.3)',
-          }}
-        />
-      )}
-    </AnimatePresence>
-  );
-}
+// ─── Save Badge ───────────────────────────────────────────────────────────────
 
-// Botão de Capitão / Herói com animação de spring e glow pulsante
-function CapHeroButton({ type, player, isActive, onSelect }: {
-  type: 'CAPTAIN' | 'HERO';
-  player?: Player | null;
-  isActive: boolean;
-  onSelect: () => void;
-}) {
-  const isGold = type === 'CAPTAIN';
-  const borderColor = isGold ? 'rgba(245,196,0,0.8)' : 'rgba(0,243,255,0.8)';
-  const glowColor   = isGold ? 'rgba(245,196,0,0.4)' : 'rgba(0,243,255,0.4)';
-  const textColor   = isGold ? 'text-yellow-500' : 'text-cyan-400';
-
+function SaveBadge({ status }: { status: 'idle' | 'saving' | 'saved' | 'error' }) {
+  if (status === 'idle') return null;
+  const map = {
+    saving: { label: 'Salvando...', cls: 'text-zinc-500' },
+    saved:  { label: '✓ Salvo',     cls: 'text-green-500' },
+    error:  { label: '⚠ Erro',      cls: 'text-red-400' },
+  };
+  const c = map[status];
   return (
-    <motion.button
-      initial={{ y: 80, opacity: 0, scale: 0.5 }}
-      animate={{ y: 0, opacity: 1, scale: 1 }}
-      transition={{ type: 'spring', damping: 12, stiffness: 150, delay: isGold ? 0 : 0.1 }}
-      onClick={onSelect}
-      className={`relative flex-1 p-4 rounded-xl border-2 transition-all active:scale-95 overflow-hidden`}
-      style={{
-        borderColor: isActive ? borderColor : 'rgba(63,63,70,0.8)',
-        background: isActive ? `${glowColor.replace('0.4', '0.08')}` : 'rgba(9,9,11,0.9)',
-        boxShadow: isActive ? `0 0 20px ${glowColor}, 0 0 40px ${glowColor.replace('0.4', '0.15')}` : 'none',
-      }}
+    <motion.span
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className={`text-[9px] font-black uppercase tracking-widest ${c.cls}`}
     >
-      {/* Glow pulsante animado */}
-      {isActive && (
-        <motion.div
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="absolute inset-0 rounded-xl"
-          style={{ background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)` }}
-        />
-      )}
-      <div className="relative z-10">
-        <span className={`block text-[9px] font-black uppercase tracking-widest ${textColor}`}>
-          {isGold ? '© Capitão' : '⭐ Herói'}
-        </span>
-        <span className="text-white text-xs font-bold truncate">
-          {player?.short ?? 'Selecionar no campo'}
-        </span>
-      </div>
-    </motion.button>
+      {c.label}
+    </motion.span>
   );
 }
 
@@ -271,44 +301,39 @@ function CapHeroButton({ type, player, isActive, onSelect }: {
 
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
   const resolvedParams = use(params);
-  const jogoRef        = resolvedParams?.jogoId;
+  const jogoRef = resolvedParams?.jogoId;
 
-  // Hook de persistência — gerencia save/load automaticamente
+  const [authed, setAuthed] = useState(false);
+  const [googleId, setGoogleId] = useState<string | null>(null);
+
   const esc = useEscalacao(jogoRef);
 
-  const [selectedSlot,  setSelectedSlot]  = useState<string | null>(null);
-  const [filterPos,     setFilterPos]     = useState('TODOS');
-  const [specialMode,   setSpecialMode]   = useState<'CAPTAIN' | 'HERO' | null>(null);
-  const [showFinalCard, setShowFinalCard] = useState(false);
-  const [shockwaveFired, setShockwaveFired] = useState(false);
-  const [prevFullTeam,  setPrevFullTeam]  = useState(false);
+  const [selectedSlot,   setSelectedSlot]   = useState<string | null>(null);
+  const [filterPos,      setFilterPos]       = useState('TODOS');
+  const [specialMode,    setSpecialMode]     = useState<'CAPTAIN' | 'HERO' | null>(null);
+  const [showFinalCard,  setShowFinalCard]   = useState(false);
+  const [bench,          setBench]           = useState<(Player | null)[]>([null, null, null, null, null]);
 
-  const currentFormation = useMemo(() => FORMATIONS[esc.formacao] ?? FORMATIONS['4-2-3-1'], [esc.formacao]);
+  // Auth gate
+  if (!authed) return <AuthGate onAuthenticated={(uid) => { setGoogleId(uid); setAuthed(true); }} />;
+
+  const currentFormation = FORMATIONS[esc.formacao] ?? FORMATIONS['4-2-3-1'];
 
   const isFullTeam = useMemo(
-    () => currentFormation.every(slot => !!esc.lineup[slot.id]),
+    () => currentFormation.every(s => !!esc.lineup[s.id]),
     [esc.lineup, currentFormation]
   );
 
-  // Dispara shockwave exatamente quando o time fica completo
-  useEffect(() => {
-    if (isFullTeam && !prevFullTeam) {
-      setShockwaveFired(true);
-      setTimeout(() => setShockwaveFired(false), 1000);
-    }
-    setPrevFullTeam(isFullTeam);
-  }, [isFullTeam, prevFullTeam]);
+  const usedIds = useMemo(() => {
+    const ids = new Set(Object.values(esc.lineup).filter(Boolean).map(p => p!.id));
+    bench.filter(Boolean).forEach(p => ids.add(p!.id));
+    return ids;
+  }, [esc.lineup, bench]);
 
-  // Jogadores já escalados ficam ocultos no mercado
-  const filteredPlayers = useMemo(() => {
-    const usedIds = new Set(
-      Object.values(esc.lineup).filter(Boolean).map(p => p!.id)
-    );
-    return PLAYERS.filter(p =>
-      !usedIds.has(p.id) &&
-      (filterPos === 'TODOS' || p.pos === filterPos)
-    );
-  }, [esc.lineup, filterPos]);
+  const filteredPlayers = useMemo(
+    () => PLAYERS.filter(p => !usedIds.has(p.id) && (filterPos === 'TODOS' || p.pos === filterPos)),
+    [usedIds, filterPos]
+  );
 
   const captainPlayer = useMemo(
     () => Object.values(esc.lineup).find(p => p?.id === esc.captainId) ?? null,
@@ -319,16 +344,10 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     [esc.lineup, esc.heroId]
   );
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
-
   const handleSlotClick = (slotId: string) => {
-    const playerInSlot = esc.lineup[slotId];
-    if (specialMode === 'CAPTAIN' && playerInSlot) {
-      esc.setCaptainId(playerInSlot.id); setSpecialMode(null); return;
-    }
-    if (specialMode === 'HERO' && playerInSlot) {
-      esc.setHeroId(playerInSlot.id); setSpecialMode(null); return;
-    }
+    const p = esc.lineup[slotId];
+    if (specialMode === 'CAPTAIN' && p) { esc.setCaptainId(p.id); setSpecialMode(null); return; }
+    if (specialMode === 'HERO'    && p) { esc.setHeroId(p.id);    setSpecialMode(null); return; }
     setSelectedSlot(slotId);
   };
 
@@ -338,235 +357,248 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     setSelectedSlot(null);
   };
 
-  const handleLockScore = async () => {
-    await esc.lockScore();
-    confetti({
-      particleCount: 120, spread: 70, origin: { y: 0.75 },
-      colors: ['#F5C400', '#22C55E', '#ffffff'],
+  const handleBenchDrop = (idx: number, player: Player) => {
+    setBench(prev => {
+      const next = [...prev];
+      next[idx] = player;
+      return next;
     });
   };
 
-  // ── Loading Skeleton ─────────────────────────────────────────────────────────
-  if (esc.isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-zinc-500 text-xs font-black uppercase tracking-widest">Carregando sua escalação...</p>
-        </div>
+  if (esc.isLoading) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Carregando escalação...</p>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-black text-white p-4 gap-6">
+    <div className="min-h-screen bg-black text-white">
 
-      {/* ── EFEITO SHOCKWAVE GLOBAL ─────────────────────────────────── */}
-      <ShockwaveEffect trigger={shockwaveFired} />
-
-      {/* ── MERCADO (Esquerda) ──────────────────────────────────────── */}
-      <section className="flex-1 bg-zinc-900/20 rounded-[2.5rem] p-6 border border-white/5 h-[85vh] overflow-hidden flex flex-col">
-
-        {/* Header do Mercado */}
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter">Tática</h2>
-              <SaveStatusBadge status={esc.saveStatus} />
-            </div>
-            <select
-              value={esc.formacao}
-              onChange={e => esc.setFormacao(e.target.value)}
-              className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-xs font-black text-white outline-none hover:border-zinc-600 transition"
-            >
-              {Object.keys(FORMATIONS).map(f => <option key={f} value={f}>{f}</option>)}
-            </select>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-black italic uppercase tracking-tighter text-zinc-500">Mercado</h3>
-            <select
-              onChange={e => setFilterPos(e.target.value)}
-              className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-xs font-black text-yellow-500 outline-none hover:border-zinc-600 transition"
-            >
-              <option value="TODOS">TODOS JOGADORES</option>
-              <option value="GOL">GOLEIROS</option>
-              <option value="ZAG">ZAGUEIROS</option>
-              <option value="LAT">LATERAIS</option>
-              <option value="MEI">MEIO-CAMPO</option>
-              <option value="ATA">ATACANTES</option>
-            </select>
+      {/* ── HEADER ── */}
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-md border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <img src={PATA_LOGO} className="w-6 h-6 object-contain" alt="" />
+          <span className="text-white font-black italic uppercase tracking-tighter text-sm">Tigre FC</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <SaveBadge status={esc.saveStatus} />
+          {/* Formation Pills */}
+          <div className="flex gap-1">
+            {Object.keys(FORMATIONS).map(f => (
+              <button
+                key={f}
+                onClick={() => esc.setFormacao(f)}
+                className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
+                  esc.formacao === f
+                    ? 'bg-yellow-500 text-black shadow-[0_0_8px_rgba(245,196,0,0.5)]'
+                    : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800 border border-zinc-800'
+                }`}
+              >
+                {FORMATION_LABELS[f]}
+              </button>
+            ))}
           </div>
         </div>
+      </header>
 
-        {/* Grid de jogadores */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 overflow-y-auto pr-1 custom-scrollbar">
-          {filteredPlayers.map(p => (
-            <motion.div
-              key={p.id}
-              onClick={() => handleSelectPlayer(p)}
-              whileHover={{ scale: 1.08, y: -3 }}
-              whileTap={{ scale: 0.95 }}
-              className="cursor-pointer"
-            >
-              <PlayerCard player={p} size={80} />
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CAMPO E FLUXO (Direita) ─────────────────────────────────── */}
-      <section className="flex-[1.4] flex flex-col items-center">
-
-        {/* CAMPO */}
-        <div className={`relative w-full max-w-[540px] aspect-[1/1.3] mb-8 transition-opacity duration-300 ${specialMode ? 'opacity-50' : 'opacity-100'}`}>
+      {/* ── CAMPO (TOPO — Mobile First) ── */}
+      <div className="px-3 pt-4 pb-2">
+        <div className="relative w-full max-w-lg mx-auto aspect-[1/1.25] rounded-2xl overflow-visible">
           <CampoFifa />
           <div className="absolute inset-0 z-10">
             {currentFormation.map(slot => {
               const player = esc.lineup[slot.id];
+              const isTarget = !!specialMode && !!player;
               return (
                 <div
                   key={slot.id}
                   onClick={() => handleSlotClick(slot.id)}
                   style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-                  className="absolute cursor-pointer -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform"
+                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:z-20 transition-all"
                 >
                   {player ? (
-                    <PlayerCard
+                    <PlayerCardCampo
                       player={player}
-                      size={65}
-                      isField
                       isCaptain={esc.captainId === player.id}
                       isHero={esc.heroId === player.id}
+                      isSpecialTarget={isTarget}
+                      size={58}
                     />
                   ) : (
-                    <div className={`w-11 h-14 rounded-lg border-2 border-dashed flex items-center justify-center transition-all ${
-                      selectedSlot === slot.id
-                        ? 'border-yellow-500 bg-yellow-500/25 shadow-[0_0_12px_rgba(245,196,0,0.4)]'
-                        : 'border-white/10 bg-black/40 hover:border-white/20'
-                    }`}>
-                      <span className="text-[9px] font-black text-zinc-600">{slot.pos}</span>
-                    </div>
+                    <motion.div
+                      animate={selectedSlot === slot.id ? { scale: [1, 1.1, 1] } : {}}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                      className={`w-10 h-12 rounded-lg border-2 border-dashed flex items-center justify-center transition-all ${
+                        selectedSlot === slot.id
+                          ? 'border-yellow-500 bg-yellow-500/20 shadow-[0_0_12px_rgba(245,196,0,0.4)]'
+                          : 'border-white/10 bg-black/30 hover:border-white/25'
+                      }`}
+                    >
+                      <span className="text-[8px] font-black" style={{ color: POS_CORES[slot.pos] ?? '#555' }}>
+                        {slot.pos}
+                      </span>
+                    </motion.div>
                   )}
                 </div>
               );
             })}
           </div>
         </div>
+      </div>
 
-        {/* FLUXO FINAL — aparece ao completar o time */}
-        <AnimatePresence>
-          {isFullTeam && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="w-full max-w-md space-y-5"
-            >
-
-              {/* Botões Capitão / Herói com spring */}
-              <div className="flex gap-3">
-                <CapHeroButton
-                  type="CAPTAIN"
-                  player={captainPlayer}
-                  isActive={!!captainPlayer}
-                  onSelect={() => setSpecialMode('CAPTAIN')}
-                />
-                <CapHeroButton
-                  type="HERO"
-                  player={heroPlayer}
-                  isActive={!!heroPlayer}
-                  onSelect={() => setSpecialMode('HERO')}
-                />
-              </div>
-
-              {/* Instrução contextual */}
-              {specialMode && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center text-[10px] font-black uppercase tracking-widest text-yellow-500 animate-pulse"
-                >
-                  {specialMode === 'CAPTAIN' ? '© Clique no Capitão no campo' : '⭐ Clique no Herói no campo'}
-                </motion.p>
-              )}
-
-              {/* Placar — só aparece após definir capitão e herói */}
-              <AnimatePresence>
-                {esc.captainId && esc.heroId && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-zinc-950 rounded-3xl border border-white/5 p-6 space-y-4"
-                    style={{
-                      boxShadow: esc.scoreLocked
-                        ? '0 0 30px rgba(34,197,94,0.15)'
-                        : '0 0 20px rgba(0,0,0,0.5)',
-                      borderColor: esc.scoreLocked ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.05)',
-                    }}
-                  >
-                    <p className="text-center text-[9px] font-black uppercase tracking-[0.4em] text-zinc-600">Palpite do Placar</p>
-                    <div className="flex items-center justify-around">
-                      <div className="text-center">
-                        <span className="text-[9px] font-black text-yellow-500 uppercase block mb-1">Tigre</span>
-                        <input
-                          type="number"
-                          value={esc.scoreTigre}
-                          onChange={e => esc.setScore(parseInt(e.target.value) || 0, esc.scoreAdv)}
-                          disabled={esc.scoreLocked}
-                          className="bg-black/80 w-16 h-16 text-3xl font-black text-center rounded-xl outline-none focus:border-yellow-500 border border-transparent transition disabled:opacity-60"
-                        />
-                      </div>
-                      <span className="text-zinc-800 font-black text-2xl italic mt-6">VS</span>
-                      <div className="text-center">
-                        <span className="text-[9px] font-black text-zinc-500 uppercase block mb-1">Adv</span>
-                        <input
-                          type="number"
-                          value={esc.scoreAdv}
-                          onChange={e => esc.setScore(esc.scoreTigre, parseInt(e.target.value) || 0)}
-                          disabled={esc.scoreLocked}
-                          className="bg-black/80 w-16 h-16 text-3xl font-black text-center rounded-xl outline-none focus:border-yellow-500 border border-transparent transition disabled:opacity-60"
-                        />
-                      </div>
-                    </div>
-
-                    {!esc.scoreLocked ? (
-                      <button
-                        onClick={handleLockScore}
-                        className="w-full py-3.5 bg-white text-black font-black uppercase text-xs rounded-xl active:scale-95 hover:bg-yellow-500 transition-all"
-                      >
-                        CRAVAR PALPITE →
-                      </button>
-                    ) : (
-                      <div className="w-full py-3.5 bg-green-500/15 border border-green-500/30 text-green-400 font-black text-xs text-center rounded-xl uppercase tracking-widest">
-                        ✓ Palpite Registrado
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* FINALIZAR */}
-              <motion.button
-                disabled={!esc.scoreLocked}
-                onClick={() => setShowFinalCard(true)}
-                animate={esc.scoreLocked ? { scale: [1, 1.03, 1] } : {}}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className={`w-full py-5 rounded-[2rem] font-black uppercase tracking-widest text-sm transition-all ${
-                  esc.scoreLocked
-                    ? 'bg-yellow-500 text-black shadow-[0_10px_40px_rgba(245,196,0,0.4)]'
-                    : 'bg-zinc-900 text-zinc-600 opacity-40 cursor-not-allowed'
+      {/* ── BANCO DE RESERVAS ── */}
+      <div className="px-3 pb-4">
+        <div className="max-w-lg mx-auto">
+          <p className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-700 mb-2 text-center">
+            Banco de Reservas
+          </p>
+          <div className="flex gap-2 justify-center">
+            {bench.map((player, idx) => (
+              <div
+                key={idx}
+                onClick={() => { if (!player) setSelectedSlot(`bench-${idx}`); }}
+                className={`relative w-12 h-16 rounded-lg border border-dashed cursor-pointer transition-all ${
+                  player ? 'border-zinc-700' : 'border-zinc-800 hover:border-zinc-600'
                 }`}
+                style={{ opacity: 0.7 }}
               >
-                Finalizar Escalação →
-              </motion.button>
+                {player ? (
+                  <>
+                    <img src={player.foto} className="w-full h-full object-cover rounded-lg object-top" alt={player.short} />
+                    <div className="absolute bottom-0 w-full bg-black/85 text-center py-[1px] rounded-b-lg">
+                      <span className="text-white text-[5px] font-black uppercase truncate block px-0.5">{player.short}</span>
+                    </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); setBench(prev => { const n = [...prev]; n[idx] = null; return n; }); }}
+                      className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[8px] text-white flex items-center justify-center leading-none"
+                    >×</button>
+                  </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-zinc-700 text-lg">+</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-            </motion.div>
+      {/* ── FLUXO PÓS-TIME-COMPLETO ── */}
+      <AnimatePresence>
+        {isFullTeam && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="px-3 pb-4 max-w-lg mx-auto space-y-4"
+          >
+            <CapitaoEHeroi
+              onSelect={mode => setSpecialMode(mode)}
+              captainName={captainPlayer?.short}
+              heroName={heroPlayer?.short}
+              captainFoto={captainPlayer?.foto}
+              heroFoto={heroPlayer?.foto}
+            />
+
+            {esc.captainId && esc.heroId && (
+              <Palpite
+                scoreTigre={esc.scoreTigre}
+                scoreAdversario={esc.scoreAdv}
+                setScoreTigre={v => esc.setScore(v, esc.scoreAdv)}
+                setScoreAdversario={v => esc.setScore(esc.scoreTigre, v)}
+                isLocked={esc.scoreLocked}
+                onLock={esc.lockScore}
+              />
+            )}
+
+            <motion.button
+              disabled={!esc.scoreLocked}
+              onClick={() => setShowFinalCard(true)}
+              animate={esc.scoreLocked ? { scale: [1, 1.02, 1] } : {}}
+              transition={{ duration: 2, repeat: Infinity }}
+              className={`w-full py-5 rounded-[1.5rem] font-black uppercase tracking-widest text-sm transition-all mb-6 ${
+                esc.scoreLocked
+                  ? 'bg-yellow-500 text-black shadow-[0_8px_30px_rgba(245,196,0,0.4)]'
+                  : 'bg-zinc-900 text-zinc-600 opacity-40 cursor-not-allowed border border-zinc-800'
+              }`}
+            >
+              {esc.scoreLocked ? 'Finalizar Escalação →' : 'Registre o palpite primeiro'}
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── MERCADO (PAINEL ABAIXO — Mobile First) ── */}
+      <div className="border-t border-white/5 bg-zinc-950/50">
+        <div className="px-3 py-4 max-w-lg mx-auto">
+
+          {/* Filtros por posição — pills */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+            {['TODOS', 'GOL', 'ZAG', 'LAT', 'MEI', 'ATA'].map(pos => (
+              <button
+                key={pos}
+                onClick={() => setFilterPos(pos)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all border ${
+                  filterPos === pos
+                    ? 'text-black border-transparent'
+                    : 'bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
+                }`}
+                style={filterPos === pos ? {
+                  background: pos === 'TODOS' ? '#F5C400' : POS_CORES[pos],
+                  boxShadow: `0 0 10px ${POS_GLOW[pos] ?? 'rgba(245,196,0,0.4)'}`,
+                } : {}}
+              >
+                {pos}
+              </button>
+            ))}
+          </div>
+
+          {/* Indicação de slot ativo */}
+          {selectedSlot && !selectedSlot.startsWith('bench') && (
+            <motion.p
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="text-yellow-500 text-[10px] font-black uppercase tracking-widest text-center mb-3 animate-pulse"
+            >
+              ▲ Selecione um jogador para o slot destacado
+            </motion.p>
           )}
-        </AnimatePresence>
-      </section>
 
-      {/* MODAL FINAL */}
+          {/* Grid de jogadores */}
+          <div className="grid grid-cols-1 gap-2">
+            {filteredPlayers.map((p, i) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.02 }}
+              >
+                <PlayerCardMercado
+                  player={p}
+                  onClick={() => {
+                    if (selectedSlot?.startsWith('bench-')) {
+                      const idx = parseInt(selectedSlot.replace('bench-', ''));
+                      handleBenchDrop(idx, p);
+                      setSelectedSlot(null);
+                    } else {
+                      handleSelectPlayer(p);
+                    }
+                  }}
+                />
+              </motion.div>
+            ))}
+            {filteredPlayers.length === 0 && (
+              <p className="text-zinc-700 text-xs font-bold uppercase text-center py-8 tracking-widest">
+                Todos escalados nessa posição ✓
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Modal Final */}
       {showFinalCard && (
         <FinalCardReveal
           lineup={esc.lineup}
@@ -580,10 +612,8 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       )}
 
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
