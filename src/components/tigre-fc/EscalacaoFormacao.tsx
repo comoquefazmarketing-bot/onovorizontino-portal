@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 // --- CONFIGURAÇÕES DE IMAGENS E DADOS ---
@@ -61,74 +61,107 @@ const RESERVA_SLOTS = ['res1', 'res2', 'res3', 'res4', 'res5'];
 
 type Player = typeof PLAYERS[0];
 
-// --- SUB-COMPONENTE: CAPITAO E HEROI (ANIMADO) ---
+// --- SUB-COMPONENTE: PALPITE (VIDEO-GAME STYLE) ---
+function PalpiteSection({ 
+  scoreTigre, scoreAdversario, setScoreTigre, setScoreAdversario, isLocked, setIsLocked 
+}: { 
+  scoreTigre: number, scoreAdversario: number, setScoreTigre: (v: number) => void, setScoreAdversario: (v: number) => void, isLocked: boolean, setIsLocked: (b: boolean) => void 
+}) {
+  const x = useMotionValue(200);
+  const y = useMotionValue(100);
+  const rotateX = useTransform(y, [0, 200], [10, -10]);
+  const rotateY = useTransform(x, [0, 400], [-10, 10]);
+
+  const handleLock = () => {
+    setIsLocked(true);
+    confetti({ particleCount: 150, spread: 70, origin: { y: 0.8 }, colors: ['#22C55E', '#F5C400'] });
+  };
+
+  const ScoreBtn = ({ label, val, set, color }: any) => (
+    <div className="flex flex-col items-center gap-3">
+      <span className={`text-[10px] font-black uppercase tracking-widest ${color === 'gold' ? 'text-yellow-500' : 'text-zinc-500'}`}>{label}</span>
+      <div className="flex items-center gap-4 bg-black/40 p-2 rounded-full border border-white/5">
+        <button onClick={() => set(Math.max(0, val - 1))} disabled={isLocked} className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center font-black">-</button>
+        <span className="text-5xl font-[1000] italic min-w-[60px] text-center drop-shadow-2xl">{val}</span>
+        <button onClick={() => set(val + 1)} disabled={isLocked} className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center font-black">+</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <motion.div 
+      style={{ perspective: 1000, rotateX, rotateY }}
+      onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); x.set(e.clientX - r.left); y.set(e.clientY - r.top); }}
+      onMouseLeave={() => { x.set(200); y.set(100); }}
+      className={`w-full max-w-[500px] p-8 rounded-[3rem] border-2 transition-all duration-700 bg-zinc-950/90 backdrop-blur-md mb-10
+        ${isLocked ? 'border-green-500 shadow-[0_0_50px_rgba(34,197,94,0.3)]' : 'border-zinc-800 shadow-2xl'}`}
+    >
+      <div className="text-center mb-8">
+        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-2">Sistema de Pontos</h2>
+        <div className="flex justify-center gap-2">
+          <span className="text-2xl font-[1000] italic text-yellow-500">PLACAR EXATO</span>
+          <span className="text-2xl font-[1000] italic text-green-500">+15 PTS</span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-around mb-10">
+        <ScoreBtn label="Tigre FC" val={scoreTigre} set={setScoreTigre} color="gold" />
+        <div className="text-zinc-800 font-black italic text-2xl mt-8">VS</div>
+        <ScoreBtn label="Oponente" val={scoreAdversario} set={setScoreAdversario} />
+      </div>
+
+      {!isLocked ? (
+        <button onClick={handleLock} className="w-full py-5 bg-white text-black font-[1000] italic uppercase tracking-widest rounded-2xl hover:bg-yellow-500 transition-all active:scale-95">
+          CRAVAR PALPITE →
+        </button>
+      ) : (
+        <div className="w-full py-5 border-2 border-green-500 text-green-500 font-black italic text-center rounded-2xl bg-green-500/10">
+          ✓ PALPITE REGISTRADO
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// --- SUB-COMPONENTE: CAPITAO E HEROI ---
 function CapitaoEHeroi({ onSelect, captainName, heroName }: { onSelect: (type: 'CAPTAIN' | 'HERO') => void, captainName?: string, heroName?: string }) {
   const [hasClashed, setHasClashed] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setHasClashed(true);
-      const duration = 2000;
-      const animationEnd = Date.now() + duration;
-      const interval: any = setInterval(function() {
-        const timeLeft = animationEnd - Date.now();
-        if (timeLeft <= 0) return clearInterval(interval);
-        confetti({ 
-          particleCount: 40, spread: 360, origin: { x: 0.5, y: 0.6 }, 
-          colors: ['#F5C400', '#00F3FF', '#FFFFFF'], zIndex: 100 
-        });
-      }, 300);
+      confetti({ particleCount: 50, spread: 360, origin: { y: 0.6 }, colors: ['#F5C400', '#00F3FF'] });
     }, 800);
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <div className="relative w-full flex flex-col items-center justify-center py-6 overflow-hidden min-h-[300px]">
+    <div className="relative w-full flex flex-col items-center justify-center py-6 min-h-[300px]">
       <AnimatePresence>
         {hasClashed && (
           <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="flex gap-20 mb-6 z-20">
-            <h3 className="text-yellow-500 font-[1000] italic uppercase tracking-[0.2em] text-xs drop-shadow-[0_0_10px_#F5C400]">Capitão</h3>
-            <h3 className="text-cyan-400 font-[1000] italic uppercase tracking-[0.2em] text-xs drop-shadow-[0_0_10px_#00F3FF]">Herói</h3>
+            <h3 className="text-yellow-500 font-[1000] italic uppercase tracking-[0.2em] text-xs">Capitão</h3>
+            <h3 className="text-cyan-400 font-[1000] italic uppercase tracking-[0.2em] text-xs">Herói</h3>
           </motion.div>
         )}
       </AnimatePresence>
 
       <div className="relative flex items-center justify-center w-full h-44">
-        <motion.button
-          onClick={() => onSelect('CAPTAIN')}
-          initial={{ x: -400, opacity: 0 }}
-          animate={{ x: hasClashed ? -75 : 0, opacity: 1 }}
-          transition={{ type: 'spring', damping: 15 }}
-          className={`group relative w-28 h-40 rounded-xl border-2 transition-all overflow-hidden
-            ${captainName ? 'border-yellow-500 bg-yellow-500/20' : 'border-yellow-500/40 bg-zinc-900'}
-            hover:scale-110 hover:shadow-[0_0_30px_rgba(245,196,0,0.4)]`}
-        >
-          <div className="flex flex-col items-center justify-center h-full p-2 text-center">
-            <span className="text-3xl mb-1 drop-shadow-lg">©</span>
-            <span className="text-[9px] font-black uppercase leading-tight">{captainName || "Selecionar"}</span>
+        <motion.button onClick={() => onSelect('CAPTAIN')} initial={{ x: -400, opacity: 0 }} animate={{ x: hasClashed ? -75 : 0, opacity: 1 }} transition={{ type: 'spring', damping: 15 }}
+          className={`relative w-28 h-40 rounded-xl border-2 transition-all ${captainName ? 'border-yellow-500 bg-yellow-500/20' : 'border-zinc-800 bg-zinc-900'} hover:scale-110`}>
+          <div className="flex flex-col items-center justify-center h-full p-2 text-center uppercase">
+            <span className="text-3xl mb-1">©</span>
+            <span className="text-[9px] font-black">{captainName || "Selecionar"}</span>
           </div>
-          <div className="absolute -inset-1 bg-yellow-500 blur opacity-10 animate-pulse" />
         </motion.button>
 
-        <motion.button
-          onClick={() => onSelect('HERO')}
-          initial={{ x: 400, opacity: 0 }}
-          animate={{ x: hasClashed ? 75 : 0, opacity: 1 }}
-          transition={{ type: 'spring', damping: 15 }}
-          className={`group relative w-28 h-40 rounded-xl border-2 transition-all overflow-hidden
-            ${heroName ? 'border-cyan-400 bg-cyan-400/20' : 'border-cyan-400/40 bg-zinc-900'}
-            hover:scale-110 hover:shadow-[0_0_30px_rgba(0,243,255,0.4)]`}
-        >
-          <div className="flex flex-col items-center justify-center h-full p-2 text-center">
-            <span className="text-3xl mb-1 drop-shadow-lg">⭐</span>
-            <span className="text-[9px] font-black uppercase leading-tight">{heroName || "Selecionar"}</span>
+        <motion.button onClick={() => onSelect('HERO')} initial={{ x: 400, opacity: 0 }} animate={{ x: hasClashed ? 75 : 0, opacity: 1 }} transition={{ type: 'spring', damping: 15 }}
+          className={`relative w-28 h-40 rounded-xl border-2 transition-all ${heroName ? 'border-cyan-400 bg-cyan-400/20' : 'border-zinc-800 bg-zinc-900'} hover:scale-110`}>
+          <div className="flex flex-col items-center justify-center h-full p-2 text-center uppercase">
+            <span className="text-3xl mb-1">⭐</span>
+            <span className="text-[9px] font-black">{heroName || "Selecionar"}</span>
           </div>
-          <div className="absolute -inset-1 bg-cyan-400 blur opacity-10 animate-pulse" />
         </motion.button>
-
-        {!hasClashed && (
-          <motion.div exit={{ scale: 3, opacity: 0 }} className="absolute w-16 h-16 bg-white rounded-full blur-2xl z-10" />
-        )}
       </div>
     </div>
   );
@@ -142,73 +175,45 @@ function CampoFifa() {
         <div className="grass-pattern">
           <div className="texture-overlay" />
           {[...Array(10)].map((_, i) => <div key={i} className="grass-stripe-h" />)}
-          <div className="vertical-stripes-container">
-            {[...Array(6)].map((_, i) => <div key={i} className="grass-stripe-v" />)}
-          </div>
         </div>
         <div className="field-lines">
           <div className="border-lines" />
           <div className="mid-line" />
           <div className="center-circle"><div className="center-point" /></div>
-          <div className="penalty-area top"><div className="goal-area" /><div className="penalty-arc" /></div>
-          <div className="penalty-area bottom"><div className="goal-area" /><div className="penalty-arc" /></div>
+          <div className="penalty-area top"><div className="goal-area" /></div>
+          <div className="penalty-area bottom"><div className="goal-area" /></div>
         </div>
-        <div className="lighting-fx" />
       </div>
       <style jsx>{`
         .fifa-field-container { perspective: 2000px; width: 100%; height: 100%; position: absolute; }
-        .field-tilt { 
-          position: absolute; inset: 0; background: #1e5c1e; border-radius: 12px;
-          transform: rotateX(40deg); transform-style: preserve-3d;
-          box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 3px solid #fff; overflow: hidden;
-        }
+        .field-tilt { position: absolute; inset: 0; background: #1e5c1e; transform: rotateX(40deg); transform-style: preserve-3d; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 3px solid #fff; border-radius: 12px; overflow: hidden; }
         .grass-pattern { position: absolute; inset: 0; display: flex; flex-direction: column; }
-        .texture-overlay { position: absolute; inset: 0; background-image: url(${TEXTURA_GRAMADO}); opacity: 0.2; mix-blend-mode: overlay; }
-        .grass-stripe-h { flex: 1; width: 100%; }
-        .grass-stripe-h:nth-child(even) { background-color: #246b24; }
-        .vertical-stripes-container { position: absolute; inset: 0; display: flex; mix-blend-mode: soft-light; opacity: 0.4; }
-        .grass-stripe-v { flex: 1; height: 100%; }
-        .grass-stripe-v:nth-child(even) { background-color: rgba(0,0,0,0.4); }
-        .field-lines { position: absolute; inset: 0; opacity: 0.7; }
+        .texture-overlay { position: absolute; inset: 0; background-image: url(${TEXTURA_GRAMADO}); opacity: 0.2; }
+        .grass-stripe-h:nth-child(even) { background-color: #246b24; flex: 1; }
+        .grass-stripe-h:nth-child(odd) { flex: 1; }
+        .field-lines { position: absolute; inset: 0; opacity: 0.5; }
         .border-lines { position: absolute; inset: 10px; border: 2px solid #fff; }
         .mid-line { position: absolute; top: 50%; left: 10px; right: 10px; height: 2px; background: #fff; }
-        .center-circle { position: absolute; top: 50%; left: 50%; width: 70px; height: 70px; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); }
-        .penalty-area { position: absolute; left: 20%; right: 20%; height: 20%; border: 2px solid #fff; }
+        .center-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); }
+        .penalty-area { position: absolute; left: 20%; right: 20%; height: 15%; border: 2px solid #fff; }
         .penalty-area.top { top: 10px; border-top: none; }
-        .penalty-area.bottom { bottom: 10px; border-bottom: none; transform: rotate(180deg); }
-        .lighting-fx { position: absolute; inset: 0; background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.1), transparent 70%); pointer-events: none; }
+        .penalty-area.bottom { bottom: 10px; border-bottom: none; }
       `}</style>
     </div>
   );
 }
 
 // --- SUB-COMPONENTE: PLAYER CARD ---
-function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { player: Player, size: number, isSelected?: boolean, isCaptain?: boolean, isHero?: boolean, isField?: boolean }) {
+function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: any) {
   return (
-    <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} style={{ width: size }}>
-      <div className={`card-box ${isCaptain ? 'gold-border' : ''} ${isHero ? 'cyan-border' : ''}`} style={{ height: size * 1.3 }}>
-        <img src={player.foto} alt={player.short} className="player-img" style={{ objectPosition: isField ? 'right top' : 'left top' }} />
-        {isCaptain && <div className="badge cap">C</div>}
-        {isHero && <div className="badge star">⭐</div>}
-        <div className="card-info">
-          <div className="pos">{player.pos}</div>
-          <div className="name">{player.short}</div>
+    <div className={`relative transition-all ${isSelected ? 'scale-110 z-10' : ''}`} style={{ width: size }}>
+      <div className={`bg-zinc-900 rounded-lg overflow-hidden border ${isCaptain ? 'border-yellow-500 shadow-[0_0_15px_rgba(245,196,0,0.5)]' : isHero ? 'border-cyan-400 shadow-[0_0_15px_rgba(0,243,255,0.5)]' : 'border-zinc-800'}`} style={{ height: size * 1.3 }}>
+        <img src={player.foto} className="w-full h-full object-cover" style={{ objectPosition: isField ? 'top' : 'center' }} />
+        <div className="absolute bottom-0 w-full bg-black/80 py-1 text-center">
+          <div className="text-yellow-500 text-[6px] font-black">{player.pos}</div>
+          <div className="text-white text-[8px] font-black uppercase truncate px-1">{player.short}</div>
         </div>
       </div>
-      <style jsx>{`
-        .card-wrapper { position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .selected { transform: scale(1.1) translateY(-5px); z-index: 10; }
-        .card-box { background: #111; border-radius: 6px; overflow: hidden; position: relative; width: 100%; border: 1px solid #333; }
-        .gold-border { border: 2px solid #F5C400 !important; box-shadow: 0 0 15px rgba(245,196,0,0.5); }
-        .cyan-border { border: 2px solid #00F3FF !important; box-shadow: 0 0 15px rgba(0,243,255,0.5); }
-        .player-img { width: 100%; height: 100%; object-fit: cover; }
-        .badge { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; z-index: 20; border: 1.5px solid #000; }
-        .cap { background: #F5C400; color: #000; }
-        .star { background: #00F3FF; color: #000; }
-        .card-info { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #000 40%, transparent); padding: 4px 0; text-align: center; }
-        .pos { color: #F5C400; font-size: 7px; font-weight: 900; }
-        .name { color: #fff; font-size: 9px; font-weight: 900; text-transform: uppercase; }
-      `}</style>
     </div>
   );
 }
@@ -221,6 +226,11 @@ export default function TigreFCEscalar() {
   const [captainId, setCaptainId] = useState<number | null>(null);
   const [heroId, setHeroId] = useState<number | null>(null);
   const [specialMode, setSpecialMode] = useState<'CAPTAIN' | 'HERO' | null>(null);
+  
+  // Estados do Placar
+  const [scoreTigre, setScoreTigre] = useState(0);
+  const [scoreAdversario, setScoreAdversario] = useState(0);
+  const [scoreLocked, setScoreLocked] = useState(false);
 
   const isFullTeam = useMemo(() => FORMATION_433.every(slot => !!lineup[slot.id]), [lineup]);
   const captainPlayer = useMemo(() => Object.values(lineup).find(p => p?.id === captainId), [lineup, captainId]);
@@ -228,16 +238,8 @@ export default function TigreFCEscalar() {
 
   const handleSlotClick = (slotId: string) => {
     const playerInSlot = lineup[slotId];
-    if (specialMode === 'CAPTAIN' && playerInSlot) {
-      setCaptainId(playerInSlot.id);
-      setSpecialMode(null);
-      return;
-    }
-    if (specialMode === 'HERO' && playerInSlot) {
-      setHeroId(playerInSlot.id);
-      setSpecialMode(null);
-      return;
-    }
+    if (specialMode === 'CAPTAIN' && playerInSlot) { setCaptainId(playerInSlot.id); setSpecialMode(null); return; }
+    if (specialMode === 'HERO' && playerInSlot) { setHeroId(playerInSlot.id); setSpecialMode(null); return; }
     setSelectedSlot(slotId);
   };
 
@@ -248,13 +250,13 @@ export default function TigreFCEscalar() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-[#050505] text-white p-4 gap-6 font-sans overflow-x-hidden">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-black text-white p-4 gap-6 overflow-x-hidden">
       
       {/* MERCADO */}
-      <section className="flex-1 flex flex-col bg-zinc-900/40 rounded-[40px] border border-white/5 p-6 backdrop-blur-xl h-[85vh]">
-        <div className="flex items-center justify-between mb-6">
+      <section className="flex-1 bg-zinc-900/30 rounded-[40px] p-6 border border-white/5 h-[85vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-[1000] italic uppercase tracking-tighter">Mercado</h2>
-          <select onChange={(e) => setFilterPos(e.target.value)} className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-yellow-500">
+          <select onChange={(e) => setFilterPos(e.target.value)} className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-yellow-500 outline-none">
             <option value="TODOS">TODOS</option>
             <option value="GOL">GOLEIROS</option>
             <option value="ZAG">ZAGUEIROS</option>
@@ -263,7 +265,7 @@ export default function TigreFCEscalar() {
             <option value="ATA">ATACANTES</option>
           </select>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 overflow-y-auto custom-scrollbar pr-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 overflow-y-auto pr-2 custom-scrollbar">
           {PLAYERS.filter(p => filterPos === 'TODOS' || p.pos === filterPos).map(p => (
             <div key={p.id} onClick={() => handleSelectPlayer(p)} className="cursor-pointer hover:brightness-125 transition active:scale-95">
               <PlayerCard player={p} size={80} />
@@ -272,27 +274,21 @@ export default function TigreFCEscalar() {
         </div>
       </section>
 
-      {/* CAMPO E AÇÕES */}
-      <section className="flex-[1.3] flex flex-col items-center">
-        <div className={`relative w-full max-w-[550px] aspect-[1/1.3] mb-8 transition-opacity ${specialMode ? 'opacity-80' : 'opacity-100'}`}>
+      {/* CAMPO E FLUXO FINAL */}
+      <section className="flex-[1.4] flex flex-col items-center">
+        <div className={`relative w-full max-w-[550px] aspect-[1/1.3] mb-8 transition-opacity ${specialMode ? 'opacity-50' : 'opacity-100'}`}>
           <CampoFifa />
           <div className="absolute inset-0 z-10 pointer-events-none">
             {FORMATION_433.map((slot) => {
               const player = lineup[slot.id];
-              const isChoiceTarget = specialMode && player;
               return (
-                <div key={slot.id} onClick={() => handleSlotClick(slot.id)}
-                  className={`absolute pointer-events-auto cursor-pointer transform -translate-x-1/2 -translate-y-1/2 transition-all
-                    ${isChoiceTarget ? 'animate-pulse-gold scale-125 z-50' : 'hover:scale-110'}`}
-                  style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-                >
+                <div key={slot.id} onClick={() => handleSlotClick(slot.id)} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
+                  className={`absolute pointer-events-auto cursor-pointer -translate-x-1/2 -translate-y-1/2 transition-all ${specialMode && player ? 'animate-pulse scale-125 z-50' : 'hover:scale-110'}`}>
                   {player ? (
-                    <PlayerCard player={player} size={65} isField isSelected={selectedSlot === slot.id} isCaptain={captainId === player.id} isHero={heroId === player.id} />
+                    <PlayerCard player={player} size={65} isField isCaptain={captainId === player.id} isHero={heroId === player.id} />
                   ) : (
-                    <div className={`w-12 h-16 rounded-lg border-2 border-dashed flex flex-col items-center justify-center 
-                      ${selectedSlot === slot.id ? 'border-yellow-500 bg-yellow-500/20' : 'border-white/10 bg-black/40'}`}>
+                    <div className={`w-12 h-16 rounded-lg border-2 border-dashed flex flex-col items-center justify-center ${selectedSlot === slot.id ? 'border-yellow-500 bg-yellow-500/20' : 'border-white/10 bg-black/40'}`}>
                       <span className="text-[10px] font-black text-zinc-600">{slot.pos}</span>
-                      <span className="text-zinc-700">+</span>
                     </div>
                   )}
                 </div>
@@ -301,48 +297,39 @@ export default function TigreFCEscalar() {
           </div>
         </div>
 
-        {/* ⚡ EXPERIÊNCIA EXTRAORDINÁRIA AQUI ⚡ */}
+        {/* FLUXO: SÓ APARECE QUANDO O TIME ESTÁ COMPLETO */}
         {isFullTeam && (
-          <CapitaoEHeroi 
-            onSelect={(mode) => setSpecialMode(mode)}
-            captainName={captainPlayer?.short}
-            heroName={heroPlayer?.short}
-          />
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full flex flex-col items-center">
+            
+            <CapitaoEHeroi 
+              onSelect={(mode) => setSpecialMode(mode)} 
+              captainName={captainPlayer?.short} 
+              heroName={heroPlayer?.short} 
+            />
+
+            {captainId && heroId && (
+              <PalpiteSection 
+                scoreTigre={scoreTigre} 
+                scoreAdversario={scoreAdversario} 
+                setScoreTigre={setScoreTigre} 
+                setScoreAdversario={setScoreAdversario}
+                isLocked={scoreLocked}
+                setIsLocked={setScoreLocked}
+              />
+            )}
+
+            <button disabled={!scoreLocked}
+              className={`w-full max-w-[400px] py-6 rounded-[2rem] font-[1000] italic uppercase tracking-widest mb-20 transition-all
+                ${scoreLocked ? 'bg-yellow-500 text-black shadow-[0_20px_50px_rgba(245,196,0,0.5)] scale-105' : 'bg-zinc-800 text-zinc-600 opacity-40 cursor-not-allowed'}`}>
+              Finalizar Escalação Extraordinária →
+            </button>
+          </motion.div>
         )}
-
-        {/* RESERVAS */}
-        <div className="w-full max-w-[500px] bg-zinc-900/60 rounded-[30px] p-5 border border-white/5 mb-8">
-          <div className="flex justify-center gap-3">
-            {RESERVA_SLOTS.map(resId => (
-              <div key={resId} onClick={() => handleSlotClick(resId)} className="cursor-pointer">
-                {lineup[resId] ? (
-                  <PlayerCard player={lineup[resId]!} size={50} isField />
-                ) : (
-                  <div className="w-10 h-14 rounded-lg border-2 border-dashed border-white/5 bg-black/20 flex items-center justify-center">
-                    <span className="text-[8px] font-black text-zinc-700">SUB</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <button disabled={!isFullTeam || !captainId || !heroId}
-          className={`w-full max-w-[350px] font-[1000] italic uppercase py-6 rounded-[2rem] transition-all
-            ${(isFullTeam && captainId && heroId) ? 'bg-yellow-500 text-black shadow-[0_20px_50px_rgba(245,196,0,0.4)]' : 'bg-zinc-800 text-zinc-600 opacity-40'}`}
-        >
-          Confirmar Escalação →
-        </button>
       </section>
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        @keyframes pulse-gold {
-          0%, 100% { filter: brightness(1); transform: translate(-50%, -50%) scale(1); }
-          50% { filter: brightness(1.4) drop-shadow(0 0 15px #f5c400); transform: translate(-50%, -50%) scale(1.1); }
-        }
-        .animate-pulse-gold { animation: pulse-gold 1.2s infinite ease-in-out; }
       `}</style>
     </div>
   );
