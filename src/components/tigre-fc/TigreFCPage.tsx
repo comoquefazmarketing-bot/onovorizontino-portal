@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useRef, use } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
+// IMPORTANTE: Use a instância centralizada para evitar o erro de múltiplas instâncias
+import { supabase as sb } from '@/lib/supabase'; 
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
 import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
-const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const SB_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // Interfaces
 interface Time {
@@ -33,7 +32,6 @@ interface UsuarioRanking {
 }
 
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
-  // Ajuste para Next.js 15: desempacotando a Promise de params
   const resolvedParams = use(params);
   
   const [mounted, setMounted] = useState(false);
@@ -47,7 +45,9 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   // Controle de montagem e Scroll inicial
   useEffect(() => {
     setMounted(true);
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
     
     const timer = setTimeout(() => {
       topRef.current?.focus();
@@ -56,25 +56,26 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     return () => clearTimeout(timer);
   }, []);
 
-  // Inicialização de Dados (Supabase + API)
+  // Inicialização de Dados
   useEffect(() => {
     if (!mounted) return;
-    const sb = createClient(SB_URL, SB_KEY);
 
     async function init() {
-      // 1. Pegar Sessão do Usuário
+      // 1. Pegar Sessão do Usuário de forma segura
       const { data: { session } } = await sb.auth.getSession();
-      if (session?.user) {
-        const { data: u } = await sb.from('tigre_fc_usuarios')
+      
+      if (session?.user?.id) {
+        const { data: u, error: uError } = await sb.from('tigre_fc_usuarios')
           .select('id')
           .eq('google_id', session.user.id)
           .maybeSingle();
-        if (u) setMeuId(u.id);
+        
+        if (u && !uError) setMeuId(u.id);
       }
 
       // 2. Carregar Jogo e Ranking
       try {
-        const [resJogo, { data: rankData }] = await Promise.all([
+        const [resJogo, resRank] = await Promise.all([
           fetch('/api/proximo-jogo').then(r => r.json()),
           sb.from('tigre_fc_usuarios')
             .select('id, nome, apelido, avatar_url, pontos_total')
@@ -82,10 +83,10 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             .limit(10)
         ]);
         
-        if (resJogo.jogos?.[0]) setJogo(resJogo.jogos[0]);
-        if (rankData) setRanking(rankData as UsuarioRanking[]);
+        if (resJogo?.jogos?.[0]) setJogo(resJogo.jogos[0]);
+        if (resRank.data) setRanking(resRank.data as UsuarioRanking[]);
       } catch (e) {
-        console.error("Erro ao carregar dados:", e);
+        console.error("Erro ao carregar dados do Tigre FC:", e);
       }
     }
     init();
@@ -93,7 +94,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   // Timer do Jogo
   useEffect(() => {
-    if (!jogo) return;
+    if (!jogo?.data_hora) return;
     
     const calculateTime = () => {
       const gameTime = new Date(jogo.data_hora.replace(' ', 'T')).getTime();
@@ -311,12 +312,11 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </section>
       </div>
 
-      {/* MODAL DE PERFIL - AJUSTADO PARA usuarioId */}
+      {/* MODAL DE PERFIL - CORRIGIDO */}
       {perfilAberto && (
         <TigreFCPerfilPublico 
-          usuarioId={perfilAberto} 
-          jogoId={jogo?.id || 0} 
-          meuId={meuId} 
+          targetUsuarioId={perfilAberto} 
+          viewerUsuarioId={meuId} 
           onClose={() => setPerfilAberto(null)} 
         />
       )}
