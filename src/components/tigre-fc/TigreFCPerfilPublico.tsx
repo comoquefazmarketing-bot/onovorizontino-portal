@@ -100,6 +100,9 @@ export default function TigreFCPerfilPublico({ targetUsuarioId, viewerUsuarioId 
   const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);                                          // ← adicione essa linha
+
+const [dados, setDados] = useState<any>(null);
 
   const [dados, setDados]         = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
