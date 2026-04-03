@@ -120,15 +120,11 @@ function MiniPlayerCard({ player, isCaptain, isHero }: { player: Player; isCapta
 }
 
 // --- Interface de Props ---
-// Aceita tanto a forma nova (usuarioId/meuId/onClose) quanto a legada (targetUsuarioId/viewerUsuarioId)
-// para não quebrar nenhum uso existente no projeto
 interface PerfilPublicoProps {
-  // Forma nova — usada pelo TigreFCPage.tsx
   usuarioId?: string;
   meuId?: string | null;
   jogoId?: number;
   onClose?: () => void;
-  // Forma legada — mantida para compatibilidade
   targetUsuarioId?: string;
   viewerUsuarioId?: string | null;
 }
@@ -142,18 +138,18 @@ export default function TigreFCPerfilPublico({
   viewerUsuarioId,
 }: PerfilPublicoProps) {
 
-  // Resolve qual prop usar — suporta os dois formatos transparentemente
-  const resolvedTargetId = usuarioId ?? targetUsuarioId ?? targetUserId ?? '';
-  const resolvedViewerId = meuId     ?? viewerUsuarioId ?? null;
+  // RESOLVIDO: Removida a variável targetUserId inexistente para consertar o build
+  const resolvedTargetId = usuarioId ?? targetUsuarioId ?? '';
+  const resolvedViewerId = meuId      ?? viewerUsuarioId ?? null;
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const [dados, setDados]               = useState<any>(null);
-  const [isLoading, setIsLoading]       = useState(true);
-  const [corneta, setCorneta]           = useState<string | null>(null);
+  const [dados, setDados]                = useState<any>(null);
+  const [isLoading, setIsLoading]        = useState(true);
+  const [corneta, setCorneta]            = useState<string | null>(null);
   const [cornetaCount, setCornetaCount] = useState(0);
 
   const isSelfView = !!resolvedViewerId && resolvedViewerId === resolvedTargetId;
@@ -198,7 +194,6 @@ export default function TigreFCPerfilPublico({
     });
   }, []);
 
-  // --- Loading ---
   if (isLoading) return (
     <div className="flex items-center justify-center h-96 bg-black rounded-[2rem] border border-zinc-900">
       <div className="flex flex-col items-center gap-3">
@@ -208,7 +203,6 @@ export default function TigreFCPerfilPublico({
     </div>
   );
 
-  // --- Sem escalação ---
   if (!dados) return (
     <div className="flex flex-col items-center justify-center h-64 bg-zinc-950 rounded-[2rem] border border-zinc-900 p-8 text-center gap-3">
       <span className="text-4xl">⚽</span>
@@ -233,7 +227,6 @@ export default function TigreFCPerfilPublico({
   return (
     <div className="relative bg-black rounded-[2rem] border border-zinc-800 overflow-hidden shadow-2xl">
 
-      {/* Botão de fechar */}
       {onClose && (
         <button
           onClick={onClose}
@@ -243,7 +236,6 @@ export default function TigreFCPerfilPublico({
         </button>
       )}
 
-      {/* HEADER FIFA STYLE */}
       <div className="p-6 border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-black flex items-center gap-4">
         <div className="relative shrink-0">
           <img
@@ -288,14 +280,11 @@ export default function TigreFCPerfilPublico({
         )}
       </div>
 
-      {/* CAMPO VIRTUAL */}
       <div className="p-4">
         <div className="relative w-full aspect-[1/1.2] rounded-3xl overflow-hidden bg-[#1e5c1e] border-2 border-white/5 shadow-inner">
-          {/* Textura gramado */}
           <div className="absolute inset-0 opacity-20 bg-repeat"
             style={{ backgroundImage: `url('https://www.transparenttextures.com/patterns/dark-dotted-2.png')` }} />
 
-          {/* Faixas alternadas */}
           {[...Array(6)].map((_, i) => (
             <div key={i}
               className={`absolute w-full ${i % 2 === 0 ? 'bg-[#246b24]/60' : ''}`}
@@ -303,12 +292,10 @@ export default function TigreFCPerfilPublico({
             />
           ))}
 
-          {/* Linhas do campo */}
           <div className="absolute inset-4 border border-white/20 rounded" />
           <div className="absolute top-1/2 left-4 right-4 h-px bg-white/20" />
           <div className="absolute top-1/2 left-1/2 w-20 h-20 border border-white/20 rounded-full -translate-x-1/2 -translate-y-1/2" />
 
-          {/* Iluminação de estádio */}
           <div className="absolute inset-0 pointer-events-none" style={{
             background: `
               radial-gradient(circle at 15% 10%, rgba(255,253,200,0.1) 0%, transparent 50%),
@@ -316,7 +303,6 @@ export default function TigreFCPerfilPublico({
             `,
           }} />
 
-          {/* Jogadores */}
           {slots.map(slot => (
             <div
               key={slot.id}
@@ -339,7 +325,6 @@ export default function TigreFCPerfilPublico({
         </div>
       </div>
 
-      {/* BOTÃO CORNETA — só para outros usuários */}
       {!isSelfView && (
         <div className="px-4 pb-6">
           <button
@@ -364,7 +349,6 @@ export default function TigreFCPerfilPublico({
         </div>
       )}
 
-      {/* Branding */}
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 opacity-20 pointer-events-none">
         <img src={PATA_LOGO} className="w-3 h-3 grayscale" alt="" />
         <span className="text-[8px] font-black uppercase tracking-tighter">Tigre FC</span>
