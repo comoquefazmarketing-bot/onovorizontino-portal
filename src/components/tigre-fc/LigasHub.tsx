@@ -13,7 +13,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
   useLigas,
@@ -31,10 +31,18 @@ const TIGRE_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/p
 
 // ─── Animação padrão de entrada ───────────────────────────────────────────────
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden:  { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
-  exit:    { opacity: 0, y: -8, transition: { duration: 0.2 } },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.35, ease: 'easeOut' } 
+  },
+  exit: { 
+    opacity: 0, 
+    y: -8, 
+    transition: { duration: 0.2 } 
+  },
 };
 
 // ─── XP Progress Bar ──────────────────────────────────────────────────────────
