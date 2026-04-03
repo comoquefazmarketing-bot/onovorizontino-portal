@@ -324,7 +324,9 @@ export function useEscalacao(jogoIdOrRef?: number | string | null, jogoRefArg?: 
     setFormacao,
     setPlayerInSlot,
     setCaptain,
+    setCaptainId: setCaptain,   // alias — retrocompatível com page.tsx
     setHero,
+    setHeroId: setHero,         // alias — retrocompatível com page.tsx
     setScore,
     lockScore,
     resetLineup,
