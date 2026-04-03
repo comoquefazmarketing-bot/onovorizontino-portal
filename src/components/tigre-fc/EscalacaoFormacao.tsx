@@ -83,7 +83,7 @@ function PlayerPhoto({foto,pose,cW,cH,radius=0}:{foto:string;pose:'static'|'cele
   );
 }
 
-// ── CARD VERTICAL PREMIUM NO CAMPO (AJUSTADO) ─────────────────────────────────
+// ── CARD VERTICAL NO CAMPO (SEM NÚMERO NO ROSTO + CABEÇA VISÍVEL) ─────────────
 function VerticalFieldCard({player,isCaptain,isHero,pulsing,active,onClick}:{
   player:Player;isCaptain:boolean;isHero:boolean;pulsing:boolean;active?:boolean;onClick:()=>void;
 }) {
@@ -134,7 +134,7 @@ function VerticalFieldCard({player,isCaptain,isHero,pulsing,active,onClick}:{
         </motion.div>
       )}
 
-      <div style={{position:'relative',width:'100%',height:'78%',overflow:'hidden'}}>
+      <div style={{position:'relative', width:'100%', height:'78%', overflow:'hidden'}}>
         <img
           src={player.foto}
           alt={player.short}
@@ -174,7 +174,7 @@ function VerticalFieldCard({player,isCaptain,isHero,pulsing,active,onClick}:{
   );
 }
 
-// ── SLOT VAZIO VERTICAL ───────────────────────────────────────────────────────
+// ── SLOT VAZIO ────────────────────────────────────────────────────────────────
 function EmptyVerticalSlot({pos,active,onClick}:{pos:string;active:boolean;onClick:()=>void}) {
   const col = POS_COLORS[pos] ?? '#888';
   return (
@@ -201,6 +201,7 @@ function EmptyVerticalSlot({pos,active,onClick}:{pos:string;active:boolean;onCli
 function StadiumBg() {
   return (
     <div style={{position:'absolute',inset:0,overflow:'hidden',background:'linear-gradient(180deg,#010508 0%,#03100a 55%,#06180a 100%)'}}>
+      {/* ... seu código original completo do StadiumBg ... */}
       <div style={{position:'absolute',bottom:0,left:0,right:0,height:'55%',background:'radial-gradient(ellipse 100% 70% at 50% 100%,rgba(16,80,16,0.4) 0%,transparent 70%)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',top:0,left:'8%',right:'8%',height:'42%',background:'linear-gradient(180deg,#040804 0%,#0a120a 60%,transparent 100%)',clipPath:'ellipse(55% 100% at 50% 0%)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',top:0,left:'8%',right:'8%',height:'36%',backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 4px,rgba(12,22,12,0.5) 4px,rgba(12,22,12,0.5) 5px)',opacity:0.8,clipPath:'ellipse(53% 100% at 50% 0%)',pointerEvents:'none'}}/>
@@ -313,7 +314,7 @@ function BenchArea({lineup,selectedSlot,onSlotClick}:{lineup:Lineup;selectedSlot
   );
 }
 
-// ── MERCADO (AJUSTADO - 2 COLUNAS + SEM NÚMERO) ─────────────────────────────
+// ── MERCADO (2 COLUNAS + SEM NÚMERO) ─────────────────────────────────────────
 function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,selectedSlot,step,selectedPlayer}:{
   lineup:Lineup;filterPos:string;setFilterPos:(p:string)=>void;
   onSelect:(p:Player)=>void;selectedSlot:string|null;step:Step;selectedPlayer:Player|null;
@@ -396,7 +397,7 @@ function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,selectedSlot,step,
   );
 }
 
-// ── HUD (CORRIGIDO - AGORA RETORNA JSX) ─────────────────────────────────────
+// ── HUD (CORRIGIDO) ───────────────────────────────────────────────────────────
 function HUD({step,filled,benchFilled}:{step:Step;filled:number;benchFilled:number}) {
   const steps=[{id:'picking',label:'Time',num:1},{id:'bench',label:'Banco',num:2},{id:'captain_hero',label:'Líder',num:3},{id:'score',label:'Placar',num:4},{id:'share',label:'Share',num:5}];
   const ci=steps.findIndex(s=>s.id===step);
@@ -429,12 +430,260 @@ function HUD({step,filled,benchFilled}:{step:Step;filled:number;benchFilled:numb
   );
 }
 
-// ── CAPITÃO & HERÓI, PLACAR LED, SHARE ───────────────────────────────────────
-// (mantidos exatamente como no seu código original)
+// ── CAPITÃO & HERÓI (CORRIGIDO) ───────────────────────────────────────────────
+function CaptainHeroScreen({onSelectMode,captainId,heroId,onDone}:{
+  onSelectMode:(m:SpecialMode)=>void;captainId:number|null;heroId:number|null;onDone:()=>void;
+}) {
+  const cap=captainId?PLAYERS.find(p=>p.id===captainId):null;
+  const hero=heroId?PLAYERS.find(p=>p.id===heroId):null;
 
-function CaptainHeroScreen({onSelectMode,captainId,heroId,onDone}:any) { /* seu código original */ }
-function LEDScoreboard({scoreTigre,setScoreTigre,scoreAdv,setScoreAdv,onConfirm}:any) { /* seu código original */ }
-function ShareScreen({lineup,captainId,heroId,scoreTigre,scoreAdv}:any) { /* seu código original */ }
+  return (
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      style={{position:'fixed',inset:0,zIndex:100,background:'linear-gradient(180deg,#000 0%,#060200 50%,#000 100%)',
+        display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:22}}>
+      <div style={{position:'absolute',inset:0,overflow:'hidden',pointerEvents:'none'}}>
+        {Array.from({length:50}).map((_,i)=>(
+          <motion.div key={i} style={{position:'absolute',width:1.5,height:1.5,borderRadius:'50%',background:'white',
+            left:`${Math.random()*100}%`,top:`${Math.random()*100}%`,opacity:0}}
+            animate={{opacity:[0,0.9,0],scale:[0,1.2,0]}}
+            transition={{duration:Math.random()*3+1,delay:Math.random()*5,repeat:Infinity}}/>
+        ))}
+      </div>
+      <motion.div initial={{y:-28,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:0.2}}
+        style={{textAlign:'center',marginBottom:28,zIndex:1}}>
+        <div style={{fontSize:8,fontWeight:900,color:'#F5C400',letterSpacing:6,textTransform:'uppercase',marginBottom:8}}>ESCOLHA OS LÍDERES</div>
+        <h2 style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:34,fontWeight:900,color:'#fff',textTransform:'uppercase',letterSpacing:-1,lineHeight:1,margin:'0 0 6px'}}>
+          CAPITÃO<br/><span style={{color:'#F5C400'}}>&amp; HERÓI</span>
+        </h2>
+        <p style={{fontSize:11,color:'#444',fontWeight:600,margin:0}}>Toque no botão, depois no jogador no campo</p>
+      </motion.div>
+      {[{label:'CAPITÃO',done:cap,doneLabel:cap?.short,delay:0.3,col:'#F5C400',icon:'©',desc:'Pontos dobrados',mode:'CAPTAIN' as SpecialMode},
+        {label:'HERÓI',done:hero,doneLabel:hero?.short,delay:0.5,col:'#00F3FF',icon:'⭐',desc:'+10 pts se acertar',mode:'HERO' as SpecialMode}
+      ].map((b,i)=>(
+        <motion.div key={i} initial={{y:-160,opacity:0}} animate={{y:0,opacity:1}}
+          transition={{type:'spring',stiffness:175,damping:16,delay:b.delay}}
+          style={{position:'relative',zIndex:1,width:'100%',maxWidth:320,marginBottom:14}}>
+          {!b.done&&['-44px','-30px','-16px'].map((t,j)=>(
+            <motion.div key={j} animate={{opacity:[0.7,0],scaleY:[1,0.2]}}
+              transition={{duration:0.9,delay:b.delay+j*0.04,repeat:Infinity,repeatDelay:2.2}}
+              style={{position:'absolute',top:t,left:'50%',transform:'translateX(-50%)',width:3,height:18,borderRadius:2,
+                background:`linear-gradient(180deg,transparent,${b.col}${Math.round((0.7-j*0.2)*255).toString(16)})`}}/>
+          ))}
+          <motion.button onClick={()=>onSelectMode(b.mode)} whileTap={{scale:0.95}}
+            animate={!b.done?{boxShadow:[`0 0 14px ${b.col}40`,`0 0 38px ${b.col}90`,`0 0 14px ${b.col}40`]}:{}}
+            transition={{duration:1.6,repeat:Infinity}}
+            style={{width:'100%',padding:'16px',borderRadius:18,
+              background:b.done?`${b.col}18`:`linear-gradient(135deg,${b.col},${b.col}cc)`,
+              border:b.done?`2px solid ${b.col}`:'none',
+              color:b.done?b.col:'#000',fontSize:13,fontWeight:900,
+              textTransform:'uppercase',letterSpacing:2,cursor:'pointer',
+              display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+            <span style={{fontSize:20}}>{b.icon}</span>
+            {b.done?`✓ ${b.label}: ${b.doneLabel}`:`ESCOLHER ${b.label}`}
+          </motion.button>
+          <div style={{textAlign:'center',fontSize:8,color:'#333',marginTop:4}}>{b.desc}</div>
+        </motion.div>
+      ))}
+      <AnimatePresence>
+        {captainId&&heroId&&(
+          <motion.div initial={{opacity:0,scale:0.85}} animate={{opacity:1,scale:1}} style={{width:'100%',maxWidth:320,zIndex:1,marginTop:8}}>
+            <button onClick={onDone} style={{width:'100%',padding:'16px',borderRadius:18,
+              background:'linear-gradient(135deg,#22C55E,#16A34A)',border:'none',color:'#fff',
+              fontSize:13,fontWeight:900,textTransform:'uppercase',letterSpacing:2,cursor:'pointer',
+              boxShadow:'0 8px 24px rgba(34,197,94,0.4)'}}>
+              PRÓXIMO → CRAVAR PALPITE
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ── PLACAR LED ────────────────────────────────────────────────────────────────
+function LEDScoreboard({scoreTigre,setScoreTigre,scoreAdv,setScoreAdv,onConfirm}:{
+  scoreTigre:number;setScoreTigre:(n:number)=>void;scoreAdv:number;setScoreAdv:(n:number)=>void;onConfirm:()=>void;
+}) {
+  return (
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      style={{position:'fixed',inset:0,zIndex:100,background:'#000',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:20}}>
+      <div style={{position:'absolute',top:0,left:0,right:0,height:'45%',background:'radial-gradient(ellipse at 50% 0%,rgba(245,196,0,0.07) 0%,transparent 70%)',pointerEvents:'none'}}/>
+      <motion.div initial={{y:-18,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:0.1}} style={{textAlign:'center',marginBottom:26}}>
+        <div style={{fontSize:8,fontWeight:900,color:'#F5C400',letterSpacing:5,textTransform:'uppercase',marginBottom:5}}>QUAL SERÁ O PLACAR?</div>
+        <h2 style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:30,fontWeight:900,color:'#fff',textTransform:'uppercase',letterSpacing:-1,lineHeight:1,margin:0}}>CRAVE O RESULTADO</h2>
+      </motion.div>
+      <motion.div initial={{scale:0.85,opacity:0}} animate={{scale:1,opacity:1}} transition={{delay:0.2,type:'spring',stiffness:200}}
+        style={{width:'100%',maxWidth:360,marginBottom:26}}>
+        <div style={{background:'linear-gradient(145deg,#150900,#211100)',border:'2px solid rgba(245,196,0,0.3)',
+          borderRadius:20,padding:'18px 14px',boxShadow:'0 0 40px rgba(245,196,0,0.12),inset 0 0 20px rgba(0,0,0,0.5)'}}>
+          <div style={{display:'flex',justifyContent:'center',gap:3,marginBottom:14}}>
+            {Array.from({length:14}).map((_,i)=>(
+              <motion.div key={i} animate={{opacity:[0.25,1,0.25]}} transition={{duration:0.7,delay:i*0.05,repeat:Infinity}}
+                style={{width:5,height:5,borderRadius:1,background:'#F5C400'}}/>
+            ))}
+          </div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+            <div style={{flex:1,textAlign:'center'}}>
+              <img src={ESCUDO} style={{width:42,height:42,objectFit:'contain',filter:'drop-shadow(0 0 8px rgba(245,196,0,0.5))',margin:'0 auto 5px',display:'block'}}/>
+              <div style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:10,fontWeight:900,color:'#F5C400',textTransform:'uppercase'}}>NOVO</div>
+            </div>
+            <div style={{display:'flex',gap:10}}>
+              {[{val:scoreTigre,set:setScoreTigre,col:'#F5C400'},{val:scoreAdv,set:setScoreAdv,col:'#666'}].map((s,i)=>(
+                <React.Fragment key={i}>
+                  {i===1&&<div style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:18,fontWeight:900,color:'rgba(245,196,0,0.2)',fontStyle:'italic',alignSelf:'center'}}>×</div>}
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5}}>
+                    <button onClick={()=>s.set(Math.min(9,s.val+1))} style={{width:30,height:30,borderRadius:8,background:`${s.col}12`,border:`1px solid ${s.col}30`,color:s.col,fontSize:16,fontWeight:900,cursor:'pointer'}}>+</button>
+                    <div style={{fontFamily:"'Courier New',monospace",fontSize:50,fontWeight:900,color:s.col,textShadow:`0 0 26px ${s.col}cc`,lineHeight:1,background:'rgba(0,0,0,0.8)',borderRadius:8,padding:'3px 10px',border:`1px solid ${s.col}18`}}>{s.val}</div>
+                    <button onClick={()=>s.set(Math.max(0,s.val-1))} style={{width:30,height:30,borderRadius:8,background:`${s.col}06`,border:`1px solid ${s.col}15`,color:'#333',fontSize:16,fontWeight:900,cursor:'pointer'}}>−</button>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+            <div style={{flex:1,textAlign:'center'}}>
+              <div style={{width:42,height:42,margin:'0 auto 5px',background:'rgba(255,255,255,0.04)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{fontSize:24}}>⚽</span></div>
+              <div style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:10,fontWeight:900,color:'#333',textTransform:'uppercase'}}>ADV</div>
+            </div>
+          </div>
+          <div style={{display:'flex',justifyContent:'center',gap:3,marginTop:14}}>
+            {Array.from({length:14}).map((_,i)=>(
+              <motion.div key={i} animate={{opacity:[0.25,1,0.25]}} transition={{duration:0.7,delay:(13-i)*0.05,repeat:Infinity}}
+                style={{width:5,height:5,borderRadius:1,background:'#F5C400'}}/>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+      <motion.button initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{delay:0.32}} onClick={onConfirm} whileTap={{scale:0.96}}
+        style={{width:'100%',maxWidth:360,padding:'15px',borderRadius:18,background:'linear-gradient(135deg,#F5C400,#D4A200)',border:'none',color:'#000',fontSize:13,fontWeight:900,textTransform:'uppercase',letterSpacing:2,cursor:'pointer',boxShadow:'0 8px 28px rgba(245,196,0,0.35)'}}>
+        🎯 CRAVAR PALPITE → VER MEU TIME
+      </motion.button>
+    </motion.div>
+  );
+}
+
+// ── SHARE ─────────────────────────────────────────────────────────────────────
+function ShareScreen({lineup,captainId,heroId,scoreTigre,scoreAdv}:{
+  lineup:Lineup;captainId:number|null;heroId:number|null;scoreTigre:number;scoreAdv:number;
+}) {
+  const [copied,setCopied]=useState(false);
+  const [dl,setDl]=useState(false);
+  const cap=captainId?PLAYERS.find(p=>p.id===captainId):null;
+  const hero=heroId?PLAYERS.find(p=>p.id===heroId):null;
+  const rows=[
+    SLOTS.filter(s=>s.pos==='ATA').map(s=>lineup[s.id]).filter(Boolean) as Player[],
+    SLOTS.filter(s=>s.pos==='MEI').map(s=>lineup[s.id]).filter(Boolean) as Player[],
+    SLOTS.filter(s=>s.pos==='ZAG'||s.pos==='LAT').map(s=>lineup[s.id]).filter(Boolean) as Player[],
+    SLOTS.filter(s=>s.pos==='GOL').map(s=>lineup[s.id]).filter(Boolean) as Player[],
+  ].filter(r=>r.length>0);
+  const shareText=encodeURIComponent(`🐯 Escalei meu time no Tigre FC!\n\nPalpite: Novorizontino ${scoreTigre} × ${scoreAdv}\n\nVocê consegue fazer melhor?\nonovorizontino.com.br/tigre-fc`);
+  const handleDl=async()=>{
+    setDl(true);
+    try{
+      const {default:h2c}=await import('html2canvas');
+      const el=document.getElementById('tfc-share-card');
+      if(!el)return;
+      const canvas=await h2c(el,{scale:2,backgroundColor:null,useCORS:true,allowTaint:true});
+      canvas.toBlob(async blob=>{
+        if(!blob)return;
+        const file=new File([blob],'tigre-fc-meu-time.png',{type:'image/png'});
+        if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({title:'Meu time!',text:'🐯',files:[file]});}
+        else{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='tigre-fc-meu-time.png';a.click();URL.revokeObjectURL(url);}
+      });
+    }catch{}
+    setDl(false);
+  };
+  const BTNS=[{l:'WhatsApp',c:'#25D366',h:`https://wa.me/?text=${shareText}`,i:'💬'},{l:'Instagram',c:'#E1306C',h:'https://instagram.com',i:'📸'},{l:'Facebook',c:'#1877F2',h:`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://onovorizontino.com.br/tigre-fc')}`,i:'👥'},{l:'Twitter',c:'#1DA1F2',h:`https://twitter.com/intent/tweet?text=${shareText}`,i:'🐦'}];
+  return (
+    <div style={{padding:'14px 14px 50px',minHeight:'100vh',background:'#050505'}}>
+      <motion.div initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} style={{textAlign:'center',marginBottom:14}}>
+        <div style={{fontSize:8,fontWeight:900,color:'#F5C400',letterSpacing:5,textTransform:'uppercase',marginBottom:4}}>TIME CONFIRMADO!</div>
+        <h2 style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:24,fontWeight:900,color:'#fff',textTransform:'uppercase',letterSpacing:-0.5,margin:0}}>
+          SALVE &amp; DESAFIE<br/><span style={{color:'#F5C400'}}>A GALERA 🐯</span>
+        </h2>
+      </motion.div>
+      <motion.div initial={{opacity:0,scale:0.94}} animate={{opacity:1,scale:1}} transition={{delay:0.1}}>
+        <div id="tfc-share-card" style={{width:'100%',maxWidth:360,margin:'0 auto',
+          background:'linear-gradient(160deg,#0a0900 0%,#141200 40%,#0a1200 70%,#050505 100%)',
+          borderRadius:22,overflow:'hidden',border:'1px solid rgba(245,196,0,0.28)',
+          boxShadow:'0 0 50px rgba(245,196,0,0.12)',fontFamily:"'Barlow Condensed',Impact,sans-serif"}}>
+          <div style={{height:3,background:'linear-gradient(90deg,#B8900A,#F5C400,#B8900A)'}}/>
+          <div style={{padding:'12px 16px 9px',display:'flex',alignItems:'center',gap:10,
+            borderBottom:'1px solid rgba(245,196,0,0.1)',background:'linear-gradient(90deg,rgba(245,196,0,0.07),transparent)'}}>
+            <img src={ESCUDO} style={{width:40,height:40,objectFit:'contain',filter:'drop-shadow(0 0 8px rgba(245,196,0,0.5))'}}/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:6.5,fontWeight:900,color:'#F5C400',letterSpacing:4,textTransform:'uppercase'}}>TIGRE FC · FANTASY LEAGUE</div>
+              <div style={{fontSize:18,fontWeight:900,color:'#fff',textTransform:'uppercase',letterSpacing:-0.5,lineHeight:1.1}}>
+                MEU TIME ESTÁ<br/><span style={{color:'#F5C400'}}>ESCALADO! 🐯</span>
+              </div>
+            </div>
+          </div>
+          <div style={{padding:'10px 14px',background:'rgba(0,0,0,0.25)'}}>
+            <div style={{display:'flex',flexDirection:'column',gap:7,alignItems:'center'}}>
+              {rows.map((row,ri)=>(
+                <div key={ri} style={{display:'flex',gap:5,justifyContent:'center'}}>
+                  {row.map(player=>{
+                    const isCap=player.id===captainId,isHero=player.id===heroId;
+                    const col=isCap?'#F5C400':isHero?'#00F3FF':(POS_COLORS[player.pos]??'#555');
+                    return (
+                      <div key={player.id} style={{textAlign:'center',position:'relative'}}>
+                        {(isCap||isHero)&&<div style={{position:'absolute',top:-5,right:-3,background:col,color:'#000',fontSize:5.5,fontWeight:900,padding:'1px 3px',borderRadius:3,zIndex:2,lineHeight:1}}>{isCap?'C':'⭐'}</div>}
+                        <div style={{width:34,height:40,borderRadius:7,overflow:'hidden',border:`1.5px solid ${col}`,boxShadow:`0 0 8px ${col}60`}}>
+                          <img src={player.foto} alt={player.short} onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
+                            style={{height:'130%',width:'auto',objectFit:'cover',position:'relative',right:0,top:0,objectPosition:'right center',transformOrigin:'right center'}}/>
+                        </div>
+                        <div style={{marginTop:1,fontSize:5.5,color:'#666',fontWeight:700,textTransform:'uppercase',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',width:34}}>{player.short}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{display:'flex',borderTop:'1px solid rgba(245,196,0,0.08)',borderBottom:'1px solid rgba(245,196,0,0.08)'}}>
+            {[{label:'Capitão',value:cap?.short??'—',icon:'©'},{label:'Herói',value:hero?.short??'—',icon:'⭐'},{label:'Palpite',value:`${scoreTigre}×${scoreAdv}`,icon:'🎯'}].map(item=>(
+              <div key={item.label} style={{flex:1,textAlign:'center',padding:'8px 3px',borderRight:'1px solid rgba(245,196,0,0.07)'}}>
+                <div style={{fontSize:13,marginBottom:1}}>{item.icon}</div>
+                <div style={{fontSize:11,fontWeight:900,color:'#F5C400',lineHeight:1}}>{item.value}</div>
+                <div style={{fontSize:5.5,color:'#2a2a2a',fontWeight:700,textTransform:'uppercase',letterSpacing:1,marginTop:1}}>{item.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{padding:'10px 16px',textAlign:'center'}}>
+            <div style={{fontSize:13,fontWeight:900,color:'#fff',textTransform:'uppercase',lineHeight:1.2,marginBottom:4}}>VOCÊ CONSEGUE<br/><span style={{color:'#F5C400'}}>FAZER MELHOR?</span></div>
+            <div style={{fontSize:8,color:'#2a2a2a',fontWeight:600}}>onovorizontino.com.br/tigre-fc</div>
+            <div style={{fontSize:7,color:'#141414',fontWeight:700,letterSpacing:2,textTransform:'uppercase',marginTop:1}}>Série B 2026 · #TigreFC</div>
+          </div>
+          <div style={{height:3,background:'linear-gradient(90deg,#B8900A,#F5C400,#B8900A)'}}/>
+        </div>
+      </motion.div>
+      <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:0.18}} style={{marginTop:12}}>
+        <motion.button onClick={handleDl} whileTap={{scale:0.96}}
+          style={{width:'100%',maxWidth:360,margin:'0 auto 9px',display:'block',padding:'14px',borderRadius:16,
+            background:'linear-gradient(135deg,#F5C400,#D4A200)',border:'none',color:'#000',fontSize:12,fontWeight:900,
+            textTransform:'uppercase',letterSpacing:1.5,cursor:'pointer',boxShadow:'0 8px 24px rgba(245,196,0,0.3)'}}>
+          {dl?'⏳ Gerando...':'📥 SALVAR & COMPARTILHAR CARD'}
+        </motion.button>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:7,maxWidth:360,margin:'0 auto 7px'}}>
+          {BTNS.map(b=>(
+            <motion.a key={b.l} href={b.h} target="_blank" rel="noreferrer" whileTap={{scale:0.91}}
+              style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,padding:'9px 3px',
+                borderRadius:12,background:`${b.c}12`,border:`1px solid ${b.c}35`,textDecoration:'none',cursor:'pointer'}}>
+              <span style={{fontSize:16}}>{b.i}</span>
+              <span style={{fontSize:6.5,fontWeight:900,color:b.c,textTransform:'uppercase',letterSpacing:0.5}}>{b.l}</span>
+            </motion.a>
+          ))}
+        </div>
+        <motion.button onClick={async()=>{await navigator.clipboard.writeText('https://onovorizontino.com.br/tigre-fc');setCopied(true);setTimeout(()=>setCopied(false),2500);}}
+          whileTap={{scale:0.96}}
+          style={{width:'100%',maxWidth:360,margin:'0 auto',display:'block',padding:'10px',borderRadius:12,
+            background:copied?'rgba(34,197,94,0.1)':'rgba(255,255,255,0.04)',
+            border:`1px solid ${copied?'rgba(34,197,94,0.4)':'rgba(255,255,255,0.07)'}`,
+            color:copied?'#22C55E':'#333',fontSize:10,fontWeight:900,textTransform:'uppercase',letterSpacing:1,cursor:'pointer'}}>
+          {copied?'✓ Link copiado!':'🔗 Copiar link'}
+        </motion.button>
+      </motion.div>
+    </div>
+  );
+}
 
 // ── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────────
 export default function EscalacaoFormacao() {
@@ -455,7 +704,98 @@ export default function EscalacaoFormacao() {
   const fieldCount=useMemo(()=>SLOTS.filter(s=>!!lineup[s.id]).length,[lineup]);
   const benchCount=useMemo(()=>BENCH_IDS.filter(id=>!!lineup[id]).length,[lineup]);
 
-  // ... resto da sua lógica (useEffect, salvarEscalacao, handleSlotClick, handleSelectPlayer, etc.) ...
+  // Carregar escalação salva
+  useEffect(() => {
+    const carregarEscalacao = async () => {
+      if (!usuarioId || !jogoId) return;
+      const { data, error } = await supabase
+        .from('escalacoes_usuarios')
+        .select('*')
+        .eq('usuario_id', usuarioId)
+        .eq('jogo_id', jogoId)
+        .single();
+      if (error && error.code !== 'PGRST116') return;
+      if (data) {
+        setLineup(data.lineup || {});
+        setCaptainId(data.capitao_id);
+        setHeroId(data.heroi_id);
+        setScoreTigre(data.placar_palpite_tigre ?? 1);
+        setScoreAdv(data.placar_palpite_adv ?? 0);
+        const nf = SLOTS.filter(s => !!data.lineup?.[s.id]).length;
+        if (nf === 11) setStep('bench');
+      }
+    };
+    carregarEscalacao();
+  }, [usuarioId, jogoId]);
+
+  const salvarEscalacao = useCallback(async () => {
+    if (!usuarioId || !jogoId) return;
+    const { error } = await supabase
+      .from('escalacoes_usuarios')
+      .upsert({
+        usuario_id: usuarioId,
+        jogo_id: jogoId,
+        formacao: '4-3-3',
+        lineup: lineup,
+        capitao_id: captainId,
+        heroi_id: heroId,
+        placar_palpite_tigre: scoreTigre,
+        placar_palpite_adv: scoreAdv,
+      }, { onConflict: 'usuario_id,jogo_id' });
+    if (error) console.error('Erro ao salvar:', error);
+    else confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+  }, [usuarioId, jogoId, lineup, captainId, heroId, scoreTigre, scoreAdv]);
+
+  const handleScoreConfirm = useCallback(() => {
+    confetti({particleCount:160,spread:90,origin:{y:0.6},colors:['#F5C400','#22C55E','#fff']});
+    salvarEscalacao();
+    setStep('share');
+  }, [salvarEscalacao]);
+
+  const handleCaptainHeroDone=useCallback(()=>{confetti({particleCount:200,spread:100,origin:{y:0.5},colors:['#F5C400','#00F3FF','#fff','#EF4444']});setStep('score');},[]);
+
+  const isGameField=step==='picking'||step==='bench';
+
+  const handleSlotClick=useCallback((slotId:string)=>{
+    if(step==='captain_hero'&&specialMode){
+      const player=lineup[slotId];
+      if(!player)return;
+      if(specialMode==='CAPTAIN'){setCaptainId(player.id);setSpecialMode(null);}
+      else{setHeroId(player.id);setSpecialMode(null);}
+      return;
+    }
+    if(selectedPlayer){
+      const newLineup:Lineup={...lineup};
+      Object.keys(newLineup).forEach(k=>{if(newLineup[k]?.id===selectedPlayer.id)newLineup[k]=null;});
+      newLineup[slotId]=selectedPlayer;
+      setLineup(newLineup);
+      setSelectedPlayer(null);
+      setSelectedSlot(null);
+      const nf=SLOTS.filter(s=>!!newLineup[s.id]).length;
+      const nb=BENCH_IDS.filter(id=>!!newLineup[id]).length;
+      if(step==='picking'&&nf===11){setTimeout(()=>{confetti({particleCount:80,spread:60,origin:{y:0.5},colors:['#F5C400','#fff','#22C55E']});setStep('bench');},350);}
+      else if(step==='bench'&&nb===5){setTimeout(()=>{confetti({particleCount:130,spread:80,origin:{y:0.4},colors:['#F5C400','#fff','#EF4444']});setStep('captain_hero');},350);}
+      return;
+    }
+    setSelectedSlot(prev=>prev===slotId?null:slotId);
+  },[step,specialMode,lineup,selectedPlayer]);
+
+  const handleSelectPlayer=useCallback((player:Player)=>{
+    if(selectedSlot){
+      const newLineup:Lineup={...lineup};
+      Object.keys(newLineup).forEach(k=>{if(newLineup[k]?.id===player.id)newLineup[k]=null;});
+      newLineup[selectedSlot]=player;
+      setLineup(newLineup);
+      setSelectedSlot(null);
+      setSelectedPlayer(null);
+      const nf=SLOTS.filter(s=>!!newLineup[s.id]).length;
+      const nb=BENCH_IDS.filter(id=>!!newLineup[id]).length;
+      if(step==='picking'&&nf===11){setTimeout(()=>{confetti({particleCount:80,spread:60,origin:{y:0.5},colors:['#F5C400','#fff','#22C55E']});setStep('bench');},350);}
+      else if(step==='bench'&&nb===5){setTimeout(()=>{confetti({particleCount:130,spread:80,origin:{y:0.4},colors:['#F5C400','#fff','#EF4444']});setStep('captain_hero');},350);}
+    } else {
+      setSelectedPlayer(prev=>prev?.id===player.id?null:player);
+    }
+  },[selectedSlot,lineup,step]);
 
   return (
     <div style={{minHeight:'100vh',background:'#050505',color:'#fff',fontFamily:"'Barlow Condensed',system-ui,sans-serif",overflowX:'hidden'}}>
@@ -466,13 +806,70 @@ export default function EscalacaoFormacao() {
 
       <HUD step={step} filled={fieldCount} benchFilled={benchCount}/>
 
-      {/* Todo o resto do seu return permanece igual */}
       <AnimatePresence>
         {step==='captain_hero'&&!specialMode&&(
           <CaptainHeroScreen onSelectMode={m=>{setSpecialMode(m);}} captainId={captainId} heroId={heroId} onDone={handleCaptainHeroDone}/>
         )}
       </AnimatePresence>
-      {/* ... resto do código ... */}
+
+      <AnimatePresence>
+        {step==='score'&&(
+          <LEDScoreboard scoreTigre={scoreTigre} setScoreTigre={setScoreTigre} scoreAdv={scoreAdv} setScoreAdv={setScoreAdv} onConfirm={handleScoreConfirm}/>
+        )}
+      </AnimatePresence>
+
+      {step==='share'&&<ShareScreen lineup={lineup} captainId={captainId} heroId={heroId} scoreTigre={scoreTigre} scoreAdv={scoreAdv}/>}
+
+      {isGameField&&(
+        <>
+          <div style={{position:'relative',overflow:'hidden',minHeight:350}}>
+            <StadiumBg/>
+            <div style={{position:'relative',zIndex:5,padding:'10px 6px 0'}}>
+              <div style={{textAlign:'center',marginBottom:5}}>
+                <motion.div key={step} initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}}
+                  style={{display:'inline-flex',alignItems:'center',gap:6,padding:'3px 12px',
+                    borderRadius:999,background:'rgba(245,196,0,0.08)',border:'1px solid rgba(245,196,0,0.2)'}}>
+                  <span style={{fontSize:7,fontWeight:900,color:'#F5C400',letterSpacing:3,textTransform:'uppercase'}}>
+                    {step==='picking'?`⚽ Escale ${11-fieldCount} jogador${11-fieldCount!==1?'es':''}`:`🪑 Adicione ${5-benchCount} reserva${5-benchCount!==1?'s':''}`}
+                  </span>
+                </motion.div>
+              </div>
+              <Field3D lineup={lineup} selectedSlot={selectedSlot} onSlotClick={handleSlotClick}
+                specialMode={specialMode} captainId={captainId} heroId={heroId} step={step}/>
+            </div>
+          </div>
+          {(fieldCount===11||step==='bench')&&<BenchArea lineup={lineup} selectedSlot={selectedSlot} onSlotClick={handleSlotClick}/>}
+          <PlayerPicker lineup={lineup} filterPos={filterPos} setFilterPos={setFilterPos}
+            onSelect={handleSelectPlayer} selectedSlot={selectedSlot} step={step} selectedPlayer={selectedPlayer}/>
+        </>
+      )}
+
+      {step==='captain_hero'&&specialMode&&(
+        <div style={{position:'fixed',inset:0,zIndex:200,display:'flex',flexDirection:'column'}}>
+          <div style={{padding:'10px 14px',background:'rgba(0,0,0,0.92)',backdropFilter:'blur(10px)',
+            borderBottom:`1px solid ${specialMode==='CAPTAIN'?'rgba(245,196,0,0.3)':'rgba(0,243,255,0.3)'}`}}>
+            <div style={{fontSize:11,fontWeight:900,textTransform:'uppercase',letterSpacing:2,textAlign:'center',
+              color:specialMode==='CAPTAIN'?'#F5C400':'#00F3FF'}}>
+              {specialMode==='CAPTAIN'?'© TOQUE NO CAPITÃO DO TIME':'⭐ TOQUE NO HERÓI DO JOGO'}
+            </div>
+          </div>
+          <div style={{flex:1,position:'relative',overflow:'hidden'}}>
+            <StadiumBg/>
+            <div style={{position:'relative',zIndex:5,padding:'8px 6px 0'}}>
+              <Field3D lineup={lineup} selectedSlot={null} onSlotClick={handleSlotClick}
+                specialMode={specialMode} captainId={captainId} heroId={heroId} step={step}/>
+            </div>
+          </div>
+          <div style={{padding:'10px 14px',background:'rgba(0,0,0,0.92)',backdropFilter:'blur(10px)'}}>
+            <button onClick={()=>setSpecialMode(null)}
+              style={{width:'100%',padding:'11px',borderRadius:12,background:'transparent',
+                border:'1px solid rgba(255,255,255,0.09)',color:'#444',fontSize:10,fontWeight:900,
+                cursor:'pointer',textTransform:'uppercase'}}>
+              ← Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
