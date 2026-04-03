@@ -3,13 +3,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import FinalCardReveal from './FinalCardReveal'; // Ajuste o caminho se necessário
 
 // --- CONFIGURAÇÕES DE IMAGENS E DADOS ---
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const TEXTURA_GRAMADO = 'https://www.transparenttextures.com/patterns/dark-dotted-2.png';
 
 const PLAYERS = [
-  { id: 1,  name: 'César Augusto',  short: 'César',     num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
+  { id: 1,  name: 'César Augusto',  short: 'César',      num: 31, pos: 'GOL', foto: BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id: 2,  name: 'Jordi',           short: 'Jordi',      num: 93, pos: 'GOL', foto: BASE+'JORDI.jpg.webp' },
   { id: 3,  name: 'João Scapin',      short: 'Scapin',     num: 12, pos: 'GOL', foto: BASE+'JOAO-SCAPIN.jpg.webp' },
   { id: 4,  name: 'Lucas Ribeiro',   short: 'Lucas',      num: 1,  pos: 'GOL', foto: BASE+'LUCAS-RIBEIRO.jpg.webp' },
@@ -57,11 +58,9 @@ const FORMATION_433 = [
   { id: 'st', x: 50, y: 12, pos: 'ATA' }, { id: 'rw', x: 82, y: 20, pos: 'ATA' }, { id: 'lw', x: 18, y: 20, pos: 'ATA' }
 ];
 
-const RESERVA_SLOTS = ['res1', 'res2', 'res3', 'res4', 'res5'];
-
 type Player = typeof PLAYERS[0];
 
-// --- SUB-COMPONENTE: PALPITE (VIDEO-GAME STYLE) ---
+// --- SUB-COMPONENTE: PALPITE ---
 function PalpiteSection({ 
   scoreTigre, scoreAdversario, setScoreTigre, setScoreAdversario, isLocked, setIsLocked 
 }: { 
@@ -232,6 +231,9 @@ export default function TigreFCEscalar() {
   const [scoreAdversario, setScoreAdversario] = useState(0);
   const [scoreLocked, setScoreLocked] = useState(false);
 
+  // Estado do Modal Final
+  const [showFinalCard, setShowFinalCard] = useState(false);
+
   const isFullTeam = useMemo(() => FORMATION_433.every(slot => !!lineup[slot.id]), [lineup]);
   const captainPlayer = useMemo(() => Object.values(lineup).find(p => p?.id === captainId), [lineup, captainId]);
   const heroPlayer = useMemo(() => Object.values(lineup).find(p => p?.id === heroId), [lineup, heroId]);
@@ -297,7 +299,7 @@ export default function TigreFCEscalar() {
           </div>
         </div>
 
-        {/* FLUXO: SÓ APARECE QUANDO O TIME ESTÁ COMPLETO */}
+        {/* FLUXO FINAL */}
         {isFullTeam && (
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full flex flex-col items-center">
             
@@ -318,14 +320,30 @@ export default function TigreFCEscalar() {
               />
             )}
 
-            <button disabled={!scoreLocked}
+            <button 
+              disabled={!scoreLocked}
+              onClick={() => setShowFinalCard(true)}
               className={`w-full max-w-[400px] py-6 rounded-[2rem] font-[1000] italic uppercase tracking-widest mb-20 transition-all
-                ${scoreLocked ? 'bg-yellow-500 text-black shadow-[0_20px_50px_rgba(245,196,0,0.5)] scale-105' : 'bg-zinc-800 text-zinc-600 opacity-40 cursor-not-allowed'}`}>
+                ${scoreLocked ? 'bg-yellow-500 text-black shadow-[0_20px_50px_rgba(245,196,0,0.5)] scale-105 hover:bg-yellow-400' : 'bg-zinc-800 text-zinc-600 opacity-40 cursor-not-allowed'}`}
+            >
               Finalizar Escalação Extraordinária →
             </button>
           </motion.div>
         )}
       </section>
+
+      {/* RENDERIZAÇÃO DO MODAL FINAL (APICE) */}
+      {showFinalCard && (
+        <FinalCardReveal 
+          lineup={lineup}
+          formation={FORMATION_433}
+          captainId={captainId}
+          heroId={heroId}
+          scoreTigre={scoreTigre}
+          scoreAdversario={scoreAdversario}
+          onClose={() => setShowFinalCard(false)}
+        />
+      )}
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
