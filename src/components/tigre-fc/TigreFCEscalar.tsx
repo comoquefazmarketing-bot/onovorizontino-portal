@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -75,17 +75,7 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
   return (
     <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} style={{ width: size }}>
       <div className="card-box" style={{ height: size * 1.35, border: isSelected ? '2px solid #F5C400' : '1px solid #333' }}>
-        <img 
-          src={`${player.foto}`} 
-          alt={player.short}
-          crossOrigin="anonymous"
-          style={{
-            width: '100%', height: '100%',
-            objectFit: 'cover',
-            objectPosition: isField ? 'right top' : 'left top',
-            display: 'block'
-          }}
-        />
+        <img src={player.foto} alt={player.short} crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: isField ? 'right top' : 'left top' }} />
         {isCaptain && <div className="badge cap">C</div>}
         {isHero && <div className="badge star">⭐</div>}
         <div className="card-info">
@@ -97,12 +87,12 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
         .card-wrapper { position: relative; transition: transform 0.2s; flex-shrink: 0; margin: 0 auto; }
         .selected { transform: scale(1.08); z-index: 50; }
         .card-box { background: #111; border-radius: 4px; overflow: hidden; position: relative; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; z-index: 5; border: 1px solid #000; }
+        .badge { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; z-index: 5; border: 1px solid #000; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         .cap { background: #F5C400; color: #000; }
         .star { background: #fff; color: #000; }
-        .card-info { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.95); text-align: center; padding: 2px 0; border-top: 1px solid rgba(245,196,0,0.3); }
-        .pos { color: #F5C400; font-size: 6px; font-weight: 900; line-height: 1; }
-        .name { color: #fff; font-size: 8px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; }
+        .card-info { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); text-align: center; padding: 2px 0; border-top: 1px solid rgba(245,196,0,0.3); }
+        .pos { color: #F5C400; font-size: 6px; font-weight: 900; }
+        .name { color: #fff; font-size: 8px; font-weight: 900; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       `}</style>
     </div>
   );
@@ -121,251 +111,218 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: string | number }) 
   const [hero, setHero] = useState<number | null>(null);
   const [filterPos, setFilterPos] = useState<string>('TODOS');
   const [fieldWidth, setFieldWidth] = useState(360);
-  
-  // Dados do Jogo (Logos e Nomes)
   const [gameData, setGameData] = useState({ home: 'TIGRE', away: 'ADVERSÁRIO', logoAway: '' });
   const [palpite, setPalpite] = useState({ home: 0, away: 0 });
 
   useEffect(() => {
     setMounted(true);
-    const loadGameAndLineup = async () => {
-      // 1. Carrega dados do Jogo
+    const init = async () => {
       const { data: jogo } = await supabase.from('jogos').select('*').eq('id', jogoId).single();
-      if (jogo) {
-        setGameData({
-          home: 'TIGRE',
-          away: jogo.adversario?.toUpperCase() || 'ADVERSÁRIO',
-          logoAway: `${ESCUDOS}${jogo.adversario_slug || 'generic'}.png`
-        });
-      }
-
-      // 2. Carrega última escalação
+      if (jogo) setGameData({ home: 'TIGRE', away: jogo.adversario?.toUpperCase(), logoAway: `${ESCUDOS}${jogo.adversario_slug}.png` });
+      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase.from('escalacoes').select('*').eq('usuario_id', user.id).order('created_at', { ascending: false }).limit(1).single();
-      if (data) {
-        setFormationKey(data.formacao as keyof typeof FORMATIONS);
-        setCaptain(data.capitao_id);
-        setHero(data.heroi_id);
-        const saved = typeof data.lineup === 'string' ? JSON.parse(data.lineup) : data.lineup;
-        const newLineup: Lineup = {};
-        Object.keys(saved).forEach(k => {
-            const p = PLAYERS.find(pl => pl.id === (saved[k]?.id || saved[k]));
-            if (p) newLineup[k] = p;
-        });
-        setLineup(newLineup);
+      if (user) {
+        const { data } = await supabase.from('escalacoes').select('*').eq('usuario_id', user.id).order('created_at', { ascending: false }).limit(1).single();
+        if (data) {
+          setFormationKey(data.formacao as keyof typeof FORMATIONS);
+          setCaptain(data.capitao_id); setHero(data.heroi_id);
+          const saved = typeof data.lineup === 'string' ? JSON.parse(data.lineup) : data.lineup;
+          const newLineup: Lineup = {};
+          Object.keys(saved).forEach(k => {
+             const p = PLAYERS.find(pl => pl.id === (saved[k]?.id || saved[k]));
+             if (p) newLineup[k] = p;
+          });
+          setLineup(newLineup);
+        }
       }
     };
-    loadGameAndLineup();
-    const updateSize = () => setFieldWidth(Math.min(window.innerWidth - 20, 450));
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+    init();
+    const up = () => setFieldWidth(Math.min(window.innerWidth - 20, 450));
+    up(); window.addEventListener('resize', up);
+    return () => window.removeEventListener('resize', up);
   }, [jogoId]);
 
-  const currentUsedIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
-  const isComplete = currentUsedIds.length === 11 && captain !== null && hero !== null;
-
-  const handlePlayerClick = useCallback((p: Player) => {
-    if (specialMode === 'captain') { setCaptain(p.id); setSpecialMode(null); }
-    else if (specialMode === 'hero') { setHero(p.id); setSpecialMode(null); }
-    else if (selectedSlot) { setLineup(prev => ({...prev, [selectedSlot]: p})); setSelectedSlot(null); }
-  }, [specialMode, selectedSlot]);
+  const currentIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
+  const is11 = currentIds.length === 11;
+  const isComplete = is11 && captain !== null && hero !== null;
 
   const handleSave = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { alert("Faça login primeiro!"); return; }
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
-    const { error } = await supabase.from('escalacoes').insert({
-      usuario_id: user.id,
-      jogo_id: jogoId,
-      formacao: formationKey,
-      lineup: JSON.stringify(lineup),
-      capitao_id: captain,
-      heroi_id: hero,
-      palpite_casa: palpite.home,
-      palpite_fora: palpite.away
-    });
+      // Criamos um objeto limpo para o lineup (apenas IDs para evitar erro de circularidade ou JSON pesado)
+      const lineupData: any = {};
+      Object.keys(lineup).forEach(key => {
+        if (lineup[key]) lineupData[key] = lineup[key]?.id;
+      });
 
-    if (error) { alert("Erro ao salvar: " + error.message); }
-    else { router.push('/tigre-fc/minhas-escalacoes'); }
-    setLoading(false);
+      const payload = {
+        usuario_id: user.id,
+        jogo_id: Number(jogoId),
+        formacao: formationKey,
+        lineup: lineupData, // O Supabase converte objeto JS para JSONB automaticamente
+        capitao_id: captain,
+        heroi_id: hero,
+        palpite_casa: palpite.home,
+        palpite_fora: palpite.away,
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase.from('escalacoes').insert(payload);
+      if (error) throw error;
+      router.push('/tigre-fc/minhas-escalacoes');
+    } catch (err: any) {
+      alert("ERRO AO SALVAR: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!mounted) return null;
 
   return (
-    <main className="container">
-      <header className="header">TIGRE FC <span className="elite">ELITE 26</span></header>
+    <main className="main">
+      <header className="top-bar">TIGRE FC <span className="gold">ELITE 26</span></header>
 
       {step === 'escalar' ? (
-        <div className="content">
-          <div className="formation-selector">
+        <div className="view">
+          <div className="form-selector">
             {(Object.keys(FORMATIONS) as Array<keyof typeof FORMATIONS>).map(f => (
-              <button key={f} className={formationKey === f ? 'active' : ''} onClick={() => { setFormationKey(f); setLineup({}); setCaptain(null); setHero(null); }}>{f}</button>
+              <button key={f} className={formationKey === f ? 'active' : ''} onClick={() => {setFormationKey(f); setLineup({}); setCaptain(null); setHero(null);}}>{f}</button>
             ))}
           </div>
 
-          <div className={`alert ${isComplete ? 'highlight' : ''}`}>
-             {currentUsedIds.length < 11 ? `FALTA(M) ${11 - currentUsedIds.length} JOGADOR(ES)` : (isComplete ? "✅ TIME PRONTO!" : "🎖️ ESCOLHA CAPITÃO E HERÓI")}
+          <div className={`status-msg ${isComplete ? 'ready' : (is11 ? 'needs-special' : '')}`}>
+            {currentIds.length < 11 ? `SELECIONE MAIS ${11 - currentIds.length} JOGADORES` : (isComplete ? "TIME CONFIRMADO!" : "AGORA ESCOLHA SEU CAPITÃO E HERÓI")}
           </div>
 
           <div className="field" style={{ width: fieldWidth, height: fieldWidth * 1.35 }}>
-            <div className="pitch-grass"></div>
-            <div className="pitch-markings">
-              <div className="pitch-outline"></div>
-              <div className="center-line"></div>
-              <div className="center-circle"></div>
-            </div>
+            <div className="grass"></div>
+            <div className="marks"><div className="outline"></div><div className="mid"></div><div className="circle"></div></div>
             {FORMATIONS[formationKey].map(slot => {
               const p = lineup[slot.id];
               return (
-                <div key={slot.id} className="slot" onClick={() => { setSelectedSlot(slot.id); setSpecialMode(null); }} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
+                <div key={slot.id} className="slot" onClick={() => {setSelectedSlot(slot.id); setSpecialMode(null);}} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
                   {p ? <PlayerCard player={p} size={fieldWidth * 0.16} isCaptain={captain === p.id} isHero={hero === p.id} isField={true} /> 
-                     : <div className={`dot ${selectedSlot === slot.id ? 'active' : ''}`} style={{ width: fieldWidth * 0.11, height: fieldWidth * 0.11 }}>+</div>}
+                     : <div className={`plus ${selectedSlot === slot.id ? 'sel' : ''}`} style={{ width: fieldWidth * 0.11, height: fieldWidth * 0.11 }}>+</div>}
                 </div>
               );
             })}
           </div>
 
-          <div className="market-section">
-            <div className="special-selectors">
-                <button className={`spec-btn ${specialMode === 'captain' ? 'active' : ''}`} onClick={() => setSpecialMode('captain')}>CAPITÃO</button>
-                <button className={`spec-btn ${specialMode === 'hero' ? 'active' : ''}`} onClick={() => setSpecialMode('hero')}>HERÓI</button>
+          <div className="market">
+            <div className="special-row">
+              <button className={`btn-spec cap ${specialMode === 'captain' ? 'on' : ''} ${is11 && !captain ? 'neon-yellow' : ''}`} onClick={() => setSpecialMode('captain')}>
+                {captain ? "CAPITÃO ✓" : "ESCOLHER CAPITÃO"}
+              </button>
+              <button className={`btn-spec her ${specialMode === 'hero' ? 'on' : ''} ${is11 && !hero ? 'neon-white' : ''}`} onClick={() => setSpecialMode('hero')}>
+                {hero ? "HERÓI ✓" : "ESCOLHER HERÓI"}
+              </button>
             </div>
-            <div className="filters">
-                {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(f => (
-                  <button key={f} className={filterPos === f ? 'f-active' : ''} onClick={() => setFilterPos(f)}>{f}</button>
-                ))}
+            <div className="filter-row">
+              {['TODOS', 'GOL', 'LAT', 'ZAG', 'MEI', 'ATA'].map(f => (
+                <button key={f} className={filterPos === f ? 'active' : ''} onClick={() => setFilterPos(f)}>{f}</button>
+              ))}
             </div>
-            <div className="players-grid">
-              {(specialMode ? (Object.values(lineup).filter(Boolean) as Player[]) : PLAYERS.filter(p => !currentUsedIds.includes(p.id)))
+            <div className="grid">
+              {(specialMode ? (Object.values(lineup).filter(Boolean) as Player[]) : PLAYERS.filter(p => !currentIds.includes(p.id)))
                 .filter(p => filterPos === 'TODOS' || p.pos === filterPos)
                 .map(p => (
-                <div key={p.id} className="grid-item" onClick={() => handlePlayerClick(p)}>
-                  <PlayerCard player={p} size={(fieldWidth / 3) - 16} isField={false} />
-                </div>
+                  <div key={p.id} onClick={() => handlePlayerClick(p)}><PlayerCard player={p} size={(fieldWidth/3)-14} isField={false} /></div>
               ))}
             </div>
           </div>
-          <div className="dock">
-            <button className="next-btn" disabled={!isComplete} onClick={() => setStep('palpite')}>DEFINIR PALPITE ➜</button>
+          <div className="footer-dock">
+            <button className="go-btn" disabled={!isComplete} onClick={() => setStep('palpite')}>PRÓXIMO PASSO ➜</button>
           </div>
         </div>
       ) : (
-        <div className="palpite-container">
-           <div className="palpite-card">
-              <h2 className="palpite-title">PLACAR DO JOGO</h2>
-              
-              <div className="scoreboard">
-                 {/* LADO TIGRE */}
-                 <div className="team-score">
-                    <div className="logo-box">
-                       <img src={`${ESCUDOS}tigre.png`} alt="Tigre" />
-                    </div>
-                    <span className="team-name">{gameData.home}</span>
-                    <div className="counter">
-                       <button onClick={() => setPalpite(p => ({...p, home: Math.max(0, p.home - 1)}))}>-</button>
-                       <div className="score-number">{palpite.home}</div>
-                       <button onClick={() => setPalpite(p => ({...p, home: p.home + 1}))}>+</button>
-                    </div>
-                 </div>
-
-                 <div className="vs">X</div>
-
-                 {/* LADO ADVERSÁRIO */}
-                 <div className="team-score">
-                    <div className="logo-box">
-                       <img src={gameData.logoAway} alt={gameData.away} onError={(e) => e.currentTarget.src = `${ESCUDOS}generic.png`} />
-                    </div>
-                    <span className="team-name">{gameData.away}</span>
-                    <div className="counter">
-                       <button onClick={() => setPalpite(p => ({...p, away: Math.max(0, p.away - 1)}))}>-</button>
-                       <div className="score-number">{palpite.away}</div>
-                       <button onClick={() => setPalpite(p => ({...p, away: p.away + 1}))}>+</button>
-                    </div>
-                 </div>
+        <div className="palpite-view">
+          <h2 className="title">PALPITE FINAL</h2>
+          <div className="match-card">
+            <div className="team">
+              <div className="shield"><img src={`${ESCUDOS}tigre.png`} alt="Tigre" /></div>
+              <p>TIGRE</p>
+              <div className="control">
+                <button onClick={() => setPalpite(p => ({...p, home: Math.max(0, p.home - 1)}))}>-</button>
+                <span>{palpite.home}</span>
+                <button onClick={() => setPalpite(p => ({...p, home: p.home + 1}))}>+</button>
               </div>
-
-              <div className="hero-recap">
-                 <p>Seu Herói: <strong>{PLAYERS.find(p => p.id === hero)?.short}</strong></p>
-                 <p>Seu Capitão: <strong>{PLAYERS.find(p => p.id === captain)?.short}</strong></p>
+            </div>
+            <div className="vs">VS</div>
+            <div className="team">
+              <div className="shield"><img src={gameData.logoAway} alt="Adv" onError={(e) => e.currentTarget.src=`${ESCUDOS}generic.png`} /></div>
+              <p>{gameData.away}</p>
+              <div className="control">
+                <button onClick={() => setPalpite(p => ({...p, away: Math.max(0, p.away - 1)}))}>-</button>
+                <span>{palpite.away}</span>
+                <button onClick={() => setPalpite(p => ({...p, away: p.away + 1}))}>+</button>
               </div>
-
-              <div className="dock-palpite">
-                <button className="back-btn" onClick={() => setStep('escalar')}>⇠ VOLTAR</button>
-                <button className="confirm-btn" disabled={loading} onClick={handleSave}>
-                  {loading ? 'SALVANDO...' : 'CONFIRMAR ESCALAÇÃO'}
-                </button>
-              </div>
-           </div>
+            </div>
+          </div>
+          <div className="final-actions">
+            <button className="back" onClick={() => setStep('escalar')}>VOLTAR</button>
+            <button className="save" disabled={loading} onClick={handleSave}>{loading ? 'SALVANDO...' : 'CONFIRMAR TUDO'}</button>
+          </div>
         </div>
       )}
 
       <style jsx global>{`
-        body { background: #000; margin: 0; font-family: 'Inter', sans-serif; color: #fff; overflow-x: hidden; }
-        .header { background: #F5C400; color: #000; text-align: center; padding: 15px; font-weight: 900; letter-spacing: 2px; }
-        .content { display: flex; flex-direction: column; align-items: center; padding: 10px; max-width: 500px; margin: 0 auto; }
+        @keyframes neonY { 0%, 100% { box-shadow: 0 0 5px #F5C400; border-color: #F5C400; } 50% { box-shadow: 0 0 20px #F5C400; border-color: #fff; } }
+        @keyframes neonW { 0%, 100% { box-shadow: 0 0 5px #fff; border-color: #fff; } 50% { box-shadow: 0 0 20px #fff; border-color: #F5C400; } }
         
-        /* Campo */
-        .field { position: relative; border-radius: 8px; overflow: hidden; background: #1a4a1a; box-shadow: 0 0 20px rgba(0,255,0,0.1); }
-        .pitch-grass { 
-            position: absolute; inset: 0;
-            background-image: linear-gradient(rgba(255,255,255,0.03) 50%, transparent 50%), linear-gradient(90deg, rgba(255,255,255,0.03) 50%, transparent 50%);
-            background-size: 50px 50px;
-        }
-        .pitch-outline { position: absolute; inset: 10px; border: 2px solid rgba(255,255,255,0.2); }
-        .center-line { position: absolute; top: 50%; width: 100%; height: 2px; background: rgba(255,255,255,0.2); }
-        .center-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; transform: translate(-50%, -50%); }
+        body { background: #000; color: #fff; margin: 0; font-family: sans-serif; }
+        .top-bar { background: #F5C400; color: #000; padding: 15px; text-align: center; font-weight: 900; font-size: 18px; }
+        .gold { color: #fff; text-shadow: 1px 1px #000; }
+        .view { display: flex; flex-direction: column; align-items: center; padding: 10px; max-width: 500px; margin: 0 auto; }
+        
+        .status-msg { width: 100%; padding: 12px; background: #111; text-align: center; font-weight: 800; font-size: 11px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #222; }
+        .status-msg.needs-special { color: #F5C400; border-color: #F5C400; }
+        .status-msg.ready { background: #F5C400; color: #000; }
+
+        .field { position: relative; background: #1a4a1a; border-radius: 10px; overflow: hidden; border: 2px solid #333; }
+        .grass { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, #143d14 0, #143d14 40px, #1a4a1a 40px, #1a4a1a 80px); }
+        .outline { position: absolute; inset: 10px; border: 1px solid rgba(255,255,255,0.2); }
+        .mid { position: absolute; top: 50%; width: 100%; height: 1px; background: rgba(255,255,255,0.2); }
+        .circle { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; transform: translate(-50%,-50%); }
+        
         .slot { position: absolute; transform: translate(-50%, -50%); z-index: 10; cursor: pointer; }
-        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); font-weight: bold; font-size: 20px; }
-        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.1); color: #F5C400; }
+        .plus { border-radius: 50%; border: 2px dashed #444; display: flex; align-items: center; justify-content: center; color: #444; font-size: 20px; }
+        .plus.sel { border-color: #F5C400; color: #F5C400; background: rgba(245,196,0,0.1); }
 
-        /* Mercado */
-        .market-section { width: 100%; padding-bottom: 100px; margin-top: 15px; }
-        .filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
-        .filters::-webkit-scrollbar { display: none; }
-        .filters button { background: #111; border: 1px solid #333; color: #555; padding: 6px 14px; border-radius: 20px; font-size: 10px; font-weight: 800; }
-        .filters button.f-active { background: #fff; color: #000; }
-        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .special-selectors { display: flex; gap: 10px; margin-bottom: 15px; }
-        .spec-btn { flex: 1; padding: 12px; border-radius: 8px; background: #111; border: 1px solid #333; color: #fff; font-weight: 900; font-size: 10px; }
-        .spec-btn.active { border-color: #F5C400; color: #F5C400; box-shadow: 0 0 10px rgba(245,196,0,0.2); }
-        .alert { width: 100%; text-align: center; padding: 12px; background: #111; border-radius: 8px; font-weight: 800; margin-bottom: 10px; font-size: 11px; }
-        .alert.highlight { background: #F5C400; color: #000; }
-        .formation-selector { display: flex; gap: 5px; width: 100%; margin-bottom: 15px; }
-        .formation-selector button { flex: 1; padding: 10px; background: #111; border: none; border-radius: 6px; color: #444; font-weight: 800; font-size: 10px; }
-        .formation-selector button.active { background: #F5C400; color: #000; }
+        .market { width: 100%; padding-bottom: 100px; margin-top: 20px; }
+        .special-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-spec { flex: 1; padding: 14px; border-radius: 10px; background: #111; border: 1px solid #333; color: #555; font-weight: 900; font-size: 10px; }
+        .btn-spec.on { border-color: #F5C400; color: #fff; }
+        .neon-yellow { animation: neonY 1s infinite !important; color: #fff !important; }
+        .neon-white { animation: neonW 1s infinite !important; color: #fff !important; }
 
-        /* PAGINA DE PALPITE - UX GAMEPLAY */
-        .palpite-container { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .palpite-card { background: #0a0a0a; border: 1px solid #222; width: 100%; max-width: 450px; border-radius: 20px; padding: 30px 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
-        .palpite-title { font-weight: 900; font-size: 14px; color: #F5C400; margin-bottom: 30px; letter-spacing: 1px; }
-        
-        .scoreboard { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
-        .team-score { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .logo-box { width: 80px; height: 80px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 12px; border: 1px solid #333; margin-bottom: 5px; }
-        .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .team-name { font-weight: 900; font-size: 12px; height: 20px; }
-        .vs { font-weight: 900; font-size: 24px; color: #333; margin: 0 10px; padding-top: 50px; }
+        .filter-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
+        .filter-row button { background: #111; border: 1px solid #222; color: #666; padding: 7px 15px; border-radius: 20px; font-size: 10px; font-weight: 800; }
+        .filter-row button.active { background: #fff; color: #000; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 
-        .counter { display: flex; align-items: center; background: #1a1a1a; border-radius: 12px; padding: 5px; border: 1px solid #333; }
-        .counter button { width: 35px; height: 35px; background: #222; border: none; color: #fff; border-radius: 8px; font-weight: 900; cursor: pointer; }
-        .counter button:active { background: #F5C400; color: #000; }
-        .score-number { width: 40px; font-size: 24px; font-weight: 900; color: #F5C400; }
+        .footer-dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 50%); display: flex; justify-content: center; z-index: 100; }
+        .go-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 12px; font-weight: 900; font-size: 15px; box-shadow: 0 5px 20px rgba(245,196,0,0.3); }
+        .go-btn:disabled { opacity: 0.3; box-shadow: none; }
 
-        .hero-recap { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 30px; border-left: 4px solid #F5C400; text-align: left; }
-        .hero-recap p { margin: 5px 0; font-size: 12px; color: #888; }
-        .hero-recap strong { color: #fff; }
-
-        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); display: flex; justify-content: center; z-index: 150; }
-        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; }
-        
-        .dock-palpite { display: flex; gap: 10px; margin-top: 20px; }
-        .back-btn { flex: 1; padding: 15px; background: #111; color: #fff; border: 1px solid #333; border-radius: 12px; font-weight: 800; font-size: 12px; }
-        .confirm-btn { flex: 2; padding: 15px; background: #F5C400; color: #000; border: none; border-radius: 12px; font-weight: 900; font-size: 12px; box-shadow: 0 10px 20px rgba(245,196,0,0.2); }
-        .confirm-btn:disabled { opacity: 0.5; }
+        /* PALPITE UI */
+        .palpite-view { min-height: 80vh; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+        .title { color: #F5C400; font-weight: 900; margin-bottom: 40px; }
+        .match-card { display: flex; align-items: center; gap: 20px; width: 100%; max-width: 400px; justify-content: space-between; margin-bottom: 50px; }
+        .team { display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .shield { width: 90px; height: 90px; background: #111; border-radius: 20px; padding: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid #222; }
+        .shield img { max-width: 100%; max-height: 100%; }
+        .team p { font-weight: 900; font-size: 12px; margin: 10px 0; color: #888; }
+        .control { display: flex; align-items: center; background: #111; border-radius: 12px; border: 1px solid #333; padding: 4px; }
+        .control button { width: 35px; height: 35px; background: #222; border: none; color: #fff; border-radius: 8px; font-weight: 900; }
+        .control span { width: 40px; text-align: center; font-size: 24px; font-weight: 900; color: #F5C400; }
+        .vs { font-weight: 900; color: #333; font-size: 20px; padding-top: 30px; }
+        .final-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px; }
+        .save { padding: 20px; background: #F5C400; border: none; border-radius: 12px; font-weight: 900; font-size: 16px; box-shadow: 0 10px 20px rgba(245,196,0,0.2); }
+        .back { padding: 15px; background: transparent; border: 1px solid #333; color: #555; border-radius: 12px; font-weight: 800; }
       `}</style>
     </main>
   );
