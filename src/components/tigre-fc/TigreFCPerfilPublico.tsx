@@ -362,12 +362,14 @@ interface TigreFCPerfilPublicoProps {
   // Modo "meu perfil" (legado)
   usuarioId?: string | null;
   meuId?: string | null;
-  jogoId?: number | null;        // aceito mas não usado — retrocompatível com TigreFCPage
-  onClose?: () => void;
+  jogoId?: number | null;
 
-  // Modo "perfil alheio" (novo — visualização cruzada)
+  // Aliases usados por TigreFCRankingPage e outros
+  targetUserId?: string | null;       // alias de targetUsuarioId
   targetUsuarioId?: string | null;
   viewerUsuarioId?: string | null;
+
+  onClose?: () => void;
 }
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
@@ -376,11 +378,12 @@ export default function TigreFCPerfilPublico({
   usuarioId,
   meuId,
   onClose,
+  targetUserId,
   targetUsuarioId,
   viewerUsuarioId,
 }: TigreFCPerfilPublicoProps) {
   // Resolve qual ID carregar e se é visualização própria ou cruzada
-  const targetId = targetUsuarioId ?? usuarioId ?? null;
+  const targetId = targetUsuarioId ?? targetUserId ?? usuarioId ?? null;
   const viewerId = viewerUsuarioId ?? meuId ?? null;
   const isOwn    = targetId !== null && targetId === viewerId;
   const isCross  = !isOwn && targetId !== null;
