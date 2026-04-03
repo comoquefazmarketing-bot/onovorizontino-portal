@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import html2canvas from 'html2canvas';
 
-// Configuração do Cliente Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -68,24 +67,12 @@ const FORMATIONS = {
     { id: 'm1', x: 65, y: 50 }, { id: 'm2', x: 35, y: 50 }, { id: 'm3', x: 85, y: 45 }, { id: 'm4', x: 15, y: 45 },
     { id: 'st1', x: 58, y: 18 }, { id: 'st2', x: 42, y: 18 }
   ],
-  '3-5-2': [
-    { id: 'gk', x: 50, y: 88 },
-    { id: 'cb1', x: 50, y: 76 }, { id: 'cb2', x: 72, y: 73 }, { id: 'cb3', x: 28, y: 73 },
-    { id: 'm1', x: 50, y: 55 }, { id: 'm2', x: 68, y: 48 }, { id: 'm3', x: 32, y: 48 }, { id: 'w1', x: 88, y: 40 }, { id: 'w2', x: 12, y: 40 },
-    { id: 'st1', x: 58, y: 18 }, { id: 'st2', x: 42, y: 18 }
-  ],
   '4-2-3-1': [
     { id: 'gk', x: 50, y: 88 },
     { id: 'rb', x: 82, y: 70 }, { id: 'cb1', x: 62, y: 76 }, { id: 'cb2', x: 38, y: 76 }, { id: 'lb', x: 18, y: 70 },
     { id: 'dm1', x: 62, y: 58 }, { id: 'dm2', x: 38, y: 58 },
     { id: 'am1', x: 50, y: 38 }, { id: 'am2', x: 78, y: 35 }, { id: 'am3', x: 22, y: 35 },
     { id: 'st', x: 50, y: 14 }
-  ],
-  '5-3-2': [
-    { id: 'gk', x: 50, y: 88 },
-    { id: 'cb1', x: 50, y: 78 }, { id: 'cb2', x: 70, y: 76 }, { id: 'cb3', x: 30, y: 76 }, { id: 'rwb', x: 88, y: 62 }, { id: 'lwb', x: 12, y: 62 },
-    { id: 'm1', x: 50, y: 48 }, { id: 'm2', x: 70, y: 43 }, { id: 'm3', x: 30, y: 43 },
-    { id: 'st1', x: 58, y: 18 }, { id: 'st2', x: 42, y: 18 }
   ]
 };
 
@@ -97,7 +84,7 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
     <div className={`card-wrapper ${isSelected ? 'selected' : ''}`} style={{ width: size }}>
       <div className="card-box" style={{ height: size * 1.35, border: isSelected ? '2px solid #F5C400' : '1px solid #333' }}>
         <img 
-          src={player.foto} 
+          src={`${player.foto}?v=1`} 
           alt={player.short}
           crossOrigin="anonymous"
           style={{
@@ -155,7 +142,11 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
 
   const currentUsedPlayers = Object.values(lineup).filter(Boolean) as Player[];
   const currentUsedIds = currentUsedPlayers.map(p => p.id);
-  const isComplete = currentUsedIds.length === 11 && captain && hero;
+  const playersCount = currentUsedIds.length;
+  const isComplete = playersCount === 11 && captain !== null && hero !== null;
+
+  // Lógica para saber se os 11 foram escolhidos mas falta o capitão/herói
+  const needsSpecial = playersCount === 11 && (!captain || !hero);
 
   const handlePlayerClick = useCallback((p: Player) => {
     if (specialMode === 'captain') {
@@ -171,13 +162,13 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
   }, [specialMode, selectedSlot]);
 
   const handleFinishAndShare = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const idsParaSalvar = Object.values(lineup).filter(Boolean).map(p => p!.id);
 
-      // 1. Salvar no Banco
-      const { error } = await supabase.from('escalacoes').insert([{
+      await supabase.from('escalacoes').insert([{
         user_id: user?.id || null,
         jogo_id: jogoId,
         jogadores_ids: idsParaSalvar,
@@ -189,41 +180,39 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
         criado_por: "Felipe Makarios"
       }]);
 
-      if (error) throw error;
-
-      // 2. Captura de Imagem
       if (cardRef.current) {
         const canvas = await html2canvas(cardRef.current, { 
           useCORS: true, 
           scale: 2,
           backgroundColor: '#000',
-          logging: false
         });
         
-        const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
-        
-        if (blob && navigator.share) {
-          const file = new File([blob], 'meu-tigre-fc.png', { type: 'image/png' });
-          await navigator.share({ 
-            title: 'Tigre FC Elite 26', 
-            text: 'Confira minha escalação!',
-            files: [file] 
+        const dataUrl = canvas.toDataURL('image/png');
+        const blob = await (await fetch(dataUrl)).blob();
+
+        if (navigator.share) {
+          const file = new File([blob], 'escalacao.png', { type: 'image/png' });
+          await navigator.share({ files: [file], title: 'Tigre FC' }).catch(() => {
+             const link = document.createElement('a');
+             link.href = dataUrl;
+             link.download = 'tigre-fc.png';
+             link.click();
           });
-        } else if (blob) {
-            // Fallback download
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = 'minha-escalacao.png';
-            link.click();
+        } else {
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = 'tigre-fc.png';
+          link.click();
         }
       }
-
-      alert("Escalação salva com sucesso!");
-      router.push('/'); 
-    } catch (err) { 
+      alert("Sucesso!");
+      router.push('/');
+    } catch (err) {
       console.error(err);
-      alert("Erro ao salvar. Verifique sua conexão."); 
-    } finally { setLoading(false); }
+      alert("Erro ao processar.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!mounted) return null;
@@ -237,25 +226,25 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
           <div className="formation-selector">
             {(Object.keys(FORMATIONS) as Array<keyof typeof FORMATIONS>).map(f => (
               <button key={f} className={formationKey === f ? 'active' : ''} 
-                onClick={() => { setFormationKey(f); setLineup({}); setSelectedSlot(null); }}>
+                onClick={() => { setFormationKey(f); setLineup({}); setSelectedSlot(null); setCaptain(null); setHero(null); }}>
                 {f}
               </button>
             ))}
           </div>
 
-          <div className={`alert ${selectedSlot || specialMode ? 'highlight' : ''}`}>
-             {specialMode === 'captain' && "🎖️ SELECIONE O CAPITÃO"}
-             {specialMode === 'hero' && "⭐ SELECIONE O HERÓI"}
-             {selectedSlot && !specialMode && "⚡ SELECIONE O ATLETA"}
-             {!selectedSlot && !specialMode && "👉 MONTE SEU TIME"}
+          <div className={`alert ${needsSpecial || selectedSlot || specialMode ? 'highlight' : ''}`}>
+             {playersCount < 11 && `FALTA(M) ${11 - playersCount} JOGADOR(ES)`}
+             {playersCount === 11 && !captain && "🎖️ AGORA ESCOLHA O CAPITÃO!"}
+             {playersCount === 11 && captain && !hero && "⭐ SÓ FALTA O HERÓI!"}
+             {isComplete && "✅ TUDO PRONTO! CLIQUE EM PRÓXIMO"}
           </div>
 
           <div className="field" style={{ width: fieldWidth, height: fieldWidth * 1.35 }}>
             <div className="pitch-markings">
               <div className="center-line"></div>
               <div className="center-circle"></div>
-              <div className="area top"><div className="small-area"></div></div>
-              <div className="area bottom"><div className="small-area"></div></div>
+              <div className="area top"></div>
+              <div className="area bottom"></div>
             </div>
             
             {FORMATIONS[formationKey].map(slot => {
@@ -278,10 +267,14 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
           <div className="market-section">
             <div className="market-sticky-header">
               <div className="special-selectors">
-                <button className={`spec-btn cap ${specialMode === 'captain' ? 'active' : ''}`} onClick={() => { setSpecialMode('captain'); setSelectedSlot(null); }}>
+                <button 
+                    className={`spec-btn cap ${specialMode === 'captain' ? 'active' : ''} ${needsSpecial && !captain ? 'neon-pulse-yellow' : ''}`} 
+                    onClick={() => { if(playersCount === 11) { setSpecialMode('captain'); setSelectedSlot(null); } else { alert("Escale os 11 primeiro!"); } }}>
                     {captain ? "CAPITÃO OK" : "ESCOLHER CAPITÃO"}
                 </button>
-                <button className={`spec-btn star ${specialMode === 'hero' ? 'active' : ''}`} onClick={() => { setSpecialMode('hero'); setSelectedSlot(null); }}>
+                <button 
+                    className={`spec-btn star ${specialMode === 'hero' ? 'active' : ''} ${needsSpecial && !hero ? 'neon-pulse-white' : ''}`} 
+                    onClick={() => { if(playersCount === 11) { setSpecialMode('hero'); setSelectedSlot(null); } else { alert("Escale os 11 primeiro!"); } }}>
                     {hero ? "HERÓI OK" : "ESCOLHER HERÓI"}
                 </button>
               </div>
@@ -333,18 +326,14 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
           <div id="final-card" ref={cardRef} className="card-capture">
              <div className="capture-header">
                 <div className="header-logo">🐯 TIGRE FC</div>
-                <div className="header-match">ESQUEMA {formationKey} | JOGO {jogoId}</div>
+                <div className="header-match">ESQUEMA {formationKey}</div>
              </div>
              <div className="capture-field">
-                <div className="pitch-markings-mini">
-                    <div className="center-line"></div>
-                    <div className="center-circle"></div>
-                </div>
                 {FORMATIONS[formationKey].map(slot => (
                    <div key={slot.id} className="slot-mini" style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
                       {lineup[slot.id] && <PlayerCard 
                         player={lineup[slot.id]!} 
-                        size={52} 
+                        size={50} 
                         isCaptain={captain === lineup[slot.id]?.id} 
                         isHero={hero === lineup[slot.id]?.id} 
                         isField 
@@ -354,8 +343,8 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
              </div>
              <div className="capture-footer">
                 <div className="footer-row">
-                  <div className="footer-placar">PALPITE: {palpite.home} x {palpite.away}</div>
-                  <div className="footer-author">BY FELIPE MAKARIOS</div>
+                  <div>PALPITE: {palpite.home} x {palpite.away}</div>
+                  <div style={{fontSize: '8px', opacity: 0.5}}>FELIPE MAKARIOS</div>
                 </div>
              </div>
           </div>
@@ -371,73 +360,71 @@ export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
 
       <style jsx global>{`
         body { background: #000; margin: 0; font-family: 'Inter', sans-serif; color: #fff; overflow-x: hidden; }
-        .header { background: #F5C400; color: #000; text-align: center; padding: 15px; font-weight: 900; font-size: 20px; position: sticky; top: 0; z-index: 100; }
-        .elite { font-size: 12px; background: #000; color: #F5C400; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+        .header { background: #F5C400; color: #000; text-align: center; padding: 15px; font-weight: 900; position: sticky; top: 0; z-index: 100; }
+        .elite { font-size: 10px; background: #000; color: #F5C400; padding: 2px 4px; border-radius: 4px; }
         .content { display: flex; flex-direction: column; align-items: center; padding: 10px; max-width: 500px; margin: 0 auto; width: 100%; }
         
         .formation-selector { display: flex; gap: 4px; margin-bottom: 12px; background: #111; padding: 4px; border-radius: 8px; width: 100%; }
-        .formation-selector button { flex: 1; padding: 8px 0; border: none; background: transparent; color: #666; font-weight: 800; font-size: 10px; cursor: pointer; border-radius: 6px; }
-        .formation-selector button.active { background: #F5C400; color: #000; }
+        .formation-selector button { flex: 1; padding: 10px 0; border: none; background: transparent; color: #666; font-weight: 800; font-size: 10px; }
+        .formation-selector button.active { background: #F5C400; color: #000; border-radius: 6px; }
 
-        .alert { background: #111; color: #555; width: 100%; text-align: center; padding: 12px; font-weight: 800; font-size: 11px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #222; }
-        .alert.highlight { background: #F5C400; color: #000; border-color: #F5C400; }
+        .alert { background: #111; color: #555; width: 100%; text-align: center; padding: 12px; font-weight: 800; font-size: 11px; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s; }
+        .alert.highlight { background: #F5C400; color: #000; }
 
-        .field { position: relative; background: #0d2b0d; border: 3px solid #1a4a1a; border-radius: 8px; overflow: hidden; margin-bottom: 20px; box-shadow: inset 0 0 60px rgba(0,0,0,0.5); }
-        .pitch-markings { position: absolute; inset: 0; pointer-events: none; opacity: 0.2; }
+        .field { position: relative; background: #0d2b0d; border: 3px solid #1a4a1a; border-radius: 8px; overflow: hidden; }
+        .pitch-markings { position: absolute; inset: 0; opacity: 0.1; }
         .center-line { position: absolute; top: 50%; width: 100%; height: 2px; background: #fff; }
         .center-circle { position: absolute; top: 50%; left: 50%; width: 70px; height: 70px; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); }
-        .area { position: absolute; left: 50%; transform: translateX(-50%); width: 60%; height: 18%; border: 2px solid #fff; }
-        .area.top { top: 0; border-top: none; }
-        .area.bottom { bottom: 0; border-bottom: none; }
-        .small-area { position: absolute; left: 50%; transform: translateX(-50%); width: 40%; height: 40%; border: 2px solid #fff; }
-        .area.top .small-area { top: 0; border-top: none; }
-        .area.bottom .small-area { bottom: 0; border-bottom: none; }
+        
+        .slot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; }
+        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
+        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.1); }
 
-        .slot { position: absolute; transform: translate(-50%, -50%); cursor: pointer; z-index: 20; }
-        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); }
-        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.15); box-shadow: 0 0 20px rgba(245,196,0,0.4); }
-        .plus { color: #fff; opacity: 0.3; font-size: 20px; }
+        .market-section { width: 100%; padding-bottom: 120px; }
+        .market-sticky-header { padding: 10px; background: #000; position: sticky; top: 50px; z-index: 80; }
+        .special-selectors { display: flex; gap: 8px; margin-bottom: 12px; }
+        .spec-btn { flex: 1; padding: 14px; border-radius: 8px; font-size: 10px; font-weight: 900; background: #111; color: #fff; border: 1px solid #333; transition: all 0.3s; }
+        .spec-btn.active { border-color: #F5C400; color: #F5C400; background: #000; }
 
-        .market-section { width: 100%; background: #080808; border-radius: 12px; margin-top: 5px; padding-bottom: 120px; border: 1px solid #111; }
-        .market-sticky-header { padding: 12px; background: #111; border-radius: 12px 12px 0 0; position: sticky; top: 54px; z-index: 80; }
-        .special-selectors { display: flex; gap: 6px; margin-bottom: 10px; }
-        .spec-btn { flex: 1; padding: 12px; border-radius: 6px; font-size: 9px; font-weight: 900; border: 1px solid #333; background: #000; color: #fff; text-transform: uppercase; }
-        .spec-btn.active { border-color: #F5C400; color: #F5C400; }
+        /* Animações Neon */
+        @keyframes neonYellow {
+          0% { box-shadow: 0 0 5px #F5C400; transform: scale(1); }
+          50% { box-shadow: 0 0 25px #F5C400, 0 0 40px #F5C400; transform: scale(1.05); border-color: #fff; }
+          100% { box-shadow: 0 0 5px #F5C400; transform: scale(1); }
+        }
+        @keyframes neonWhite {
+          0% { box-shadow: 0 0 5px #fff; transform: scale(1); }
+          50% { box-shadow: 0 0 25px #fff, 0 0 40px #fff; transform: scale(1.05); border-color: #F5C400; }
+          100% { box-shadow: 0 0 5px #fff; transform: scale(1); }
+        }
+        .neon-pulse-yellow { animation: neonYellow 1.2s infinite ease-in-out; background: #221d00; border-color: #F5C400; color: #F5C400; }
+        .neon-pulse-white { animation: neonWhite 1.2s infinite ease-in-out; background: #1a1a1a; border-color: #fff; color: #fff; }
         
         .filters { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; }
-        .filters button { background: #222; border: none; color: #666; padding: 8px 14px; border-radius: 20px; font-size: 9px; font-weight: 800; white-space: nowrap; }
-        .filters button.f-active { background: #F5C400; color: #000; }
+        .filters button { background: #222; border: none; color: #666; padding: 8px 12px; border-radius: 20px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+        .filters button.f-active { background: #fff; color: #000; }
         
-        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; }
+        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-top: 10px; }
 
-        .match-day-hud { width: 100%; background: #111; border-radius: 12px; padding: 25px; margin: 20px 0; }
+        .match-day-hud { width: 100%; background: #111; border-radius: 12px; padding: 20px; margin: 20px 0; }
         .hud-scoreboard { display: flex; align-items: center; justify-content: space-around; }
-        .hud-team { display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 900; color: #444; }
-        .hud-shield { width: 50px; height: 50px; margin-bottom: 8px; }
-        .adv-shield-placeholder { width: 50px; height: 50px; border: 2px dashed #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 8px; }
-        .hud-inputs { display: flex; align-items: center; gap: 10px; }
-        .hud-inputs input { width: 70px; height: 90px; background: #000; border: 2px solid #222; color: #F5C400; text-align: center; font-size: 48px; font-weight: 900; border-radius: 10px; }
-        .hud-divider { font-weight: 900; color: #333; font-size: 20px; }
-
-        .card-capture { width: 380px; background: #000; border: 8px solid #F5C400; padding: 20px; }
-        .capture-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #F5C400; padding-bottom: 10px; margin-bottom: 15px; }
-        .header-logo { font-weight: 1000; font-size: 22px; color: #F5C400; }
-        .header-match { font-size: 10px; font-weight: 800; color: #555; }
-        .capture-field { position: relative; height: 440px; background: #0d2b0d; border-radius: 10px; border: 2px solid #1a4a1a; }
-        .pitch-markings-mini { position: absolute; inset: 0; opacity: 0.1; pointer-events: none; }
-        .slot-mini { position: absolute; transform: translate(-50%, -50%); }
-        .capture-footer { border-top: 2px solid #F5C400; margin-top: 15px; padding-top: 12px; }
-        .footer-row { display: flex; justify-content: space-between; align-items: center; }
-        .footer-placar { font-weight: 900; color: #F5C400; font-size: 16px; }
-        .footer-author { color: #444; font-size: 9px; font-weight: 800; }
-
-        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 35%); display: flex; justify-content: center; z-index: 150; }
-        .next-btn { width: 100%; max-width: 440px; padding: 20px; background: #F5C400; color: #000; border-radius: 12px; font-weight: 900; border: none; font-size: 16px; box-shadow: 0 5px 20px rgba(245,196,0,0.3); cursor: pointer; }
-        .next-btn:disabled { background: #222; color: #444; box-shadow: none; cursor: not-allowed; }
+        .hud-shield { width: 50px; height: 50px; }
+        .hud-inputs input { width: 60px; height: 80px; background: #000; border: 2px solid #333; color: #F5C400; text-align: center; font-size: 32px; font-weight: 900; border-radius: 8px; }
         
-        .share-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
+        .card-capture { width: 360px; background: #000; border: 6px solid #F5C400; padding: 15px; margin: 0 auto; }
+        .capture-header { display: flex; justify-content: space-between; border-bottom: 2px solid #F5C400; padding-bottom: 8px; margin-bottom: 10px; }
+        .header-logo { font-weight: 900; color: #F5C400; }
+        .capture-field { position: relative; height: 400px; background: #0d2b0d; border-radius: 8px; margin-bottom: 10px; }
+        .slot-mini { position: absolute; transform: translate(-50%, -50%); }
+        .capture-footer { border-top: 2px solid #F5C400; padding-top: 10px; font-weight: 900; color: #F5C400; }
+
+        .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 30%); display: flex; justify-content: center; z-index: 150; }
+        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border-radius: 12px; font-weight: 900; border: none; font-size: 15px; cursor: pointer; transition: all 0.2s; }
+        .next-btn:disabled { background: #222; color: #444; cursor: not-allowed; }
+        
+        .share-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 20px; }
         .share-btn { background: #F5C400; color: #000; padding: 18px; border-radius: 12px; font-weight: 900; border: none; font-size: 15px; cursor: pointer; }
-        .exit-btn { background: #111; color: #fff; padding: 12px; border-radius: 12px; font-weight: 800; border: 1px solid #333; cursor: pointer; }
+        .exit-btn { background: #111; color: #fff; padding: 12px; border-radius: 12px; border: 1px solid #333; cursor: pointer; }
       `}</style>
     </main>
   );
