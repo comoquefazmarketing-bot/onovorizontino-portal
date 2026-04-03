@@ -1,30 +1,15 @@
 'use client';
 
-/**
- * tigre-fc/page.tsx v3
- *
- * Mobile-First: Campo no topo, Mercado abaixo como painel de controle.
- * Auth gate: redireciona para login se não autenticado.
- * Formation pills: sem dropdowns.
- * Bench: 5 slots de reservas abaixo do campo.
- * Player cards: borda neon por posição, foto à esquerda (mercado) / direita (campo).
- */
-
-'use client';
-
 import React, { useState, useMemo, useEffect, use } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createBrowserClient } from '@supabase/ssr';
-import confetti from 'canvas-confetti';
 import CampoFifa, { POS_CORES, POS_GLOW } from '@/components/tigre-fc/CampoFifa';
 import CapitaoEHeroi from '@/components/tigre-fc/CapitaoEHeroi';
 import Palpite from '@/components/tigre-fc/Palpite';
 import TigreFCShare from '@/components/tigre-fc/TigreFCShare';
 import { useEscalacao, Player } from '@/hooks/useEscalacao';
 
-// ─── Dados ────────────────────────────────────────────────────────────────────
-
-const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
+const BASE      = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
 const PLAYERS: Player[] = [
@@ -72,44 +57,42 @@ const PLAYERS: Player[] = [
 const FORMATIONS: Record<string, { id: string; x: number; y: number; pos: string }[]> = {
   '4-2-3-1': [
     { id: 'gk',  x: 50, y: 88, pos: 'GOL' },
-    { id: 'rb',  x: 82, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 18, y: 68, pos: 'LAT' },
+    { id: 'rb',  x: 82, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb',  x: 18, y: 68, pos: 'LAT' },
     { id: 'dm1', x: 35, y: 57, pos: 'MEI' }, { id: 'dm2', x: 65, y: 57, pos: 'MEI' },
-    { id: 'am1', x: 50, y: 38, pos: 'MEI' }, { id: 'rw',  x: 80, y: 28, pos: 'ATA' }, { id: 'lw', x: 20, y: 28, pos: 'ATA' },
+    { id: 'am1', x: 50, y: 38, pos: 'MEI' }, { id: 'rw',  x: 80, y: 28, pos: 'ATA' }, { id: 'lw',  x: 20, y: 28, pos: 'ATA' },
     { id: 'st',  x: 50, y: 13, pos: 'ATA' },
   ],
   '4-3-3': [
     { id: 'gk',  x: 50, y: 85, pos: 'GOL' },
-    { id: 'rb',  x: 82, y: 65, pos: 'LAT' }, { id: 'cb1', x: 62, y: 72, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 72, pos: 'ZAG' }, { id: 'lb', x: 18, y: 65, pos: 'LAT' },
-    { id: 'm1',  x: 50, y: 50, pos: 'MEI' }, { id: 'm2',  x: 75, y: 42, pos: 'MEI' }, { id: 'm3', x: 25, y: 42, pos: 'MEI' },
-    { id: 'st',  x: 50, y: 13, pos: 'ATA' }, { id: 'rw',  x: 80, y: 20, pos: 'ATA' }, { id: 'lw', x: 20, y: 20, pos: 'ATA' },
+    { id: 'rb',  x: 82, y: 65, pos: 'LAT' }, { id: 'cb1', x: 62, y: 72, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 72, pos: 'ZAG' }, { id: 'lb',  x: 18, y: 65, pos: 'LAT' },
+    { id: 'm1',  x: 50, y: 50, pos: 'MEI' }, { id: 'm2',  x: 75, y: 42, pos: 'MEI' }, { id: 'm3',  x: 25, y: 42, pos: 'MEI' },
+    { id: 'st',  x: 50, y: 13, pos: 'ATA' }, { id: 'rw',  x: 80, y: 20, pos: 'ATA' }, { id: 'lw',  x: 20, y: 20, pos: 'ATA' },
   ],
   '4-4-2': [
     { id: 'gk',  x: 50, y: 88, pos: 'GOL' },
-    { id: 'rb',  x: 85, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 15, y: 68, pos: 'LAT' },
-    { id: 'm1',  x: 20, y: 48, pos: 'MEI' }, { id: 'm2',  x: 40, y: 48, pos: 'MEI' }, { id: 'm3', x: 60, y: 48, pos: 'MEI' }, { id: 'm4', x: 80, y: 48, pos: 'MEI' },
+    { id: 'rb',  x: 85, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb',  x: 15, y: 68, pos: 'LAT' },
+    { id: 'm1',  x: 20, y: 48, pos: 'MEI' }, { id: 'm2',  x: 40, y: 48, pos: 'MEI' }, { id: 'm3',  x: 60, y: 48, pos: 'MEI' }, { id: 'm4',  x: 80, y: 48, pos: 'MEI' },
     { id: 'st1', x: 35, y: 18, pos: 'ATA' }, { id: 'st2', x: 65, y: 18, pos: 'ATA' },
   ],
   '3-5-2': [
     { id: 'gk',  x: 50, y: 88, pos: 'GOL' },
     { id: 'cb1', x: 50, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 75, y: 72, pos: 'ZAG' }, { id: 'cb3', x: 25, y: 72, pos: 'ZAG' },
-    { id: 'm1',  x: 50, y: 52, pos: 'MEI' }, { id: 'm2',  x: 25, y: 46, pos: 'MEI' }, { id: 'm3', x: 75, y: 46, pos: 'MEI' }, { id: 'm4', x: 10, y: 38, pos: 'MEI' }, { id: 'm5', x: 90, y: 38, pos: 'MEI' },
+    { id: 'm1',  x: 50, y: 52, pos: 'MEI' }, { id: 'm2',  x: 25, y: 46, pos: 'MEI' }, { id: 'm3',  x: 75, y: 46, pos: 'MEI' }, { id: 'm4',  x: 10, y: 38, pos: 'MEI' }, { id: 'm5', x: 90, y: 38, pos: 'MEI' },
     { id: 'st1', x: 38, y: 18, pos: 'ATA' }, { id: 'st2', x: 62, y: 18, pos: 'ATA' },
   ],
   '5-4-1': [
     { id: 'gk',  x: 50, y: 88, pos: 'GOL' },
-    { id: 'cb1', x: 50, y: 78, pos: 'ZAG' }, { id: 'cb2', x: 70, y: 75, pos: 'ZAG' }, { id: 'cb3', x: 30, y: 75, pos: 'ZAG' }, { id: 'rb', x: 88, y: 68, pos: 'LAT' }, { id: 'lb', x: 12, y: 68, pos: 'LAT' },
-    { id: 'm1',  x: 35, y: 48, pos: 'MEI' }, { id: 'm2',  x: 65, y: 48, pos: 'MEI' }, { id: 'm3', x: 15, y: 40, pos: 'MEI' }, { id: 'm4', x: 85, y: 40, pos: 'MEI' },
+    { id: 'cb1', x: 50, y: 78, pos: 'ZAG' }, { id: 'cb2', x: 70, y: 75, pos: 'ZAG' }, { id: 'cb3', x: 30, y: 75, pos: 'ZAG' }, { id: 'rb',  x: 88, y: 68, pos: 'LAT' }, { id: 'lb', x: 12, y: 68, pos: 'LAT' },
+    { id: 'm1',  x: 35, y: 48, pos: 'MEI' }, { id: 'm2',  x: 65, y: 48, pos: 'MEI' }, { id: 'm3',  x: 15, y: 40, pos: 'MEI' }, { id: 'm4',  x: 85, y: 40, pos: 'MEI' },
     { id: 'st',  x: 50, y: 18, pos: 'ATA' },
   ],
 };
 
 const FORMATION_LABELS: Record<string, string> = {
-  '4-2-3-1': '4·2·3·1',
-  '4-3-3':   '4·3·3',
-  '4-4-2':   '4·4·2',
-  '3-5-2':   '3·5·2',
-  '5-4-1':   '5·4·1',
+  '4-2-3-1': '4·2·3·1', '4-3-3': '4·3·3', '4-4-2': '4·4·2', '3-5-2': '3·5·2', '5-4-1': '5·4·1',
 };
+
+type Perfil = { display_name?: string; avatar_url?: string; nivel?: string; xp?: number };
 
 // ─── Auth Gate ────────────────────────────────────────────────────────────────
 
@@ -122,7 +105,7 @@ function AuthGate({ onAuthenticated }: { onAuthenticated: (uid: string) => void 
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) { onAuthenticated(session.user.id); }
+      if (session?.user) onAuthenticated(session.user.id);
       setLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
@@ -138,24 +121,17 @@ function AuthGate({ onAuthenticated }: { onAuthenticated: (uid: string) => void 
   );
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 gap-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center gap-6 text-center"
-      >
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center gap-6 text-center">
         <img src={PATA_LOGO} className="w-20 h-20 object-contain" alt="Tigre FC" />
         <div>
-          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">
-            Tigre FC
-          </h1>
-          <p className="text-zinc-500 text-sm mt-1 font-medium">
-            Entre no clube. Faça sua escalação.
-          </p>
+          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">Tigre FC</h1>
+          <p className="text-zinc-500 text-sm mt-1 font-medium">Entre no clube. Faça sua escalação.</p>
         </div>
         <button
           onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } })}
-          className="flex items-center gap-3 bg-white text-black font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.15)]"
+          className="flex items-center gap-3 bg-white text-black font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-yellow-400 active:scale-95 transition-all"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -170,52 +146,36 @@ function AuthGate({ onAuthenticated }: { onAuthenticated: (uid: string) => void 
   );
 }
 
-// ─── Player Card — Mercado (foto esquerda, info direita) ─────────────────────
+// ─── Player Cards ─────────────────────────────────────────────────────────────
 
 function PlayerCardMercado({ player, onClick }: { player: Player; onClick: () => void }) {
   const cor  = POS_CORES[player.pos] ?? '#71717A';
   const glow = POS_GLOW[player.pos]  ?? 'rgba(113,113,122,0.4)';
-
   return (
     <motion.div
-  whileHover={{ scale: 1.03, y: -2, boxShadow: `0 0 14px ${glow}` }}
-  whileTap={{ scale: 0.96 }}
-  initial={{ boxShadow: `0 0 0px ${glow}` }}
-  onClick={onClick}
-  className="relative flex items-center gap-2 bg-zinc-950 rounded-xl overflow-hidden cursor-pointer border border-zinc-900 hover:border-zinc-700 transition-all"
->
-      {/* Barra lateral de posição */}
+      whileHover={{ scale: 1.03, y: -2, boxShadow: `0 0 14px ${glow}` }}
+      whileTap={{ scale: 0.96 }}
+      initial={{ boxShadow: `0 0 0px ${glow}` }}
+      onClick={onClick}
+      className="relative flex items-center gap-2 bg-zinc-950 rounded-xl overflow-hidden cursor-pointer border border-zinc-900 hover:border-zinc-700 transition-all"
+    >
       <div className="w-1 self-stretch rounded-l-xl" style={{ background: cor }} />
-
-      {/* Foto alinhada à ESQUERDA — "preparação/espera" */}
       <div className="relative w-12 h-14 shrink-0 overflow-hidden">
-        <img
-          src={player.foto}
-          className="w-full h-full object-cover"
-          style={{ objectPosition: 'left top' }}
-          alt={player.short}
-        />
+        <img src={player.foto} className="w-full h-full object-cover" style={{ objectPosition: 'left top' }} alt={player.short} />
       </div>
-
-      {/* Info */}
       <div className="flex-1 min-w-0 py-2 pr-2">
         <div className="text-white text-[11px] font-black uppercase truncate">{player.short}</div>
-        <div className="text-[9px] font-black uppercase tracking-wider" style={{ color: cor }}>
-          {player.pos}
-        </div>
+        <div className="text-[9px] font-black uppercase tracking-wider" style={{ color: cor }}>{player.pos}</div>
         <div className="text-zinc-700 text-[9px] font-medium">#{player.num}</div>
       </div>
     </motion.div>
   );
 }
 
-// ─── Player Card — Campo (foto direita, "comemoração/ação") ──────────────────
-
 function PlayerCardCampo({ player, isCaptain, isHero, isSpecialTarget, size = 60 }: {
   player: Player; isCaptain: boolean; isHero: boolean; isSpecialTarget?: boolean; size?: number;
 }) {
-  const cor  = POS_CORES[player.pos] ?? '#71717A';
-
+  const cor = POS_CORES[player.pos] ?? '#71717A';
   return (
     <motion.div
       initial={{ scale: 0.3, opacity: 0 }}
@@ -224,7 +184,6 @@ function PlayerCardCampo({ player, isCaptain, isHero, isSpecialTarget, size = 60
       className="relative"
       style={{ width: size }}
     >
-      {/* Aura pulsante para modo especial */}
       {isSpecialTarget && (
         <motion.div
           animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
@@ -237,7 +196,6 @@ function PlayerCardCampo({ player, isCaptain, isHero, isSpecialTarget, size = 60
           }}
         />
       )}
-
       <div
         className="relative bg-zinc-900 rounded-lg overflow-hidden border-2"
         style={{
@@ -250,13 +208,7 @@ function PlayerCardCampo({ player, isCaptain, isHero, isSpecialTarget, size = 60
             : `0 0 8px ${POS_GLOW[player.pos] ?? 'transparent'}`,
         }}
       >
-        {/* Foto alinhada à DIREITA — "comemoração/ação" */}
-        <img
-          src={player.foto}
-          className="w-full h-full object-cover"
-          style={{ objectPosition: 'right top' }}
-          alt={player.short}
-        />
+        <img src={player.foto} className="w-full h-full object-cover" style={{ objectPosition: 'right top' }} alt={player.short} />
         <div className="absolute bottom-0 w-full bg-black/85 text-center py-[2px]">
           <div className="text-[6px] font-black" style={{ color: cor }}>{player.pos}</div>
           <div className="text-white text-[7px] font-black uppercase truncate px-0.5">{player.short}</div>
@@ -276,21 +228,17 @@ function PlayerCardCampo({ player, isCaptain, isHero, isSpecialTarget, size = 60
   );
 }
 
-// ─── Save Badge ───────────────────────────────────────────────────────────────
-
 function SaveBadge({ status }: { status: 'idle' | 'saving' | 'saved' | 'error' }) {
   if (status === 'idle') return null;
   const map = {
     saving: { label: 'Salvando...', cls: 'text-zinc-500' },
     saved:  { label: '✓ Salvo',     cls: 'text-green-500' },
-    error:  { label: '⚠ Erro',      cls: 'text-red-400' },
+    error:  { label: '⚠ Erro',      cls: 'text-red-400'   },
   };
   const c = map[status];
   return (
-    <motion.span
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className={`text-[9px] font-black uppercase tracking-widest ${c.cls}`}
-    >
+    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className={`text-[9px] font-black uppercase tracking-widest ${c.cls}`}>
       {c.label}
     </motion.span>
   );
@@ -300,21 +248,35 @@ function SaveBadge({ status }: { status: 'idle' | 'saving' | 'saved' | 'error' }
 
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
   const resolvedParams = use(params);
-  const jogoRef = resolvedParams?.jogoId;
+  const jogoRef        = resolvedParams?.jogoId;
 
-  const [authed, setAuthed] = useState(false);
-  const [googleId, setGoogleId] = useState<string | null>(null);
+  // ── TODOS os hooks aqui — NUNCA depois de um return condicional ───────────
+  const [authed,        setAuthed]        = useState(false);
+  const [googleId,      setGoogleId]      = useState<string | null>(null);
+  const [perfil,        setPerfil]        = useState<Perfil | null>(null);
+  const [selectedSlot,  setSelectedSlot]  = useState<string | null>(null);
+  const [filterPos,     setFilterPos]     = useState('TODOS');
+  const [specialMode,   setSpecialMode]   = useState<'CAPTAIN' | 'HERO' | null>(null);
+  const [showFinalCard, setShowFinalCard] = useState(false);
+  const [bench,         setBench]         = useState<(Player | null)[]>([null, null, null, null, null]);
 
   const esc = useEscalacao(jogoRef);
 
-  const [selectedSlot,   setSelectedSlot]   = useState<string | null>(null);
-  const [filterPos,      setFilterPos]       = useState('TODOS');
-  const [specialMode,    setSpecialMode]     = useState<'CAPTAIN' | 'HERO' | null>(null);
-  const [showFinalCard,  setShowFinalCard]   = useState(false);
-  const [bench,          setBench]           = useState<(Player | null)[]>([null, null, null, null, null]);
+  const supabase = React.useMemo(() => createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ), []);
 
-  // Auth gate
-  if (!authed) return <AuthGate onAuthenticated={(uid) => { setGoogleId(uid); setAuthed(true); }} />;
+  // Busca perfil do usuário logado para passar ao TigreFCShare
+  useEffect(() => {
+    if (!esc.usuarioId) return;
+    supabase
+      .from('tigre_fc_usuarios')
+      .select('display_name, avatar_url, nivel, xp')
+      .eq('id', esc.usuarioId)
+      .single()
+      .then(({ data }) => { if (data) setPerfil(data as Perfil); });
+  }, [esc.usuarioId, supabase]);
 
   const currentFormation = FORMATIONS[esc.formacao] ?? FORMATIONS['4-2-3-1'];
 
@@ -357,26 +319,30 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   };
 
   const handleBenchDrop = (idx: number, player: Player) => {
-    setBench(prev => {
-      const next = [...prev];
-      next[idx] = player;
-      return next;
-    });
+    setBench(prev => { const n = [...prev]; n[idx] = player; return n; });
   };
 
-  if (esc.isLoading) return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Carregando escalação...</p>
+  // ── Returns condicionais DEPOIS de todos os hooks ─────────────────────────
+
+  if (!authed) {
+    return <AuthGate onAuthenticated={(uid) => { setGoogleId(uid); setAuthed(true); }} />;
+  }
+
+  if (esc.isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Carregando escalação...</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
 
-      {/* ── HEADER ── */}
+      {/* HEADER */}
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-2">
           <img src={PATA_LOGO} className="w-6 h-6 object-contain" alt="" />
@@ -384,18 +350,14 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </div>
         <div className="flex items-center gap-3">
           <SaveBadge status={esc.saveStatus} />
-          {/* Formation Pills */}
           <div className="flex gap-1">
             {Object.keys(FORMATIONS).map(f => (
-              <button
-                key={f}
-                onClick={() => esc.setFormacao(f)}
+              <button key={f} onClick={() => esc.setFormacao(f)}
                 className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
                   esc.formacao === f
                     ? 'bg-yellow-500 text-black shadow-[0_0_8px_rgba(245,196,0,0.5)]'
                     : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800 border border-zinc-800'
-                }`}
-              >
+                }`}>
                 {FORMATION_LABELS[f]}
               </button>
             ))}
@@ -403,18 +365,16 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </div>
       </header>
 
-      {/* ── CAMPO (TOPO — Mobile First) ── */}
+      {/* CAMPO */}
       <div className="px-3 pt-4 pb-2">
         <div className="relative w-full max-w-lg mx-auto aspect-[1/1.25] rounded-2xl overflow-visible">
           <CampoFifa />
           <div className="absolute inset-0 z-10">
             {currentFormation.map(slot => {
-              const player = esc.lineup[slot.id];
+              const player   = esc.lineup[slot.id];
               const isTarget = !!specialMode && !!player;
               return (
-                <div
-                  key={slot.id}
-                  onClick={() => handleSlotClick(slot.id)}
+                <div key={slot.id} onClick={() => handleSlotClick(slot.id)}
                   style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
                   className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:z-20 transition-all"
                 >
@@ -448,20 +408,15 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </div>
       </div>
 
-      {/* ── BANCO DE RESERVAS ── */}
+      {/* BANCO DE RESERVAS */}
       <div className="px-3 pb-4">
         <div className="max-w-lg mx-auto">
-          <p className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-700 mb-2 text-center">
-            Banco de Reservas
-          </p>
+          <p className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-700 mb-2 text-center">Banco de Reservas</p>
           <div className="flex gap-2 justify-center">
             {bench.map((player, idx) => (
-              <div
-                key={idx}
+              <div key={idx}
                 onClick={() => { if (!player) setSelectedSlot(`bench-${idx}`); }}
-                className={`relative w-12 h-16 rounded-lg border border-dashed cursor-pointer transition-all ${
-                  player ? 'border-zinc-700' : 'border-zinc-800 hover:border-zinc-600'
-                }`}
+                className={`relative w-12 h-16 rounded-lg border border-dashed cursor-pointer transition-all ${player ? 'border-zinc-700' : 'border-zinc-800 hover:border-zinc-600'}`}
                 style={{ opacity: 0.7 }}
               >
                 {player ? (
@@ -486,14 +441,11 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </div>
       </div>
 
-      {/* ── FLUXO PÓS-TIME-COMPLETO ── */}
+      {/* FLUXO PÓS-TIME-COMPLETO */}
       <AnimatePresence>
         {isFullTeam && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="px-3 pb-4 max-w-lg mx-auto space-y-4"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="px-3 pb-4 max-w-lg mx-auto space-y-4">
             <CapitaoEHeroi
               onSelect={mode => setSpecialMode(mode)}
               captainName={captainPlayer?.short}
@@ -530,23 +482,19 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         )}
       </AnimatePresence>
 
-      {/* ── MERCADO (PAINEL ABAIXO — Mobile First) ── */}
+      {/* MERCADO */}
       <div className="border-t border-white/5 bg-zinc-950/50">
         <div className="px-3 py-4 max-w-lg mx-auto">
-
-          {/* Filtros por posição — pills */}
           <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
             {['TODOS', 'GOL', 'ZAG', 'LAT', 'MEI', 'ATA'].map(pos => (
-              <button
-                key={pos}
-                onClick={() => setFilterPos(pos)}
+              <button key={pos} onClick={() => setFilterPos(pos)}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all border ${
                   filterPos === pos
                     ? 'text-black border-transparent'
                     : 'bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
                 }`}
                 style={filterPos === pos ? {
-                  background: pos === 'TODOS' ? '#F5C400' : POS_CORES[pos],
+                  background: pos === 'TODOS' ? '#F5C400' : (POS_CORES[pos] ?? '#F5C400'),
                   boxShadow: `0 0 10px ${POS_GLOW[pos] ?? 'rgba(245,196,0,0.4)'}`,
                 } : {}}
               >
@@ -555,21 +503,16 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             ))}
           </div>
 
-          {/* Indicação de slot ativo */}
           {selectedSlot && !selectedSlot.startsWith('bench') && (
-            <motion.p
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="text-yellow-500 text-[10px] font-black uppercase tracking-widest text-center mb-3 animate-pulse"
-            >
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="text-yellow-500 text-[10px] font-black uppercase tracking-widest text-center mb-3 animate-pulse">
               ▲ Selecione um jogador para o slot destacado
             </motion.p>
           )}
 
-          {/* Grid de jogadores */}
           <div className="grid grid-cols-1 gap-2">
             {filteredPlayers.map((p, i) => (
-              <motion.div
-                key={p.id}
+              <motion.div key={p.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.02 }}
@@ -578,8 +521,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                   player={p}
                   onClick={() => {
                     if (selectedSlot?.startsWith('bench-')) {
-                      const idx = parseInt(selectedSlot.replace('bench-', ''));
-                      handleBenchDrop(idx, p);
+                      handleBenchDrop(parseInt(selectedSlot.replace('bench-', '')), p);
                       setSelectedSlot(null);
                     } else {
                       handleSelectPlayer(p);
@@ -597,26 +539,26 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </div>
       </div>
 
-      {/* Modal Final */}
-     {showFinalCard && (
-  <TigreFCShare
-    usuario={{
-      display_name: perfil?.display_name,
-      avatar_url:   perfil?.avatar_url,
-      nivel:        perfil?.nivel,
-      xp:           perfil?.xp,
-    }}
-    escalacao={{
-      formacao:    esc.formacao,
-      lineup_json: esc.lineup,
-      capitan_id:  esc.captainId,
-      heroi_id:    esc.heroId,
-      score_tigre: esc.scoreTigre,
-      score_adv:   esc.scoreAdv,
-    }}
-    onClose={() => setShowFinalCard(false)}
-  />
-)}
+      {/* MODAL SHARE — TigreFCShare substitui FinalCardReveal */}
+      {showFinalCard && (
+        <TigreFCShare
+          usuario={{
+            display_name: perfil?.display_name,
+            avatar_url:   perfil?.avatar_url,
+            nivel:        perfil?.nivel,
+            xp:           perfil?.xp,
+          }}
+          escalacao={{
+            formacao:    esc.formacao,
+            lineup_json: esc.lineup,
+            capitan_id:  esc.captainId,
+            heroi_id:    esc.heroId,
+            score_tigre: esc.scoreTigre,
+            score_adv:   esc.scoreAdv,
+          }}
+          onClose={() => setShowFinalCard(false)}
+        />
+      )}
 
       <style jsx global>{`
         .scrollbar-none::-webkit-scrollbar { display: none; }
