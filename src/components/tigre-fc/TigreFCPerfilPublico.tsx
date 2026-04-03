@@ -127,6 +127,7 @@ interface PerfilPublicoProps {
   onClose?: () => void;
   targetUsuarioId?: string;
   viewerUsuarioId?: string | null;
+  targetUserId?: string; // Adicionado para resolver o erro no RankingPage
 }
 
 export default function TigreFCPerfilPublico({
@@ -136,10 +137,11 @@ export default function TigreFCPerfilPublico({
   onClose,
   targetUsuarioId,
   viewerUsuarioId,
+  targetUserId,
 }: PerfilPublicoProps) {
 
-  // RESOLVIDO: Removida a variável targetUserId inexistente para consertar o build
-  const resolvedTargetId = usuarioId ?? targetUsuarioId ?? '';
+  // Lógica de resolução de IDs para compatibilidade total
+  const resolvedTargetId = usuarioId ?? targetUsuarioId ?? targetUserId ?? '';
   const resolvedViewerId = meuId      ?? viewerUsuarioId ?? null;
 
   const supabase = createBrowserClient(
