@@ -350,13 +350,13 @@ function BenchArea({lineup,selectedSlot,onSlotClick}:{lineup:Lineup;selectedSlot
 }
 
 // ── MERCADO (Cards verticais menores — 3 colunas) ─────────────────────────────
-function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,selectedSlot,step}:{
+function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,selectedSlot,step,selectedPlayer}:{
   lineup:Lineup;filterPos:string;setFilterPos:(p:string)=>void;
-  onSelect:(p:Player)=>void;selectedSlot:string|null;step:Step;
+  onSelect:(p:Player)=>void;selectedSlot:string|null;step:Step;selectedPlayer:Player|null;
 }) {
   const usedIds=useMemo(()=>new Set(Object.values(lineup).filter(Boolean).map(p=>p!.id)),[lineup]);
   const filtered=useMemo(()=>PLAYERS.filter(p=>!usedIds.has(p.id)&&(filterPos==='TODOS'||p.pos===filterPos)),[usedIds,filterPos]);
-  const canPlace=!!selectedSlot;
+  const canPlace=!!selectedSlot || !!selectedPlayer;
 
   return (
     <div style={{background:'#080808',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
@@ -374,7 +374,7 @@ function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,selectedSlot,step}
         ))}
       </div>
       <div style={{padding:'0 12px 5px',fontSize:9,fontWeight:700,color:canPlace?'#F5C400':'#2a2a2a'}}>
-        {canPlace?'✦ Slot ativo — clique no jogador':step==='bench'?'🪑 Selecione um reserva':'← Clique num slot do campo primeiro'}
+        {canPlace?'✦ Slot ou jogador ativo — clique para escalar':step==='bench'?'🪑 Selecione um reserva':'← Clique num slot do campo primeiro'}
       </div>
 
       {/* Grid de cards verticais menores (3 colunas) */}
@@ -389,7 +389,7 @@ function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,selectedSlot,step}
         {filtered.map(p=>{
           const col=POS_COLORS[p.pos]??'#555';
           return (
-            <motion.button key={p.id} onClick={()=>canPlace&&onSelect(p)}
+            <motion.button key={p.id} onClick={()=>onSelect(p)}
               whileTap={canPlace?{scale:0.92}:{}} whileHover={canPlace?{scale:1.04}:{}}
               style={{
                 background:'#111',
@@ -404,20 +404,9 @@ function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,selectedSlot,step}
                 transition:'opacity 0.2s',
               }}
             >
-              {/* Foto estática (metade esquerda) */}
+              {/* Foto estática (metade esquerda) — FOTO DUPLA CORRIGIDA */}
               <div style={{width:'100%',aspectRatio:'4/5',position:'relative',overflow:'hidden',background:'#0d0d0d'}}>
-                <img src={p.foto} alt={p.short}
-                  onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
-                  style={{
-                    position:'absolute',
-                    height:'100%',
-                    width:'auto',
-                    left:0,
-                    top:0,
-                    objectFit:'cover',
-                    objectPosition:'left center',
-                  }}
-                />
+                <PlayerPhoto foto={p.foto} pose="static" cW={300} cH={375} radius={0} />
               </div>
 
               {/* Info inferior */}
@@ -734,6 +723,7 @@ export default function EscalacaoFormacao() {
   const [step,setStep]=useState<Step>('picking');
   const [lineup,setLineup]=useState<Lineup>({});
   const [selectedSlot,setSelectedSlot]=useState<string|null>(null);
+  const [selectedPlayer,setSelectedPlayer]=useState<Player|null>(null); // ← NOVO: permite clicar jogador primeiro
   const [filterPos,setFilterPos]=useState('TODOS');
   const [captainId,setCaptainId]=useState<number|null>(null);
   const [heroId,setHeroId]=useState<number|null>(null);
@@ -744,7 +734,7 @@ export default function EscalacaoFormacao() {
   const fieldCount=useMemo(()=>SLOTS.filter(s=>!!lineup[s.id]).length,[lineup]);
   const benchCount=useMemo(()=>BENCH_IDS.filter(id=>!!lineup[id]).length,[lineup]);
 
-  // Slot click: ativa slot OU resolve capitão/herói
+  // ── LÓGICA CENTRALIZADA DE COMUNICAÇÃO MERCADO ↔ CAMPO (bidirecional) ──
   const handleSlotClick=useCallback((slotId:string)=>{
     if(step==='captain_hero'&&specialMode){
       const player=lineup[slotId];
@@ -753,23 +743,43 @@ export default function EscalacaoFormacao() {
       else{setHeroId(player.id);setSpecialMode(null);}
       return;
     }
-    setSelectedSlot(prev=>prev===slotId?null:slotId);
-  },[step,specialMode,lineup]);
 
-  // Selecionar jogador no mercado → vai para o slot ativo
+    // Nova lógica bidirecional
+    if(selectedPlayer){
+      const newLineup:Lineup={...lineup};
+      Object.keys(newLineup).forEach(k=>{if(newLineup[k]?.id===selectedPlayer.id)newLineup[k]=null;});
+      newLineup[slotId]=selectedPlayer;
+      setLineup(newLineup);
+      setSelectedPlayer(null);
+      setSelectedSlot(null);
+
+      const nf=SLOTS.filter(s=>!!newLineup[s.id]).length;
+      const nb=BENCH_IDS.filter(id=>!!newLineup[id]).length;
+      if(step==='picking'&&nf===11){setTimeout(()=>{confetti({particleCount:80,spread:60,origin:{y:0.5},colors:['#F5C400','#fff','#22C55E']});setStep('bench');},350);}
+      else if(step==='bench'&&nb===5){setTimeout(()=>{confetti({particleCount:130,spread:80,origin:{y:0.4},colors:['#F5C400','#fff','#EF4444']});setStep('captain_hero');},350);}
+      return;
+    }
+
+    setSelectedSlot(prev=>prev===slotId?null:slotId);
+  },[step,specialMode,lineup,selectedPlayer]);
+
   const handleSelectPlayer=useCallback((player:Player)=>{
-    if(!selectedSlot)return;
-    // Remove da posição anterior
-    const newLineup:Lineup={...lineup};
-    Object.keys(newLineup).forEach(k=>{if(newLineup[k]?.id===player.id)newLineup[k]=null;});
-    newLineup[selectedSlot]=player;
-    setLineup(newLineup);
-    setSelectedSlot(null);
-    // Auto-advance
-    const nf=SLOTS.filter(s=>!!newLineup[s.id]).length;
-    const nb=BENCH_IDS.filter(id=>!!newLineup[id]).length;
-    if(step==='picking'&&nf===11){setTimeout(()=>{confetti({particleCount:80,spread:60,origin:{y:0.5},colors:['#F5C400','#fff','#22C55E']});setStep('bench');},350);}
-    else if(step==='bench'&&nb===5){setTimeout(()=>{confetti({particleCount:130,spread:80,origin:{y:0.4},colors:['#F5C400','#fff','#EF4444']});setStep('captain_hero');},350);}
+    if(selectedSlot){
+      const newLineup:Lineup={...lineup};
+      Object.keys(newLineup).forEach(k=>{if(newLineup[k]?.id===player.id)newLineup[k]=null;});
+      newLineup[selectedSlot]=player;
+      setLineup(newLineup);
+      setSelectedSlot(null);
+      setSelectedPlayer(null);
+
+      const nf=SLOTS.filter(s=>!!newLineup[s.id]).length;
+      const nb=BENCH_IDS.filter(id=>!!newLineup[id]).length;
+      if(step==='picking'&&nf===11){setTimeout(()=>{confetti({particleCount:80,spread:60,origin:{y:0.5},colors:['#F5C400','#fff','#22C55E']});setStep('bench');},350);}
+      else if(step==='bench'&&nb===5){setTimeout(()=>{confetti({particleCount:130,spread:80,origin:{y:0.4},colors:['#F5C400','#fff','#EF4444']});setStep('captain_hero');},350);}
+    } else {
+      // Permite clicar no jogador ANTES do slot
+      setSelectedPlayer(prev=>prev?.id===player.id?null:player);
+    }
   },[selectedSlot,lineup,step]);
 
   const handleCaptainHeroDone=useCallback(()=>{confetti({particleCount:200,spread:100,origin:{y:0.5},colors:['#F5C400','#00F3FF','#fff','#EF4444']});setStep('score');},[]);
@@ -819,7 +829,7 @@ export default function EscalacaoFormacao() {
           </div>
           {(fieldCount===11||step==='bench')&&<BenchArea lineup={lineup} selectedSlot={selectedSlot} onSlotClick={handleSlotClick}/>}
           <PlayerPicker lineup={lineup} filterPos={filterPos} setFilterPos={setFilterPos}
-            onSelect={handleSelectPlayer} selectedSlot={selectedSlot} step={step}/>
+            onSelect={handleSelectPlayer} selectedSlot={selectedSlot} step={step} selectedPlayer={selectedPlayer}/>
         </>
       )}
 
