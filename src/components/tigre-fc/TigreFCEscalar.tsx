@@ -85,14 +85,13 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
       </div>
       <style jsx>{`
         .card-wrapper { position: relative; transition: transform 0.2s; flex-shrink: 0; margin: 0 auto; }
-        .selected { transform: scale(1.08); z-index: 50; }
         .card-box { background: #111; border-radius: 4px; overflow: hidden; position: relative; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .badge { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; z-index: 5; border: 1px solid #000; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .badge { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; z-index: 5; border: 1px solid #000; }
         .cap { background: #F5C400; color: #000; }
         .star { background: #fff; color: #000; }
-        .card-info { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); text-align: center; padding: 2px 0; border-top: 1px solid rgba(245,196,0,0.3); }
+        .card-info { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); text-align: center; padding: 2px 0; }
         .pos { color: #F5C400; font-size: 6px; font-weight: 900; }
-        .name { color: #fff; font-size: 8px; font-weight: 900; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .name { color: #fff; font-size: 8px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       `}</style>
     </div>
   );
@@ -118,11 +117,11 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: string | number }) 
     setMounted(true);
     const init = async () => {
       const { data: jogo } = await supabase.from('jogos').select('*').eq('id', jogoId).single();
-      if (jogo) setGameData({ home: 'TIGRE', away: jogo.adversario?.toUpperCase(), logoAway: `${ESCUDOS}${jogo.adversario_slug}.png` });
+      if (jogo) setGameData({ home: 'TIGRE', away: jogo.adversario?.toUpperCase() || 'ADVERSÁRIO', logoAway: `${ESCUDOS}${jogo.adversario_slug}.png` });
       
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase.from('escalacoes').select('*').eq('usuario_id', user.id).order('created_at', { ascending: false }).limit(1).single();
+        const { data } = await supabase.from('escalacoes').select('*').eq('usuario_id', user.id).eq('jogo_id', jogoId).order('created_at', { ascending: false }).limit(1).single();
         if (data) {
           setFormationKey(data.formacao as keyof typeof FORMATIONS);
           setCaptain(data.capitao_id); setHero(data.heroi_id);
@@ -142,6 +141,12 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: string | number }) 
     return () => window.removeEventListener('resize', up);
   }, [jogoId]);
 
+  const handlePlayerClick = useCallback((p: Player) => {
+    if (specialMode === 'captain') { setCaptain(p.id); setSpecialMode(null); }
+    else if (specialMode === 'hero') { setHero(p.id); setSpecialMode(null); }
+    else if (selectedSlot) { setLineup(prev => ({...prev, [selectedSlot]: p})); setSelectedSlot(null); }
+  }, [specialMode, selectedSlot]);
+
   const currentIds = Object.values(lineup).filter(Boolean).map(p => p!.id);
   const is11 = currentIds.length === 11;
   const isComplete = is11 && captain !== null && hero !== null;
@@ -152,25 +157,22 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: string | number }) 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Criamos um objeto limpo para o lineup (apenas IDs para evitar erro de circularidade ou JSON pesado)
       const lineupData: any = {};
       Object.keys(lineup).forEach(key => {
-        if (lineup[key]) lineupData[key] = lineup[key]?.id;
+        if (lineup[key]) lineupData[key] = { id: lineup[key]!.id, short: lineup[key]!.short };
       });
 
-      const payload = {
+      const { error } = await supabase.from('escalacoes').insert({
         usuario_id: user.id,
         jogo_id: Number(jogoId),
         formacao: formationKey,
-        lineup: lineupData, // O Supabase converte objeto JS para JSONB automaticamente
+        lineup: lineupData,
         capitao_id: captain,
         heroi_id: hero,
         palpite_casa: palpite.home,
-        palpite_fora: palpite.away,
-        created_at: new Date().toISOString()
-      };
+        palpite_fora: palpite.away
+      });
 
-      const { error } = await supabase.from('escalacoes').insert(payload);
       if (error) throw error;
       router.push('/tigre-fc/minhas-escalacoes');
     } catch (err: any) {
@@ -272,57 +274,44 @@ export default function TigreFCEscalar({ jogoId }: { jogoId: string | number }) 
       <style jsx global>{`
         @keyframes neonY { 0%, 100% { box-shadow: 0 0 5px #F5C400; border-color: #F5C400; } 50% { box-shadow: 0 0 20px #F5C400; border-color: #fff; } }
         @keyframes neonW { 0%, 100% { box-shadow: 0 0 5px #fff; border-color: #fff; } 50% { box-shadow: 0 0 20px #fff; border-color: #F5C400; } }
-        
         body { background: #000; color: #fff; margin: 0; font-family: sans-serif; }
-        .top-bar { background: #F5C400; color: #000; padding: 15px; text-align: center; font-weight: 900; font-size: 18px; }
-        .gold { color: #fff; text-shadow: 1px 1px #000; }
+        .top-bar { background: #F5C400; color: #000; padding: 15px; text-align: center; font-weight: 900; }
         .view { display: flex; flex-direction: column; align-items: center; padding: 10px; max-width: 500px; margin: 0 auto; }
-        
-        .status-msg { width: 100%; padding: 12px; background: #111; text-align: center; font-weight: 800; font-size: 11px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #222; }
-        .status-msg.needs-special { color: #F5C400; border-color: #F5C400; }
+        .status-msg { width: 100%; padding: 12px; background: #111; text-align: center; font-weight: 800; font-size: 11px; border-radius: 8px; margin-bottom: 10px; }
+        .status-msg.needs-special { color: #F5C400; border: 1px solid #F5C400; }
         .status-msg.ready { background: #F5C400; color: #000; }
-
-        .field { position: relative; background: #1a4a1a; border-radius: 10px; overflow: hidden; border: 2px solid #333; }
+        .field { position: relative; background: #1a4a1a; border-radius: 10px; overflow: hidden; }
         .grass { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, #143d14 0, #143d14 40px, #1a4a1a 40px, #1a4a1a 80px); }
+        .marks { position: absolute; inset: 0; }
         .outline { position: absolute; inset: 10px; border: 1px solid rgba(255,255,255,0.2); }
         .mid { position: absolute; top: 50%; width: 100%; height: 1px; background: rgba(255,255,255,0.2); }
         .circle { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; transform: translate(-50%,-50%); }
-        
-        .slot { position: absolute; transform: translate(-50%, -50%); z-index: 10; cursor: pointer; }
-        .plus { border-radius: 50%; border: 2px dashed #444; display: flex; align-items: center; justify-content: center; color: #444; font-size: 20px; }
-        .plus.sel { border-color: #F5C400; color: #F5C400; background: rgba(245,196,0,0.1); }
-
+        .slot { position: absolute; transform: translate(-50%, -50%); z-index: 10; }
+        .plus { border-radius: 50%; border: 2px dashed #444; display: flex; align-items: center; justify-content: center; color: #444; }
+        .plus.sel { border-color: #F5C400; color: #F5C400; }
         .market { width: 100%; padding-bottom: 100px; margin-top: 20px; }
         .special-row { display: flex; gap: 10px; margin-bottom: 20px; }
         .btn-spec { flex: 1; padding: 14px; border-radius: 10px; background: #111; border: 1px solid #333; color: #555; font-weight: 900; font-size: 10px; }
         .btn-spec.on { border-color: #F5C400; color: #fff; }
-        .neon-yellow { animation: neonY 1s infinite !important; color: #fff !important; }
-        .neon-white { animation: neonW 1s infinite !important; color: #fff !important; }
-
+        .neon-yellow { animation: neonY 1s infinite !important; }
+        .neon-white { animation: neonW 1s infinite !important; }
         .filter-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
         .filter-row button { background: #111; border: 1px solid #222; color: #666; padding: 7px 15px; border-radius: 20px; font-size: 10px; font-weight: 800; }
         .filter-row button.active { background: #fff; color: #000; }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-
         .footer-dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 50%); display: flex; justify-content: center; z-index: 100; }
-        .go-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 12px; font-weight: 900; font-size: 15px; box-shadow: 0 5px 20px rgba(245,196,0,0.3); }
-        .go-btn:disabled { opacity: 0.3; box-shadow: none; }
-
-        /* PALPITE UI */
+        .go-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; color: #000; border: none; border-radius: 12px; font-weight: 900; }
         .palpite-view { min-height: 80vh; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
-        .title { color: #F5C400; font-weight: 900; margin-bottom: 40px; }
-        .match-card { display: flex; align-items: center; gap: 20px; width: 100%; max-width: 400px; justify-content: space-between; margin-bottom: 50px; }
-        .team { display: flex; flex-direction: column; align-items: center; flex: 1; }
-        .shield { width: 90px; height: 90px; background: #111; border-radius: 20px; padding: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid #222; }
+        .match-card { display: flex; align-items: center; gap: 20px; width: 100%; justify-content: space-between; margin-bottom: 50px; }
+        .team { display: flex; flex-direction: column; align-items: center; }
+        .shield { width: 80px; height: 80px; background: #111; border-radius: 15px; padding: 10px; display: flex; align-items: center; justify-content: center; }
         .shield img { max-width: 100%; max-height: 100%; }
-        .team p { font-weight: 900; font-size: 12px; margin: 10px 0; color: #888; }
-        .control { display: flex; align-items: center; background: #111; border-radius: 12px; border: 1px solid #333; padding: 4px; }
-        .control button { width: 35px; height: 35px; background: #222; border: none; color: #fff; border-radius: 8px; font-weight: 900; }
-        .control span { width: 40px; text-align: center; font-size: 24px; font-weight: 900; color: #F5C400; }
-        .vs { font-weight: 900; color: #333; font-size: 20px; padding-top: 30px; }
+        .control { display: flex; align-items: center; background: #111; border-radius: 10px; padding: 5px; margin-top: 10px; }
+        .control button { width: 30px; height: 30px; background: #222; border: none; color: #fff; border-radius: 5px; }
+        .control span { width: 30px; text-align: center; font-weight: 900; color: #F5C400; }
         .final-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px; }
-        .save { padding: 20px; background: #F5C400; border: none; border-radius: 12px; font-weight: 900; font-size: 16px; box-shadow: 0 10px 20px rgba(245,196,0,0.2); }
-        .back { padding: 15px; background: transparent; border: 1px solid #333; color: #555; border-radius: 12px; font-weight: 800; }
+        .save { padding: 20px; background: #F5C400; border: none; border-radius: 12px; font-weight: 900; }
+        .back { padding: 15px; background: transparent; border: 1px solid #333; color: #555; border-radius: 12px; }
       `}</style>
     </main>
   );
