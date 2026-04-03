@@ -10,7 +10,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import confetti from 'canvas-confetti';
 import { NIVEL_CORES, NIVEL_ICONES } from '@/hooks/useLigas'; // Ajuste o path
 
@@ -97,7 +97,9 @@ interface TigreFCPerfilPublicoProps {
 }
 
 export default function TigreFCPerfilPublico({ targetUsuarioId, viewerUsuarioId }: TigreFCPerfilPublicoProps) {
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
   const [dados, setDados]         = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
