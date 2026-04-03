@@ -79,7 +79,6 @@ export default function FinalCardReveal({
         useCORS: true,
         scale: 3, // Alta definição para redes sociais
         backgroundColor: '#09090b',
-        borderRadius: 40,
         logging: false
       });
 
