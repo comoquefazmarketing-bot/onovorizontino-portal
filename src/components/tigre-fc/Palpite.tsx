@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * CapitaoEHeroi v3
+ * CapitaoEHeroi v3.1 - Finalizado
  * Aura pulsante dourada/ciano nos jogadores selecionáveis.
  * Sem escurecer o campo — mantém brilho total, destaca com aura.
  */
@@ -126,7 +126,7 @@ export default function CapitaoEHeroi({ onSelect, captainName, heroName, captain
           </div>
         </motion.button>
 
-        {/* Separador VS */}
+        {/* Separador VS/& */}
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
