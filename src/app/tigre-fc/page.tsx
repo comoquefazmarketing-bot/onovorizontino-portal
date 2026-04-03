@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, use } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, type Transition } from 'framer-motion';
 import { supabase as sb } from '@/lib/supabase';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
@@ -27,7 +27,7 @@ function FlipDigit({ value }: { value: string }) {
       key={value}
       initial={{ rotateX: -90, opacity: 0 }}
       animate={{ rotateX: 0, opacity: 1 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      transition={{ duration: 0.25, ease: 'easeOut' as const }}
       style={{ display: 'inline-block', transformOrigin: '50% 50%' }}
     >
       {value}
@@ -191,7 +191,12 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   if (!mounted) return <div className="min-h-screen bg-[#050505]" />;
 
-  const stagger = (i: number) => ({ initial: { opacity: 0, y: 28 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.1 + i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] } });
+  const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+  const stagger = (i: number): { initial: object; animate: object; transition: Transition } => ({
+    initial: { opacity: 0, y: 28 },
+    animate: { opacity: 1, y: 0 },
+    transition: { delay: 0.1 + i * 0.08, duration: 0.5, ease: EASE },
+  });
 
   return (
     <main style={{ minHeight: '100vh', background: '#050505', color: '#fff', overflowX: 'hidden', fontFamily: "'Barlow Condensed', system-ui, sans-serif" }}>
@@ -266,7 +271,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         <ParticlesBg />
 
         <div style={{ position: 'relative', zIndex: 10, padding: '80px 24px 60px', textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
-          <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
+          <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}>
             <img src={PATA_LOGO} style={{ width: 72, height: 72, objectFit: 'contain', margin: '0 auto 16px', filter: 'drop-shadow(0 0 24px rgba(245,196,0,0.6))' }} alt="" />
           </motion.div>
 
@@ -515,7 +520,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                   key={u.id}
                   initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 * i, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ delay: 0.05 * i, duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
                   whileHover={{ scale: 1.02, x: 4 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setPerfilAberto(u.id)}
