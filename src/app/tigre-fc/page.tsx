@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef, use } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import React, { useState, useMemo, use } from 'react';
+import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import FinalCardReveal from '@/components/tigre-fc/FinalCardReveal'; 
 
@@ -51,12 +51,39 @@ const PLAYERS = [
   { id: 39, name: 'Ronald Barcellos', short: 'Ronald',     num: 23, pos: 'ATA', foto: BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-const FORMATION_433 = [
-  { id: 'gk', x: 50, y: 85, pos: 'GOL' },
-  { id: 'rb', x: 82, y: 65, pos: 'LAT' }, { id: 'cb1', x: 62, y: 72, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 72, pos: 'ZAG' }, { id: 'lb', x: 18, y: 65, pos: 'LAT' },
-  { id: 'm1', x: 50, y: 50, pos: 'MEI' }, { id: 'm2', x: 75, y: 42, pos: 'MEI' }, { id: 'm3', x: 25, y: 42, pos: 'MEI' },
-  { id: 'st', x: 50, y: 12, pos: 'ATA' }, { id: 'rw', x: 82, y: 20, pos: 'ATA' }, { id: 'lw', x: 18, y: 20, pos: 'ATA' }
-];
+const FORMATIONS: Record<string, any[]> = {
+  '4-2-3-1': [ // PREFERIDA ENDERSON MOREIRA
+    { id: 'gk', x: 50, y: 88, pos: 'GOL' },
+    { id: 'rb', x: 82, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 18, y: 68, pos: 'LAT' },
+    { id: 'dm1', x: 35, y: 58, pos: 'MEI' }, { id: 'dm2', x: 65, y: 58, pos: 'MEI' },
+    { id: 'am1', x: 50, y: 38, pos: 'MEI' }, { id: 'rw', x: 82, y: 30, pos: 'ATA' }, { id: 'lw', x: 18, y: 30, pos: 'ATA' },
+    { id: 'st', x: 50, y: 15, pos: 'ATA' }
+  ],
+  '4-3-3': [
+    { id: 'gk', x: 50, y: 85, pos: 'GOL' },
+    { id: 'rb', x: 82, y: 65, pos: 'LAT' }, { id: 'cb1', x: 62, y: 72, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 72, pos: 'ZAG' }, { id: 'lb', x: 18, y: 65, pos: 'LAT' },
+    { id: 'm1', x: 50, y: 50, pos: 'MEI' }, { id: 'm2', x: 75, y: 42, pos: 'MEI' }, { id: 'm3', x: 25, y: 42, pos: 'MEI' },
+    { id: 'st', x: 50, y: 12, pos: 'ATA' }, { id: 'rw', x: 82, y: 20, pos: 'ATA' }, { id: 'lw', x: 18, y: 20, pos: 'ATA' }
+  ],
+  '4-4-2': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL' },
+    { id: 'rb', x: 85, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 15, y: 68, pos: 'LAT' },
+    { id: 'm1', x: 20, y: 48, pos: 'MEI' }, { id: 'm2', x: 40, y: 48, pos: 'MEI' }, { id: 'm3', x: 60, y: 48, pos: 'MEI' }, { id: 'm4', x: 80, y: 48, pos: 'MEI' },
+    { id: 'st1', x: 35, y: 18, pos: 'ATA' }, { id: 'st2', x: 65, y: 18, pos: 'ATA' }
+  ],
+  '3-5-2': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL' },
+    { id: 'cb1', x: 50, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 75, y: 72, pos: 'ZAG' }, { id: 'cb3', x: 25, y: 72, pos: 'ZAG' },
+    { id: 'm1', x: 50, y: 52, pos: 'MEI' }, { id: 'm2', x: 25, y: 48, pos: 'MEI' }, { id: 'm3', x: 75, y: 48, pos: 'MEI' }, { id: 'm4', x: 10, y: 38, pos: 'MEI' }, { id: 'm5', x: 90, y: 38, pos: 'MEI' },
+    { id: 'st1', x: 40, y: 18, pos: 'ATA' }, { id: 'st2', x: 60, y: 18, pos: 'ATA' }
+  ],
+  '5-4-1': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL' },
+    { id: 'cb1', x: 50, y: 78, pos: 'ZAG' }, { id: 'cb2', x: 70, y: 75, pos: 'ZAG' }, { id: 'cb3', x: 30, y: 75, pos: 'ZAG' }, { id: 'rb', x: 88, y: 68, pos: 'LAT' }, { id: 'lb', x: 12, y: 68, pos: 'LAT' },
+    { id: 'm1', x: 35, y: 48, pos: 'MEI' }, { id: 'm2', x: 65, y: 48, pos: 'MEI' }, { id: 'm3', x: 15, y: 42, pos: 'MEI' }, { id: 'm4', x: 85, y: 42, pos: 'MEI' },
+    { id: 'st', x: 50, y: 18, pos: 'ATA' }
+  ]
+};
 
 type Player = typeof PLAYERS[0];
 
@@ -107,8 +134,10 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   const [score, setScore] = useState({ home: 0, away: 0 });
   const [scoreLocked, setScoreLocked] = useState(false);
   const [showFinalCard, setShowFinalCard] = useState(false);
+  const [formationKey, setFormationKey] = useState('4-2-3-1');
 
-  const isFullTeam = useMemo(() => FORMATION_433.every(slot => !!lineup[slot.id]), [lineup]);
+  const currentFormation = useMemo(() => FORMATIONS[formationKey], [formationKey]);
+  const isFullTeam = useMemo(() => currentFormation.every(slot => !!lineup[slot.id]), [lineup, currentFormation]);
   const captainPlayer = useMemo(() => Object.values(lineup).find(p => p?.id === captainId), [lineup, captainId]);
   const heroPlayer = useMemo(() => Object.values(lineup).find(p => p?.id === heroId), [lineup, heroId]);
 
@@ -130,17 +159,31 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       
       {/* MERCADO (Esquerda) */}
       <section className="flex-1 bg-zinc-900/30 rounded-[40px] p-6 border border-white/5 h-[85vh] overflow-hidden flex flex-col">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-[1000] italic uppercase tracking-tighter">Mercado</h2>
-          <select onChange={(e) => setFilterPos(e.target.value)} className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-yellow-500 outline-none">
-            <option value="TODOS">TODOS</option>
-            <option value="GOL">GOLEIROS</option>
-            <option value="ZAG">ZAGUEIROS</option>
-            <option value="LAT">LATERAIS</option>
-            <option value="MEI">MEIO-CAMPO</option>
-            <option value="ATA">ATACANTES</option>
-          </select>
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-[1000] italic uppercase tracking-tighter">Tática</h2>
+            <select 
+              value={formationKey}
+              onChange={(e) => {setFormationKey(e.target.value); setLineup({});}} 
+              className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-white outline-none"
+            >
+              {Object.keys(FORMATIONS).map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-[1000] italic uppercase tracking-tighter">Mercado</h2>
+            <select onChange={(e) => setFilterPos(e.target.value)} className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-yellow-500 outline-none">
+              <option value="TODOS">TODOS JOGADORES</option>
+              <option value="GOL">GOLEIROS</option>
+              <option value="ZAG">ZAGUEIROS</option>
+              <option value="LAT">LATERAIS</option>
+              <option value="MEI">MEIO-CAMPO</option>
+              <option value="ATA">ATACANTES</option>
+            </select>
+          </div>
         </div>
+
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 overflow-y-auto pr-2 custom-scrollbar">
           {PLAYERS.filter(p => filterPos === 'TODOS' || p.pos === filterPos).map(p => (
             <div key={p.id} onClick={() => handleSelectPlayer(p)} className="cursor-pointer hover:brightness-125 transition active:scale-95">
@@ -155,7 +198,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         <div className={`relative w-full max-w-[550px] aspect-[1/1.3] mb-8 transition-opacity ${specialMode ? 'opacity-50' : 'opacity-100'}`}>
           <CampoFifa />
           <div className="absolute inset-0 z-10">
-            {FORMATION_433.map((slot) => {
+            {currentFormation.map((slot) => {
               const player = lineup[slot.id];
               return (
                 <div key={slot.id} onClick={() => handleSlotClick(slot.id)} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
@@ -175,7 +218,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
         {isFullTeam && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md space-y-6">
-            {/* CAPITÃO / HERÓI SELECTION */}
             <div className="flex justify-center gap-4">
               <button onClick={() => setSpecialMode('CAPTAIN')} className={`flex-1 p-4 rounded-xl border-2 transition-all ${captainId ? 'border-yellow-500 bg-yellow-500/10' : 'border-zinc-800'}`}>
                 <span className="block text-[10px] font-black text-yellow-500 uppercase">Capitão</span>
@@ -187,7 +229,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               </button>
             </div>
 
-            {/* PLACAR */}
             {captainId && heroId && (
               <div className="bg-zinc-900 p-6 rounded-3xl border border-white/5 space-y-4">
                 <div className="flex items-center justify-around">
@@ -219,7 +260,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       {showFinalCard && (
         <FinalCardReveal 
           lineup={lineup}
-          formation="4-3-3"
+          formation={currentFormation} // AQUI PASSA O ARRAY, NÃO A STRING
           captainId={captainId}
           heroId={heroId}
           scoreTigre={score.home}
