@@ -81,6 +81,130 @@ function PlayerPhoto({foto,pose,cW,cH,radius=0}:{foto:string;pose:'static'|'cele
   );
 }
 
+// ── CARD VERTICAL PREMIUM NO CAMPO ────────────────────────────────────────────
+// Card vertical (64×92) com pose de comemoração (metade direita), número de colecionador,
+// tarja agressiva no rodapé, flutuação 3D e sombra projetada no gramado.
+function VerticalFieldCard({player,isCaptain,isHero,pulsing,active,onClick}:{
+  player:Player;isCaptain:boolean;isHero:boolean;pulsing:boolean;active?:boolean;onClick:()=>void;
+}) {
+  const col = isCaptain ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#888');
+  return (
+    <motion.button onClick={onClick}
+      initial={{scale:0,opacity:0,y:-18}} animate={{scale:1,opacity:1,y:0}}
+      whileHover={{scale:1.08,y:-4}} whileTap={{scale:0.92}}
+      transition={{type:'spring',stiffness:380,damping:25}}
+      style={{
+        position:'relative',
+        width:64,
+        height:92,
+        background:'linear-gradient(180deg,#18181b 0%,#27272a 100%)',
+        borderRadius:14,
+        border:`2.5px solid ${col}`,
+        overflow:'hidden',
+        cursor:'pointer',
+        boxShadow:`0 0 18px ${col}60, 0 12px 28px rgba(0,0,0,0.75), 0 4px 12px rgba(0,0,0,0.5)`,
+        filter:'drop-shadow(0 18px 14px rgba(0,0,0,0.65))',
+        display:'flex',
+        flexDirection:'column',
+      }}
+    >
+      {/* Pulse ring (capitão/herói) */}
+      {pulsing && (
+        <motion.div
+          animate={{scale:[1,1.18,1],opacity:[0.7,0,0.7]}}
+          transition={{duration:1.1,repeat:Infinity}}
+          style={{
+            position:'absolute',inset:-10,borderRadius:20,
+            border:`3px solid ${col}`,pointerEvents:'none',zIndex:0,
+          }}
+        />
+      )}
+
+      {/* Active glow */}
+      {active && (
+        <motion.div
+          animate={{opacity:[0.3,0.95,0.3]}}
+          transition={{duration:1.4,repeat:Infinity}}
+          style={{
+            position:'absolute',inset:-8,borderRadius:20,
+            boxShadow:`0 0 0 5px ${col}90`,pointerEvents:'none',
+          }}
+        />
+      )}
+
+      {/* Número de colecionador (canto superior esquerdo) */}
+      <div style={{
+        position:'absolute',top:7,left:7,zIndex:20,
+        background:col,color:'#000',fontSize:11,fontWeight:900,
+        width:24,height:24,borderRadius:7,
+        display:'flex',alignItems:'center',justifyContent:'center',
+        boxShadow:`0 0 10px ${col}dd`,
+      }}>
+        {player.num}
+      </div>
+
+      {/* Capitão / Herói (canto superior direito) */}
+      {(isCaptain || isHero) && (
+        <motion.div initial={{scale:0}} animate={{scale:1}}
+          style={{
+            position:'absolute',top:7,right:7,zIndex:20,
+            background:col,color:'#000',fontSize:12,fontWeight:900,
+            padding:'3px 6px',borderRadius:5,lineHeight:1,
+            boxShadow:`0 0 12px ${col}cc`,
+          }}>
+          {isCaptain ? 'C' : '⭐'}
+        </motion.div>
+      )}
+
+      {/* Foto vertical — pose de comemoração (metade DIREITA) */}
+      <div style={{
+        width:64,height:68,position:'relative',overflow:'hidden',
+        borderTopLeftRadius:11,borderTopRightRadius:11,
+      }}>
+        <PlayerPhoto foto={player.foto} pose="celebration" cW={64} cH={68} radius={0} />
+      </div>
+
+      {/* Tarja do nome — tipografia agressiva */}
+      <div style={{
+        background:`linear-gradient(90deg,${col}ee,${col}aa)`,
+        height:24,display:'flex',alignItems:'center',justifyContent:'center',
+        fontFamily:"'Barlow Condensed',sans-serif",fontSize:9.5,
+        fontWeight:900,fontStyle:'italic',color:'#000',
+        textTransform:'uppercase',letterSpacing:-0.4,lineHeight:1,
+        boxShadow:'0 -3px 8px rgba(0,0,0,0.4)',
+      }}>
+        {player.short}
+      </div>
+    </motion.button>
+  );
+}
+
+// ── SLOT VAZIO VERTICAL ───────────────────────────────────────────────────────
+function EmptyVerticalSlot({pos,active,onClick}:{pos:string;active:boolean;onClick:()=>void}) {
+  const col = POS_COLORS[pos] ?? '#888';
+  return (
+    <motion.button onClick={onClick} whileTap={{scale:0.88}}
+      animate={active ? {boxShadow:[`0 0 0 0 ${col}30`,`0 0 32px 14px ${col}85`,`0 0 0 0 ${col}30`]} : {}}
+      transition={{duration:0.85,repeat:Infinity}}
+      style={{
+        width:64,height:92,borderRadius:14,cursor:'pointer',
+        border:`2.5px dashed ${active ? col : 'rgba(255,255,255,0.25)'}`,
+        background:active ? `${col}18` : 'rgba(20,20,20,0.68)',
+        display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,
+        boxShadow:active ? `0 0 26px ${col}70` : '0 10px 24px rgba(0,0,0,0.65)',
+      }}
+    >
+      <div style={{fontSize:26,opacity:0.15,lineHeight:1}}>+</div>
+      <div style={{
+        fontSize:10,fontWeight:900,color:active ? col : 'rgba(255,255,255,0.35)',
+        letterSpacing:1.5,textTransform:'uppercase',
+      }}>
+        {pos}
+      </div>
+    </motion.button>
+  );
+}
+
 // ── STADIUM BG ────────────────────────────────────────────────────────────────
 function StadiumBg() {
   return (
@@ -116,108 +240,12 @@ function StadiumBg() {
   );
 }
 
-// ── EMPTY SLOT ────────────────────────────────────────────────────────────────
-function EmptySlot({pos,active,onClick}:{pos:string;active:boolean;onClick:()=>void}) {
-  const col=POS_COLORS[pos]??'#888';
-  return (
-    <motion.button onClick={onClick} whileTap={{scale:0.88}}
-      animate={active?{boxShadow:[`0 0 0 0 ${col}40`,`0 0 20px 6px ${col}90`,`0 0 0 0 ${col}40`]}:{}}
-      transition={{duration:0.75,repeat:Infinity}}
-      style={{width:44,height:44,borderRadius:'50%',cursor:'pointer',
-        border:`2px dashed ${active?col:'rgba(255,255,255,0.2)'}`,
-        background:active?`${col}28`:'rgba(0,0,0,0.55)',backdropFilter:'blur(4px)',
-        display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:1,
-        boxShadow:active?`0 0 22px ${col}90,0 0 44px ${col}30`:'none',
-        transition:'border-color 0.2s,background 0.2s'}}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-        <path d="M13 2L4.5 13.5H11L10 22L20 9.5H13.5L13 2Z"
-          stroke={active?col:'rgba(255,255,255,0.22)'} strokeWidth="1.5"
-          fill={active?`${col}40`:'transparent'} strokeLinejoin="round"/>
-      </svg>
-      <span style={{fontSize:6,fontWeight:900,color:active?col:'rgba(255,255,255,0.2)',letterSpacing:1,textTransform:'uppercase',lineHeight:1}}>{pos}</span>
-    </motion.button>
-  );
-}
-
-// ── CARD NO CAMPO ─────────────────────────────────────────────────────────────
-function CardOnField({player,isCaptain,isHero,pulsing,onClick}:{
-  player:Player;isCaptain:boolean;isHero:boolean;pulsing:boolean;onClick:()=>void;
-}) {
-  const col=isCaptain?'#F5C400':isHero?'#00F3FF':(POS_COLORS[player.pos]??'#888');
-  return (
-    <motion.button onClick={onClick}
-      initial={{scale:0,opacity:0,y:-20}} animate={{scale:1,opacity:1,y:0}}
-      whileHover={{scale:1.1,y:-4}} whileTap={{scale:0.93}}
-      transition={{type:'spring',stiffness:420,damping:22}}
-      style={{position:'relative',cursor:'pointer',background:'none',border:'none',padding:0,
-        display:'flex',flexDirection:'column',alignItems:'center',gap:0}}>
-      {/* Pulse ring durante seleção capitão/herói */}
-      {pulsing&&(
-        <motion.div animate={{scale:[1,1.8,1],opacity:[0.9,0,0.9]}} transition={{duration:0.85,repeat:Infinity}}
-          style={{position:'absolute',inset:-6,borderRadius:'50%',border:`2px solid ${col}`,pointerEvents:'none'}}/>
-      )}
-      {/* Badge C / ⭐ */}
-      {(isCaptain||isHero)&&(
-        <motion.div initial={{scale:0}} animate={{scale:1}}
-          style={{position:'absolute',top:-9,right:-6,zIndex:10,
-            background:col,color:'#000',fontSize:8,fontWeight:900,
-            padding:'2px 5px',borderRadius:4,lineHeight:1,
-            boxShadow:`0 0 14px ${col}cc,0 0 28px ${col}60`}}>
-          {isCaptain?'C':'⭐'}
-        </motion.div>
-      )}
-      {/* ── Círculo com foto CELEBRAÇÃO (pose direita) ── */}
-      <div style={{
-        position:'relative',width:56,height:56,borderRadius:'50%',
-        overflow:'hidden',border:`2px solid ${col}`,
-        background:'#000',
-        boxShadow:`0 0 20px rgba(245,196,0,0.5),0 6px 18px rgba(0,0,0,0.8)`,
-      }}>
-        <img src={player.foto} alt={player.short}
-          onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
-          style={{
-            height:'100%',width:'auto',maxWidth:'none',
-            objectFit:'contain',
-            objectPosition:'right center',
-            transform:'scale(1.4)',
-            transformOrigin:'right center',
-          }}/>
-        {/* Shimmer neon no topo */}
-        <div style={{position:'absolute',top:0,left:0,right:0,height:'35%',
-          background:`linear-gradient(180deg,${col}20,transparent)`,pointerEvents:'none'}}/>
-      </div>
-      {/* ── Tarja LED skewed estilo FIFA ── */}
-      <div style={{
-        marginTop:-8,position:'relative',zIndex:5,
-        background:col,
-        padding:'3px 10px',
-        transform:'skewX(-10deg)',
-        borderRadius:3,
-        boxShadow:`0 4px 12px ${col}80`,
-      }}>
-        <span style={{
-          fontSize:9,fontWeight:900,color:'#000',
-          textTransform:'uppercase',fontStyle:'italic',letterSpacing:-0.3,
-          display:'block',whiteSpace:'nowrap',
-          transform:'skewX(10deg)',// contra-skew no texto
-        }}>
-          {player.short}
-        </span>
-      </div>
-      {/* Sombra flutuante */}
-      <motion.div animate={{scaleX:[1,0.6,1],opacity:[0.25,0.1,0.25]}}
-        transition={{duration:2.5,repeat:Infinity,ease:'easeInOut'}}
-        style={{width:34,height:5,borderRadius:'50%',background:'rgba(0,0,0,0.5)',filter:'blur(3px)',marginTop:4}}/>
-    </motion.button>
-  );
-}
-
 // ── CAMPO 3D ──────────────────────────────────────────────────────────────────
-function Field3D({lineup,activeSlot,onSlotClick,specialMode,captainId,heroId,step}:{
-  lineup:Lineup;activeSlot:string|null;onSlotClick:(id:string)=>void;
+function Field3D({lineup,selectedSlot,onSlotClick,specialMode,captainId,heroId,step}:{
+  lineup:Lineup;selectedSlot:string|null;onSlotClick:(id:string)=>void;
   specialMode:SpecialMode;captainId:number|null;heroId:number|null;step:Step;
 }) {
-  const pulsing=step==='captain_hero'&&specialMode!==null;
+  const pulsing = step==='captain_hero' && specialMode !== null;
   return (
     <div style={{width:'100%',maxWidth:440,margin:'0 auto',perspective:'480px',perspectiveOrigin:'50% 18%'}}>
       <div style={{position:'relative',width:'100%',paddingTop:'148%',transform:'rotateX(20deg)',transformOrigin:'bottom center',transformStyle:'preserve-3d'}}>
@@ -243,20 +271,38 @@ function Field3D({lineup,activeSlot,onSlotClick,specialMode,captainId,heroId,ste
           <div style={{position:'absolute',bottom:0,left:0,right:0,height:'14%',
             background:'linear-gradient(0deg,rgba(170,215,170,0.06) 0%,transparent 100%)',pointerEvents:'none'}}/>
         </div>
-        {/* Slots */}
+
+        {/* Slots — agora cards verticais flutuantes com rotateX oposto */}
         <div style={{position:'absolute',inset:0}}>
           {SLOTS.map(slot=>{
-            const player=lineup[slot.id]??null;
-            const isActive=activeSlot===slot.id;
-            const isPulsing=pulsing&&!!player;
+            const player = lineup[slot.id] ?? null;
+            const isActive = selectedSlot === slot.id;
+            const isPulsing = pulsing && !!player;
             return (
               <div key={slot.id} onClick={()=>onSlotClick(slot.id)}
-                style={{position:'absolute',left:`${slot.x}%`,top:`${slot.y}%`,transform:'translate(-50%,-50%)',
-                  zIndex:isActive?20:player?10:5,cursor:'pointer'}}>
+                style={{
+                  position:'absolute',
+                  left:`${slot.x}%`,
+                  top:`${slot.y}%`,
+                  transform:'translate(-50%, -50%) rotateX(-22deg)',
+                  zIndex:isActive ? 30 : player ? 20 : 10,
+                  cursor:'pointer',
+                }}
+              >
                 {player
-                  ? <CardOnField player={player} isCaptain={captainId===player.id} isHero={heroId===player.id}
-                      pulsing={isPulsing} onClick={()=>onSlotClick(slot.id)}/>
-                  : <EmptySlot pos={slot.pos} active={isActive} onClick={()=>onSlotClick(slot.id)}/>}
+                  ? <VerticalFieldCard
+                      player={player}
+                      isCaptain={captainId === player.id}
+                      isHero={heroId === player.id}
+                      pulsing={isPulsing}
+                      active={isActive}
+                      onClick={()=>onSlotClick(slot.id)}
+                    />
+                  : <EmptyVerticalSlot
+                      pos={slot.pos}
+                      active={isActive}
+                      onClick={()=>onSlotClick(slot.id)}
+                    />}
               </div>
             );
           })}
@@ -267,14 +313,14 @@ function Field3D({lineup,activeSlot,onSlotClick,specialMode,captainId,heroId,ste
 }
 
 // ── BANCO ─────────────────────────────────────────────────────────────────────
-function BenchArea({lineup,activeSlot,onSlotClick}:{lineup:Lineup;activeSlot:string|null;onSlotClick:(id:string)=>void}) {
+function BenchArea({lineup,selectedSlot,onSlotClick}:{lineup:Lineup;selectedSlot:string|null;onSlotClick:(id:string)=>void}) {
   return (
     <div style={{padding:'10px 12px 12px',background:'rgba(0,0,0,0.72)',backdropFilter:'blur(8px)',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
       <div style={{fontSize:7,fontWeight:900,color:'#2a2a2a',letterSpacing:4,textTransform:'uppercase',textAlign:'center',marginBottom:10}}>🪑 Banco de Reservas</div>
       <div style={{display:'flex',gap:8,justifyContent:'center'}}>
         {BENCH_IDS.map((id,i)=>{
           const player=lineup[id]??null;
-          const isActive=activeSlot===id;
+          const isActive=selectedSlot===id;
           const col=player?(POS_COLORS[player.pos]??'#555'):isActive?'#F5C400':'rgba(255,255,255,0.1)';
           return (
             <div key={id} onClick={()=>onSlotClick(id)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,cursor:'pointer'}}>
@@ -303,21 +349,14 @@ function BenchArea({lineup,activeSlot,onSlotClick}:{lineup:Lineup;activeSlot:str
   );
 }
 
-// ── MERCADO ───────────────────────────────────────────────────────────────────
-function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,activeSlot,activePlayer,step}:{
+// ── MERCADO (Cards verticais menores — 3 colunas) ─────────────────────────────
+function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,selectedSlot,step}:{
   lineup:Lineup;filterPos:string;setFilterPos:(p:string)=>void;
-  onSelect:(p:Player)=>void;activeSlot:string|null;activePlayer:Player|null;step:Step;
+  onSelect:(p:Player)=>void;selectedSlot:string|null;step:Step;
 }) {
   const usedIds=useMemo(()=>new Set(Object.values(lineup).filter(Boolean).map(p=>p!.id)),[lineup]);
   const filtered=useMemo(()=>PLAYERS.filter(p=>!usedIds.has(p.id)&&(filterPos==='TODOS'||p.pos===filterPos)),[usedIds,filterPos]);
-
-  // Hint inteligente
-  let hint:string;
-  let hintCol:string;
-  if(activeSlot){hint='✦ Slot ativo — clique no jogador';hintCol='#F5C400';}
-  else if(activePlayer){hint=`🟡 ${activePlayer.short} selecionado — clique num slot no campo`;hintCol='#F5C400';}
-  else if(step==='bench'){hint='🪑 Selecione um reserva ou slot do banco';hintCol='#2a2a2a';}
-  else{hint='← Clique num slot do campo ou num jogador aqui';hintCol='#2a2a2a';}
+  const canPlace=!!selectedSlot;
 
   return (
     <div style={{background:'#080808',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
@@ -334,34 +373,71 @@ function PlayerPicker({lineup,filterPos,setFilterPos,onSelect,activeSlot,activeP
           </button>
         ))}
       </div>
-      <div style={{padding:'0 12px 5px',fontSize:9,fontWeight:700,color:hintCol}}>{hint}</div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:7,padding:'0 12px 16px',maxHeight:210,overflowY:'auto'}}>
+      <div style={{padding:'0 12px 5px',fontSize:9,fontWeight:700,color:canPlace?'#F5C400':'#2a2a2a'}}>
+        {canPlace?'✦ Slot ativo — clique no jogador':step==='bench'?'🪑 Selecione um reserva':'← Clique num slot do campo primeiro'}
+      </div>
+
+      {/* Grid de cards verticais menores (3 colunas) */}
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'repeat(3,1fr)',
+        gap:10,
+        padding:'0 12px 20px',
+        maxHeight:260,
+        overflowY:'auto',
+      }}>
         {filtered.map(p=>{
           const col=POS_COLORS[p.pos]??'#555';
-          const isActive=activePlayer?.id===p.id;
           return (
-            <motion.button key={p.id} onClick={()=>onSelect(p)}
-              whileTap={{scale:0.91}} whileHover={{scale:1.04}}
-              style={{background:isActive?'rgba(245,196,0,0.15)':'#111',
-                border:isActive?`1.5px solid #F5C400`:`1.5px solid rgba(255,255,255,0.06)`,
-                borderRadius:10,overflow:'hidden',cursor:'pointer',padding:0,
-                boxShadow:isActive?'0 0 14px rgba(245,196,0,0.4)':'none',
-                transition:'all 0.15s'}}>
-              {/* Foto mercado — pose ESTÁTICA (esquerda) */}
-              <div style={{width:'100%',aspectRatio:'1/1.1',overflow:'hidden',position:'relative',background:'#0d0d0d'}}>
+            <motion.button key={p.id} onClick={()=>canPlace&&onSelect(p)}
+              whileTap={canPlace?{scale:0.92}:{}} whileHover={canPlace?{scale:1.04}:{}}
+              style={{
+                background:'#111',
+                border:`1.5px solid rgba(255,255,255,0.06)`,
+                borderRadius:12,
+                overflow:'hidden',
+                cursor:canPlace?'pointer':'default',
+                opacity:canPlace?1:0.45,
+                display:'flex',
+                flexDirection:'column',
+                height:'100%',
+                transition:'opacity 0.2s',
+              }}
+            >
+              {/* Foto estática (metade esquerda) */}
+              <div style={{width:'100%',aspectRatio:'4/5',position:'relative',overflow:'hidden',background:'#0d0d0d'}}>
                 <img src={p.foto} alt={p.short}
                   onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
-                  style={{position:'absolute',height:'100%',width:'auto',
-                    left:0,top:0,objectFit:'cover',objectPosition:'left center'}}/>
+                  style={{
+                    position:'absolute',
+                    height:'100%',
+                    width:'auto',
+                    left:0,
+                    top:0,
+                    objectFit:'cover',
+                    objectPosition:'left center',
+                  }}
+                />
               </div>
-              <div style={{padding:'3px 3px 4px',background:isActive?'rgba(245,196,0,0.1)':'#0d0d0d'}}>
-                <div style={{fontSize:6.5,color:isActive?'#F5C400':col,fontWeight:900,letterSpacing:0.5}}>{p.pos}</div>
-                <div style={{fontSize:8,color:'#fff',fontWeight:700,textTransform:'uppercase',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.short}</div>
+
+              {/* Info inferior */}
+              <div style={{padding:'7px 6px 6px',background:'#0d0d0d',flex:1,display:'flex',flexDirection:'column',justifyContent:'space-between'}}>
+                <div style={{fontSize:8,color:col,fontWeight:900,letterSpacing:0.5}}>{p.pos} • #{p.num}</div>
+                <div style={{
+                  fontSize:9.5,color:'#fff',fontWeight:700,textTransform:'uppercase',
+                  overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',lineHeight:1.1,
+                }}>
+                  {p.short}
+                </div>
               </div>
             </motion.button>
           );
         })}
-        {filtered.length===0&&<div style={{gridColumn:'1/-1',textAlign:'center',padding:'20px 0',color:'#22C55E',fontSize:11,fontWeight:700}}>Todos escalados ✓</div>}
+        {filtered.length===0 && (
+          <div style={{gridColumn:'1/-1',textAlign:'center',padding:'30px 0',color:'#22C55E',fontSize:11,fontWeight:700}}>
+            Todos escalados ✓
+          </div>
+        )}
       </div>
     </div>
   );
@@ -657,9 +733,7 @@ function ShareScreen({lineup,captainId,heroId,scoreTigre,scoreAdv}:{
 export default function EscalacaoFormacao() {
   const [step,setStep]=useState<Step>('picking');
   const [lineup,setLineup]=useState<Lineup>({});
-  // ── Dual-state: slot pendente OU jogador pendente ──────────────────────────
-  const [activeSlot,setActiveSlot]=useState<string|null>(null);
-  const [activePlayer,setActivePlayer]=useState<Player|null>(null);
+  const [selectedSlot,setSelectedSlot]=useState<string|null>(null);
   const [filterPos,setFilterPos]=useState('TODOS');
   const [captainId,setCaptainId]=useState<number|null>(null);
   const [heroId,setHeroId]=useState<number|null>(null);
@@ -670,60 +744,33 @@ export default function EscalacaoFormacao() {
   const fieldCount=useMemo(()=>SLOTS.filter(s=>!!lineup[s.id]).length,[lineup]);
   const benchCount=useMemo(()=>BENCH_IDS.filter(id=>!!lineup[id]).length,[lineup]);
 
-  // ── Executa a escalação e limpa os estados temporários ────────────────────
-  const executarEscalacao=useCallback((slotId:string,player:Player)=>{
-    setLineup(prev=>{
-      const novoTime={...prev};
-      // Regra anti-duplicidade: remove o jogador de onde estava
-      Object.keys(novoTime).forEach(k=>{if(novoTime[k]?.id===player.id)novoTime[k]=null;});
-      novoTime[slotId]=player;
-      return novoTime;
-    });
-    setActiveSlot(null);
-    setActivePlayer(null);
-    // Auto-advance (usa setTimeout para ler o estado atualizado via novo cálculo)
-    setTimeout(()=>{
-      setLineup(current=>{
-        const nf=SLOTS.filter(s=>!!current[s.id]).length;
-        const nb=BENCH_IDS.filter(id=>!!current[id]).length;
-        if(step==='picking'&&nf===11){confetti({particleCount:80,spread:60,origin:{y:0.5},colors:['#F5C400','#fff','#22C55E']});setStep('bench');}
-        else if(step==='bench'&&nb===5){confetti({particleCount:130,spread:80,origin:{y:0.4},colors:['#F5C400','#fff','#EF4444']});setStep('captain_hero');}
-        return current;
-      });
-    },350);
-  },[step]);
-
-  // ── handleEscalacao: clique no slot OU no jogador ─────────────────────────
-  const handleEscalacao=useCallback((slotId?:string,player?:Player)=>{
-    // Modo especial capitão/herói
-    if(step==='captain_hero'&&specialMode&&slotId){
-      const p=lineup[slotId];
-      if(!p)return;
-      if(specialMode==='CAPTAIN'){setCaptainId(p.id);setSpecialMode(null);}
-      else{setHeroId(p.id);setSpecialMode(null);}
+  // Slot click: ativa slot OU resolve capitão/herói
+  const handleSlotClick=useCallback((slotId:string)=>{
+    if(step==='captain_hero'&&specialMode){
+      const player=lineup[slotId];
+      if(!player)return;
+      if(specialMode==='CAPTAIN'){setCaptainId(player.id);setSpecialMode(null);}
+      else{setHeroId(player.id);setSpecialMode(null);}
       return;
     }
-    // CASO A: clicou no SLOT
-    if(slotId){
-      if(activePlayer){
-        // Tinha jogador esperando → escala direto
-        executarEscalacao(slotId,activePlayer);
-      } else {
-        // Nenhum jogador selecionado → ativa o slot (toggle)
-        setActiveSlot(prev=>prev===slotId?null:slotId);
-      }
-    }
-    // CASO B: clicou no JOGADOR (mercado)
-    if(player){
-      if(activeSlot){
-        // Tinha slot esperando → escala direto
-        executarEscalacao(activeSlot,player);
-      } else {
-        // Nenhum slot selecionado → ativa o jogador (toggle)
-        setActivePlayer(prev=>prev?.id===player.id?null:player);
-      }
-    }
-  },[step,specialMode,lineup,activeSlot,activePlayer,executarEscalacao]);
+    setSelectedSlot(prev=>prev===slotId?null:slotId);
+  },[step,specialMode,lineup]);
+
+  // Selecionar jogador no mercado → vai para o slot ativo
+  const handleSelectPlayer=useCallback((player:Player)=>{
+    if(!selectedSlot)return;
+    // Remove da posição anterior
+    const newLineup:Lineup={...lineup};
+    Object.keys(newLineup).forEach(k=>{if(newLineup[k]?.id===player.id)newLineup[k]=null;});
+    newLineup[selectedSlot]=player;
+    setLineup(newLineup);
+    setSelectedSlot(null);
+    // Auto-advance
+    const nf=SLOTS.filter(s=>!!newLineup[s.id]).length;
+    const nb=BENCH_IDS.filter(id=>!!newLineup[id]).length;
+    if(step==='picking'&&nf===11){setTimeout(()=>{confetti({particleCount:80,spread:60,origin:{y:0.5},colors:['#F5C400','#fff','#22C55E']});setStep('bench');},350);}
+    else if(step==='bench'&&nb===5){setTimeout(()=>{confetti({particleCount:130,spread:80,origin:{y:0.4},colors:['#F5C400','#fff','#EF4444']});setStep('captain_hero');},350);}
+  },[selectedSlot,lineup,step]);
 
   const handleCaptainHeroDone=useCallback(()=>{confetti({particleCount:200,spread:100,origin:{y:0.5},colors:['#F5C400','#00F3FF','#fff','#EF4444']});setStep('score');},[]);
   const handleScoreConfirm=useCallback(()=>{confetti({particleCount:160,spread:90,origin:{y:0.6},colors:['#F5C400','#22C55E','#fff']});setStep('share');},[]);
@@ -766,13 +813,13 @@ export default function EscalacaoFormacao() {
                   </span>
                 </motion.div>
               </div>
-              <Field3D lineup={lineup} activeSlot={activeSlot} onSlotClick={slotId=>handleEscalacao(slotId,undefined)}
+              <Field3D lineup={lineup} selectedSlot={selectedSlot} onSlotClick={handleSlotClick}
                 specialMode={specialMode} captainId={captainId} heroId={heroId} step={step}/>
             </div>
           </div>
-          {(fieldCount===11||step==='bench')&&<BenchArea lineup={lineup} activeSlot={activeSlot} onSlotClick={slotId=>handleEscalacao(slotId,undefined)}/>}
+          {(fieldCount===11||step==='bench')&&<BenchArea lineup={lineup} selectedSlot={selectedSlot} onSlotClick={handleSlotClick}/>}
           <PlayerPicker lineup={lineup} filterPos={filterPos} setFilterPos={setFilterPos}
-            onSelect={p=>handleEscalacao(undefined,p)} activeSlot={activeSlot} activePlayer={activePlayer} step={step}/>
+            onSelect={handleSelectPlayer} selectedSlot={selectedSlot} step={step}/>
         </>
       )}
 
@@ -789,7 +836,7 @@ export default function EscalacaoFormacao() {
           <div style={{flex:1,position:'relative',overflow:'hidden'}}>
             <StadiumBg/>
             <div style={{position:'relative',zIndex:5,padding:'8px 6px 0'}}>
-              <Field3D lineup={lineup} activeSlot={null} onSlotClick={slotId=>handleEscalacao(slotId,undefined)}
+              <Field3D lineup={lineup} selectedSlot={null} onSlotClick={handleSlotClick}
                 specialMode={specialMode} captainId={captainId} heroId={heroId} step={step}/>
             </div>
           </div>
