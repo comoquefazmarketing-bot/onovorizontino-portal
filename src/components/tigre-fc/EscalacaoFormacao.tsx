@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import FinalCardReveal from './FinalCardReveal'; // Ajuste o caminho se necessário
+import FinalCardReveal from './FinalCardReveal'; 
 
 // --- CONFIGURAÇÕES DE IMAGENS E DADOS ---
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
@@ -53,9 +53,13 @@ const PLAYERS = [
 
 const FORMATION_433 = [
   { id: 'gk', x: 50, y: 85, pos: 'GOL' },
-  { id: 'rb', x: 82, y: 65, pos: 'LAT' }, { id: 'cb1', x: 62, y: 72, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 72, pos: 'ZAG' }, { id: 'lb', x: 18, y: 65, pos: 'LAT' },
+  { id: 'rb', x: 82, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 72, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 72, pos: 'ZAG' }, { id: 'lb', x: 18, y: 68, pos: 'LAT' },
   { id: 'm1', x: 50, y: 50, pos: 'MEI' }, { id: 'm2', x: 75, y: 42, pos: 'MEI' }, { id: 'm3', x: 25, y: 42, pos: 'MEI' },
-  { id: 'st', x: 50, y: 12, pos: 'ATA' }, { id: 'rw', x: 82, y: 20, pos: 'ATA' }, { id: 'lw', x: 18, y: 20, pos: 'ATA' }
+  { id: 'st', x: 50, y: 15, pos: 'ATA' }, { id: 'rw', x: 82, y: 22, pos: 'ATA' }, { id: 'lw', x: 18, y: 22, pos: 'ATA' }
+];
+
+const RESERVES_SLOTS = [
+  { id: 'res1', pos: 'RES' }, { id: 'res2', pos: 'RES' }, { id: 'res3', pos: 'RES' }, { id: 'res4', pos: 'RES' }, { id: 'res5', pos: 'RES' }
 ];
 
 type Player = typeof PLAYERS[0];
@@ -184,17 +188,17 @@ function CampoFifa() {
         </div>
       </div>
       <style jsx>{`
-        .fifa-field-container { perspective: 2000px; width: 100%; height: 100%; position: absolute; }
-        .field-tilt { position: absolute; inset: 0; background: #1e5c1e; transform: rotateX(40deg); transform-style: preserve-3d; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 3px solid #fff; border-radius: 12px; overflow: hidden; }
+        .fifa-field-container { perspective: 2000px; width: 95%; height: 95%; position: absolute; left: 2.5%; top: 2.5%; }
+        .field-tilt { position: absolute; inset: 0; background: #1e5c1e; transform: rotateX(25deg); transform-style: preserve-3d; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 2px solid #fff; border-radius: 8px; overflow: hidden; }
         .grass-pattern { position: absolute; inset: 0; display: flex; flex-direction: column; }
         .texture-overlay { position: absolute; inset: 0; background-image: url(${TEXTURA_GRAMADO}); opacity: 0.2; }
         .grass-stripe-h:nth-child(even) { background-color: #246b24; flex: 1; }
         .grass-stripe-h:nth-child(odd) { flex: 1; }
         .field-lines { position: absolute; inset: 0; opacity: 0.5; }
-        .border-lines { position: absolute; inset: 10px; border: 2px solid #fff; }
-        .mid-line { position: absolute; top: 50%; left: 10px; right: 10px; height: 2px; background: #fff; }
-        .center-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); }
-        .penalty-area { position: absolute; left: 20%; right: 20%; height: 15%; border: 2px solid #fff; }
+        .border-lines { position: absolute; inset: 10px; border: 1.5px solid #fff; }
+        .mid-line { position: absolute; top: 50%; left: 10px; right: 10px; height: 1.5px; background: #fff; }
+        .center-circle { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 1.5px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); }
+        .penalty-area { position: absolute; left: 20%; right: 20%; height: 12%; border: 1.5px solid #fff; }
         .penalty-area.top { top: 10px; border-top: none; }
         .penalty-area.bottom { bottom: 10px; border-bottom: none; }
       `}</style>
@@ -206,8 +210,8 @@ function CampoFifa() {
 function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: any) {
   return (
     <div className={`relative transition-all ${isSelected ? 'scale-110 z-10' : ''}`} style={{ width: size }}>
-      <div className={`bg-zinc-900 rounded-lg overflow-hidden border ${isCaptain ? 'border-yellow-500 shadow-[0_0_15px_rgba(245,196,0,0.5)]' : isHero ? 'border-cyan-400 shadow-[0_0_15px_rgba(0,243,255,0.5)]' : 'border-zinc-800'}`} style={{ height: size * 1.3 }}>
-        <img src={player.foto} className="w-full h-full object-cover" style={{ objectPosition: isField ? 'top' : 'center' }} />
+      <div className={`bg-zinc-900 rounded-lg overflow-hidden border ${isCaptain ? 'border-yellow-500 shadow-[0_0_15px_rgba(245,196,0,0.5)]' : isHero ? 'border-cyan-400 shadow-[0_0_15px_rgba(0,243,255,0.5)]' : 'border-zinc-800'}`} style={{ height: size * 1.25 }}>
+        <img src={player.foto} className="w-full h-full object-cover" style={{ objectPosition: 'top' }} />
         <div className="absolute bottom-0 w-full bg-black/80 py-1 text-center">
           <div className="text-yellow-500 text-[6px] font-black">{player.pos}</div>
           <div className="text-white text-[8px] font-black uppercase truncate px-1">{player.short}</div>
@@ -235,6 +239,8 @@ export default function TigreFCEscalar() {
   const [showFinalCard, setShowFinalCard] = useState(false);
 
   const isFullTeam = useMemo(() => FORMATION_433.every(slot => !!lineup[slot.id]), [lineup]);
+  const isFullReserves = useMemo(() => RESERVES_SLOTS.every(slot => !!lineup[slot.id]), [lineup]);
+  
   const captainPlayer = useMemo(() => Object.values(lineup).find(p => p?.id === captainId), [lineup, captainId]);
   const heroPlayer = useMemo(() => Object.values(lineup).find(p => p?.id === heroId), [lineup, heroId]);
 
@@ -254,7 +260,7 @@ export default function TigreFCEscalar() {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-black text-white p-4 gap-6 overflow-x-hidden">
       
-      {/* MERCADO */}
+      {/* MERCADO - GRID DE 4 COLUNAS */}
       <section className="flex-1 bg-zinc-900/30 rounded-[40px] p-6 border border-white/5 h-[85vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-[1000] italic uppercase tracking-tighter">Mercado</h2>
@@ -267,10 +273,10 @@ export default function TigreFCEscalar() {
             <option value="ATA">ATACANTES</option>
           </select>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 overflow-y-auto pr-2 custom-scrollbar">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 overflow-y-auto pr-2 custom-scrollbar">
           {PLAYERS.filter(p => filterPos === 'TODOS' || p.pos === filterPos).map(p => (
-            <div key={p.id} onClick={() => handleSelectPlayer(p)} className="cursor-pointer hover:brightness-125 transition active:scale-95">
-              <PlayerCard player={p} size={80} />
+            <div key={p.id} onClick={() => handleSelectPlayer(p)} className="cursor-pointer hover:brightness-125 transition active:scale-95 flex justify-center">
+              <PlayerCard player={p} size={75} />
             </div>
           ))}
         </div>
@@ -278,7 +284,7 @@ export default function TigreFCEscalar() {
 
       {/* CAMPO E FLUXO FINAL */}
       <section className="flex-[1.4] flex flex-col items-center">
-        <div className={`relative w-full max-w-[550px] aspect-[1/1.3] mb-8 transition-opacity ${specialMode ? 'opacity-50' : 'opacity-100'}`}>
+        <div className={`relative w-full max-w-[550px] aspect-[1/1.2] mb-4 transition-opacity ${specialMode ? 'opacity-50' : 'opacity-100'}`}>
           <CampoFifa />
           <div className="absolute inset-0 z-10 pointer-events-none">
             {FORMATION_433.map((slot) => {
@@ -287,7 +293,7 @@ export default function TigreFCEscalar() {
                 <div key={slot.id} onClick={() => handleSlotClick(slot.id)} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
                   className={`absolute pointer-events-auto cursor-pointer -translate-x-1/2 -translate-y-1/2 transition-all ${specialMode && player ? 'animate-pulse scale-125 z-50' : 'hover:scale-110'}`}>
                   {player ? (
-                    <PlayerCard player={player} size={65} isField isCaptain={captainId === player.id} isHero={heroId === player.id} />
+                    <PlayerCard player={player} size={60} isField isCaptain={captainId === player.id} isHero={heroId === player.id} />
                   ) : (
                     <div className={`w-12 h-16 rounded-lg border-2 border-dashed flex flex-col items-center justify-center ${selectedSlot === slot.id ? 'border-yellow-500 bg-yellow-500/20' : 'border-white/10 bg-black/40'}`}>
                       <span className="text-[10px] font-black text-zinc-600">{slot.pos}</span>
@@ -299,8 +305,29 @@ export default function TigreFCEscalar() {
           </div>
         </div>
 
+        {/* BANCO DE RESERVAS OBRIGATÓRIO */}
+        <div className="w-full max-w-[500px] bg-zinc-900/50 p-4 rounded-3xl border border-white/5 mb-8">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-4 text-center">Banco de Reservas</h3>
+          <div className="flex justify-center gap-3">
+            {RESERVES_SLOTS.map((slot) => {
+              const player = lineup[slot.id];
+              return (
+                <div key={slot.id} onClick={() => handleSlotClick(slot.id)} className="cursor-pointer transition-transform hover:scale-105">
+                  {player ? (
+                    <PlayerCard player={player} size={55} />
+                  ) : (
+                    <div className={`w-12 h-16 rounded-lg border-2 border-dashed flex items-center justify-center ${selectedSlot === slot.id ? 'border-yellow-500 bg-yellow-500/20' : 'border-white/10 bg-black/20'}`}>
+                      <span className="text-xl text-zinc-700">+</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* FLUXO FINAL */}
-        {isFullTeam && (
+        {isFullTeam && isFullReserves && (
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full flex flex-col items-center">
             
             <CapitaoEHeroi 
@@ -332,7 +359,7 @@ export default function TigreFCEscalar() {
         )}
       </section>
 
-      {/* RENDERIZAÇÃO DO MODAL FINAL (APICE) */}
+      {/* RENDERIZAÇÃO DO MODAL FINAL */}
       {showFinalCard && (
         <FinalCardReveal 
           lineup={lineup}
