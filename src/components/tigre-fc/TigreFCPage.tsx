@@ -33,6 +33,7 @@ interface UsuarioRanking {
 }
 
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
+  // Ajuste para Next.js 15: desempacotando a Promise de params
   const resolvedParams = use(params);
   
   const [mounted, setMounted] = useState(false);
@@ -43,27 +44,25 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
   const topRef = useRef<HTMLDivElement>(null);
 
-  // Forçar scroll para o topo ao carregar
+  // Controle de montagem e Scroll inicial
   useEffect(() => {
     setMounted(true);
+    window.scrollTo({ top: 0, behavior: 'instant' });
     
-    // Scroll imediato
-    window.scrollTo(0, 0);
-
-    // Scroll reforçado após renderização inicial para evitar que iFrames ou Chat puxem o scroll
     const timer = setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'instant' });
       topRef.current?.focus();
     }, 100);
 
     return () => clearTimeout(timer);
   }, []);
 
+  // Inicialização de Dados (Supabase + API)
   useEffect(() => {
     if (!mounted) return;
     const sb = createClient(SB_URL, SB_KEY);
 
     async function init() {
+      // 1. Pegar Sessão do Usuário
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user) {
         const { data: u } = await sb.from('tigre_fc_usuarios')
@@ -73,6 +72,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (u) setMeuId(u.id);
       }
 
+      // 2. Carregar Jogo e Ranking
       try {
         const [resJogo, { data: rankData }] = await Promise.all([
           fetch('/api/proximo-jogo').then(r => r.json()),
@@ -91,12 +91,13 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     init();
   }, [mounted]);
 
+  // Timer do Jogo
   useEffect(() => {
     if (!jogo) return;
     
     const calculateTime = () => {
       const gameTime = new Date(jogo.data_hora.replace(' ', 'T')).getTime();
-      const lockTime = gameTime - (90 * 60 * 1000); 
+      const lockTime = gameTime - (90 * 60 * 1000); // 1h30 antes do jogo
       const now = Date.now();
       const diff = lockTime - now;
       
@@ -125,7 +126,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       {/* 🏆 HEADER PREMIUM */}
       <header 
         ref={topRef} 
-        tabIndex={-1} // Permite focar programaticamente para garantir o scroll
+        tabIndex={-1} 
         className="bg-[#F5C400] pt-20 pb-32 px-6 border-b-[12px] border-black text-center relative overflow-hidden outline-none"
       >
         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
