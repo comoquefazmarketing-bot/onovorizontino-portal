@@ -75,7 +75,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (resJogo?.jogos?.length > 0) {
           setJogo(resJogo.jogos[0]);
         } else {
-          // Fallback robusto baseado no jogos_rows.json
+          // Fallback usando links diretos do bucket baseados no seu CSV/Database
           setJogo({
             id: 3,
             data_hora: "2026-04-05T21:00:00Z",
@@ -84,7 +84,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             local: "Jorjão • Novo Horizonte",
             mandante: { 
               nome: "Novorizontino", 
-              escudo_url: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/escudos/novorizontino.png" 
+              escudo_url: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png" 
             },
             visitante: { 
               nome: "CRB", 
@@ -116,7 +116,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     if (!jogo?.data_hora) return;
     
     const calculateTime = () => {
-      // Ajuste para garantir formato ISO e evitar NaN
       const dateStr = jogo.data_hora.includes('T') ? jogo.data_hora : jogo.data_hora.replace(' ', 'T');
       const gameTime = new Date(dateStr).getTime();
       const lockTime = gameTime - (90 * 60 * 1000); 
@@ -182,16 +181,17 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                   ))}
                 </div>
 
-                {/* CONFRONTO */}
+                {/* CONFRONTO DINÂMICO */}
                 <div className="flex items-center justify-between mb-8 px-2">
                   <div className="flex flex-col items-center flex-1">
                     <img 
-                      src={jogo.mandante?.escudo_url || PATA_LOGO} 
+                      src={jogo.mandante?.escudo_url} 
+                      onError={(e) => { (e.target as HTMLImageElement).src = PATA_LOGO; }}
                       className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(245,196,0,0.3)]" 
                       alt={jogo.mandante?.nome}
                     />
                     <span className="text-[10px] font-black text-white uppercase mt-3 tracking-tighter">
-                      {jogo.mandante?.nome || "Carregando..."}
+                      {jogo.mandante?.nome || "Mandante"}
                     </span>
                   </div>
 
@@ -202,12 +202,13 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
                   <div className="flex flex-col items-center flex-1">
                     <img 
-                      src={jogo.visitante?.escudo_url || PATA_LOGO} 
+                      src={jogo.visitante?.escudo_url} 
+                      onError={(e) => { (e.target as HTMLImageElement).src = PATA_LOGO; }}
                       className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
                       alt={jogo.visitante?.nome}
                     />
                     <span className="text-[10px] font-black text-white uppercase mt-3 tracking-tighter">
-                      {jogo.visitante?.nome || "Carregando..."}
+                      {jogo.visitante?.nome || "Visitante"}
                     </span>
                   </div>
                 </div>
