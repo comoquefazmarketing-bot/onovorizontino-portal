@@ -178,13 +178,12 @@ function PlayerCardMercado({ player, onClick }: { player: Player; onClick: () =>
 
   return (
     <motion.div
-      whileHover={{ scale: 1.03, y: -2 }}
-      whileTap={{ scale: 0.96 }}
-      onClick={onClick}
-      className="relative flex items-center gap-2 bg-zinc-950 rounded-xl overflow-hidden cursor-pointer border border-zinc-900 hover:border-zinc-700 transition-all"
-      style={{ boxShadow: `0 0 0 0 ${glow}` }}
-      whileHover={{ boxShadow: `0 0 12px ${glow}` } as any}
-    >
+  whileHover={{ scale: 1.03, y: -2, boxShadow: `0 0 14px ${glow}` }}
+  whileTap={{ scale: 0.96 }}
+  initial={{ boxShadow: `0 0 0px ${glow}` }}
+  onClick={onClick}
+  className="relative flex items-center gap-2 bg-zinc-950 rounded-xl overflow-hidden cursor-pointer border border-zinc-900 hover:border-zinc-700 transition-all"
+>
       {/* Barra lateral de posição */}
       <div className="w-1 self-stretch rounded-l-xl" style={{ background: cor }} />
 
