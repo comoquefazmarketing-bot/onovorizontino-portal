@@ -2,14 +2,8 @@
 
 /**
  * useEscalacao — Hook de Persistência da Escalação
- * 
- * REGRA DE OURO: Nunca usa auth.uid() direto nas queries.
- * Sempre converte via tigre_fc_usuarios filtrando por google_id.
- * 
- * Estratégia de Upsert:
- *   - Ao montar: tenta carregar lineup salvo do Supabase (null-safe)
- *   - Auto-save debounced a cada mudança de lineup (500ms)
- *   - saveNow() para salvar imediatamente antes de ações críticas
+ * * Ajustado para Next.js 14/15/16 + Supabase SSR.
+ * Corrigido erro de declaração duplicada e tipagem de state.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -55,15 +49,17 @@ const DEFAULT_STATE: EscalacaoState = {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useEscalacao(jogoRef?: string) {
-  const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);                                          // ← essa linha estava faltando
-const [usuarioId, setUsuarioId] = useState<string | null>(null);
-  const [usuarioId, setUsuarioId]     = useState<string | null>(null);
-  const [state, setState]             = useState<EscalacaoState>(DEFAULT_STATE);
-  const [isLoading, setIsLoading]     = useState(true);
-  const [saveStatus, setSaveStatus]   = useState<SaveStatus>('idle');
+  // Inicialização única do Supabase Client
+  const [supabase] = useState(() => createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ));
+
+  const [usuarioId, setUsuarioId] = useState<string | null>(null);
+  const [state, setState] = useState<EscalacaoState>(DEFAULT_STATE);
+  const [isLoading, setIsLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoad = useRef(true);
 
@@ -73,34 +69,35 @@ const [usuarioId, setUsuarioId] = useState<string | null>(null);
 
     async function resolveUser() {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user || !mounted) { setIsLoading(false); return; }
+      if (!session?.user || !mounted) { 
+        setIsLoading(false); 
+        return; 
+      }
 
-      const googleId = session.user.id; // auth.uid() === google_id
+      const googleId = session.user.id;
 
-      // Tenta buscar usuário existente
       const { data: existing } = await supabase
         .from('tigre_fc_usuarios')
         .select('id')
         .eq('google_id', googleId)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         if (mounted) setUsuarioId(existing.id);
-        return;
+      } else {
+        // Cria novo perfil se for primeiro acesso
+        const { data: created } = await supabase
+          .from('tigre_fc_usuarios')
+          .insert({
+            google_id: googleId,
+            display_name: session.user.user_metadata?.full_name ?? 'Torcedor',
+            avatar_url: session.user.user_metadata?.avatar_url ?? null,
+          })
+          .select('id')
+          .single();
+
+        if (mounted && created) setUsuarioId(created.id);
       }
-
-      // Cria novo perfil se for primeiro acesso
-      const { data: created } = await supabase
-        .from('tigre_fc_usuarios')
-        .insert({
-          google_id:    googleId,
-          display_name: session.user.user_metadata?.full_name ?? 'Torcedor',
-          avatar_url:   session.user.user_metadata?.avatar_url ?? null,
-        })
-        .select('id')
-        .single();
-
-      if (mounted && created) setUsuarioId(created.id);
     }
 
     resolveUser();
@@ -118,25 +115,23 @@ const [usuarioId, setUsuarioId] = useState<string | null>(null);
         .from('tigre_fc_escalacoes')
         .select('*')
         .eq('usuario_id', usuarioId)
-        .maybeSingle(); // maybeSingle: retorna null se não existir, sem erro
+        .maybeSingle();
 
-      if (data && !error) {
-        // null-safe parse do lineup_json
+      if (data && !error && isInitialLoad.current) {
         const rawLineup = data.lineup_json ?? {};
         const safeLineup: LineupRecord = {};
         
-        // Garante que cada valor do lineup é Player | null (nunca undefined)
-        Object.entries(rawLineup).forEach(([slotId, player]) => {
+        Object.entries(rawLineup as object).forEach(([slotId, player]) => {
           safeLineup[slotId] = player ? (player as Player) : null;
         });
 
         setState({
-          formacao:    data.formacao     ?? DEFAULT_STATE.formacao,
-          lineup:      safeLineup,
-          captainId:   data.capitan_id  ?? null,
-          heroId:      data.heroi_id    ?? null,
-          scoreTigre:  data.score_tigre ?? 0,
-          scoreAdv:    data.score_adv   ?? 0,
+          formacao: data.formacao ?? DEFAULT_STATE.formacao,
+          lineup: safeLineup,
+          captainId: data.capitan_id ?? null,
+          heroId: data.heroi_id ?? null,
+          scoreTigre: data.score_tigre ?? 0,
+          scoreAdv: data.score_adv ?? 0,
           scoreLocked: data.score_locked ?? false,
         });
       }
@@ -148,24 +143,8 @@ const [usuarioId, setUsuarioId] = useState<string | null>(null);
     loadEscalacao();
   }, [usuarioId, supabase]);
 
-  // ── 3. Auto-save com debounce (500ms) após cada mudança ────────────────────
-  useEffect(() => {
-    // Não salva na carga inicial ou sem usuário autenticado
-    if (isInitialLoad.current || !usuarioId) return;
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    
-    debounceRef.current = setTimeout(() => {
-      saveNow();
-    }, 500);
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [state, usuarioId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── 4. saveNow — Upsert imediato via RPC (sem race condition) ──────────────
-  const saveNow = useCallback(async () => {
+  // ── 3. saveNow — Upsert imediato via RPC ────────────────────────────────────
+  const saveNow = useCallback(async (currentState: EscalacaoState) => {
     if (!usuarioId) return;
 
     setSaveStatus('saving');
@@ -173,13 +152,13 @@ const [usuarioId, setUsuarioId] = useState<string | null>(null);
     try {
       const { error } = await supabase.rpc('upsert_escalacao', {
         p_usuario_id:   usuarioId,
-        p_formacao:     state.formacao,
-        p_lineup_json:  state.lineup as any,
-        p_capitan_id:   state.captainId,
-        p_heroi_id:     state.heroId,
-        p_score_tigre:  state.scoreTigre,
-        p_score_adv:    state.scoreAdv,
-        p_score_locked: state.scoreLocked,
+        p_formacao:     currentState.formacao,
+        p_lineup_json:  currentState.lineup as any,
+        p_capitan_id:   currentState.captainId,
+        p_heroi_id:     currentState.heroId,
+        p_score_tigre:  currentState.scoreTigre,
+        p_score_adv:    currentState.scoreAdv,
+        p_score_locked: currentState.scoreLocked,
         p_jogo_ref:     jogoRef ?? null,
       });
 
@@ -188,9 +167,24 @@ const [usuarioId, setUsuarioId] = useState<string | null>(null);
     } catch {
       setSaveStatus('error');
     }
-  }, [usuarioId, state, supabase, jogoRef]);
+  }, [usuarioId, supabase, jogoRef]);
 
-  // ── 5. Setters tipados (atualizam state → auto-save dispara) ───────────────
+  // ── 4. Auto-save com debounce ───────────────────────────────────────────────
+  useEffect(() => {
+    if (isInitialLoad.current || !usuarioId) return;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    
+    debounceRef.current = setTimeout(() => {
+      saveNow(state);
+    }, 1000); // Debounce de 1s para evitar spam no Supabase
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [state, usuarioId, saveNow]);
+
+  // ── 5. Setters ──────────────────────────────────────────────────────────────
 
   const setFormacao = useCallback((formacao: string) => {
     setState(prev => ({ ...prev, formacao, lineup: {}, captainId: null, heroId: null }));
@@ -213,23 +207,21 @@ const [usuarioId, setUsuarioId] = useState<string | null>(null);
   }, []);
 
   const lockScore = useCallback(async () => {
-    setState(prev => ({ ...prev, scoreLocked: true }));
-    // Força save imediato ao cravar palpite
-    await saveNow();
-  }, [saveNow]);
+    const newState = { ...state, scoreLocked: true };
+    setState(newState);
+    await saveNow(newState);
+  }, [state, saveNow]);
 
   const resetLineup = useCallback(() => {
     setState(DEFAULT_STATE);
   }, []);
 
   return {
-    // Estado
     ...state,
     usuarioId,
     isLoading,
     saveStatus,
     isAuthenticated: !!usuarioId,
-    // Setters
     setFormacao,
     setPlayerInSlot,
     setCaptainId,
@@ -237,6 +229,6 @@ const [usuarioId, setUsuarioId] = useState<string | null>(null);
     setScore,
     lockScore,
     resetLineup,
-    saveNow,
+    saveNow: () => saveNow(state),
   };
 }
