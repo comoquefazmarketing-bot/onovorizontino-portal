@@ -362,11 +362,12 @@ interface TigreFCPerfilPublicoProps {
   // Modo "meu perfil" (legado)
   usuarioId?: string | null;
   meuId?: string | null;
+  jogoId?: number | null;        // aceito mas não usado — retrocompatível com TigreFCPage
   onClose?: () => void;
 
   // Modo "perfil alheio" (novo — visualização cruzada)
   targetUsuarioId?: string | null;
-  viewerUsuarioId?: string | null; // quem está vendo (para habilitar corneta)
+  viewerUsuarioId?: string | null;
 }
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
