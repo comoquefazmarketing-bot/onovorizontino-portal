@@ -2,10 +2,9 @@
 
 /**
  * useLigas — Hook de Gerenciamento de Ligas Particulares
- * 
- * Regra XP:
- *   Fiel (100+ xp)  → pode CRIAR ligas
- *   Novato          → só pode ENTRAR via código de convite
+ * * Regra XP:
+ * Fiel (100+ xp)  → pode CRIAR ligas
+ * Novato          → só pode ENTRAR via código de convite
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -52,76 +51,81 @@ export const XP_PARA_CRIAR_LIGA = 100;
 export const NIVEL_CORES: Record<string, string> = {
   Novato:   '#71717A',
   Torcedor: '#3B82F6',
-  Fiel:     '#F5C400',
+  Fiel:      '#F5C400',
   Fanático: '#EF4444',
-  Lenda:    '#9333EA',
+  Lenda:     '#9333EA',
 };
 
 export const NIVEL_ICONES: Record<string, string> = {
   Novato:   '🌱',
   Torcedor: '👟',
-  Fiel:     '🏆',
+  Fiel:      '🏆',
   Fanático: '🔥',
-  Lenda:    '👑',
+  Lenda:     '👑',
 };
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useLigas(usuarioId: string | null) {
-  const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  const [perfil, setPerfil]             = useState<UsuarioPerfil | null>(null);
+  const [supabase] = useState(() => createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ));
+
+  const [perfil, setPerfil]               = useState<UsuarioPerfil | null>(null);
   const [minhasLigas, setMinhasLigas]   = useState<Liga[]>([]);
-  const [isLoading, setIsLoading]       = useState(false);
-  const [error, setError]               = useState<string | null>(null);
+  const [isLoading, setIsLoading]        = useState(false);
+  const [error, setError]                = useState<string | null>(null);
 
   // Derived
   const podeCriarLiga = (perfil?.xp ?? 0) >= XP_PARA_CRIAR_LIGA;
   const xpParaFiel    = Math.max(0, XP_PARA_CRIAR_LIGA - (perfil?.xp ?? 0));
 
   // ── Carrega perfil e ligas do usuário ─────────────────────────────────────
-  useEffect(() => {
-    if (!usuarioId) return;
-    carregarDados();
-  }, [usuarioId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function carregarDados() {
+  const carregarDados = useCallback(async () => {
     if (!usuarioId) return;
     setIsLoading(true);
     setError(null);
 
-    // Perfil do usuário
-    const { data: perfilData } = await supabase
-      .from('tigre_fc_usuarios')
-      .select('id, display_name, avatar_url, xp, nivel')
-      .eq('id', usuarioId)
-      .single();
+    try {
+      // Perfil do usuário
+      const { data: perfilData } = await supabase
+        .from('tigre_fc_usuarios')
+        .select('id, display_name, avatar_url, xp, nivel')
+        .eq('id', usuarioId)
+        .single();
 
-    if (perfilData) setPerfil(perfilData);
+      if (perfilData) setPerfil(perfilData as UsuarioPerfil);
 
-    // Ligas que o usuário participa (via membros)
-    const { data: membrosData } = await supabase
-      .from('tigre_fc_ligas_membros')
-      .select(`
-        liga_id,
-        pontos,
-        tigre_fc_ligas (
-          id, nome, descricao, codigo_convite, dono_id,
-          max_membros, is_publica, temporada, ativa, created_at
-        )
-      `)
-      .eq('usuario_id', usuarioId);
+      // Ligas que o usuário participa (via membros)
+      const { data: membrosData } = await supabase
+        .from('tigre_fc_ligas_membros')
+        .select(`
+          liga_id,
+          pontos,
+          tigre_fc_ligas (
+            id, nome, descricao, codigo_convite, dono_id,
+            max_membros, is_publica, temporada, ativa, created_at
+          )
+        `)
+        .eq('usuario_id', usuarioId);
 
-    if (membrosData) {
-      const ligas = membrosData
-        .map((m: any) => m.tigre_fc_ligas)
-        .filter(Boolean) as Liga[];
-      setMinhasLigas(ligas);
+      if (membrosData) {
+        const ligas = membrosData
+          .map((m: any) => m.tigre_fc_ligas)
+          .filter(Boolean) as Liga[];
+        setMinhasLigas(ligas);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dados das ligas:', err);
+    } finally {
+      setIsLoading(false);
     }
+  }, [usuarioId, supabase]);
 
-    setIsLoading(false);
-  }
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
 
   // ── Criar Liga ────────────────────────────────────────────────────────────
   const criarLiga = useCallback(async (nome: string, descricao?: string, isPublica = false, maxMembros = 20) => {
@@ -153,7 +157,7 @@ export function useLigas(usuarioId: string | null) {
 
     await carregarDados();
     return liga as Liga;
-  }, [usuarioId, podeCriarLiga, supabase, xpParaFiel]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [usuarioId, podeCriarLiga, supabase, xpParaFiel, carregarDados]);
 
   // ── Entrar na Liga via código ─────────────────────────────────────────────
   const entrarNaLiga = useCallback(async (codigo: string) => {
@@ -172,7 +176,7 @@ export function useLigas(usuarioId: string | null) {
 
     await carregarDados();
     return { success: true, ligaNome: data?.liga_nome };
-  }, [usuarioId, supabase]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [usuarioId, supabase, carregarDados]);
 
   // ── Buscar ranking de uma liga ────────────────────────────────────────────
   const getRankingLiga = useCallback(async (ligaId: string): Promise<LigaMembro[]> => {
@@ -186,7 +190,7 @@ export function useLigas(usuarioId: string | null) {
       .order('pontos', { ascending: false })
       .limit(50);
 
-    return (data ?? []) as LigaMembro[];
+    return (data ?? []) as unknown as LigaMembro[];
   }, [supabase]);
 
   // ── Buscar escalação pública de outro usuário ─────────────────────────────
@@ -199,12 +203,11 @@ export function useLigas(usuarioId: string | null) {
 
     if (!data) return null;
 
-    // null-safe parse
     const lineup = data.lineup_json ?? {};
     return {
       ...data,
       lineup_safe: Object.fromEntries(
-        Object.entries(lineup).map(([k, v]) => [k, v ?? null])
+        Object.entries(lineup as object).map(([k, v]) => [k, v ?? null])
       ),
     };
   }, [supabase]);
