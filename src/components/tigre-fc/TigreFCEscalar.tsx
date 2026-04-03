@@ -56,23 +56,16 @@ const PLAYERS = [
 
 const FORMATIONS = {
   '4-3-3': [
-    { id: 'gk', x: 50, y: 88 },
-    { id: 'rb', x: 82, y: 70 }, { id: 'cb1', x: 62, y: 76 }, { id: 'cb2', x: 38, y: 76 }, { id: 'lb', x: 18, y: 70 },
-    { id: 'm1', x: 50, y: 55 }, { id: 'm2', x: 72, y: 48 }, { id: 'm3', x: 28, y: 48 },
-    { id: 'st', x: 50, y: 15 }, { id: 'rw', x: 80, y: 22 }, { id: 'lw', x: 20, y: 22 }
+    { id: 'gk', x: 50, y: 88 }, { id: 'rb', x: 82, y: 70 }, { id: 'cb1', x: 62, y: 76 }, { id: 'cb2', x: 38, y: 76 }, { id: 'lb', x: 18, y: 70 },
+    { id: 'm1', x: 50, y: 55 }, { id: 'm2', x: 72, y: 48 }, { id: 'm3', x: 28, y: 48 }, { id: 'st', x: 50, y: 15 }, { id: 'rw', x: 80, y: 22 }, { id: 'lw', x: 20, y: 22 }
   ],
   '4-4-2': [
-    { id: 'gk', x: 50, y: 88 },
-    { id: 'rb', x: 82, y: 70 }, { id: 'cb1', x: 62, y: 76 }, { id: 'cb2', x: 38, y: 76 }, { id: 'lb', x: 18, y: 70 },
-    { id: 'm1', x: 65, y: 50 }, { id: 'm2', x: 35, y: 50 }, { id: 'm3', x: 85, y: 45 }, { id: 'm4', x: 15, y: 45 },
-    { id: 'st1', x: 58, y: 18 }, { id: 'st2', x: 42, y: 18 }
+    { id: 'gk', x: 50, y: 88 }, { id: 'rb', x: 82, y: 70 }, { id: 'cb1', x: 62, y: 76 }, { id: 'cb2', x: 38, y: 76 }, { id: 'lb', x: 18, y: 70 },
+    { id: 'm1', x: 65, y: 50 }, { id: 'm2', x: 35, y: 50 }, { id: 'm3', x: 85, y: 45 }, { id: 'm4', x: 15, y: 45 }, { id: 'st1', x: 58, y: 18 }, { id: 'st2', x: 42, y: 18 }
   ],
   '4-2-3-1': [
-    { id: 'gk', x: 50, y: 88 },
-    { id: 'rb', x: 82, y: 70 }, { id: 'cb1', x: 62, y: 76 }, { id: 'cb2', x: 38, y: 76 }, { id: 'lb', x: 18, y: 70 },
-    { id: 'dm1', x: 62, y: 58 }, { id: 'dm2', x: 38, y: 58 },
-    { id: 'am1', x: 50, y: 38 }, { id: 'am2', x: 78, y: 35 }, { id: 'am3', x: 22, y: 35 },
-    { id: 'st', x: 50, y: 14 }
+    { id: 'gk', x: 50, y: 88 }, { id: 'rb', x: 82, y: 70 }, { id: 'cb1', x: 62, y: 76 }, { id: 'cb2', x: 38, y: 76 }, { id: 'lb', x: 18, y: 70 },
+    { id: 'dm1', x: 62, y: 58 }, { id: 'dm2', x: 38, y: 58 }, { id: 'am1', x: 50, y: 38 }, { id: 'am2', x: 78, y: 35 }, { id: 'am3', x: 22, y: 35 }, { id: 'st', x: 50, y: 14 }
   ]
 };
 
@@ -90,7 +83,7 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
           style={{
             width: '100%', height: '100%',
             objectFit: 'cover',
-            // AJUSTE CRÍTICO: Posição à esquerda para o mercado
+            // AJUSTE: Fotos no mercado (grid) ficam à esquerda para não cortar
             objectPosition: isField ? 'center top' : 'left top',
             display: 'block'
           }}
@@ -117,7 +110,8 @@ function PlayerCard({ player, size, isSelected, isCaptain, isHero, isField }: { 
   );
 }
 
-export default function TigreFCEscalar() {
+// CORREÇÃO: Adicionado 'jogoId' de volta ao componente
+export default function TigreFCEscalar({ jogoId = 3 }: { jogoId?: number }) {
   const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -133,37 +127,37 @@ export default function TigreFCEscalar() {
   const [filterPos, setFilterPos] = useState<string>('TODOS');
   const [fieldWidth, setFieldWidth] = useState(360);
 
-  // IMPORTAÇÃO AUTOMÁTICA DO SUPABASE
+  // IMPORTAÇÃO AUTOMÁTICA
   useEffect(() => {
     setMounted(true);
-    const fetchLineup = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+    const loadLastEscalacao = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        const { data, error } = await supabase
-            .from('escalacoes')
-            .select('*')
-            .eq('usuario_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+      const { data, error } = await supabase
+        .from('escalacoes')
+        .select('*')
+        .eq('usuario_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
-        if (data && !error) {
-            setFormationKey(data.formacao as keyof typeof FORMATIONS);
-            setCaptain(data.capitao_id);
-            setHero(data.heroi_id);
-            
-            const savedLineup = typeof data.lineup === 'string' ? JSON.parse(data.lineup) : data.lineup;
-            const newLineup: Lineup = {};
-            Object.keys(savedLineup).forEach(slotId => {
-                const pId = savedLineup[slotId]?.id || savedLineup[slotId];
-                const match = PLAYERS.find(p => p.id === pId);
-                if (match) newLineup[slotId] = match;
-            });
-            setLineup(newLineup);
-        }
+      if (data && !error) {
+        setFormationKey(data.formacao as keyof typeof FORMATIONS);
+        setCaptain(data.capitao_id);
+        setHero(data.heroi_id);
+        
+        const savedLineup = typeof data.lineup === 'string' ? JSON.parse(data.lineup) : data.lineup;
+        const newLineup: Lineup = {};
+        Object.keys(savedLineup).forEach(key => {
+            const pid = savedLineup[key]?.id || savedLineup[key];
+            const p = PLAYERS.find(pl => pl.id === pid);
+            if (p) newLineup[key] = p;
+        });
+        setLineup(newLineup);
+      }
     };
-    fetchLineup();
+    loadLastEscalacao();
     const updateSize = () => setFieldWidth(Math.min(window.innerWidth - 20, 450));
     updateSize();
     window.addEventListener('resize', updateSize);
@@ -203,18 +197,17 @@ export default function TigreFCEscalar() {
           </div>
 
           <div className={`alert ${playersCount === 11 && (!captain || !hero) ? 'highlight' : ''}`}>
-             {playersCount < 11 ? `FALTA(M) ${11 - playersCount} JOGADOR(ES)` : (isComplete ? "✅ PRONTO PARA O JOGO" : "🎖️ ESCOLHA CAPITÃO E HERÓI")}
+             {playersCount < 11 ? `FALTA(M) ${11 - playersCount} JOGADOR(ES)` : (isComplete ? "✅ TIME ESCALADO!" : "🎖️ ESCOLHA CAPITÃO E HERÓI")}
           </div>
 
-          {/* CAMPO FIDEDIGNO QUADRICULADO */}
           <div className="field" style={{ width: fieldWidth, height: fieldWidth * 1.35 }}>
             <div className="pitch-grass"></div>
             <div className="pitch-markings">
               <div className="pitch-outline"></div>
               <div className="center-line"></div>
               <div className="center-circle"></div>
-              <div className="penalty-area top"><div className="goal-area"></div><div className="penalty-arc"></div></div>
-              <div className="penalty-area bottom"><div className="goal-area"></div><div className="penalty-arc"></div></div>
+              <div className="penalty-area top"><div className="goal-area"></div></div>
+              <div className="penalty-area bottom"><div className="goal-area"></div></div>
             </div>
             
             {FORMATIONS[formationKey].map(slot => {
@@ -243,7 +236,7 @@ export default function TigreFCEscalar() {
                 .filter(p => filterPos === 'TODOS' || p.pos === filterPos)
                 .map(p => (
                 <div key={p.id} className="grid-item" onClick={() => handlePlayerClick(p)}>
-                  <PlayerCard player={p} size={(fieldWidth / 3) - 16} />
+                  <PlayerCard player={p} size={(fieldWidth / 3) - 16} isField={false} />
                 </div>
               ))}
             </div>
@@ -255,52 +248,47 @@ export default function TigreFCEscalar() {
         </div>
       )}
 
-      {/* Estilos Globais e do Componente */}
       <style jsx global>{`
-        body { background: #000; margin: 0; font-family: 'Inter', sans-serif; color: #fff; }
+        body { background: #000; margin: 0; font-family: sans-serif; color: #fff; }
         .header { background: #F5C400; color: #000; text-align: center; padding: 15px; font-weight: 900; }
-        .content { display: flex; flex-direction: column; align-items: center; padding: 10px; max-width: 500px; margin: 0 auto; width: 100%; }
+        .content { display: flex; flex-direction: column; align-items: center; padding: 10px; max-width: 500px; margin: 0 auto; }
         
-        /* CAMPO */
         .field { position: relative; border-radius: 8px; overflow: hidden; background: #1a4a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .pitch-grass { 
             position: absolute; inset: 0;
-            background-image: linear-gradient(rgba(255,255,255,0.05) 50%, transparent 50%),
-                              linear-gradient(90deg, rgba(255,255,255,0.05) 50%, transparent 50%);
-            background-size: 45px 45px;
+            background-image: linear-gradient(rgba(255,255,255,0.03) 50%, transparent 50%), linear-gradient(90deg, rgba(255,255,255,0.03) 50%, transparent 50%);
+            background-size: 50px 50px;
         }
         .pitch-markings { position: absolute; inset: 0; pointer-events: none; }
-        .pitch-outline { position: absolute; inset: 10px; border: 2px solid rgba(255,255,255,0.3); }
-        .center-line { position: absolute; top: 50%; width: 100%; height: 2px; background: rgba(255,255,255,0.3); }
-        .center-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; transform: translate(-50%, -50%); }
-        .penalty-area { position: absolute; left: 50%; transform: translateX(-50%); width: 60%; height: 18%; border: 2px solid rgba(255,255,255,0.3); }
+        .pitch-outline { position: absolute; inset: 10px; border: 2px solid rgba(255,255,255,0.2); }
+        .center-line { position: absolute; top: 50%; width: 100%; height: 2px; background: rgba(255,255,255,0.2); }
+        .center-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; transform: translate(-50%, -50%); }
+        .penalty-area { position: absolute; left: 50%; transform: translateX(-50%); width: 60%; height: 18%; border: 2px solid rgba(255,255,255,0.2); }
         .penalty-area.top { top: 10px; border-top: none; }
         .penalty-area.bottom { bottom: 10px; border-bottom: none; }
-        .goal-area { position: absolute; left: 50%; transform: translateX(-50%); width: 50%; height: 40%; border: 2px solid rgba(255,255,255,0.3); }
-        .top .goal-area { top: 0; border-top: none; }
-        .bottom .goal-area { bottom: 0; border-bottom: none; }
 
         .slot { position: absolute; transform: translate(-50%, -50%); z-index: 10; cursor: pointer; }
-        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); font-weight: 900; }
-        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.2); }
+        .dot { border-radius: 50%; border: 2px dashed rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); }
+        .dot.active { border-color: #F5C400; background: rgba(245,196,0,0.1); }
 
-        /* MERCADO */
-        .market-section { width: 100%; padding-bottom: 120px; margin-top: 20px; }
-        .filters { display: flex; gap: 8px; overflow-x: auto; margin: 15px 0; scrollbar-width: none; }
-        .filters button { background: #111; border: 1px solid #333; color: #666; padding: 8px 15px; border-radius: 20px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+        .market-section { width: 100%; padding-bottom: 120px; margin-top: 15px; }
+        .filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
+        .filters button { background: #111; border: 1px solid #333; color: #555; padding: 6px 14px; border-radius: 20px; font-size: 10px; font-weight: 800; white-space: nowrap; }
         .filters button.f-active { background: #fff; color: #000; }
         .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        
+        .special-selectors { display: flex; gap: 10px; margin-bottom: 15px; }
         .spec-btn { flex: 1; padding: 12px; border-radius: 8px; background: #111; border: 1px solid #333; color: #fff; font-weight: 900; }
         .spec-btn.active { border-color: #F5C400; color: #F5C400; }
-        .special-selectors { display: flex; gap: 10px; }
 
-        .alert { width: 100%; text-align: center; padding: 12px; background: #111; border-radius: 8px; font-weight: 800; margin-bottom: 15px; }
+        .alert { width: 100%; text-align: center; padding: 12px; background: #111; border-radius: 8px; font-weight: 800; margin-bottom: 10px; font-size: 11px; }
         .alert.highlight { background: #F5C400; color: #000; }
 
         .dock { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 50%); display: flex; justify-content: center; z-index: 150; }
-        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; border: none; border-radius: 12px; font-weight: 900; }
+        .next-btn { width: 100%; max-width: 400px; padding: 18px; background: #F5C400; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; }
+        
         .formation-selector { display: flex; gap: 5px; width: 100%; margin-bottom: 15px; }
-        .formation-selector button { flex: 1; padding: 10px; background: #111; border: none; border-radius: 6px; color: #555; font-weight: 800; }
+        .formation-selector button { flex: 1; padding: 10px; background: #111; border: none; border-radius: 6px; color: #444; font-weight: 800; font-size: 10px; }
         .formation-selector button.active { background: #F5C400; color: #000; }
       `}</style>
     </main>
