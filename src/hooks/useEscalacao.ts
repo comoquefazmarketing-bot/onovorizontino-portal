@@ -72,7 +72,10 @@ function parseLineupSafe(raw: unknown): LineupRecord {
 
 // ─── Hook Principal ───────────────────────────────────────────────────────────
 
-export function useEscalacao(jogoId?: number | null, jogoRef?: string) {
+export function useEscalacao(jogoIdOrRef?: number | string | null, jogoRefArg?: string) {
+  // Retrocompatibilidade: aceita useEscalacao('slug') OU useEscalacao(42, 'slug')
+  const jogoId  = typeof jogoIdOrRef === 'number' ? jogoIdOrRef : null;
+  const jogoRef = typeof jogoIdOrRef === 'string'  ? jogoIdOrRef : jogoRefArg;
   const [supabase] = useState(() =>
     createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
