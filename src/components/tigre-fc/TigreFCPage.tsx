@@ -311,10 +311,10 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </section>
       </div>
 
-      {/* MODAL DE PERFIL */}
+      {/* MODAL DE PERFIL - AJUSTADO PARA usuarioId */}
       {perfilAberto && (
         <TigreFCPerfilPublico 
-          targetUserId={perfilAberto} 
+          usuarioId={perfilAberto} 
           jogoId={jogo?.id || 0} 
           meuId={meuId} 
           onClose={() => setPerfilAberto(null)} 
