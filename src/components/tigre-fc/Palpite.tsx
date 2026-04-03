@@ -1,25 +1,30 @@
 'use client';
 
 /**
- * CapitaoEHeroi v3.1 - Finalizado
- * Aura pulsante dourada/ciano nos jogadores selecionáveis.
- * Sem escurecer o campo — mantém brilho total, destaca com aura.
+ * Palpite.tsx
+ * Componente que gerencia a escolha de Capitão e Herói
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
-interface PalpiteProps {
-  scoreTigre: number;
-  scoreAdversario: number;
-  setScoreTigre: (v: number) => void;
-  setScoreAdversario: (v: number) => void;
-  isLocked: boolean;
-  onLock: () => Promise<void>;
+// 1. A interface PRECISA se chamar 'Props' para bater com a linha 22 do erro
+interface Props {
+  onSelect: (type: 'CAPTAIN' | 'HERO') => void;
+  captainName?: string;
+  heroName?: string;
+  captainFoto?: string;
+  heroFoto?: string;
 }
 
-export default function CapitaoEHeroi({ onSelect, captainName, heroName, captainFoto, heroFoto }: Props) {
+export default function CapitaoEHeroi({ 
+  onSelect, 
+  captainName, 
+  heroName, 
+  captainFoto, 
+  heroFoto 
+}: Props) {
   const [hasEntered, setHasEntered] = useState(false);
 
   useEffect(() => {
@@ -127,7 +132,7 @@ export default function CapitaoEHeroi({ onSelect, captainName, heroName, captain
           </div>
         </motion.button>
 
-        {/* Separador VS/& */}
+        {/* Separador VS */}
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
