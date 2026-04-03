@@ -55,7 +55,9 @@ const DEFAULT_STATE: EscalacaoState = {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useEscalacao(jogoRef?: string) {
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   const [usuarioId, setUsuarioId]     = useState<string | null>(null);
   const [state, setState]             = useState<EscalacaoState>(DEFAULT_STATE);
   const [isLoading, setIsLoading]     = useState(true);
