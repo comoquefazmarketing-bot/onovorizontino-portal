@@ -19,7 +19,7 @@ import confetti from 'canvas-confetti';
 import CampoFifa, { POS_CORES, POS_GLOW } from '@/components/tigre-fc/CampoFifa';
 import CapitaoEHeroi from '@/components/tigre-fc/CapitaoEHeroi';
 import Palpite from '@/components/tigre-fc/Palpite';
-import FinalCardReveal from '@/components/tigre-fc/FinalCardReveal';
+import TigreFCShare from '@/components/tigre-fc/TigreFCShare';
 import { useEscalacao, Player } from '@/hooks/useEscalacao';
 
 // ─── Dados ────────────────────────────────────────────────────────────────────
@@ -598,17 +598,25 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       </div>
 
       {/* Modal Final */}
-      {showFinalCard && (
-        <FinalCardReveal
-          lineup={esc.lineup}
-          formation={currentFormation}
-          captainId={esc.captainId}
-          heroId={esc.heroId}
-          scoreTigre={esc.scoreTigre}
-          scoreAdversario={esc.scoreAdv}
-          onClose={() => setShowFinalCard(false)}
-        />
-      )}
+     {showFinalCard && (
+  <TigreFCShare
+    usuario={{
+      display_name: perfil?.display_name,
+      avatar_url:   perfil?.avatar_url,
+      nivel:        perfil?.nivel,
+      xp:           perfil?.xp,
+    }}
+    escalacao={{
+      formacao:    esc.formacao,
+      lineup_json: esc.lineup,
+      capitan_id:  esc.captainId,
+      heroi_id:    esc.heroId,
+      score_tigre: esc.scoreTigre,
+      score_adv:   esc.scoreAdv,
+    }}
+    onClose={() => setShowFinalCard(false)}
+  />
+)}
 
       <style jsx global>{`
         .scrollbar-none::-webkit-scrollbar { display: none; }
