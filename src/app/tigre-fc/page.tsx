@@ -3,6 +3,7 @@
 import React, { useState, useMemo, use } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+// Certifique-se que o arquivo existe em: src/components/tigre-fc/FinalCardReveal.tsx
 import FinalCardReveal from '@/components/tigre-fc/FinalCardReveal'; 
 
 // --- CONFIGURAÇÕES DE IMAGENS E DADOS ---
@@ -52,7 +53,7 @@ const PLAYERS = [
 ];
 
 const FORMATIONS: Record<string, any[]> = {
-  '4-2-3-1': [ // PREFERIDA ENDERSON MOREIRA
+  '4-2-3-1': [
     { id: 'gk', x: 50, y: 88, pos: 'GOL' },
     { id: 'rb', x: 82, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' }, { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 18, y: 68, pos: 'LAT' },
     { id: 'dm1', x: 35, y: 58, pos: 'MEI' }, { id: 'dm2', x: 65, y: 58, pos: 'MEI' },
@@ -111,7 +112,11 @@ function PlayerCard({ player, size, isCaptain, isHero, isField }: any) {
   return (
     <div className="relative transition-all" style={{ width: size }}>
       <div className={`bg-zinc-900 rounded-lg overflow-hidden border ${isCaptain ? 'border-yellow-500 shadow-[0_0_15px_rgba(245,196,0,0.5)]' : isHero ? 'border-cyan-400 shadow-[0_0_15px_rgba(0,243,255,0.5)]' : 'border-zinc-800'}`} style={{ height: size * 1.3 }}>
-        <img src={player.foto} className="w-full h-full object-cover" style={{ objectPosition: isField ? 'top' : 'center' }} />
+        <img 
+            src={player.foto} 
+            className="w-full h-full object-cover" 
+            style={{ objectPosition: isField ? 'right top' : 'left top' }} // CORREÇÃO DE ALINHAMENTO
+        />
         <div className="absolute bottom-0 w-full bg-black/80 py-1 text-center">
           <div className="text-yellow-500 text-[6px] font-black">{player.pos}</div>
           <div className="text-white text-[8px] font-black uppercase truncate px-1">{player.short}</div>
@@ -138,6 +143,16 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   const currentFormation = useMemo(() => FORMATIONS[formationKey], [formationKey]);
   const isFullTeam = useMemo(() => currentFormation.every(slot => !!lineup[slot.id]), [lineup, currentFormation]);
+  
+  // Lógica de Filtragem: Mostra apenas quem não foi escalado ainda
+  const filteredPlayers = useMemo(() => {
+    const selectedIds = Object.values(lineup).filter(p => p !== null).map(p => p!.id);
+    return PLAYERS.filter(p => 
+        !selectedIds.includes(p.id) && 
+        (filterPos === 'TODOS' || p.pos === filterPos)
+    );
+  }, [lineup, filterPos]);
+
   const captainPlayer = useMemo(() => Object.values(lineup).find(p => p?.id === captainId), [lineup, captainId]);
   const heroPlayer = useMemo(() => Object.values(lineup).find(p => p?.id === heroId), [lineup, heroId]);
 
@@ -164,7 +179,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             <h2 className="text-2xl font-[1000] italic uppercase tracking-tighter">Tática</h2>
             <select 
               value={formationKey}
-              onChange={(e) => {setFormationKey(e.target.value); setLineup({});}} 
+              onChange={(e) => {setFormationKey(e.target.value); setLineup({}); setCaptainId(null); setHeroId(null);}} 
               className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-white outline-none"
             >
               {Object.keys(FORMATIONS).map(f => <option key={f} value={f}>{f}</option>)}
@@ -172,7 +187,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
           
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-[1000] italic uppercase tracking-tighter">Mercado</h2>
+            <h2 className="text-xl font-[1000] italic uppercase tracking-tighter text-zinc-500">Mercado</h2>
             <select onChange={(e) => setFilterPos(e.target.value)} className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-yellow-500 outline-none">
               <option value="TODOS">TODOS JOGADORES</option>
               <option value="GOL">GOLEIROS</option>
@@ -185,7 +200,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </div>
 
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 overflow-y-auto pr-2 custom-scrollbar">
-          {PLAYERS.filter(p => filterPos === 'TODOS' || p.pos === filterPos).map(p => (
+          {filteredPlayers.map(p => (
             <div key={p.id} onClick={() => handleSelectPlayer(p)} className="cursor-pointer hover:brightness-125 transition active:scale-95">
               <PlayerCard player={p} size={80} />
             </div>
@@ -220,12 +235,12 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md space-y-6">
             <div className="flex justify-center gap-4">
               <button onClick={() => setSpecialMode('CAPTAIN')} className={`flex-1 p-4 rounded-xl border-2 transition-all ${captainId ? 'border-yellow-500 bg-yellow-500/10' : 'border-zinc-800'}`}>
-                <span className="block text-[10px] font-black text-yellow-500 uppercase">Capitão</span>
-                <span className="text-xs">{captainPlayer?.short || 'Selecionar'}</span>
+                <span className="block text-[10px] font-black text-yellow-500 uppercase">Capitão (C)</span>
+                <span className="text-xs">{captainPlayer?.short || 'Selecionar no Campo'}</span>
               </button>
               <button onClick={() => setSpecialMode('HERO')} className={`flex-1 p-4 rounded-xl border-2 transition-all ${heroId ? 'border-cyan-400 bg-cyan-400/10' : 'border-zinc-800'}`}>
-                <span className="block text-[10px] font-black text-cyan-400 uppercase">Herói</span>
-                <span className="text-xs">{heroPlayer?.short || 'Selecionar'}</span>
+                <span className="block text-[10px] font-black text-cyan-400 uppercase">Herói (H)</span>
+                <span className="text-xs">{heroPlayer?.short || 'Selecionar no Campo'}</span>
               </button>
             </div>
 
@@ -234,15 +249,15 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                 <div className="flex items-center justify-around">
                   <div className="text-center">
                     <span className="text-[10px] font-bold text-zinc-500 block">TIGRE</span>
-                    <input type="number" value={score.home} onChange={e => setScore({...score, home: parseInt(e.target.value) || 0})} className="bg-black w-16 h-16 text-3xl font-black text-center rounded-xl" />
+                    <input type="number" value={score.home} onChange={e => setScore({...score, home: parseInt(e.target.value) || 0})} className="bg-black w-16 h-16 text-3xl font-black text-center rounded-xl outline-none focus:border-yellow-500 border border-transparent" />
                   </div>
                   <span className="text-zinc-700 font-black">VS</span>
                   <div className="text-center">
                     <span className="text-[10px] font-bold text-zinc-500 block">ADV</span>
-                    <input type="number" value={score.away} onChange={e => setScore({...score, away: parseInt(e.target.value) || 0})} className="bg-black w-16 h-16 text-3xl font-black text-center rounded-xl" />
+                    <input type="number" value={score.away} onChange={e => setScore({...score, away: parseInt(e.target.value) || 0})} className="bg-black w-16 h-16 text-3xl font-black text-center rounded-xl outline-none focus:border-yellow-500 border border-transparent" />
                   </div>
                 </div>
-                <button onClick={() => { setScoreLocked(true); confetti(); }} className="w-full py-3 bg-white text-black font-black rounded-xl">CRAVAR PALPITE</button>
+                <button onClick={() => { setScoreLocked(true); confetti(); }} className="w-full py-3 bg-white text-black font-black rounded-xl active:scale-95 transition">CRAVAR PALPITE</button>
               </div>
             )}
 
@@ -260,7 +275,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       {showFinalCard && (
         <FinalCardReveal 
           lineup={lineup}
-          formation={currentFormation} // AQUI PASSA O ARRAY, NÃO A STRING
+          formation={currentFormation} 
           captainId={captainId}
           heroId={heroId}
           scoreTigre={score.home}
@@ -272,6 +287,8 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
       `}</style>
     </div>
   );
