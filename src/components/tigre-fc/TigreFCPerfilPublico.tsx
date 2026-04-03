@@ -143,7 +143,7 @@ export default function TigreFCPerfilPublico({
 }: PerfilPublicoProps) {
 
   // Resolve qual prop usar — suporta os dois formatos transparentemente
-  const resolvedTargetId = usuarioId ?? targetUsuarioId ?? '';
+  const resolvedTargetId = usuarioId ?? targetUsuarioId ?? targetUserId ?? '';
   const resolvedViewerId = meuId     ?? viewerUsuarioId ?? null;
 
   const supabase = createBrowserClient(
