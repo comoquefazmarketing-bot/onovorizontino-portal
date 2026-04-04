@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Image from 'next/image';
-import html2canvas from 'html2canvas';
 
 // --- CONFIGURAÇÕES VISUAIS ---
 const TEXTURA_GRAMADO = 'https://www.transparenttextures.com/patterns/dark-dotted-2.png';
@@ -69,40 +68,49 @@ export default function FinalCardReveal({
   }, []);
 
   // --- COMPARTILHAMENTO NATIVO ---
-  const handleShare = async () => {
+ const handleShare = async () => {
     if (!cardRef.current) return;
     setIsSharing(true);
-
+ 
     try {
-      // Captura o Card como Imagem
-      const canvas = await html2canvas(cardRef.current, {
-        useCORS: true,
-        scale: 3, // Alta definição para redes sociais
-        backgroundColor: '#09090b',
-        logging: false
+      // html-to-image: sem SecurityError, suporte a crossOrigin nativo
+      const { toPng } = await import('html-to-image');
+ 
+      // Garante crossOrigin="anonymous" em todas as imagens do card
+      cardRef.current.querySelectorAll('img').forEach((img) => {
+        (img as HTMLImageElement).crossOrigin = 'anonymous';
       });
-
-      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png', 1.0));
+      await new Promise(r => setTimeout(r, 80)); // aguarda reload
+ 
+      const dataUrl = await toPng(cardRef.current, {
+        pixelRatio: 2,          // resolução 2× para redes sociais
+        cacheBust: true,        // previne uso de cache sem crossOrigin
+        backgroundColor: '#09090b',
+        style: { imageRendering: 'auto' },
+      });
+ 
+      const blob = await (await fetch(dataUrl)).blob();
       if (!blob) return;
-
+ 
       const file = new File([blob], 'meu-time-tigre-fc.png', { type: 'image/png' });
-
-      // Tenta o compartilhamento nativo (Mobile)
-      if (navigator.share && navigator.canShare({ files: [file] })) {
+ 
+      // Mobile → Web Share API (abre WhatsApp, Insta, etc.)
+      // Desktop → download direto do .png
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isMobile && navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: 'Meu Time no Tigre FC',
-          text: `Olha minha escalação pro próximo jogo! Tigre ${scoreTigre} x ${scoreAdversario} Oponente.`,
+          text: `Olha minha escalação! Tigre ${scoreTigre} x ${scoreAdversario} 🐯`,
         });
       } else {
-        // Fallback para Desktop: Download da imagem
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = 'meu-time-tigre-fc.png';
         link.click();
       }
     } catch (error) {
-      console.error('Erro ao processar imagem:', error);
+      console.error('[FinalCardReveal] share error:', error);
     } finally {
       setIsSharing(false);
     }
