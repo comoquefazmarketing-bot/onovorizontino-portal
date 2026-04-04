@@ -1003,22 +1003,23 @@ function PackReveal({ lineup, formation, captainId, heroId, onContinue }: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SHARE SCREEN — Story 9:16
+// SHARE SCREEN — Story 9:16 com html-to-image
 // ─────────────────────────────────────────────────────────────────────────────
 function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAdv, onReset }: {
   lineup:Lineup; formation:string; captainId:number|null; heroId:number|null;
   scoreTigre:number; scoreAdv:number; onReset:()=>void;
 }) {
-  const [copied, setCopied]     = useState(false);
-  const [dl, setDl]             = useState(false);
-  const [saving, setSaving]     = useState(false);
-  const [saved, setSaved]       = useState(false);
-  const cardRef                 = useRef<HTMLDivElement>(null);
+  const [copied,  setCopied]  = useState(false);
+  const [dl,      setDl]      = useState(false);
+  const [saving,  setSaving]  = useState(false);
+  const [saved,   setSaved]   = useState(false);
+  const [dlLabel, setDlLabel] = useState<'idle'|'generating'|'done'>('idle');
 
-  const cap  = captainId ? PLAYERS.find(p=>p.id===captainId) : null;
-  const hero = heroId    ? PLAYERS.find(p=>p.id===heroId)    : null;
+  const cap   = captainId ? PLAYERS.find(p=>p.id===captainId) : null;
+  const hero  = heroId    ? PLAYERS.find(p=>p.id===heroId)    : null;
   const slots = FORMATIONS[formation] ?? FORMATIONS['4-2-3-1'];
 
+  // Linhas de jogadores: ATA → MEI → DEF → GOL (exibe de cima pra baixo)
   const rows = [
     slots.filter(s=>s.pos==='ATA').map(s=>lineup[s.id]).filter(Boolean) as Player[],
     slots.filter(s=>s.pos==='MEI').map(s=>lineup[s.id]).filter(Boolean) as Player[],
@@ -1026,9 +1027,11 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
     slots.filter(s=>s.pos==='GOL').map(s=>lineup[s.id]).filter(Boolean) as Player[],
   ].filter(r=>r.length>0);
 
-  const shareText = encodeURIComponent(`🐯 Escalei meu time no Tigre FC!\nFormação: ${formation}\nPalpite: Novorizontino ${scoreTigre} × ${scoreAdv}\nVocê consegue fazer melhor?\nonovorizontino.com.br/tigre-fc`);
+  const shareText = encodeURIComponent(
+    `🐯 Escalei meu time no Tigre FC!\nFormação: ${formation}\nPalpite: Novorizontino ${scoreTigre} × ${scoreAdv}\nVocê consegue fazer melhor? 👇\nonovorizontino.com.br/tigre-fc`
+  );
 
-  // Supabase upsert
+  // ── Supabase upsert ──────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     if (saved) return;
     setSaving(true);
@@ -1039,13 +1042,9 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
           .select('id').eq('google_id', session.user.id).maybeSingle();
         if (u) {
           await supabase.from('tigre_fc_escalacoes').upsert({
-            usuario_id: u.id,
-            formacao: formation,
-            lineup_json: lineup,
-            capitan_id: captainId,
-            heroi_id: heroId,
-            palpite_tigre: scoreTigre,
-            palpite_adv: scoreAdv,
+            usuario_id: u.id, formacao: formation, lineup_json: lineup,
+            capitan_id: captainId, heroi_id: heroId,
+            palpite_tigre: scoreTigre, palpite_adv: scoreAdv,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'usuario_id' });
           setSaved(true);
@@ -1055,168 +1054,192 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
     setSaving(false);
   }, [lineup, formation, captainId, heroId, scoreTigre, scoreAdv, saved]);
 
-  // Auto-save ao montar
   React.useEffect(() => { handleSave(); }, []);
 
+  // ── Captura + Share / Download ──────────────────────────────────────────
   const handleDownload = async () => {
+    if (dl) return;
     setDl(true);
+    setDlLabel('generating');
     try {
-      // Garante crossOrigin em todas as imagens do card antes de capturar
       const el = document.getElementById('tfc-story-card');
-      if (!el) { setDl(false); return; }
-      el.querySelectorAll('img').forEach(img => {
-        if (!img.crossOrigin) img.crossOrigin = 'anonymous';
-        // Força reload com cache-bust para evitar taint
-        if (!img.src.includes('crossorigin') && !img.src.startsWith('data:')) {
-          img.src = img.src.includes('?') ? img.src + '&_cb=1' : img.src + '?_cb=1';
-        }
+      if (!el) { setDl(false); setDlLabel('idle'); return; }
+
+      // Garante crossOrigin="anonymous" em TODAS as imagens do card
+      el.querySelectorAll('img').forEach((img) => {
+        img.crossOrigin = 'anonymous';
       });
-      // Aguarda imagens carregarem
-      await Promise.allSettled(
-        Array.from(el.querySelectorAll('img')).map(img =>
-          img.complete ? Promise.resolve() : new Promise(res => { img.onload = img.onerror = res; })
-        )
-      );
 
-      // Tenta html-to-image primeiro (melhor suporte a CORS)
-      let blob: Blob | null = null;
-      try {
-        const { toPng } = await import('html-to-image');
-        const dataUrl = await toPng(el, {
-          pixelRatio: 2,
-          backgroundColor: '#050505',
-          style: { borderRadius:'0' }, // evita corte no Safari
-          cacheBust: true,
-          skipFonts: false,
-          includeQueryParams: true,
-        });
-        const res = await fetch(dataUrl);
-        blob = await res.blob();
-      } catch {
-        // Fallback: html2canvas
-        const { default: h2c } = await import('html2canvas');
-        const canvas = await h2c(el, { scale:2, backgroundColor:'#050505', useCORS:true, allowTaint:false });
-        blob = await new Promise<Blob|null>(res => canvas.toBlob(res));
-      }
+      // Aguarda imagens com crossOrigin recarregarem
+      await new Promise(res => setTimeout(res, 120));
 
-      if (!blob) { setDl(false); return; }
+      // html-to-image com pixelRatio:2 (alta resolução)
+      const { toPng } = await import('html-to-image');
+      const dataUrl = await toPng(el, {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: '#050505',
+        style: { borderRadius: '0px' }, // evita corte no Safari
+      });
 
-      const file = new File([blob], 'tigre-fc-meu-time.png', { type:'image/png' });
+      // Converte dataURL → Blob → File
+      const res  = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], 'tigre-fc-meu-time.png', { type: 'image/png' });
 
-      // Web Share API (prioridade mobile)
-      if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.({ files:[file] })) {
+      setDlLabel('done');
+
+      // Detecta Mobile vs Desktop
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+      if (isMobile && navigator.share && navigator.canShare?.({ files: [file] })) {
+        // Mobile: Web Share API nativa (abre WhatsApp, Insta, etc.)
         await navigator.share({
-          title: 'Meu Time — Tigre FC Fantasy League 🐯',
-          text: `🐯 Escalei meu time! Formação ${formation} · Palpite: ${scoreTigre}×${scoreAdv}
-onovorizontino.com.br/tigre-fc`,
+          title: 'Meu Time — Tigre FC 🐯',
+          text: `🐯 ${formation} | Palpite ${scoreTigre}×${scoreAdv}\nonovorizontino.com.br/tigre-fc`,
           files: [file],
         });
       } else {
-        // Fallback desktop: download direto
+        // Desktop: download direto do .png
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a   = document.createElement('a');
         a.href = url; a.download = 'tigre-fc-meu-time.png'; a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
       }
     } catch (err) {
-      console.warn('[TigreFC] Share error:', err);
-      // Último fallback: copia link
-      await navigator.clipboard.writeText('https://onovorizontino.com.br/tigre-fc').catch(()=>{});
-      setCopied(true); setTimeout(()=>setCopied(false), 2500);
+      console.warn('[TigreFC Share]', err);
+      // Fallback: copia link
+      navigator.clipboard.writeText('https://onovorizontino.com.br/tigre-fc').catch(()=>{});
+      setCopied(true); setTimeout(() => setCopied(false), 2500);
     }
     setDl(false);
+    setTimeout(() => setDlLabel('idle'), 3000);
   };
 
   const SHARE_BTNS = [
-    { l:'WhatsApp', c:'#25D366', h:`https://wa.me/?text=${shareText}`, i:'💬' },
-    { l:'Instagram',c:'#E1306C', h:'https://instagram.com',             i:'📸' },
-    { l:'Facebook', c:'#1877F2', h:`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://onovorizontino.com.br/tigre-fc')}`, i:'👥' },
-    { l:'Twitter',  c:'#1DA1F2', h:`https://twitter.com/intent/tweet?text=${shareText}`, i:'🐦' },
+    { l:'WhatsApp',  c:'#25D366', h:`https://wa.me/?text=${shareText}`,                                                                               i:'💬' },
+    { l:'Instagram', c:'#E1306C', h:'https://instagram.com',                                                                                          i:'📸' },
+    { l:'Facebook',  c:'#1877F2', h:`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://onovorizontino.com.br/tigre-fc')}`,    i:'👥' },
+    { l:'Twitter',   c:'#1DA1F2', h:`https://twitter.com/intent/tweet?text=${shareText}`,                                                              i:'🐦' },
   ];
 
+  const dlText = dlLabel==='generating' ? '⏳ Gerando...' : dlLabel==='done' ? '✓ Pronto!' : '📥 SALVAR STORY & COMPARTILHAR';
+
   return (
-    <div style={{ padding:'14px 14px 60px', minHeight:'100vh', background:'#050505' }}>
-      <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }} style={{ textAlign:'center', marginBottom:16 }}>
-        <div style={{ fontSize:8, fontWeight:900, color:'#22C55E', letterSpacing:5, textTransform:'uppercase', marginBottom:4 }}>
-          {saved ? '✓ Time salvo!' : saving ? '⏳ Salvando...' : 'STEP 7 · GLORIFY'}
+    <div style={{ padding:'12px 12px 60px', minHeight:'100vh', background:'#050505' }}>
+
+      {/* Título */}
+      <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}
+        style={{ textAlign:'center', marginBottom:14 }}>
+        <div style={{ fontSize:8, fontWeight:900, letterSpacing:5, textTransform:'uppercase', marginBottom:4,
+          color: saved ? '#22C55E' : saving ? '#F5C400' : '#2a2a2a' }}>
+          {saved ? '✓ Time salvo no banco!' : saving ? '⏳ Salvando...' : 'STEP 7 · GLORIFY'}
         </div>
-        <h2 style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:26, fontWeight:900,
+        <h2 style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:24, fontWeight:900,
           color:'#fff', textTransform:'uppercase', letterSpacing:-0.5, margin:0 }}>
           SALVE &amp; DESAFIE<br /><span style={{ color:'#F5C400' }}>A GALERA 🐯</span>
         </h2>
       </motion.div>
 
-      {/* Story Card 9:16 */}
-      <motion.div initial={{ opacity:0, scale:0.92 }} animate={{ opacity:1, scale:1 }} transition={{ delay:0.1 }}>
-        {/* Wrapper de scroll — exibe o card responsivo na tela */}
-        <div style={{ width:'100%', maxWidth:360, margin:'0 auto', aspectRatio:'9/16',
-          overflow:'hidden', borderRadius:20, boxShadow:'0 0 50px rgba(245,196,0,0.12)' }}>
-        {/* Card interno com dimensões FIXAS para html-to-image/html2canvas — 9:16 exacto */}
-        <div id="tfc-story-card" ref={cardRef}
-          style={{ width:360, height:640, margin:'0 auto',
-            background:'linear-gradient(160deg,#080700 0%,#101000 30%,#0a1400 60%,#050505 100%)',
-            borderRadius:20, overflow:'hidden', border:'1px solid rgba(245,196,0,0.28)',
-            boxShadow:'0 0 50px rgba(245,196,0,0.12)',
+      {/* ── STORY CARD 9:16 ─────────────────────────────────────────────── */}
+      {/* Wrapper responsivo na tela */}
+      <motion.div initial={{ opacity:0, scale:0.94 }} animate={{ opacity:1, scale:1 }} transition={{ delay:0.1, type:'spring', stiffness:200 }}
+        style={{ width:'100%', maxWidth:360, margin:'0 auto', aspectRatio:'9/16',
+          borderRadius:20, overflow:'hidden', boxShadow:'0 0 60px rgba(245,196,0,0.18)' }}>
+
+        {/* Card fixo 360×640 para captura — html-to-image fotografa exatamente isso */}
+        <div id="tfc-story-card"
+          style={{ width:360, height:640, position:'relative', overflow:'hidden',
+            background:'linear-gradient(160deg,#070600 0%,#0e0c00 25%,#091200 55%,#050505 100%)',
             fontFamily:"'Barlow Condensed',Impact,sans-serif",
-            display:'flex', flexDirection:'column', position:'relative' }}>
-          {/* Noise overlay */}
-          <div style={{ position:'absolute', inset:0, opacity:0.03, pointerEvents:'none',
-            backgroundImage:"url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E\")" }}/>
-          {/* Gold lines */}
-          <div style={{ height:3, background:'linear-gradient(90deg,#B8900A,#F5C400,#B8900A)' }}/>
-          <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(245,196,0,0.2),transparent)' }}/>
+            display:'flex', flexDirection:'column' }}>
+
+          {/* Gramado SVG de fundo */}
+          <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
+            <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'55%',
+              background:'radial-gradient(ellipse 100% 70% at 50% 100%,rgba(16,80,16,0.45) 0%,transparent 70%)' }}/>
+            {/* Linhas de campo sutis */}
+            <svg viewBox="0 0 360 640" style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.04 }}>
+              <ellipse cx="180" cy="420" rx="160" ry="80" stroke="white" strokeWidth="1" fill="none"/>
+              <line x1="0" y1="380" x2="360" y2="380" stroke="white" strokeWidth="0.8"/>
+            </svg>
+            {/* Refletores cantos */}
+            <div style={{ position:'absolute', top:0, left:0, width:'50%', height:'70%',
+              background:'linear-gradient(135deg,rgba(255,252,210,0.06) 0%,transparent 55%)', filter:'blur(20px)' }}/>
+            <div style={{ position:'absolute', top:0, right:0, width:'50%', height:'70%',
+              background:'linear-gradient(225deg,rgba(255,252,210,0.06) 0%,transparent 55%)', filter:'blur(20px)' }}/>
+          </div>
+
+          {/* Linha dourada topo */}
+          <div style={{ height:4, background:'linear-gradient(90deg,#8B6500,#F5C400,#D4A200,#F5C400,#8B6500)', flexShrink:0 }}/>
 
           {/* Header */}
-          <div style={{ padding:'12px 16px 10px', display:'flex', alignItems:'center', gap:10,
-            background:'linear-gradient(90deg,rgba(245,196,0,0.08),transparent)',
-            borderBottom:'1px solid rgba(245,196,0,0.1)' }}>
-            <img src={ESCUDO} style={{ width:40, height:40, objectFit:'contain',
-              filter:'drop-shadow(0 0 10px rgba(245,196,0,0.6))' }}/>
+          <div style={{ padding:'10px 14px 8px', display:'flex', alignItems:'center', gap:10,
+            background:'linear-gradient(90deg,rgba(245,196,0,0.1),transparent)',
+            borderBottom:'1px solid rgba(245,196,0,0.12)', flexShrink:0, position:'relative', zIndex:2 }}>
+            <img src={ESCUDO} crossOrigin="anonymous" alt="escudo"
+              style={{ width:44, height:44, objectFit:'contain',
+                filter:'drop-shadow(0 0 12px rgba(245,196,0,0.7))' }}/>
             <div style={{ flex:1 }}>
-              <div style={{ fontSize:6.5, fontWeight:900, color:'#F5C400', letterSpacing:4, textTransform:'uppercase' }}>
+              <div style={{ fontSize:7, fontWeight:900, color:'#F5C400', letterSpacing:3, textTransform:'uppercase', marginBottom:2 }}>
                 TIGRE FC · FANTASY LEAGUE
               </div>
-              <div style={{ fontSize:18, fontWeight:900, color:'#fff', textTransform:'uppercase', letterSpacing:-0.5, lineHeight:1.1 }}>
+              <div style={{ fontSize:17, fontWeight:900, color:'#fff', textTransform:'uppercase', letterSpacing:-0.5, lineHeight:1.1 }}>
                 MEU TIME<br /><span style={{ color:'#F5C400' }}>ESTÁ PRONTO! 🐯</span>
               </div>
             </div>
-            <div style={{ textAlign:'right' }}>
-              <div style={{ fontSize:8, color:'rgba(245,196,0,0.4)', fontWeight:700, textTransform:'uppercase' }}>FORMAÇÃO</div>
-              <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif",
-                fontSize:20, fontWeight:900, color:'#F5C400', letterSpacing:-0.5 }}>{formation}</div>
+            <div style={{ textAlign:'right', flexShrink:0 }}>
+              <div style={{ fontSize:7, color:'rgba(245,196,0,0.5)', fontWeight:700, textTransform:'uppercase', letterSpacing:1 }}>FORMAÇÃO</div>
+              <div style={{ fontSize:22, fontWeight:900, color:'#F5C400', letterSpacing:-1, lineHeight:1 }}>{formation}</div>
             </div>
           </div>
 
-          {/* Formação mini cards */}
-          <div style={{ flex:1, padding:'12px 12px 0', background:'rgba(0,0,0,0.1)',
-            display:'flex', flexDirection:'column', justifyContent:'center', gap:8 }}>
+          {/* ── Jogadores — cards FIFA verticais maiores ── */}
+          <div style={{ flex:1, padding:'10px 8px 0', display:'flex', flexDirection:'column',
+            justifyContent:'center', gap:6, position:'relative', zIndex:2 }}>
             {rows.map((row, ri) => (
-              <div key={ri} style={{ display:'flex', gap:5, justifyContent:'center' }}>
+              <div key={ri} style={{ display:'flex', gap:5, justifyContent:'center', alignItems:'flex-end' }}>
                 {row.map(player => {
-                  const isCap = player.id === captainId;
+                  const isCap  = player.id === captainId;
                   const isHero = player.id === heroId;
-                  const col = isCap ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#555');
+                  const col = isCap ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#888');
+                  // Card maior (50×68) para leitura nítida
                   return (
-                    <div key={player.id} style={{ textAlign:'center', position:'relative' }}>
+                    <div key={player.id} style={{ textAlign:'center', position:'relative', flexShrink:0 }}>
                       {(isCap||isHero) && (
-                        <div style={{ position:'absolute', top:-6, right:-4, background:col, color:'#000',
-                          fontSize:6, fontWeight:900, padding:'1px 3px', borderRadius:3, zIndex:2, lineHeight:1 }}>
-                          {isCap?'C':'⭐'}
+                        <div style={{ position:'absolute', top:-7, right:-5, zIndex:3,
+                          background:col, color:'#000', fontSize:7, fontWeight:900,
+                          padding:'2px 4px', borderRadius:4, lineHeight:1,
+                          boxShadow:`0 0 10px ${col}cc` }}>
+                          {isCap ? 'C' : '⭐'}
                         </div>
                       )}
-                      <div style={{ width:36, height:48, borderRadius:7, overflow:'hidden',
-                        border:`1.5px solid ${col}`, boxShadow:`0 0 8px ${col}60`, background:'#050505',
-                        position:'relative' }}>
-                        {/* Foto celebração no share card */}
-                        <div style={{ width:'100%', height:'75%', overflow:'hidden', position:'relative' }}>
-                          <img src={player.foto} alt={player.short}
+                      {/* Card FIFA vertical 50×68 */}
+                      <div style={{ width:50, height:68, borderRadius:8, overflow:'hidden',
+                        border:`1.5px solid ${col}`,
+                        boxShadow: isCap||isHero ? `0 0 16px ${col}80,0 4px 12px rgba(0,0,0,0.8)` : `0 0 8px ${col}50,0 4px 12px rgba(0,0,0,0.6)`,
+                        background:'#050505', position:'relative' }}>
+                        {/* Zona de foto */}
+                        <div style={{ width:'100%', height:'74%', overflow:'hidden', position:'relative' }}>
+                          <img src={player.foto} alt={player.short} crossOrigin="anonymous"
                             onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
-                            style={imgStyle('celebration')} />
+                            style={{
+                              position:'absolute', top:'50%', left:'50%',
+                              height:'130%', width:'200%', maxWidth:'none',
+                              objectFit:'cover', objectPosition:'80% 10%',
+                              transform:'translate(-50%,-50%) scale(1.3)',
+                              transformOrigin:'center top',
+                            }}/>
+                          <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'35%',
+                            background:'linear-gradient(0deg,#050505 0%,transparent 100%)', pointerEvents:'none' }}/>
                         </div>
-                        <div style={{ background:col, textAlign:'center', padding:'2px 1px',
-                          position:'absolute', bottom:0, width:'100%' }}>
-                          <div style={{ fontSize:5.5, fontWeight:900, color:'#000',
-                            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1 }}>
+                        {/* Tarja nome */}
+                        <div style={{ position:'absolute', bottom:0, width:'100%',
+                          background:`linear-gradient(135deg,${col}ee,${col}99)`,
+                          textAlign:'center', padding:'2px 2px' }}>
+                          <div style={{ fontSize:7, fontWeight:900, color:'#000', textTransform:'uppercase',
+                            letterSpacing:-0.3, lineHeight:1.1,
+                            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                             {player.short}
                           </div>
                         </div>
@@ -1229,73 +1252,99 @@ onovorizontino.com.br/tigre-fc`,
           </div>
 
           {/* Stats strip */}
-          <div style={{ display:'flex', borderTop:'1px solid rgba(245,196,0,0.08)',
-            borderBottom:'1px solid rgba(245,196,0,0.08)', background:'rgba(0,0,0,0.3)' }}>
+          <div style={{ display:'flex', flexShrink:0,
+            borderTop:'1px solid rgba(245,196,0,0.1)', borderBottom:'1px solid rgba(245,196,0,0.1)',
+            background:'rgba(0,0,0,0.35)', position:'relative', zIndex:2 }}>
             {[
-              { label:'Capitão', value:cap?.short??'—', icon:'©', col:'#F5C400' },
-              { label:'Herói',   value:hero?.short??'—', icon:'⭐', col:'#00F3FF' },
+              { label:'Capitão', value:cap?.short??'—',           icon:'©',  col:'#F5C400' },
+              { label:'Herói',   value:hero?.short??'—',           icon:'⭐', col:'#00F3FF' },
               { label:'Palpite', value:`${scoreTigre}×${scoreAdv}`, icon:'🎯', col:'#22C55E' },
-            ].map(item => (
-              <div key={item.label} style={{ flex:1, textAlign:'center', padding:'9px 3px',
-                borderRight:'1px solid rgba(245,196,0,0.07)' }}>
-                <div style={{ fontSize:14, marginBottom:1 }}>{item.icon}</div>
-                <div style={{ fontSize:12, fontWeight:900, color:item.col, lineHeight:1 }}>{item.value}</div>
-                <div style={{ fontSize:6, color:'#333', fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginTop:1 }}>{item.label}</div>
+            ].map((item, idx) => (
+              <div key={item.label} style={{ flex:1, textAlign:'center', padding:'8px 3px',
+                borderRight: idx < 2 ? '1px solid rgba(245,196,0,0.08)' : 'none' }}>
+                <div style={{ fontSize:15, marginBottom:1 }}>{item.icon}</div>
+                <div style={{ fontSize:12, fontWeight:900, color:item.col, lineHeight:1,
+                  overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', padding:'0 2px' }}>
+                  {item.value}
+                </div>
+                <div style={{ fontSize:6, color:'#333', fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginTop:2 }}>
+                  {item.label}
+                </div>
               </div>
             ))}
           </div>
 
-          {/* CTA copy */}
-          <div style={{ padding:'12px 16px', textAlign:'center', background:'rgba(0,0,0,0.2)' }}>
-            <div style={{ fontSize:14, fontWeight:900, color:'#fff', textTransform:'uppercase', lineHeight:1.2, marginBottom:5 }}>
+          {/* CTA footer */}
+          <div style={{ padding:'10px 14px', textAlign:'center', background:'rgba(0,0,0,0.25)',
+            flexShrink:0, position:'relative', zIndex:2 }}>
+            <div style={{ fontSize:13, fontWeight:900, color:'#fff', textTransform:'uppercase',
+              lineHeight:1.2, marginBottom:4 }}>
               VOCÊ CONSEGUE<br /><span style={{ color:'#F5C400' }}>FAZER MELHOR?</span>
             </div>
-            <div style={{ fontSize:8.5, color:'#2a2a2a', fontWeight:600 }}>onovorizontino.com.br/tigre-fc</div>
-            <div style={{ fontSize:7, color:'#141414', fontWeight:700, letterSpacing:2, textTransform:'uppercase', marginTop:2 }}>
+            <div style={{ fontSize:8, color:'#2a2a2a', fontWeight:600 }}>onovorizontino.com.br/tigre-fc</div>
+            <div style={{ fontSize:6.5, color:'#141414', fontWeight:700, letterSpacing:2,
+              textTransform:'uppercase', marginTop:2 }}>
               Série B 2026 · #TigreFC · #NovFC
             </div>
           </div>
-          <div style={{ height:3, background:'linear-gradient(90deg,#B8900A,#F5C400,#B8900A)' }}/>
+
+          {/* Linha dourada bottom */}
+          <div style={{ height:4, background:'linear-gradient(90deg,#8B6500,#F5C400,#D4A200,#F5C400,#8B6500)', flexShrink:0 }}/>
         </div>
-        </div>{/* /wrapper */}
       </motion.div>
 
-      {/* Botões */}
+      {/* ── Botões de Ação ──────────────────────────────────────────────── */}
       <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }}
-        style={{ marginTop:14 }}>
+        style={{ marginTop:14, maxWidth:360, margin:'14px auto 0' }}>
+
+        {/* Botão principal: Salvar + Compartilhar */}
         <motion.button onClick={handleDownload} whileTap={{ scale:0.96 }}
-          style={{ width:'100%', maxWidth:360, margin:'0 auto 10px', display:'block', padding:'15px',
-            borderRadius:16, background:'linear-gradient(135deg,#F5C400,#D4A200)', border:'none',
-            color:'#000', fontSize:12, fontWeight:900, textTransform:'uppercase', letterSpacing:1.5,
-            cursor:'pointer', boxShadow:'0 8px 24px rgba(245,196,0,0.3)' }}>
-          {dl ? '⏳ Gerando...' : '📥 SALVAR STORY (9:16) & COMPARTILHAR'}
+          disabled={dl}
+          style={{ width:'100%', padding:'15px', marginBottom:10, borderRadius:16,
+            background: dlLabel==='done'
+              ? 'linear-gradient(135deg,#22C55E,#16A34A)'
+              : 'linear-gradient(135deg,#F5C400,#D4A200)',
+            border:'none', color:'#000', fontSize:12, fontWeight:900,
+            textTransform:'uppercase', letterSpacing:1.5, cursor: dl ? 'wait' : 'pointer',
+            boxShadow:'0 8px 24px rgba(245,196,0,0.3)',
+            opacity: dl ? 0.85 : 1, transition:'background 0.3s' }}>
+          {dlText}
         </motion.button>
 
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7, maxWidth:360, margin:'0 auto 9px' }}>
+        {/* Share buttons sociais */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7, marginBottom:9 }}>
           {SHARE_BTNS.map(b => (
-            <motion.a key={b.l} href={b.h} target="_blank" rel="noreferrer" whileTap={{ scale:0.91 }}
-              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, padding:'9px 3px',
-                borderRadius:12, background:`${b.c}12`, border:`1px solid ${b.c}35`, textDecoration:'none', cursor:'pointer' }}>
+            <motion.a key={b.l} href={b.h} target="_blank" rel="noreferrer" whileTap={{ scale:0.9 }}
+              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4,
+                padding:'9px 3px', borderRadius:12,
+                background:`${b.c}12`, border:`1px solid ${b.c}35`,
+                textDecoration:'none', cursor:'pointer' }}>
               <span style={{ fontSize:17 }}>{b.i}</span>
               <span style={{ fontSize:6.5, fontWeight:900, color:b.c, textTransform:'uppercase', letterSpacing:0.5 }}>{b.l}</span>
             </motion.a>
           ))}
         </div>
 
-        <motion.button onClick={async()=>{ await navigator.clipboard.writeText('https://onovorizontino.com.br/tigre-fc'); setCopied(true); setTimeout(()=>setCopied(false),2500); }}
+        {/* Copiar link */}
+        <motion.button
+          onClick={async () => {
+            await navigator.clipboard.writeText('https://onovorizontino.com.br/tigre-fc');
+            setCopied(true); setTimeout(() => setCopied(false), 2500);
+          }}
           whileTap={{ scale:0.96 }}
-          style={{ width:'100%', maxWidth:360, margin:'0 auto 10px', display:'block', padding:'11px', borderRadius:12,
-            background: copied?'rgba(34,197,94,0.1)':'rgba(255,255,255,0.04)',
-            border:`1px solid ${copied?'rgba(34,197,94,0.4)':'rgba(255,255,255,0.07)'}`,
-            color:copied?'#22C55E':'#333', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:1, cursor:'pointer' }}>
+          style={{ width:'100%', padding:'11px', borderRadius:12, marginBottom:9,
+            background: copied ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.04)',
+            border:`1px solid ${copied ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.07)'}`,
+            color: copied ? '#22C55E' : '#333',
+            fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:1, cursor:'pointer' }}>
           {copied ? '✓ Link copiado!' : '🔗 Copiar link'}
         </motion.button>
 
         {/* Reset */}
         <motion.button onClick={onReset} whileTap={{ scale:0.96 }}
-          style={{ width:'100%', maxWidth:360, margin:'0 auto', display:'block', padding:'14px', borderRadius:16,
-            background:'transparent', border:'1px solid rgba(255,255,255,0.08)',
-            color:'#333', fontSize:11, fontWeight:900, textTransform:'uppercase', letterSpacing:1.5, cursor:'pointer' }}>
+          style={{ width:'100%', padding:'14px', borderRadius:16, background:'transparent',
+            border:'1px solid rgba(255,255,255,0.08)', color:'#333',
+            fontSize:11, fontWeight:900, textTransform:'uppercase', letterSpacing:1.5, cursor:'pointer' }}>
           🔄 ESCALAR NOVO TIME
         </motion.button>
       </motion.div>
