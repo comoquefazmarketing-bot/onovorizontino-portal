@@ -149,22 +149,39 @@ const POS_COLORS: Record<string, string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 // UTILITÁRIOS DE FOTO DUPLA
 // ─────────────────────────────────────────────────────────────────────────────
-// pose='static'      → esquerda (perfil, mercado)
-// pose='celebration' → direita (comemoração, campo)
+// ── FOTO DUPLA — recorte preciso por pose ─────────────────────────────
+// A imagem contém 2 poses lado a lado (mesma largura total).
+//
+// pose='static'      → Mercado: pose séria/esquerda
+//   object-position: 22% center  → mira no jogador esquerdo
+//   scale(1.4)                   → zoom para eliminar o jogador direito do frame
+//
+// pose='celebration' → Campo: pose comemoração/direita
+//   object-position: 78% center  → mira no jogador direito
+//   scale(1.5)                   → zoom maior para destacar a celebração
+//
 function imgStyle(pose: 'static' | 'celebration'): React.CSSProperties {
-  if (pose === 'static') return {
-    position:'absolute', top:0, left:0,
-    height:'100%', width:'200%', maxWidth:'none',
-    objectFit:'cover', objectPosition:'left center',
-  };
-  // Celebration: foca da cintura para cima, centralizado no card
-  // width:200% garante foto dupla; object-position 80% 10% enquadra o rosto
+  if (pose === 'static') {
+    // Mercado — pose séria (lado esquerdo da imagem dupla)
+    return {
+      position: 'absolute',
+      top: '50%', left: '50%',
+      width: '100%', height: '100%',
+      objectFit: 'cover',
+      objectPosition: '22% center',  // centraliza o jogador da esquerda
+      transform: 'translate(-50%, -50%) scale(1.4)', // zoom remove o jogador direito
+      transformOrigin: 'center center',
+    };
+  }
+  // Campo — pose celebração (lado direito da imagem dupla)
   return {
-    position:'absolute', top:'50%', left:'50%',
-    height:'130%', width:'200%', maxWidth:'none',
-    objectFit:'cover', objectPosition:'80% 10%',
-    transform:'translate(-50%, -50%) scale(1.3)',
-    transformOrigin:'center top',
+    position: 'absolute',
+    top: '50%', left: '50%',
+    width: '100%', height: '100%',
+    objectFit: 'cover',
+    objectPosition: '78% center',  // centraliza o jogador da direita
+    transform: 'translate(-50%, -50%) scale(1.5)', // zoom elimina o jogador esquerdo
+    transformOrigin: 'center center',
   };
 }
 
@@ -1223,13 +1240,7 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
                         <div style={{ width:'100%', height:'74%', overflow:'hidden', position:'relative' }}>
                           <img src={player.foto} alt={player.short} crossOrigin="anonymous"
                             onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
-                            style={{
-                              position:'absolute', top:'50%', left:'50%',
-                              height:'130%', width:'200%', maxWidth:'none',
-                              objectFit:'cover', objectPosition:'80% 10%',
-                              transform:'translate(-50%,-50%) scale(1.3)',
-                              transformOrigin:'center top',
-                            }}/>
+                            style={imgStyle('celebration')}/>
                           <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'35%',
                             background:'linear-gradient(0deg,#050505 0%,transparent 100%)', pointerEvents:'none' }}/>
                         </div>
