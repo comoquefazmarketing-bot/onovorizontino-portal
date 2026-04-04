@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * TigreFCPerfilPublico v5
- * - Query direta ao Supabase como fallback (não depende do RPC get_perfil_publico)
+ * TigreFCPerfilPublico v5.1
+ * - Ajuste: Implementação de shareCardRef e migração para html-to-image
  * - Corneta: 5 mensagens rotativas com animação
  * - Mostra última escalação salva
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createBrowserClient } from '@supabase/ssr';
 
@@ -129,6 +129,7 @@ function CampoVisual({ formacao, lineup, captainId }: {
                   )}
                   <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${POS_CORES[player.pos] ?? '#F5C400'}`, background: '#111' }}>
                     <img src={player.foto} alt={player.short} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      crossOrigin="anonymous"
                       onError={e => { (e.target as HTMLImageElement).src = PATA; }} />
                   </div>
                 </div>
@@ -157,11 +158,14 @@ interface Props {
   viewerUsuarioId?: string | null; onClose?: () => void;
 }
 
-export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetUserId, targetUsuarioId, viewerUsuarioId, onClose }: Props) {
+export default function TigreFCPerfilPublico({ usuarioId, meuId, targetUserId, targetUsuarioId, viewerUsuarioId, onClose }: Props) {
   const targetId = targetUsuarioId ?? targetUserId ?? usuarioId ?? null;
   const viewerId = viewerUsuarioId ?? meuId ?? null;
   const isOwn    = !!targetId && targetId === viewerId;
 
+  // Refs e Estados
+  const shareCardRef = useRef<HTMLDivElement>(null);
+  const [isSharing, setIsSharing] = useState(false);
   const [supabase] = useState(() => createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -179,7 +183,6 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
     let alive = true;
     async function load() {
       setIsLoading(true); setError(null);
-      // 1. Tenta RPC
       try {
         const { data: rpc } = await supabase.rpc('get_perfil_publico', { p_usuario_id: targetId });
         if (alive && rpc && !rpc.error && rpc.usuario) {
@@ -192,7 +195,6 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
           setIsLoading(false); return;
         }
       } catch { /* fallback */ }
-      // 2. Query direta — não depende de is_public nem da RPC
       try {
         const [{ data: u }, { data: esc }] = await Promise.all([
           supabase.from('tigre_fc_usuarios')
@@ -223,8 +225,9 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
   }, []);
 
   const handleShare = useCallback(async () => {
-    if (!shareCardRef.current || !dados) return;
+    if (!shareCardRef.current || !perfil) return;
     setIsSharing(true);
+    setCopied(false);
  
     try {
       const { toPng } = await import('html-to-image');
@@ -233,7 +236,7 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
       shareCardRef.current.querySelectorAll('img').forEach((img) => {
         (img as HTMLImageElement).crossOrigin = 'anonymous';
       });
-      await new Promise(r => setTimeout(r, 80));
+      await new Promise(r => setTimeout(r, 150));
  
       const dataUrl = await toPng(shareCardRef.current, {
         pixelRatio: 2,
@@ -245,28 +248,28 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
       const blob = await (await fetch(dataUrl)).blob();
       if (!blob) return;
  
-      const perfil = dados.tigre_fc_usuarios ?? {};
-      const file   = new File([blob], 'tigre-fc-escalacao.png', { type: 'image/png' });
-      const text   = `Minha escalação pro próximo jogo do Tigre FC! 🐯⚽ Palpite: ${dados.score_tigre ?? 0}×${dados.score_adv ?? 0} #TigreFC #Novorizontino`;
+      const file = new File([blob], 'tigre-fc-time.png', { type: 'image/png' });
+      const text = `Confira a escalação de ${perfil.apelido ?? perfil.display_name} no Tigre FC! 🐯⚽ #TigreFC #Novorizontino`;
  
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       if (isMobile && navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Tigre FC — Minha Escalação', text });
+        await navigator.share({ files: [file], title: 'Tigre FC — Time do Rival', text });
       } else {
-        // Fallback: download direto
         const url  = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href     = url;
-        link.download = `tigre-fc-escalacao-${perfil.display_name ?? 'meu-time'}.png`;
+        link.download = `tigre-fc-escalacao-${perfil.display_name}.png`;
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 3000);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
       }
     } catch (error) {
       console.error('[TigreFCPerfilPublico] share:', error);
     } finally {
       setIsSharing(false);
     }
-  }, [shareCardRef, dados]);
+  }, [perfil]);
 
   if (!targetId) return null;
   const nivelCor = NIVEL_CORES[perfil?.nivel ?? 'Novato'];
@@ -278,6 +281,7 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
         onClick={e => { if (e.target === e.currentTarget) onClose?.(); }}
       >
         <motion.div
+          ref={shareCardRef}
           initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           style={{ width: '100%', maxWidth: 480, background: 'linear-gradient(160deg, #090909 0%, #0f0f0a 100%)', borderRadius: '24px 24px 0 0', borderTop: '1px solid rgba(245,196,0,0.2)', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -318,7 +322,7 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, padding: '14px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 18, border: '1px solid rgba(255,255,255,0.04)' }}>
                   <div style={{ width: 54, height: 54, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${nivelCor}`, background: `${nivelCor}20`, boxShadow: `0 0 16px ${nivelCor}30`, flexShrink: 0 }}>
                     {perfil.avatar_url ? (
-                      <img src={perfil.avatar_url} alt={perfil.display_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={perfil.avatar_url} alt={perfil.display_name} crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
                         {NIVEL_ICONES[perfil.nivel ?? 'Novato']}
@@ -337,7 +341,7 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
                     </div>
                     {perfil.bio && <div style={{ fontSize: 11, color: '#444', marginTop: 4, lineHeight: 1.4 }}>{perfil.bio}</div>}
                   </div>
-                  <img src={ESCUDO} alt="" style={{ width: 26, height: 26, objectFit: 'contain', opacity: 0.3 }} />
+                  <img src={ESCUDO} alt="" crossOrigin="anonymous" style={{ width: 26, height: 26, objectFit: 'contain', opacity: 0.3 }} />
                 </div>
 
                 {/* Campo */}
@@ -350,23 +354,31 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
                 )}
 
                 {/* Ações */}
-                {!isOwn ? (
-                  <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-                    <motion.button whileTap={{ scale: 0.93 }} onClick={handleCorneta}
-                      style={{ flex: 1, padding: '15px', background: 'linear-gradient(135deg, #EF4444, #B91C1C)', border: 'none', borderRadius: 16, color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', textTransform: 'uppercase', boxShadow: '0 4px 16px rgba(239,68,68,0.3)' }}>
-                      🎺 Corneta!
+                <div style={{ marginTop: 16 }}>
+                  {!isOwn ? (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <motion.button whileTap={{ scale: 0.93 }} onClick={handleCorneta}
+                        style={{ flex: 1, padding: '15px', background: 'linear-gradient(135deg, #EF4444, #B91C1C)', border: 'none', borderRadius: 16, color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', textTransform: 'uppercase', boxShadow: '0 4px 16px rgba(239,68,68,0.3)' }}>
+                        🎺 Corneta!
+                      </motion.button>
+                      <motion.button 
+                        whileTap={{ scale: 0.93 }} 
+                        onClick={handleShare}
+                        disabled={isSharing}
+                        style={{ flex: 1, padding: '15px', background: '#111', border: '1px solid #222', borderRadius: 16, color: copied ? '#22C55E' : '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', textTransform: 'uppercase', opacity: isSharing ? 0.6 : 1 }}>
+                        {isSharing ? 'Gerando...' : copied ? '✓ Baixado' : '📤 Compartilhar'}
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <motion.button 
+                      whileTap={{ scale: 0.95 }} 
+                      onClick={handleShare}
+                      disabled={isSharing}
+                      style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg, #F5C400, #D4A200)', border: 'none', borderRadius: 16, color: '#000', fontSize: 12, fontWeight: 900, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 1, opacity: isSharing ? 0.6 : 1 }}>
+                      {isSharing ? 'Gerando Imagem...' : copied ? '✓ Imagem Salva!' : '🔗 Compartilhar meu time'}
                     </motion.button>
-                    <motion.button whileTap={{ scale: 0.93 }} onClick={handleShare}
-                      style={{ flex: 1, padding: '15px', background: '#111', border: '1px solid #222', borderRadius: 16, color: copied ? '#22C55E' : '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', textTransform: 'uppercase' }}>
-                      {copied ? '✓ Copiado' : '📤 Compartilhar'}
-                    </motion.button>
-                  </div>
-                ) : (
-                  <motion.button whileTap={{ scale: 0.95 }} onClick={handleShare}
-                    style={{ marginTop: 16, width: '100%', padding: '16px', background: 'linear-gradient(135deg, #F5C400, #D4A200)', border: 'none', borderRadius: 16, color: '#000', fontSize: 12, fontWeight: 900, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    {copied ? '✓ Link copiado!' : '🔗 Compartilhar meu time'}
-                  </motion.button>
-                )}
+                  )}
+                </div>
 
                 {/* Toast corneta */}
                 <AnimatePresence>
