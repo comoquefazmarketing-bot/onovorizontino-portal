@@ -65,71 +65,72 @@ const PLAYERS: Player[] = [
 ];
 
 // ─── Formações ────────────────────────────────────────────────────────────────
+// Coordenadas recalculadas para cards 30% maiores — mais respiro, sem encavalamento
 const FORMATIONS: Record<string, Slot[]> = {
   '4-2-3-1': [
-    { id:'gk',  x:50, y:87, pos:'GOL', label:'GK'  },
-    { id:'rb',  x:82, y:70, pos:'LAT', label:'RB'  },
-    { id:'cb1', x:62, y:77, pos:'ZAG', label:'CB'  },
-    { id:'cb2', x:38, y:77, pos:'ZAG', label:'CB'  },
-    { id:'lb',  x:18, y:70, pos:'LAT', label:'LB'  },
-    { id:'dm1', x:35, y:55, pos:'MEI', label:'DM'  },
-    { id:'dm2', x:65, y:55, pos:'MEI', label:'DM'  },
-    { id:'am',  x:50, y:38, pos:'MEI', label:'AM'  },
-    { id:'rw',  x:80, y:24, pos:'ATA', label:'RW'  },
-    { id:'lw',  x:20, y:24, pos:'ATA', label:'LW'  },
-    { id:'st',  x:50, y:12, pos:'ATA', label:'ST'  },
+    { id:'gk',  x:50, y:88, pos:'GOL', label:'GK' },
+    { id:'rb',  x:87, y:72, pos:'LAT', label:'RB' },  // laterais nas pontas
+    { id:'cb1', x:64, y:78, pos:'ZAG', label:'CB' },  // zagueiros mais separados
+    { id:'cb2', x:36, y:78, pos:'ZAG', label:'CB' },
+    { id:'lb',  x:13, y:72, pos:'LAT', label:'LB' },
+    { id:'dm1', x:34, y:57, pos:'MEI', label:'DM' },
+    { id:'dm2', x:66, y:57, pos:'MEI', label:'DM' },
+    { id:'am',  x:50, y:40, pos:'MEI', label:'AM' },
+    { id:'rw',  x:85, y:25, pos:'ATA', label:'RW' },  // pontas abertas
+    { id:'lw',  x:15, y:25, pos:'ATA', label:'LW' },
+    { id:'st',  x:50, y:11, pos:'ATA', label:'ST' },
   ],
   '4-3-3': [
-    { id:'gk',  x:50, y:87, pos:'GOL', label:'GK' },
-    { id:'rb',  x:82, y:70, pos:'LAT', label:'RB' },
-    { id:'cb1', x:62, y:77, pos:'ZAG', label:'CB' },
-    { id:'cb2', x:38, y:77, pos:'ZAG', label:'CB' },
-    { id:'lb',  x:18, y:70, pos:'LAT', label:'LB' },
-    { id:'m1',  x:50, y:52, pos:'MEI', label:'CM' },
-    { id:'m2',  x:74, y:44, pos:'MEI', label:'CM' },
-    { id:'m3',  x:26, y:44, pos:'MEI', label:'CM' },
-    { id:'st',  x:50, y:13, pos:'ATA', label:'CF' },
-    { id:'rw',  x:80, y:21, pos:'ATA', label:'RW' },
-    { id:'lw',  x:20, y:21, pos:'ATA', label:'LW' },
+    { id:'gk',  x:50, y:88, pos:'GOL', label:'GK' },
+    { id:'rb',  x:87, y:72, pos:'LAT', label:'RB' },
+    { id:'cb1', x:64, y:78, pos:'ZAG', label:'CB' },
+    { id:'cb2', x:36, y:78, pos:'ZAG', label:'CB' },
+    { id:'lb',  x:13, y:72, pos:'LAT', label:'LB' },
+    { id:'m1',  x:50, y:54, pos:'MEI', label:'CM' },
+    { id:'m2',  x:76, y:46, pos:'MEI', label:'CM' },
+    { id:'m3',  x:24, y:46, pos:'MEI', label:'CM' },
+    { id:'st',  x:50, y:11, pos:'ATA', label:'CF' },
+    { id:'rw',  x:83, y:20, pos:'ATA', label:'RW' },
+    { id:'lw',  x:17, y:20, pos:'ATA', label:'LW' },
   ],
   '3-5-2': [
-    { id:'gk',  x:50, y:87, pos:'GOL', label:'GK' },
-    { id:'cb1', x:50, y:77, pos:'ZAG', label:'CB' },
-    { id:'cb2', x:72, y:73, pos:'ZAG', label:'CB' },
-    { id:'cb3', x:28, y:73, pos:'ZAG', label:'CB' },
-    { id:'rm',  x:88, y:55, pos:'LAT', label:'WB' },
-    { id:'lm',  x:12, y:55, pos:'LAT', label:'WB' },
-    { id:'m1',  x:50, y:52, pos:'MEI', label:'CM' },
-    { id:'m2',  x:68, y:42, pos:'MEI', label:'CM' },
-    { id:'m3',  x:32, y:42, pos:'MEI', label:'CM' },
-    { id:'st1', x:38, y:16, pos:'ATA', label:'ST' },
-    { id:'st2', x:62, y:16, pos:'ATA', label:'ST' },
+    { id:'gk',  x:50, y:88, pos:'GOL', label:'GK' },
+    { id:'cb1', x:50, y:78, pos:'ZAG', label:'CB' },
+    { id:'cb2', x:74, y:74, pos:'ZAG', label:'CB' },
+    { id:'cb3', x:26, y:74, pos:'ZAG', label:'CB' },
+    { id:'rm',  x:91, y:56, pos:'LAT', label:'WB' },
+    { id:'lm',  x: 9, y:56, pos:'LAT', label:'WB' },
+    { id:'m1',  x:50, y:54, pos:'MEI', label:'CM' },
+    { id:'m2',  x:70, y:43, pos:'MEI', label:'CM' },
+    { id:'m3',  x:30, y:43, pos:'MEI', label:'CM' },
+    { id:'st1', x:37, y:15, pos:'ATA', label:'ST' },
+    { id:'st2', x:63, y:15, pos:'ATA', label:'ST' },
   ],
   '4-4-2': [
-    { id:'gk',  x:50, y:87, pos:'GOL', label:'GK' },
-    { id:'rb',  x:84, y:70, pos:'LAT', label:'RB' },
-    { id:'cb1', x:62, y:77, pos:'ZAG', label:'CB' },
-    { id:'cb2', x:38, y:77, pos:'ZAG', label:'CB' },
-    { id:'lb',  x:16, y:70, pos:'LAT', label:'LB' },
-    { id:'rm',  x:80, y:48, pos:'MEI', label:'RM' },
-    { id:'cm1', x:60, y:52, pos:'MEI', label:'CM' },
-    { id:'cm2', x:40, y:52, pos:'MEI', label:'CM' },
-    { id:'lm',  x:20, y:48, pos:'MEI', label:'LM' },
-    { id:'st1', x:38, y:16, pos:'ATA', label:'ST' },
-    { id:'st2', x:62, y:16, pos:'ATA', label:'ST' },
+    { id:'gk',  x:50, y:88, pos:'GOL', label:'GK' },
+    { id:'rb',  x:87, y:72, pos:'LAT', label:'RB' },
+    { id:'cb1', x:64, y:78, pos:'ZAG', label:'CB' },
+    { id:'cb2', x:36, y:78, pos:'ZAG', label:'CB' },
+    { id:'lb',  x:13, y:72, pos:'LAT', label:'LB' },
+    { id:'rm',  x:83, y:50, pos:'MEI', label:'RM' },
+    { id:'cm1', x:60, y:54, pos:'MEI', label:'CM' },
+    { id:'cm2', x:40, y:54, pos:'MEI', label:'CM' },
+    { id:'lm',  x:17, y:50, pos:'MEI', label:'LM' },
+    { id:'st1', x:37, y:15, pos:'ATA', label:'ST' },
+    { id:'st2', x:63, y:15, pos:'ATA', label:'ST' },
   ],
   '5-3-2': [
-    { id:'gk',  x:50, y:87, pos:'GOL', label:'GK' },
-    { id:'rb',  x:86, y:68, pos:'LAT', label:'WB' },
-    { id:'cb1', x:66, y:75, pos:'ZAG', label:'CB' },
-    { id:'cb2', x:50, y:79, pos:'ZAG', label:'CB' },
-    { id:'cb3', x:34, y:75, pos:'ZAG', label:'CB' },
-    { id:'lb',  x:14, y:68, pos:'LAT', label:'WB' },
-    { id:'m1',  x:50, y:52, pos:'MEI', label:'CM' },
-    { id:'m2',  x:70, y:44, pos:'MEI', label:'CM' },
-    { id:'m3',  x:30, y:44, pos:'MEI', label:'CM' },
-    { id:'st1', x:38, y:16, pos:'ATA', label:'ST' },
-    { id:'st2', x:62, y:16, pos:'ATA', label:'ST' },
+    { id:'gk',  x:50, y:88, pos:'GOL', label:'GK' },
+    { id:'rb',  x:89, y:70, pos:'LAT', label:'WB' },
+    { id:'cb1', x:67, y:76, pos:'ZAG', label:'CB' },
+    { id:'cb2', x:50, y:80, pos:'ZAG', label:'CB' },
+    { id:'cb3', x:33, y:76, pos:'ZAG', label:'CB' },
+    { id:'lb',  x:11, y:70, pos:'LAT', label:'WB' },
+    { id:'m1',  x:50, y:54, pos:'MEI', label:'CM' },
+    { id:'m2',  x:72, y:45, pos:'MEI', label:'CM' },
+    { id:'m3',  x:28, y:45, pos:'MEI', label:'CM' },
+    { id:'st1', x:37, y:15, pos:'ATA', label:'ST' },
+    { id:'st2', x:63, y:15, pos:'ATA', label:'ST' },
   ],
 };
 
@@ -231,8 +232,8 @@ function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small=false, o
   onClick?: () => void;
 }) {
   const col = isCaptain ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#888');
-  const W = small ? 38 : 48;
-  const H = Math.round(W * 1.35);
+  const W = small ? 44 : 62;   // +30% vs original (48→62, 38→44)
+  const H = Math.round(W * 1.4); // proporção ligeiramente mais alta
   const aura = isCaptain ? '0 0 28px rgba(245,196,0,0.9),0 0 60px rgba(245,196,0,0.4)'
     : isHero     ? '0 0 28px rgba(0,243,255,0.8),0 0 60px rgba(0,243,255,0.3)'
     : `0 0 12px ${col}60`;
@@ -1211,55 +1212,76 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
             </div>
           </div>
 
-          {/* ── Jogadores — cards FIFA verticais maiores ── */}
-          <div style={{ flex:1, padding:'10px 8px 0', display:'flex', flexDirection:'column',
-            justifyContent:'center', gap:6, position:'relative', zIndex:2 }}>
-            {rows.map((row, ri) => (
-              <div key={ri} style={{ display:'flex', gap:5, justifyContent:'center', alignItems:'flex-end' }}>
-                {row.map(player => {
-                  const isCap  = player.id === captainId;
-                  const isHero = player.id === heroId;
-                  const col = isCap ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#888');
-                  // Card maior (50×68) para leitura nítida
-                  return (
-                    <div key={player.id} style={{ textAlign:'center', position:'relative', flexShrink:0 }}>
-                      {(isCap||isHero) && (
-                        <div style={{ position:'absolute', top:-7, right:-5, zIndex:3,
-                          background:col, color:'#000', fontSize:7, fontWeight:900,
-                          padding:'2px 4px', borderRadius:4, lineHeight:1,
-                          boxShadow:`0 0 10px ${col}cc` }}>
-                          {isCap ? 'C' : '⭐'}
-                        </div>
-                      )}
-                      {/* Card FIFA vertical 50×68 */}
-                      <div style={{ width:50, height:68, borderRadius:8, overflow:'hidden',
-                        border:`1.5px solid ${col}`,
-                        boxShadow: isCap||isHero ? `0 0 16px ${col}80,0 4px 12px rgba(0,0,0,0.8)` : `0 0 8px ${col}50,0 4px 12px rgba(0,0,0,0.6)`,
-                        background:'#050505', position:'relative' }}>
-                        {/* Zona de foto */}
-                        <div style={{ width:'100%', height:'74%', overflow:'hidden', position:'relative' }}>
-                          <img src={player.foto} alt={player.short} crossOrigin="anonymous"
-                            onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
-                            style={imgStyle('celebration')}/>
-                          <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'35%',
-                            background:'linear-gradient(0deg,#050505 0%,transparent 100%)', pointerEvents:'none' }}/>
-                        </div>
-                        {/* Tarja nome */}
-                        <div style={{ position:'absolute', bottom:0, width:'100%',
-                          background:`linear-gradient(135deg,${col}ee,${col}99)`,
-                          textAlign:'center', padding:'2px 2px' }}>
-                          <div style={{ fontSize:7, fontWeight:900, color:'#000', textTransform:'uppercase',
-                            letterSpacing:-0.3, lineHeight:1.1,
-                            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                            {player.short}
+          {/* ── Jogadores — cards FIFA +40%, overlap efeito baralho ── */}
+          <div style={{ flex:1, padding:'8px 6px 0', display:'flex', flexDirection:'column',
+            justifyContent:'center', gap:4, position:'relative', zIndex:2 }}>
+            {rows.map((row, ri) => {
+              // Overlap: cards com margem negativa para efeito de baralho aberto
+              const cardW = 58;
+              const overlapOffset = row.length > 4 ? -6 : row.length > 3 ? -2 : 0;
+              return (
+                <div key={ri} style={{ display:'flex', justifyContent:'center', alignItems:'flex-end',
+                  // Cada card avança sobre o anterior — efeito 3D de profundidade
+                  marginLeft: overlapOffset * (row.length - 1) / 2,
+                }}>
+                  {row.map((player, pi) => {
+                    const isCap  = player.id === captainId;
+                    const isHero = player.id === heroId;
+                    const col = isCap ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#888');
+                    return (
+                      <div key={player.id} style={{ position:'relative', flexShrink:0,
+                        // Overlap lateral — cada card se sobrepõe ao anterior
+                        marginLeft: pi === 0 ? 0 : overlapOffset,
+                        zIndex: pi + 1,
+                      }}>
+                        {/* Badge C / ⭐ */}
+                        {(isCap||isHero) && (
+                          <div style={{ position:'absolute', top:-8, right:-4, zIndex:10,
+                            background:col, color:'#000', fontSize:8, fontWeight:900,
+                            padding:'2px 5px', borderRadius:4, lineHeight:1,
+                            boxShadow:`0 0 12px ${col}cc` }}>
+                            {isCap ? 'C' : '⭐'}
+                          </div>
+                        )}
+                        {/* Card FIFA vertical 58×80 — +40% vs original */}
+                        <div style={{ width:cardW, height:80, borderRadius:9, overflow:'hidden',
+                          border:`2px solid ${col}`,
+                          boxShadow: isCap||isHero
+                            ? `0 0 20px ${col}99, 0 6px 16px rgba(0,0,0,0.9), 2px 0 0 rgba(0,0,0,0.5)`
+                            : `0 0 10px ${col}60, 0 6px 14px rgba(0,0,0,0.8), 2px 0 0 rgba(0,0,0,0.4)`,
+                          background:'#050505', position:'relative' }}>
+                          {/* Zona de foto */}
+                          <div style={{ width:'100%', height:'74%', overflow:'hidden', position:'relative' }}>
+                            <img src={player.foto} alt={player.short} crossOrigin="anonymous"
+                              onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
+                              style={imgStyle('celebration')}/>
+                            <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'35%',
+                              background:'linear-gradient(0deg,#050505 0%,transparent 100%)', pointerEvents:'none' }}/>
+                          </div>
+                          {/* Tarja nome — tipografia grande e robusta */}
+                          <div style={{ position:'absolute', bottom:0, width:'100%', height:'26%',
+                            background:`linear-gradient(135deg,${col}f0,${col}cc)`,
+                            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                            padding:'1px 3px' }}>
+                            <div style={{ fontSize:6, fontWeight:900, color:'rgba(0,0,0,0.6)',
+                              letterSpacing:2, textTransform:'uppercase', lineHeight:1 }}>{player.pos}</div>
+                            <div style={{
+                              fontFamily:"'Barlow Condensed',Impact,sans-serif",
+                              fontSize:9, fontWeight:900, fontStyle:'italic', color:'#000',
+                              textTransform:'uppercase', letterSpacing:-0.3, lineHeight:1.1,
+                              overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+                              maxWidth:'100%', padding:'0 2px',
+                            }}>
+                              {player.short}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
 
           {/* Stats strip */}
@@ -1351,12 +1373,22 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
           {copied ? '✓ Link copiado!' : '🔗 Copiar link'}
         </motion.button>
 
-        {/* Reset */}
-        <motion.button onClick={onReset} whileTap={{ scale:0.96 }}
-          style={{ width:'100%', padding:'14px', borderRadius:16, background:'transparent',
-            border:'1px solid rgba(255,255,255,0.08)', color:'#333',
-            fontSize:11, fontWeight:900, textTransform:'uppercase', letterSpacing:1.5, cursor:'pointer' }}>
-          🔄 ESCALAR NOVO TIME
+        {/* Botão Ciclo da Vitória */}
+        <motion.button onClick={onReset}
+          whileTap={{ scale:0.97 }}
+          whileHover={{ backgroundColor:'#F5C400', color:'#000' }}
+          style={{ width:'100%', padding:'16px', borderRadius:16,
+            background:'transparent',
+            border:'2px solid #F5C400',
+            color:'#F5C400',
+            fontSize:12, fontWeight:900, fontStyle:'italic',
+            textTransform:'uppercase', letterSpacing:1.5, cursor:'pointer',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+            boxShadow:'0 0 20px rgba(245,196,0,0.15)',
+            transition:'background 0.25s, color 0.25s',
+          }}>
+          <span style={{ fontSize:18 }}>🔄</span>
+          MONTAR NOVA ESCALAÇÃO
         </motion.button>
       </motion.div>
     </div>
