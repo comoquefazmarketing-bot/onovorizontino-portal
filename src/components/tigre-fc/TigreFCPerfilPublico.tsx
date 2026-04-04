@@ -223,10 +223,50 @@ export default function TigreFCPerfilPublico({ usuarioId, meuId, jogoId, targetU
   }, []);
 
   const handleShare = useCallback(async () => {
-    const url = `${window.location.origin}/tigre-fc`;
-    if (navigator.share) { await navigator.share({ title: `Time de ${perfil?.display_name} — Tigre FC`, url }); }
-    else { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2500); }
-  }, [perfil]);
+    if (!shareCardRef.current || !dados) return;
+    setIsSharing(true);
+ 
+    try {
+      const { toPng } = await import('html-to-image');
+ 
+      // crossOrigin obrigatório para imagens do Supabase
+      shareCardRef.current.querySelectorAll('img').forEach((img) => {
+        (img as HTMLImageElement).crossOrigin = 'anonymous';
+      });
+      await new Promise(r => setTimeout(r, 80));
+ 
+      const dataUrl = await toPng(shareCardRef.current, {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: '#09090b',
+        style: { imageRendering: 'auto' },
+      });
+ 
+      const blob = await (await fetch(dataUrl)).blob();
+      if (!blob) return;
+ 
+      const perfil = dados.tigre_fc_usuarios ?? {};
+      const file   = new File([blob], 'tigre-fc-escalacao.png', { type: 'image/png' });
+      const text   = `Minha escalação pro próximo jogo do Tigre FC! 🐯⚽ Palpite: ${dados.score_tigre ?? 0}×${dados.score_adv ?? 0} #TigreFC #Novorizontino`;
+ 
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isMobile && navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Tigre FC — Minha Escalação', text });
+      } else {
+        // Fallback: download direto
+        const url  = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href     = url;
+        link.download = `tigre-fc-escalacao-${perfil.display_name ?? 'meu-time'}.png`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+      }
+    } catch (error) {
+      console.error('[TigreFCPerfilPublico] share:', error);
+    } finally {
+      setIsSharing(false);
+    }
+  }, [shareCardRef, dados]);
 
   if (!targetId) return null;
   const nivelCor = NIVEL_CORES[perfil?.nivel ?? 'Novato'];
