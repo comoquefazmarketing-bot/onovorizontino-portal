@@ -157,12 +157,14 @@ function imgStyle(pose: 'static' | 'celebration'): React.CSSProperties {
     height:'100%', width:'200%', maxWidth:'none',
     objectFit:'cover', objectPosition:'left center',
   };
+  // Celebration: foca da cintura para cima, centralizado no card
+  // width:200% garante foto dupla; object-position 80% 10% enquadra o rosto
   return {
-    position:'absolute', top:'50%', right:0,
-    height:'150%', width:'200%', maxWidth:'none',
-    objectFit:'cover', objectPosition:'right 10%',
-    transform:'translateY(-50%)',
-    transformOrigin:'right center',
+    position:'absolute', top:'50%', left:'50%',
+    height:'130%', width:'200%', maxWidth:'none',
+    objectFit:'cover', objectPosition:'80% 10%',
+    transform:'translate(-50%, -50%) scale(1.3)',
+    transformOrigin:'center top',
   };
 }
 
@@ -371,13 +373,58 @@ function Field3D({ lineup, slots, activeSlot, activePlayer, onSlotClick, special
 // ─────────────────────────────────────────────────────────────────────────────
 // BANCO DE RESERVAS (com posições obrigatórias)
 // ─────────────────────────────────────────────────────────────────────────────
-function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick }: {
-  lineup:Lineup; activeSlot:string|null; activePlayer:Player|null; onSlotClick:(id:string)=>void;
+function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }: {
+  lineup:Lineup; activeSlot:string|null; activePlayer:Player|null;
+  onSlotClick:(id:string)=>void; fieldFull:boolean;
 }) {
+  const benchCount = BENCH_SLOTS.filter(bs => !!lineup[bs.id]).length;
+  const needsAlert = fieldFull && benchCount < 5;
+
   return (
-    <div style={{ padding:'10px 12px 14px', background:'rgba(0,0,0,0.75)', backdropFilter:'blur(8px)',
-      borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-      <div style={{ fontSize:7, fontWeight:900, color:'#333', letterSpacing:4,
+    <motion.div
+      animate={needsAlert ? {
+        boxShadow: [
+          '0 0 0px rgba(245,196,0,0)',
+          '0 0 28px rgba(245,196,0,0.7)',
+          '0 0 8px rgba(245,196,0,0.3)',
+          '0 0 28px rgba(245,196,0,0.7)',
+          '0 0 0px rgba(245,196,0,0)',
+        ],
+        scale: [1, 1.015, 1, 1.015, 1],
+      } : {}}
+      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+      style={{ padding:'10px 12px 14px', background: needsAlert ? 'rgba(20,14,0,0.92)' : 'rgba(0,0,0,0.75)',
+        backdropFilter:'blur(8px)', borderTop: needsAlert ? '1px solid rgba(245,196,0,0.4)' : '1px solid rgba(255,255,255,0.06)',
+        position:'relative' }}>
+
+      {/* Banner "PROFESSOR" — visível só quando alerta ativo */}
+      {needsAlert && (
+        <motion.div
+          initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }}
+          exit={{ opacity:0, y:-8 }}
+          style={{ textAlign:'center', marginBottom:8 }}>
+          <motion.div
+            animate={{ opacity:[0.7,1,0.7] }}
+            transition={{ duration:1, repeat:Infinity }}
+            style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'5px 14px',
+              background:'rgba(245,196,0,0.1)', border:'1px solid rgba(245,196,0,0.5)',
+              borderRadius:999 }}>
+            <motion.span animate={{ rotate:[0,15,-15,0] }} transition={{ duration:0.6, repeat:Infinity, repeatDelay:1.2 }}
+              style={{ fontSize:14 }}>🧑‍🏫</motion.span>
+            <span style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif",
+              fontSize:11, fontWeight:900, color:'#F5C400', textTransform:'uppercase',
+              fontStyle:'italic', letterSpacing:0.5, lineHeight:1 }}>
+              ESCOLHA SEUS RESERVAS PARA AVANÇAR
+            </span>
+          </motion.div>
+          <div style={{ fontSize:7, color:'rgba(245,196,0,0.4)', marginTop:3, fontWeight:700,
+            letterSpacing:2, textTransform:'uppercase' }}>
+            Faltam {5 - benchCount} posição{5-benchCount !== 1 ? 'ões' : ''}
+          </div>
+        </motion.div>
+      )}
+
+      <div style={{ fontSize:7, fontWeight:900, color: needsAlert ? '#F5C400' : '#333', letterSpacing:4,
         textTransform:'uppercase', textAlign:'center', marginBottom:10 }}>🪑 Banco de Reservas</div>
       <div style={{ display:'flex', gap:7, justifyContent:'center' }}>
         {BENCH_SLOTS.map(bs => {
@@ -1014,23 +1061,69 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
   const handleDownload = async () => {
     setDl(true);
     try {
-      const { default: h2c } = await import('html2canvas');
+      // Garante crossOrigin em todas as imagens do card antes de capturar
       const el = document.getElementById('tfc-story-card');
-      if (!el) return;
-      // 9:16 a pixelRatio 2
-      const canvas = await h2c(el, { scale:2, backgroundColor:'#050505', useCORS:true, allowTaint:true });
-      canvas.toBlob(async blob => {
-        if (!blob) return;
-        const file = new File([blob], 'tigre-fc-meu-time.png', { type:'image/png' });
-        if (navigator.share && navigator.canShare?.({ files:[file] })) {
-          await navigator.share({ title:'Meu Time Tigre FC!', text:'🐯', files:[file] });
-        } else {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href=url; a.download='tigre-fc-meu-time.png'; a.click();
-          URL.revokeObjectURL(url);
+      if (!el) { setDl(false); return; }
+      el.querySelectorAll('img').forEach(img => {
+        if (!img.crossOrigin) img.crossOrigin = 'anonymous';
+        // Força reload com cache-bust para evitar taint
+        if (!img.src.includes('crossorigin') && !img.src.startsWith('data:')) {
+          img.src = img.src.includes('?') ? img.src + '&_cb=1' : img.src + '?_cb=1';
         }
       });
-    } catch {}
+      // Aguarda imagens carregarem
+      await Promise.allSettled(
+        Array.from(el.querySelectorAll('img')).map(img =>
+          img.complete ? Promise.resolve() : new Promise(res => { img.onload = img.onerror = res; })
+        )
+      );
+
+      // Tenta html-to-image primeiro (melhor suporte a CORS)
+      let blob: Blob | null = null;
+      try {
+        const { toPng } = await import('html-to-image');
+        const dataUrl = await toPng(el, {
+          pixelRatio: 2,
+          backgroundColor: '#050505',
+          style: { borderRadius:'0' }, // evita corte no Safari
+          cacheBust: true,
+          skipFonts: false,
+          includeQueryParams: true,
+        });
+        const res = await fetch(dataUrl);
+        blob = await res.blob();
+      } catch {
+        // Fallback: html2canvas
+        const { default: h2c } = await import('html2canvas');
+        const canvas = await h2c(el, { scale:2, backgroundColor:'#050505', useCORS:true, allowTaint:false });
+        blob = await new Promise<Blob|null>(res => canvas.toBlob(res));
+      }
+
+      if (!blob) { setDl(false); return; }
+
+      const file = new File([blob], 'tigre-fc-meu-time.png', { type:'image/png' });
+
+      // Web Share API (prioridade mobile)
+      if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.({ files:[file] })) {
+        await navigator.share({
+          title: 'Meu Time — Tigre FC Fantasy League 🐯',
+          text: `🐯 Escalei meu time! Formação ${formation} · Palpite: ${scoreTigre}×${scoreAdv}
+onovorizontino.com.br/tigre-fc`,
+          files: [file],
+        });
+      } else {
+        // Fallback desktop: download direto
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'tigre-fc-meu-time.png'; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      }
+    } catch (err) {
+      console.warn('[TigreFC] Share error:', err);
+      // Último fallback: copia link
+      await navigator.clipboard.writeText('https://onovorizontino.com.br/tigre-fc').catch(()=>{});
+      setCopied(true); setTimeout(()=>setCopied(false), 2500);
+    }
     setDl(false);
   };
 
@@ -1055,8 +1148,12 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
 
       {/* Story Card 9:16 */}
       <motion.div initial={{ opacity:0, scale:0.92 }} animate={{ opacity:1, scale:1 }} transition={{ delay:0.1 }}>
+        {/* Wrapper de scroll — exibe o card responsivo na tela */}
+        <div style={{ width:'100%', maxWidth:360, margin:'0 auto', aspectRatio:'9/16',
+          overflow:'hidden', borderRadius:20, boxShadow:'0 0 50px rgba(245,196,0,0.12)' }}>
+        {/* Card interno com dimensões FIXAS para html-to-image/html2canvas — 9:16 exacto */}
         <div id="tfc-story-card" ref={cardRef}
-          style={{ width:'100%', maxWidth:360, aspectRatio:'9/16', margin:'0 auto',
+          style={{ width:360, height:640, margin:'0 auto',
             background:'linear-gradient(160deg,#080700 0%,#101000 30%,#0a1400 60%,#050505 100%)',
             borderRadius:20, overflow:'hidden', border:'1px solid rgba(245,196,0,0.28)',
             boxShadow:'0 0 50px rgba(245,196,0,0.12)',
@@ -1160,6 +1257,7 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
           </div>
           <div style={{ height:3, background:'linear-gradient(90deg,#B8900A,#F5C400,#B8900A)' }}/>
         </div>
+        </div>{/* /wrapper */}
       </motion.div>
 
       {/* Botões */}
@@ -1371,7 +1469,7 @@ export default function EscalacaoFormacao() {
 
           {(isFieldFull || step === 'bench') && (
             <BenchArea lineup={lineup} activeSlot={activeSlot} activePlayer={activePlayer}
-              onSlotClick={slotId => handleEscalacao(slotId, undefined)}/>
+              onSlotClick={slotId => handleEscalacao(slotId, undefined)} fieldFull={isFieldFull}/>
           )}
 
           <PlayerPicker lineup={lineup} filterPos={filterPos} setFilterPos={setFilterPos}
