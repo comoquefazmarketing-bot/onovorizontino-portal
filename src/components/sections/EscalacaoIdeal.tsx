@@ -359,15 +359,24 @@ export default function EscalacaoIdeal() {
     if (jaRegistrado) { doGenerate(); } else { setShowLeadModal(true); }
   };
 
-  const doGenerate = async () => {
+   const doGenerate = async () => {
     setShowLeadModal(false); setGenerating(true); setShowCard(true);
     await new Promise(r => setTimeout(r, 600));
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(cardRef.current!, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#080808', logging: false });
-      const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/png'));
-      generatedBlob.current = blob;
-    } catch (e) { console.error(e); }
+      const { toPng } = await import('html-to-image');
+      // crossOrigin obrigatório — evita SecurityError com imagens do Supabase
+      cardRef.current!.querySelectorAll('img').forEach((img) => {
+        (img as HTMLImageElement).crossOrigin = 'anonymous';
+      });
+      await new Promise(r => setTimeout(r, 80)); // aguarda reload crossOrigin
+      const dataUrl = await toPng(cardRef.current!, {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: '#080808',
+        style: { imageRendering: 'auto' },
+      });
+      generatedBlob.current = await (await fetch(dataUrl)).blob();
+    } catch (e) { console.error('[EscalacaoIdeal] capture:', e); }
     setGenerating(false); setShowCard(false);
     setShowShare(true);
   };
