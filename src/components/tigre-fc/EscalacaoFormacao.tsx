@@ -479,7 +479,7 @@ function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }:
           </div>
         );
       })()}
-    </div>
+    </motion.div>
   );
 }
 
