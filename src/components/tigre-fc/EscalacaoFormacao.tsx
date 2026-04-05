@@ -4,7 +4,8 @@
  * Jornada completa: Formação → Mercado → Campo → Banco → Capitão/Herói → Palpite → Reveal → Share
  */
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
@@ -1059,12 +1060,16 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
         const { data: u } = await supabase.from('tigre_fc_usuarios')
           .select('id').eq('google_id', session.user.id).maybeSingle();
         if (u) {
-          await supabase.from('tigre_fc_escalacoes').upsert({
-            usuario_id: u.id, formacao: formation, lineup_json: lineup,
-            capitan_id: captainId, heroi_id: heroId,
-            palpite_tigre: scoreTigre, palpite_adv: scoreAdv,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'usuario_id' });
+          await supabase.rpc('upsert_escalacao', {
+            p_google_id:     session.user.id, // RPC resolve uuid internamente
+            p_formacao:      formation,
+            p_lineup:        lineup,           // coluna real: lineup
+            p_capitao_id:    captainId,        // coluna real: capitao_id
+            p_heroi_id:      heroId,
+            p_palpite_tigre: scoreTigre,       // coluna real: placar_palpite_tigre
+            p_palpite_adv:   scoreAdv,         // coluna real: placar_palpite_adv
+            p_bench:         {},
+          });
           setSaved(true);
         }
       }
@@ -1399,6 +1404,8 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
 // COMPONENTE PRINCIPAL
 // ─────────────────────────────────────────────────────────────────────────────
 export default function EscalacaoFormacao() {
+  const router = useRouter();
+
   const [step,         setStep]         = useState<Step>('formation');
   const [formation,    setFormation]    = useState('4-2-3-1');
   const [lineup,       setLineup]       = useState<Lineup>({});
@@ -1410,6 +1417,8 @@ export default function EscalacaoFormacao() {
   const [specialMode,  setSpecialMode]  = useState<SpecialMode>(null);
   const [scoreTigre,   setScoreTigre]   = useState(1);
   const [scoreAdv,     setScoreAdv]     = useState(0);
+  const [userId,       setUserId]       = useState<string|null>(null);
+  const [hydrated,     setHydrated]     = useState(false);
 
   const slots      = useMemo(() => FORMATIONS[formation] ?? FORMATIONS['4-2-3-1'], [formation]);
   const fieldCount = useMemo(() => slots.filter(s => !!lineup[s.id]).length, [lineup, slots]);
@@ -1417,13 +1426,111 @@ export default function EscalacaoFormacao() {
   const isFieldFull = fieldCount === 11;
   const isBenchFull = benchCount === 5;
 
+  // ── HIDRATAÇÃO: carrega escalação salva ao montar ──────────────────────────
+  useEffect(() => {
+    let alive = true;
+    async function loadSaved() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) return;
+
+        // Regra de Ouro: usa google_id via RPC server-side
+        const googleId = session.user.id;
+
+        // Guarda o google_id para o autoSave usar na RPC
+        setUserId(googleId);
+
+        // Carrega escalação via RPC (converte google_id internamente)
+        const { data: esc, error } = await supabase
+          .rpc('get_escalacao_usuario', { p_google_id: googleId });
+
+        if (!alive || error || !esc || esc.error) return;
+
+        // Parse null-safe do lineup — tabela: escalacoes_usuarios, coluna: lineup
+        const safeLineup: Lineup = {};
+        Object.entries((esc.lineup ?? {}) as object).forEach(([k, v]) => {
+          safeLineup[k] = v ? (v as Player) : null;
+        });
+
+        setFormation(esc.formacao ?? '4-2-3-1');
+        setLineup(safeLineup);
+        setCaptainId(esc.capitao_id ?? null);      // coluna real: capitao_id
+        setHeroId(esc.heroi_id ?? null);
+        setScoreTigre(esc.placar_palpite_tigre ?? 1); // coluna real
+        setScoreAdv(esc.placar_palpite_adv ?? 0);     // coluna real
+
+        // Avança a etapa conforme o que já está salvo
+        const savedSlots = FORMATIONS[esc.formacao ?? '4-2-3-1'] ?? FORMATIONS['4-2-3-1'];
+        const savedField = savedSlots.filter((s: any) => !!safeLineup[s.id]).length;
+        const savedBench = BENCH_SLOTS.filter(bs => !!safeLineup[bs.id]).length;
+
+        if (savedField === 11 && savedBench === 5 && esc.capitao_id && esc.heroi_id) {
+          setStep('share');
+        } else if (savedField === 11 && savedBench === 5) {
+          setStep('captain_hero');
+        } else if (savedField === 11) {
+          setStep('bench');
+        } else if (savedField > 0) {
+          setStep('picking');
+        }
+      } catch (e) {
+        console.warn('[TigreFC] Hydration error:', e);
+      } finally {
+        if (alive) setHydrated(true);
+      }
+    }
+    loadSaved();
+    return () => { alive = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── AUTO-SAVE: via RPC upsert_escalacao (Regra de Ouro: google_id server-side)
+  const autoSave = useCallback(async (
+    currentLineup: Lineup,
+    currentFormation: string,
+    currentCaptain: number|null,
+    currentHero: number|null,
+    currentScoreTigre: number,
+    currentScoreAdv: number,
+  ) => {
+    if (!userId || !hydrated) return; // userId aqui é o google_id da sessão
+    try {
+      // Separa titulares e reservas para salvar nos campos corretos
+      const titulares: Lineup = {};
+      const reservas:  Lineup = {};
+      Object.entries(currentLineup).forEach(([k, v]) => {
+        if (k.startsWith('b_')) reservas[k] = v;
+        else titulares[k] = v;
+      });
+
+      await supabase.rpc('upsert_escalacao', {
+        p_google_id:     userId,           // RPC converte → uuid internamente
+        p_formacao:      currentFormation,
+        p_lineup:        titulares,        // coluna: lineup
+        p_capitao_id:    currentCaptain,   // coluna: capitao_id
+        p_heroi_id:      currentHero,
+        p_palpite_tigre: currentScoreTigre, // coluna: placar_palpite_tigre
+        p_palpite_adv:   currentScoreAdv,   // coluna: placar_palpite_adv
+        p_bench:         reservas,
+      });
+    } catch (e) {
+      console.warn('[TigreFC] AutoSave error:', e);
+    }
+  }, [userId, hydrated]);
+
   // Reset completo do ciclo
   const handleReset = useCallback(() => {
     setStep('formation'); setFormation('4-2-3-1'); setLineup({});
     setActiveSlot(null); setActivePlayer(null); setFilterPos('TODOS');
     setCaptainId(null); setHeroId(null); setSpecialMode(null);
     setScoreTigre(1); setScoreAdv(0);
+    // Não limpa userId/hydrated — mantém sessão
   }, []);
+
+  // Botão "Novo time" na tela de share → volta para /tigre-fc
+  const handleGoHome = useCallback(() => {
+    handleReset();
+    router.push('/tigre-fc');
+  }, [handleReset, router]);
 
   // Escolhe formação
   const handleFormation = useCallback((f: string) => {
@@ -1531,7 +1638,7 @@ export default function EscalacaoFormacao() {
         {step === 'share' && (
           <motion.div key="share" initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}>
             <ShareScreen lineup={lineup} formation={formation} captainId={captainId} heroId={heroId}
-              scoreTigre={scoreTigre} scoreAdv={scoreAdv} onReset={handleReset}/>
+              scoreTigre={scoreTigre} scoreAdv={scoreAdv} onReset={handleGoHome}/>
           </motion.div>
         )}
       </AnimatePresence>
