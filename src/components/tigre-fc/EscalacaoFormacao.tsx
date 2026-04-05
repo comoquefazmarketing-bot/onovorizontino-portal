@@ -11,16 +11,39 @@ import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
-const BASE   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
-const ESCUDO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-const PATA   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
+const BASE       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
+const ESCUDO     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+const ESCUDO_CRB = 'https://upload.wikimedia.org/wikipedia/commons/7/73/CRB_logo.svg';
+const PATA       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Player     = { id: number; name: string; short: string; num: number; pos: string; foto: string };
-type Lineup     = Record<string, Player | null>;
-type Step       = 'formation' | 'picking' | 'bench' | 'captain_hero' | 'score' | 'reveal' | 'share';
+type Player      = { id: number; name: string; short: string; num: number; pos: string; foto: string };
+type Lineup      = Record<string, Player | null>;
+type Step        = 'formation' | 'picking' | 'bench' | 'captain_hero' | 'score' | 'reveal' | 'share';
 type SpecialMode = 'CAPTAIN' | 'HERO' | null;
-type Slot       = { id: string; x: number; y: number; pos: string; label: string };
+type Slot        = { id: string; x: number; y: number; pos: string; label: string };
+
+// ─── Interfaces de Props (tipagem explícita — elimina any implícito) ──────────
+interface Field3DProps {
+  lineup: Lineup; slots: Slot[];
+  activeSlot: string|null; activePlayer: Player|null;
+  onSlotClick: (id:string)=>void;
+  specialMode: SpecialMode; captainId: number|null; heroId: number|null;
+}
+interface BenchAreaProps {
+  lineup: Lineup; activeSlot: string|null; activePlayer: Player|null;
+  onSlotClick: (id:string)=>void; fieldFull: boolean;
+}
+interface PlayerPickerProps {
+  lineup: Lineup; filterPos: string; setFilterPos: (p:string)=>void;
+  onSelect: (p:Player)=>void; activeSlot: string|null; activePlayer: Player|null;
+  step: Step; formation: string;
+}
+interface FifaCardProps {
+  player: Player; isCaptain?: boolean; isHero?: boolean;
+  isActive?: boolean; pulsing?: boolean; small?: boolean;
+  onClick?: ()=>void;
+}
 
 // ─── Players ─────────────────────────────────────────────────────────────────
 const PLAYERS: Player[] = [
@@ -227,11 +250,7 @@ function StadiumBg() {
 // ─────────────────────────────────────────────────────────────────────────────
 // CARD FIFA VERTICAL — usado no campo
 // ─────────────────────────────────────────────────────────────────────────────
-function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small=false, onClick }: {
-  player: Player; isCaptain?: boolean; isHero?: boolean;
-  isActive?: boolean; pulsing?: boolean; small?: boolean;
-  onClick?: () => void;
-}) {
+function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small=false, onClick }: FifaCardProps) {
   const col = isCaptain ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#888');
   const W = small ? 44 : 62;   // +30% vs original (48→62, 38→44)
   const H = Math.round(W * 1.4); // proporção ligeiramente mais alta
@@ -334,10 +353,7 @@ function EmptySlot({ pos, label, active, onClick }: { pos:string; label:string; 
 // ─────────────────────────────────────────────────────────────────────────────
 // CAMPO 3D
 // ─────────────────────────────────────────────────────────────────────────────
-function Field3D({ lineup, slots, activeSlot, activePlayer, onSlotClick, specialMode, captainId, heroId }: {
-  lineup:Lineup; slots:Slot[]; activeSlot:string|null; activePlayer:Player|null;
-  onSlotClick:(id:string)=>void; specialMode:SpecialMode; captainId:number|null; heroId:number|null;
-}) {
+function Field3D({ lineup, slots, activeSlot, activePlayer, onSlotClick, specialMode, captainId, heroId }: Field3DProps) {
   const pulsing = !!specialMode;
   return (
     <div style={{ width:'100%', maxWidth:440, margin:'0 auto', perspective:'400px', perspectiveOrigin:'50% 10%' }}>
@@ -392,10 +408,7 @@ function Field3D({ lineup, slots, activeSlot, activePlayer, onSlotClick, special
 // ─────────────────────────────────────────────────────────────────────────────
 // BANCO DE RESERVAS (com posições obrigatórias)
 // ─────────────────────────────────────────────────────────────────────────────
-function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }: {
-  lineup:Lineup; activeSlot:string|null; activePlayer:Player|null;
-  onSlotClick:(id:string)=>void; fieldFull:boolean;
-}) {
+function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }: BenchAreaProps) {
   const benchCount = BENCH_SLOTS.filter(bs => !!lineup[bs.id]).length;
   const needsAlert = fieldFull && benchCount < 5;
 
@@ -505,11 +518,7 @@ function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }:
 // ─────────────────────────────────────────────────────────────────────────────
 // MERCADO DE JOGADORES — Grid Elite 2 colunas
 // ─────────────────────────────────────────────────────────────────────────────
-function PlayerPicker({ lineup, filterPos, setFilterPos, onSelect, activeSlot, activePlayer, step, formation }: {
-  lineup:Lineup; filterPos:string; setFilterPos:(p:string)=>void;
-  onSelect:(p:Player)=>void; activeSlot:string|null; activePlayer:Player|null;
-  step:Step; formation:string;
-}) {
+function PlayerPicker({ lineup, filterPos, setFilterPos, onSelect, activeSlot, activePlayer, step, formation }: PlayerPickerProps) {
   const slots = FORMATIONS[formation] ?? FORMATIONS['4-2-3-1'];
   const usedIds = useMemo(() => new Set(Object.values(lineup).filter(Boolean).map(p => p!.id)), [lineup]);
   const filtered = useMemo(() =>
@@ -576,11 +585,7 @@ function PlayerPicker({ lineup, filterPos, setFilterPos, onSelect, activeSlot, a
                 {isActive && <div style={{ position:'absolute', inset:0,
                   background:'radial-gradient(circle at 50% 80%,rgba(245,196,0,0.15),transparent 70%)',
                   pointerEvents:'none' }}/>}
-                {/* Número watermark */}
-                <div style={{ position:'absolute', top:6, right:8,
-                  fontFamily:"'Barlow Condensed',Impact,sans-serif",
-                  fontSize:30, fontWeight:900, fontStyle:'italic',
-                  color:'rgba(255,255,255,0.06)', lineHeight:1, userSelect:'none' }}>{p.num}</div>
+                {/* Sem número — rosto limpo no mercado */}
               </div>
               {/* Info */}
               <div style={{ padding:'7px 10px 9px' }}>
@@ -917,13 +922,13 @@ function LEDScoreboard({ scoreTigre, setScoreTigre, scoreAdv, setScoreAdv, onCon
                 </React.Fragment>
               ))}
             </div>
-            {/* Adversário */}
+            {/* CRB */}
             <div style={{ flex:1, textAlign:'center' }}>
-              <div style={{ width:44, height:44, margin:'0 auto 6px', background:'rgba(255,255,255,0.04)',
-                borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <span style={{ fontSize:26 }}>⚽</span>
-              </div>
-              <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:10, fontWeight:900, color:'#444', textTransform:'uppercase' }}>ADV</div>
+              <img src={ESCUDO_CRB} alt="CRB"
+                crossOrigin="anonymous" loading="eager"
+                style={{ width:44, height:44, objectFit:'contain', margin:'0 auto 6px', display:'block',
+                  filter:'drop-shadow(0 0 10px #EE2D31)' }}/>
+              <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:10, fontWeight:900, color:'#EE2D31', textTransform:'uppercase' }}>CRB</div>
             </div>
           </div>
           {/* LED bar bottom */}
@@ -979,10 +984,21 @@ function PackReveal({ lineup, formation, captainId, heroId, onContinue }: {
         )}
       </AnimatePresence>
 
-      {/* Title */}
+      {/* Title com escudos Novo × CRB */}
       <motion.div initial={{ scale:3, opacity:0 }} animate={{ scale:1, opacity:1 }}
         transition={{ delay:0.5, type:'spring', stiffness:200 }}
         style={{ textAlign:'center', marginBottom:28, zIndex:2 }}>
+        {/* Placar dos escudos */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:16, marginBottom:10 }}>
+          <img src={ESCUDO} alt="Novorizontino" crossOrigin="anonymous" loading="eager"
+            style={{ width:40, height:40, objectFit:'contain',
+              filter:'drop-shadow(0 0 10px rgba(245,196,0,0.7))' }}/>
+          <span style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:20, fontWeight:900,
+            color:'rgba(245,196,0,0.4)', fontStyle:'italic' }}>VS</span>
+          <img src={ESCUDO_CRB} alt="CRB" crossOrigin="anonymous" loading="eager"
+            style={{ width:40, height:40, objectFit:'contain',
+              filter:'drop-shadow(0 0 10px #EE2D31)' }}/>
+        </div>
         <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:42, fontWeight:900,
           color:'#F5C400', textTransform:'uppercase', letterSpacing:-2, lineHeight:0.9,
           textShadow:'0 0 40px rgba(245,196,0,0.8)' }}>
@@ -1047,7 +1063,7 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
   ].filter(r=>r.length>0);
 
   const shareText = encodeURIComponent(
-    `🐯 Escalei meu time no Tigre FC!\nFormação: ${formation}\nPalpite: Novorizontino ${scoreTigre} × ${scoreAdv}\nVocê consegue fazer melhor? 👇\nonovorizontino.com.br/tigre-fc`
+    `🐯 Escalei meu time no Tigre FC!\nFormação: ${formation}\nPalpite: Novorizontino ${scoreTigre} × ${scoreAdv} CRB\nVocê consegue fazer melhor? 👇\nonovorizontino.com.br/tigre-fc`
   );
 
   // ── Supabase upsert ──────────────────────────────────────────────────────
@@ -1131,7 +1147,12 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
       }
     } catch (err) {
       console.warn('[TigreFC Share]', err);
-      // Fallback: copia link
+      const errMsg = err instanceof Error ? err.message : String(err);
+      // Diagnóstico amigável
+      if (errMsg.includes('tainted') || errMsg.includes('CORS') || errMsg.includes('SecurityError')) {
+        alert('Erro de imagem (CORS). Tente novamente ou use o botão de copiar link.');
+      }
+      // Fallback: copia link para área de transferência
       navigator.clipboard.writeText('https://onovorizontino.com.br/tigre-fc').catch(()=>{});
       setCopied(true); setTimeout(() => setCopied(false), 2500);
     }
@@ -1296,7 +1317,7 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
             {[
               { label:'Capitão', value:cap?.short??'—',           icon:'©',  col:'#F5C400' },
               { label:'Herói',   value:hero?.short??'—',           icon:'⭐', col:'#00F3FF' },
-              { label:'Palpite', value:`${scoreTigre}×${scoreAdv}`, icon:'🎯', col:'#22C55E' },
+              { label:'Novo × CRB', value:`${scoreTigre}×${scoreAdv}`, icon:'🎯', col:'#22C55E' },
             ].map((item, idx) => (
               <div key={item.label} style={{ flex:1, textAlign:'center', padding:'8px 3px',
                 borderRight: idx < 2 ? '1px solid rgba(245,196,0,0.08)' : 'none' }}>
@@ -1392,8 +1413,8 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
             boxShadow:'0 0 20px rgba(245,196,0,0.15)',
             transition:'background 0.25s, color 0.25s',
           }}>
-          <span style={{ fontSize:18 }}>🔄</span>
-          MONTAR NOVA ESCALAÇÃO
+          <span style={{ fontSize:18 }}>🏠</span>
+          IR PARA O TIGRE FC
         </motion.button>
       </motion.div>
     </div>
@@ -1448,9 +1469,17 @@ export default function EscalacaoFormacao() {
 
         // Parse null-safe do lineup — tabela: escalacoes_usuarios, coluna: lineup
         const safeLineup: Lineup = {};
-        Object.entries((esc.lineup ?? {}) as object).forEach(([k, v]) => {
-          safeLineup[k] = v ? (v as Player) : null;
-        });
+        const rawLineup = esc.lineup ?? {};
+        if (rawLineup && typeof rawLineup === 'object') {
+          Object.entries(rawLineup as Record<string, unknown>).forEach(([k, v]) => {
+            // Valida que o valor tem a forma mínima de um Player antes de atribuir
+            if (v && typeof v === 'object' && 'id' in v && 'pos' in v) {
+              safeLineup[k] = v as Player;
+            } else {
+              safeLineup[k] = null;
+            }
+          });
+        }
 
         setFormation(esc.formacao ?? '4-2-3-1');
         setLineup(safeLineup);
@@ -1502,7 +1531,13 @@ export default function EscalacaoFormacao() {
         else titulares[k] = v;
       });
 
-      await supabase.rpc('upsert_escalacao', {
+      if (process.env.NODE_ENV === 'development') {
+        const tCount = Object.values(titulares).filter(Boolean).length;
+        const bCount = Object.values(reservas).filter(Boolean).length;
+        console.log(`[TigreFC] autoSave → formação:${currentFormation} titulares:${tCount} reservas:${bCount} cap:${currentCaptain} herói:${currentHero}`);
+      }
+
+      const { data, error } = await supabase.rpc('upsert_escalacao', {
         p_google_id:     userId,           // RPC converte → uuid internamente
         p_formacao:      currentFormation,
         p_lineup:        titulares,        // coluna: lineup
@@ -1512,8 +1547,14 @@ export default function EscalacaoFormacao() {
         p_palpite_adv:   currentScoreAdv,   // coluna: placar_palpite_adv
         p_bench:         reservas,
       });
+
+      if (error) {
+        console.error('[TigreFC] upsert_escalacao error:', error.message, error.details);
+      } else if (data?.error) {
+        console.error('[TigreFC] RPC returned error:', data.error);
+      }
     } catch (e) {
-      console.warn('[TigreFC] AutoSave error:', e);
+      console.warn('[TigreFC] AutoSave unexpected error:', e);
     }
   }, [userId, hydrated]);
 
@@ -1526,11 +1567,13 @@ export default function EscalacaoFormacao() {
     // Não limpa userId/hydrated — mantém sessão
   }, []);
 
-  // Botão "Novo time" na tela de share → volta para /tigre-fc
-  const handleGoHome = useCallback(() => {
+  // Botão final → aguarda save e redireciona para o Hub do Tigre FC
+  const handleGoHome = useCallback(async () => {
+    // Garante que o upsert foi concluído antes de navegar
+    await autoSave(lineup, formation, captainId, heroId, scoreTigre, scoreAdv);
     handleReset();
     router.push('/tigre-fc');
-  }, [handleReset, router]);
+  }, [handleReset, router, autoSave, lineup, formation, captainId, heroId, scoreTigre, scoreAdv]);
 
   // Escolhe formação
   const handleFormation = useCallback((f: string) => {
@@ -1598,6 +1641,21 @@ export default function EscalacaoFormacao() {
   }, []);
 
   const isGameField = step === 'picking' || step === 'bench';
+
+  // Tela de carregamento enquanto busca escalação salva
+  if (!hydrated) return (
+    <div style={{ minHeight:'100vh', background:'#050505',
+      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+      <motion.img src={PATA} alt="Tigre FC"
+        style={{ width:56, height:56, objectFit:'contain', filter:'drop-shadow(0 0 16px rgba(245,196,0,0.6))' }}
+        animate={{ opacity:[0.5,1,0.5], scale:[0.95,1.05,0.95] }}
+        transition={{ duration:1.8, repeat:Infinity, ease:'easeInOut' }}/>
+      <div style={{ fontSize:10, fontWeight:900, color:'#F5C400', letterSpacing:4,
+        textTransform:'uppercase', fontFamily:"'Barlow Condensed',system-ui,sans-serif" }}>
+        Carregando seu time...
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ minHeight:'100vh', background:'#050505', color:'#fff',
