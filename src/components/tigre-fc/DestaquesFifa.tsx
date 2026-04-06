@@ -1,44 +1,51 @@
 'use client';
 
+// ─── THE BEST TIGRE FC ────────────────────────────────────────────────────────
+// Rodada 3 — Novorizontino 1×1 CRB (05/04/2026)
+// ✏️ Para atualizar: edite apenas os objetos `capitao` e `heroi` abaixo
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function DestaquesFifa() {
-  // CONFIGURAÇÃO DIRETA (Mágico de Oz) 
-  // Altere apenas aqui para atualizar o painel manualmente
+
+  // CAPITÃO — Rômulo · Jogador da Partida · Rating 7.9 → exibido como 15.8 (×2)
   const capitao = {
-    nome: 'César Augusto',
-    pontos: 7.3,
-    // FOTO ATUALIZADA (VERSÃO 1)
-    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CESAR%20AUGUSTO%20DESTAQUE%20(1).png'
+    nome:   'Rômulo',
+    pontos: 7.9,
+    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ROMULO%20FUNDO%20TRANSPARENTE.png',
   };
 
+  // HERÓI — Carlão · Gol aos 74' · Rating 7.5
   const heroi = {
-    nome: 'Patrick',
-    pontos: 7.3,
-    // FOTO ATUALIZADA (VERSÃO 1)
-    foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/PATRICK%20DESTAQUE%20(1).png'
+    nome:   'Carlão',
+    pontos: 7.5,
+    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CARLAO%20FUNDO%20TRANSPARENTE.png',
   };
 
-  const CardUT26 = ({ j, tipo }: { j: any, tipo: 'CAPITÃO' | 'HERÓI' }) => {
-    const isCap = tipo === 'CAPITÃO';
-    const color = isCap ? '#F5C400' : '#00E5FF'; 
-    const notaFinal = isCap ? (j.pontos * 2).toFixed(1) : j.pontos.toFixed(1);
+  const CardUT26 = ({ j, tipo }: { j: { nome: string; pontos: number; foto: string }; tipo: 'CAPITÃO' | 'HERÓI' }) => {
+    const isCap      = tipo === 'CAPITÃO';
+    const color      = isCap ? '#F5C400' : '#00E5FF';
+    const notaFinal  = isCap ? (j.pontos * 2).toFixed(1) : j.pontos.toFixed(1);
 
     return (
       <div className="relative group animate-in fade-in zoom-in duration-1000">
-        {/* Aura de Brilho Estilo UEFA */}
-        <div className={`absolute -inset-2 blur-2xl opacity-20 group-hover:opacity-50 transition duration-1000`} 
-             style={{ backgroundColor: color }} />
-        
-        <div className="relative w-[165px] h-[240px] bg-black overflow-hidden border-2 shadow-2xl"
-             style={{ 
-               borderColor: color,
-               borderRadius: '12px 12px 50px 12px',
-               boxShadow: `inset 0 0 25px ${color}44`
-             }}>
-          
-          {/* Reflexo Dinâmico (Shimmer) */}
+        {/* Aura brilhante estilo UEFA */}
+        <div
+          className="absolute -inset-2 blur-2xl opacity-20 group-hover:opacity-50 transition duration-1000"
+          style={{ backgroundColor: color }}
+        />
+
+        <div
+          className="relative w-[165px] h-[240px] bg-black overflow-hidden border-2 shadow-2xl"
+          style={{
+            borderColor:   color,
+            borderRadius:  '12px 12px 50px 12px',
+            boxShadow:     `inset 0 0 25px ${color}44`,
+          }}
+        >
+          {/* Shimmer */}
           <div className="absolute inset-0 z-0 opacity-20 bg-gradient-to-tr from-transparent via-white to-transparent -translate-x-full animate-[shimmer_5s_infinite]" />
 
-          {/* Badge de Pontos */}
+          {/* Badge de pontos */}
           <div className="relative z-10 p-4">
             <div className="flex flex-col leading-none">
               <span className="text-4xl font-[1000] text-white italic drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
@@ -48,19 +55,26 @@ export default function DestaquesFifa() {
                 RATING {isCap && 'x2'}
               </span>
             </div>
-            <div className="absolute top-4 right-0 px-2 py-0.5 text-[8px] font-black text-black uppercase italic" 
-                  style={{ backgroundColor: color, borderRadius: '2px 0 0 2px' }}>
+            <div
+              className="absolute top-4 right-0 px-2 py-0.5 text-[8px] font-black text-black uppercase italic"
+              style={{ backgroundColor: color, borderRadius: '2px 0 0 2px' }}
+            >
               {tipo}
             </div>
           </div>
 
-          {/* Foto do Jogador - Ajustada para destacar o recorte PNG */}
+          {/* Foto PNG fundo transparente */}
           <div className="relative z-10 w-full h-40 flex justify-center mt-[-15px]">
-            <img src={j.foto} alt={j.nome} 
-                  className="h-full object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] scale-125 group-hover:scale-[1.35] transition-all duration-500" />
+            <img
+              src={j.foto}
+              alt={j.nome}
+              crossOrigin="anonymous"
+              loading="eager"
+              className="h-full object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.9)] scale-125 group-hover:scale-[1.35] transition-all duration-500"
+            />
           </div>
 
-          {/* Nome e Rodapé */}
+          {/* Nome e rodapé */}
           <div className="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/95 to-transparent pb-4 text-center px-2 z-10">
             <p className="text-white font-[1000] text-[12px] uppercase italic tracking-tighter">
               {j.nome}
@@ -82,17 +96,22 @@ export default function DestaquesFifa() {
         </h2>
         <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-yellow-500/40" />
       </div>
-      
+
+      {/* Sub-label da rodada */}
+      <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.4em] mb-6">
+        Rodada 3 · Novorizontino 1×1 CRB
+      </p>
+
       <div className="flex justify-center gap-8 flex-wrap">
         <CardUT26 j={capitao} tipo="CAPITÃO" />
-        <CardUT26 j={heroi} tipo="HERÓI" />
+        <CardUT26 j={heroi}   tipo="HERÓI"   />
       </div>
 
       <style jsx global>{`
         @keyframes shimmer {
-          0% { transform: translateX(-150%) skewX(-20deg); }
-          30% { transform: translateX(150%) skewX(-20deg); }
-          100% { transform: translateX(150%) skewX(-20deg); }
+          0%   { transform: translateX(-150%) skewX(-20deg); }
+          30%  { transform: translateX(150%)  skewX(-20deg); }
+          100% { transform: translateX(150%)  skewX(-20deg); }
         }
       `}</style>
     </section>
