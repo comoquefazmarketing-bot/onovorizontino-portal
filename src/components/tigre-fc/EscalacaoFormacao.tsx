@@ -15,7 +15,82 @@ const BASE       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/p
 const ESCUDO     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
 const ESCUDO_CRB = 'https://upload.wikimedia.org/wikipedia/commons/7/73/CRB_logo.svg';
 const PATA       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
+// ─── Assets "The Best" — fotos fundo transparente para destaque visual ───────
+const FOTO_ROMULO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ROMULO%20FUNDO%20TRANSPARENTE.png';
+const FOTO_CARLAO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CARLAO%20FUNDO%20TRANSPARENTE.png';
 
+// ─── Gatilho de rodada ───────────────────────────────────────────────────────
+// false → edição aberta  |  true → rodada encerrada, exibe pontuação real
+const RODADA_ENCERRADA = true;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DADOS OFICIAIS — Novorizontino 1×1 CRB
+// Sofascore ID: 15526006 | Série B 2026, Rodada 3 | 05/04/2026
+// Estádio Dr. Jorge Ismael de Biasi, Novo Horizonte
+// ───────────────────────────────────────────────────────────────────────────────
+// GOLS:
+//   Carlão 74'      (Novorizontino) — entrou aos 65', substituiu Robson
+//   Dadá Belmonte 90'+4' (CRB)
+// ───────────────────────────────────────────────────────────────────────────────
+// ESCALAÇÃO TITULAR (11 que iniciaram):
+//   GK  31 César Augusto    id=1   rating 7.4
+//   DEF 20 N. Castrillón    id=6   rating 6.8
+//   DEF  5 Sander           id=8   rating 7.4
+//   DEF 25 Dantas            id=10  rating 6.2
+//   DEF  4 Patrick           id=12  rating 7.4
+//   MEI 18 L. Naldi          id=20  rating 6.8
+//   MEI 50 Juninho            id=23  rating 6.7
+//   MEI 10 Rômulo (POTM)     id=21  rating 7.9 ← Jogador da Partida
+//   MEI  8 C. Ortíz           id=36  rating 6.5
+//   ATA 16 Vinicius Paiva     id=32  rating 7.1
+//   ATA 11 Robson (c)         id=31  rating 6.1
+// ───────────────────────────────────────────────────────────────────────────────
+// SUBSTITUIÇÕES:
+//   46' +Oyama(id=19, 6.6)  +Lora(id=5, 6.4)   / -C.Ortíz  -L.Naldi
+//   65' +Carlão(id=38, 7.5) GOL 74'              / -Robson
+//   71' +N.Careca(id=35,6.4)                     / -V.Paiva
+//   80' +Bianqui(id=22, 6.6)                     / -N.Careca
+// ═══════════════════════════════════════════════════════════════════════════════
+const RESULTADO_JOGO = {
+  sofascore_id: 15526006,
+  adversario:   'CRB',
+  rodada:       'Série B 2026 · Rodada 3',
+  placar_novo:  1,   // Carlão 74'
+  placar_crb:   1,   // Dadá Belmonte 90+4'
+  data:         '05/04/2026',
+  local:        'Estádio Dr. Jorge Ismael de Biasi, Novo Horizonte',
+
+  // IDs dos 11 titulares (mapeados para o PLAYERS array)
+  titulares_ids: new Set<number>([1, 6, 8, 10, 12, 20, 21, 23, 31, 32, 36]),
+
+  // Herói fantasy: Carlão (id=38) — único gol do Novorizontino
+  heroi_id: 38,
+
+  // Player of the Match Sofascore: Rômulo (id=21) — nota 7.9
+  potm_id: 21,
+
+  // Ratings oficiais Sofascore (lidos da tela ID 15526006 em 05/04/2026)
+  ratings: {
+    // Titulares
+     1: 7.4,  // César Augusto (GOL #31)
+     6: 6.8,  // N. Castrillón (DEF #20)
+     8: 7.4,  // Sander (DEF #5)
+    10: 6.2,  // Dantas (ZAG #25)
+    12: 7.4,  // Patrick (ZAG #4)
+    20: 6.8,  // L. Naldi (MEI #18)
+    21: 7.9,  // Rômulo (MEI #10) ← POTM ⭐
+    23: 6.7,  // Juninho (MEI #50)
+    31: 6.1,  // Robson (ATA #11)
+    32: 7.1,  // Vinicius Paiva (ATA #16)
+    36: 6.5,  // C. Ortíz (MEI #8)
+    // Substitutos
+     5: 6.4,  // Jhilmar Lora (entrou 46')
+    19: 6.6,  // Luís Oyama (entrou 46')
+    38: 7.5,  // Carlão (entrou 65', GOL 74') ← HERÓI ⚽
+    35: 6.4,  // Nicolas Careca (71'–80')
+    22: 6.6,  // Matheus Bianqui (entrou 80')
+  } as Record<number, number>,
+};
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Player      = { id: number; name: string; short: string; num: number; pos: string; foto: string };
 type Lineup      = Record<string, Player | null>;
@@ -67,7 +142,7 @@ const PLAYERS: Player[] = [
   { id:18, name:'Bruno Santana',    short:'B.Santana',  num:33, pos:'ZAG', foto:BASE+'BRUNO-SANTANA.jpg.webp' },
   { id:19, name:'Luís Oyama',       short:'Oyama',      num:8,  pos:'MEI', foto:BASE+'LUIS-OYAMA.jpg.webp' },
   { id:20, name:'Léo Naldi',        short:'L.Naldi',    num:7,  pos:'MEI', foto:BASE+'LEO-NALDI.jpg.webp' },
-  { id:21, name:'Rômulo',           short:'Rômulo',     num:10, pos:'MEI', foto:BASE+'ROMULO.jpg.webp' },
+  { id:21, name:'Rômulo',           short:'Rômulo',     num:10, pos:'MEI', foto:FOTO_ROMULO },
   { id:22, name:'Matheus Bianqui',  short:'Bianqui',    num:11, pos:'MEI', foto:BASE+'MATHEUS-BIANQUI.jpg.webp' },
   { id:23, name:'Juninho',          short:'Juninho',    num:20, pos:'MEI', foto:BASE+'JUNINHO.jpg.webp' },
   { id:24, name:'Tavinho',          short:'Tavinho',    num:17, pos:'MEI', foto:BASE+'TAVINHO.jpg.webp' },
@@ -84,7 +159,7 @@ const PLAYERS: Player[] = [
   { id:35, name:'Nicolas Careca',   short:'N.Careca',   num:21, pos:'ATA', foto:BASE+'NICOLAS-CARECA.jpg.webp' },
   { id:36, name:'Titi Ortiz',       short:'T.Ortiz',    num:15, pos:'ATA', foto:BASE+'TITI-ORTIZ.jpg.webp' },
   { id:37, name:'Diego Mathias',    short:'D.Mathias',  num:41, pos:'ATA', foto:BASE+'DIEGO-MATHIAS.jpg.webp' },
-  { id:38, name:'Carlão',           short:'Carlão',     num:90, pos:'ATA', foto:BASE+'CARLAO.jpg.webp' },
+  { id:38, name:'Carlão',           short:'Carlão',     num:90, pos:'ATA', foto:FOTO_CARLAO },
   { id:39, name:'Ronald Barcellos', short:'Ronald',     num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
@@ -1421,6 +1496,294 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
   );
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MOTOR DE PONTUAÇÃO — calcula pts do torcedor vs resultado real
+// ─────────────────────────────────────────────────────────────────────────────
+interface PlacarResult {
+  pts_escalacao: number;  // +5 por cada titular acertado
+  pts_capitao:   number;  // rating do capitão × 2
+  pts_heroi:     number;  // +10 se herói certo
+  pts_palpite:   number;  // +15 exato | +5 resultado
+  total:         number;
+  acertou_exato: boolean;
+  titulares_certos: number[];
+}
+
+function calcularPontuacao(
+  lineup: Lineup,
+  captainId: number|null,
+  heroId: number|null,
+  palpiteTigre: number,
+  palpiteAdv: number,
+): PlacarResult {
+  const titulares_certos: number[] = [];
+  let pts_escalacao = 0;
+  let pts_capitao   = 0;
+
+  Object.values(lineup).forEach(p => {
+    if (!p) return;
+    if (RESULTADO_JOGO.titulares_ids.has(p.id)) {
+      titulares_certos.push(p.id);
+      pts_escalacao += 5;
+    }
+  });
+
+  // Capitão: rating × 2 (bônus = rating extra, base já está no escalação)
+  if (captainId && RESULTADO_JOGO.ratings[captainId]) {
+    pts_capitao = Math.round(RESULTADO_JOGO.ratings[captainId] * 2);
+  }
+
+  // Herói
+  const pts_heroi = heroId === RESULTADO_JOGO.heroi_id ? 10 : 0;
+
+  // Palpite
+  let pts_palpite = 0;
+  let acertou_exato = false;
+  const res_real  = RESULTADO_JOGO.placar_novo > RESULTADO_JOGO.placar_crb ? 'V'
+    : RESULTADO_JOGO.placar_novo < RESULTADO_JOGO.placar_crb ? 'D' : 'E';
+  const res_user  = palpiteTigre > palpiteAdv ? 'V' : palpiteTigre < palpiteAdv ? 'D' : 'E';
+
+  if (palpiteTigre === RESULTADO_JOGO.placar_novo && palpiteAdv === RESULTADO_JOGO.placar_crb) {
+    pts_palpite = 15; acertou_exato = true;
+  } else if (res_user === res_real) {
+    pts_palpite = 5;
+  }
+
+  const total = pts_escalacao + pts_capitao + pts_heroi + pts_palpite;
+  return { pts_escalacao, pts_capitao, pts_heroi, pts_palpite, total, acertou_exato, titulares_certos };
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TELA DE RESULTADOS DA RODADA — Novorizontino vs CRB (Série B 2026)
+// ─────────────────────────────────────────────────────────────────────────────
+function ResultadoScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAdv, onGoRanking }: {
+  lineup: Lineup; formation: string; captainId: number|null; heroId: number|null;
+  scoreTigre: number; scoreAdv: number; onGoRanking: ()=>void;
+}) {
+  const slots  = FORMATIONS[formation] ?? FORMATIONS['4-2-3-1'];
+  const result = calcularPontuacao(lineup, captainId, heroId, scoreTigre, scoreAdv);
+  const totalColor = result.total >= 50 ? '#22C55E' : result.total >= 30 ? '#F5C400' : '#EF4444';
+
+  return (
+    <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
+      style={{ minHeight:'100vh', background:'#050505', color:'#fff', padding:'0 0 60px',
+        fontFamily:"'Barlow Condensed',system-ui,sans-serif" }}>
+
+      {/* Header */}
+      <div style={{ padding:'20px 16px 16px',
+        background:'linear-gradient(160deg,#0a0800,#141000)', borderBottom:'1px solid rgba(245,196,0,0.12)' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+          <div>
+            <div style={{ fontSize:7, fontWeight:900, color:'rgba(245,196,0,0.5)', letterSpacing:4, textTransform:'uppercase' }}>
+              SÉRIE B 2026 · RODADA
+            </div>
+            <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:22, fontWeight:900,
+              color:'#fff', textTransform:'uppercase', letterSpacing:-0.5, lineHeight:1 }}>
+              RESULTADO DA RODADA
+            </div>
+          </div>
+          {/* Placar real */}
+          <div style={{ textAlign:'right' }}>
+            <div style={{ fontSize:8, color:'rgba(245,196,0,0.4)', fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>
+              RESULTADO OFICIAL
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <img src={ESCUDO} alt="Novo" crossOrigin="anonymous" loading="eager"
+                style={{ width:28, height:28, objectFit:'contain', filter:'drop-shadow(0 0 6px rgba(245,196,0,0.6))' }}/>
+              <span style={{ fontFamily:"'Courier New',monospace", fontSize:28, fontWeight:900, color:'#F5C400' }}>
+                {RESULTADO_JOGO.placar_novo}
+              </span>
+              <span style={{ fontSize:16, color:'#333', fontWeight:900 }}>×</span>
+              <span style={{ fontFamily:"'Courier New',monospace", fontSize:28, fontWeight:900, color:'#EE2D31' }}>
+                {RESULTADO_JOGO.placar_crb}
+              </span>
+              <img src={ESCUDO_CRB} alt="CRB" crossOrigin="anonymous" loading="eager"
+                style={{ width:28, height:28, objectFit:'contain', filter:'drop-shadow(0 0 6px #EE2D31)' }}/>
+            </div>
+          </div>
+        </div>
+
+        {/* Seus pontos */}
+        <motion.div initial={{ scale:0.8, opacity:0 }} animate={{ scale:1, opacity:1 }}
+          transition={{ delay:0.2, type:'spring', stiffness:200 }}
+          style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px',
+            background:`${totalColor}12`, border:`1.5px solid ${totalColor}40`, borderRadius:16 }}>
+          <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif",
+            fontSize:56, fontWeight:900, color:totalColor, lineHeight:1,
+            textShadow:`0 0 24px ${totalColor}80` }}>
+            {result.total}
+          </div>
+          <div>
+            <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif",
+              fontSize:22, fontWeight:900, color:'#fff', textTransform:'uppercase', lineHeight:1, letterSpacing:-0.5 }}>
+              SEUS PONTOS
+            </div>
+            <div style={{ fontSize:10, color:'#555', fontWeight:700, textTransform:'uppercase', letterSpacing:2, marginTop:2 }}>
+              nesta rodada
+            </div>
+          </div>
+          {result.acertou_exato && (
+            <motion.div animate={{ scale:[1,1.1,1] }} transition={{ duration:0.8, repeat:Infinity }}
+              style={{ marginLeft:'auto', background:'linear-gradient(135deg,#F5C400,#D4A200)',
+                color:'#000', fontSize:9, fontWeight:900, padding:'5px 10px', borderRadius:8,
+                textTransform:'uppercase', letterSpacing:1 }}>
+              🎯 PLACAR EXATO!
+            </motion.div>
+          )}
+        </motion.div>
+      </div>
+
+      <div style={{ padding:'16px 14px 0', maxWidth:460, margin:'0 auto' }}>
+
+        {/* Breakdown */}
+        <div style={{ fontSize:8, fontWeight:900, color:'#333', letterSpacing:4, textTransform:'uppercase', marginBottom:10 }}>
+          DETALHAMENTO
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:20 }}>
+          {[
+            { label:`Escalação (${result.titulares_certos.length} titular${result.titulares_certos.length!==1?'es':''} certos)`, pts:result.pts_escalacao, icon:'⚽', col:'#22C55E' },
+            { label:'Capitão (rating × 2)',         pts:result.pts_capitao,  icon:'©',  col:'#F5C400' },
+            { label:heroId===RESULTADO_JOGO.heroi_id ? 'Herói acertado! 🎉' : 'Herói errado', pts:result.pts_heroi, icon:'⭐', col:'#00F3FF' },
+            { label:result.acertou_exato ? 'Placar EXATO 🎯' : scoreTigre > scoreAdv ? 'Resultado correto' : 'Palpite errado', pts:result.pts_palpite, icon:'🎯', col:'#22C55E' },
+          ].map((item, i) => (
+            <motion.div key={i} initial={{ opacity:0, x:-12 }} animate={{ opacity:1, x:0 }}
+              transition={{ delay:0.1 + i * 0.07 }}
+              style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px',
+                background:'rgba(255,255,255,0.02)', borderRadius:12,
+                border:`1px solid ${item.pts > 0 ? item.col + '30' : 'rgba(255,255,255,0.05)'}` }}>
+              <span style={{ fontSize:18 }}>{item.icon}</span>
+              <div style={{ flex:1, fontSize:12, color: item.pts > 0 ? '#ccc' : '#333', fontWeight:700 }}>
+                {item.label}
+              </div>
+              <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif",
+                fontSize:22, fontWeight:900, color: item.pts > 0 ? item.col : '#222', lineHeight:1 }}>
+                +{item.pts}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Campo comparativo */}
+        <div style={{ fontSize:8, fontWeight:900, color:'#333', letterSpacing:4, textTransform:'uppercase', marginBottom:10 }}>
+          SEU TIME vs REAL
+        </div>
+        <div style={{ position:'relative', width:'100%', maxWidth:400, margin:'0 auto',
+          perspective:'380px', perspectiveOrigin:'50% 10%' }}>
+          <div style={{ position:'relative', width:'100%', paddingTop:'95%',
+            transform:'rotateX(20deg)', transformOrigin:'bottom center', transformStyle:'preserve-3d' }}>
+            <div style={{ position:'absolute', inset:0, borderRadius:14, overflow:'hidden',
+              background:'linear-gradient(180deg,#0b3d0b 0%,#1c6e1c 50%,#0b3d0b 100%)',
+              border:'1.5px solid rgba(255,255,255,0.15)' }}>
+              <svg viewBox="0 0 100 95" preserveAspectRatio="none"
+                style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.18 }}>
+                <rect x="5" y="3" width="90" height="89" stroke="white" strokeWidth="1" fill="none"/>
+                <line x1="5" y1="47.5" x2="95" y2="47.5" stroke="white" strokeWidth="0.8"/>
+                <circle cx="50" cy="47.5" r="12" stroke="white" strokeWidth="0.8" fill="none"/>
+              </svg>
+            </div>
+            <div style={{ position:'absolute', inset:0 }}>
+              {slots.map(slot => {
+                const p = lineup[slot.id];
+                if (!p) return null;
+                const isTitular = RESULTADO_JOGO.titulares_ids.has(p.id);
+                const rating    = RESULTADO_JOGO.ratings[p.id];
+                const isCap     = captainId === p.id;
+                const isHero    = heroId    === p.id;
+                const col       = isCap ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[p.pos] ?? '#888');
+                return (
+                  <div key={slot.id} style={{ position:'absolute',
+                    left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)', zIndex:5 }}>
+                    <div style={{ position:'relative', width:36, height:50, borderRadius:6, overflow:'hidden',
+                      border:`2px solid ${isTitular ? col : '#2a2a2a'}`,
+                      background:'#050505',
+                      filter: isTitular ? 'none' : 'grayscale(100%) brightness(0.4)',
+                      boxShadow: isTitular ? `0 0 12px ${col}60` : 'none' }}>
+                      <div style={{ width:'100%', height:'76%', overflow:'hidden', position:'relative' }}>
+                        <img src={p.foto} alt={p.short} crossOrigin="anonymous"
+                          onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
+                          style={imgStyle('celebration')} />
+                        <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'40%',
+                          background:'linear-gradient(0deg,#050505,transparent)', pointerEvents:'none' }}/>
+                      </div>
+                      <div style={{ position:'absolute', bottom:0, width:'100%', height:'24%',
+                        background:`linear-gradient(135deg,${isTitular ? col : '#2a2a2a'}dd,${isTitular ? col : '#2a2a2a'}88)`,
+                        display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        <span style={{ fontSize:5.5, fontWeight:900, color: isTitular ? '#000' : '#555',
+                          textTransform:'uppercase', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', padding:'0 1px' }}>
+                          {p.short}
+                        </span>
+                      </div>
+                      {/* Badge nota Sofascore */}
+                      {rating && isTitular && (
+                        <div style={{ position:'absolute', top:-7, left:-5, zIndex:10,
+                          background: rating >= 8 ? '#22C55E' : rating >= 7 ? '#F5C400' : '#666',
+                          color:'#000', fontSize:7, fontWeight:900, padding:'1px 3px',
+                          borderRadius:4, lineHeight:1, boxShadow:'0 0 6px rgba(0,0,0,0.8)' }}>
+                          {rating.toFixed(1)}
+                        </div>
+                      )}
+                      {/* Banco */}
+                      {!isTitular && (
+                        <div style={{ position:'absolute', top:-7, left:-5, zIndex:10,
+                          background:'#1a1a1a', color:'#555', fontSize:7, fontWeight:900,
+                          padding:'1px 3px', borderRadius:4, lineHeight:1 }}>🪑</div>
+                      )}
+                      {/* C / ⭐ */}
+                      {(isCap||isHero) && (
+                        <div style={{ position:'absolute', top:-7, right:-5, zIndex:10,
+                          background:col, color:'#000', fontSize:7, fontWeight:900,
+                          padding:'1px 3px', borderRadius:4, lineHeight:1 }}>
+                          {isCap ? 'C' : '⭐'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Legenda */}
+        <div style={{ display:'flex', gap:16, justifyContent:'center', marginTop:10, flexWrap:'wrap' }}>
+          {[
+            { label:'Titular real (+5 pts)', color:'#22C55E', icon:null },
+            { label:'Ficou no banco', color:'#555', icon:'🪑' },
+            { label:'Nota Sofascore', color:'#22C55E', badge:'8.0' },
+          ].map((l,i) => (
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:5, fontSize:9, color:'#555', fontWeight:700 }}>
+              {l.icon && <span>{l.icon}</span>}
+              {l.badge && <span style={{ background:l.color, color:'#000', fontSize:7, fontWeight:900,
+                padding:'0 3px', borderRadius:3 }}>{l.badge}</span>}
+              {!l.icon && !l.badge && <span style={{ display:'inline-block', width:10, height:10,
+                borderRadius:2, background:l.color }}/>}
+              {l.label}
+            </div>
+          ))}
+        </div>
+
+        {/* CTA Ranking */}
+        <motion.button onClick={onGoRanking}
+          whileTap={{ scale:0.96 }} whileHover={{ scale:1.02 }}
+          animate={{ boxShadow:['0 0 0 0 rgba(245,196,0,0)','0 0 28px rgba(245,196,0,0.6)','0 0 0 0 rgba(245,196,0,0)'] }}
+          transition={{ duration:2, repeat:Infinity }}
+          style={{ width:'100%', maxWidth:400, margin:'24px auto 0', display:'block',
+            padding:'18px', borderRadius:18, background:'linear-gradient(135deg,#F5C400,#D4A200)',
+            border:'none', color:'#000', fontSize:15, fontWeight:900,
+            textTransform:'uppercase', letterSpacing:2, cursor:'pointer' }}>
+          🏆 VER RANKING GERAL
+        </motion.button>
+        <div style={{ textAlign:'center', marginTop:10, fontSize:9, color:'#222',
+          fontWeight:700, textTransform:'uppercase', letterSpacing:2 }}>
+          onovorizontino.com.br/tigre-fc
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENTE PRINCIPAL
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1642,6 +2005,11 @@ export default function EscalacaoFormacao() {
 
   const isGameField = step === 'picking' || step === 'bench';
 
+  // Vai para o ranking (Tigre FC hub)
+  const handleGoRanking = useCallback(() => {
+    router.push('/tigre-fc');
+  }, [router]);
+
   // Tela de carregamento enquanto busca escalação salva
   if (!hydrated) return (
     <div style={{ minHeight:'100vh', background:'#050505',
@@ -1665,7 +2033,20 @@ export default function EscalacaoFormacao() {
         *{box-sizing:border-box}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1a1a1a;border-radius:4px}body{background:#050505}
       `}</style>
 
-      <HUD step={step} filled={fieldCount} benchFilled={benchCount} formation={formation}/>
+      {/* Rodada encerrada — mostra apuração em vez do campo editável */}
+      {RODADA_ENCERRADA && Object.values(lineup).some(Boolean) && (
+        <ResultadoScreen
+          lineup={lineup} formation={formation}
+          captainId={captainId} heroId={heroId}
+          scoreTigre={scoreTigre} scoreAdv={scoreAdv}
+          onGoRanking={handleGoRanking}
+        />
+      )}
+
+      {/* HUD só aparece quando não está na tela de resultado */}
+      {!(RODADA_ENCERRADA && Object.values(lineup).some(Boolean)) && (
+        <HUD step={step} filled={fieldCount} benchFilled={benchCount} formation={formation}/>
+      )}
 
       {/* Overlays full-screen */}
       <AnimatePresence mode="wait">
