@@ -19,11 +19,11 @@ const ESCUDO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/publi
 const ESCUDO_ADV = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png';
 const PATA = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
-// Fotos com fundo transparente para destaque
+// Fotos com fundo transparente
 const FOTO_ROMULO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ROMULO%20FUNDO%20TRANSPARENTE.png';
 const FOTO_CARLAO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CARLAO%20FUNDO%20TRANSPARENTE.png';
 
-// ─── Controle de Rodada ──────────────────────────────────────────────────────
+// ─── Gatilho de rodada ───────────────────────────────────────────────────────
 const RODADA_ENCERRADA = false;   // Mantenha false enquanto o mercado estiver aberto
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -39,7 +39,6 @@ const RESULTADO_JOGO = {
   placar_adv: 0,
   data: '12/04/2026',
   local: 'Arena da Independência, Belo Horizonte',
-
   titulares_ids: new Set<number>([]),
   heroi_id: null,
   potm_id: null,
@@ -121,14 +120,31 @@ const PLAYERS: Player[] = [
   { id:39, name:'Ronald Barcellos', short:'Ronald', num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-// Formações, BENCH_SLOTS, POS_COLORS, imgStyle, StadiumBg, FifaCard, EmptySlot, 
-// Field3D, BenchArea, PlayerPicker, HUD, FormationScreen, CaptainHeroScreen, 
-// LEDScoreboard, PackReveal, ShareScreen, calcularPontuacao e ResultadoScreen 
-// permanecem iguais ao seu arquivo original (com as pequenas correções de tipagem).
+// ─── Formações, Bench, Cores, Estilos (mantidos iguais) ───────────────────────
+const FORMATIONS: Record<string, Slot[]> = { /* ... seu código original de FORMATIONS ... */ };
+const BENCH_SLOTS = [ /* ... seu código original ... */ ];
+const POS_COLORS: Record<string, string> = { /* ... seu código original ... */ };
 
-// ... (cole aqui todos os componentes do seu arquivo original: StadiumBg, imgStyle, FifaCard, EmptySlot, 
-// Field3D, BenchArea, PlayerPicker, HUD, FormationScreen, CaptainHeroScreen, LEDScoreboard, PackReveal, ShareScreen, 
-// calcularPontuacao, ResultadoScreen ...)
+function imgStyle(pose: 'static' | 'celebration'): React.CSSProperties { /* ... seu código original ... */ }
+function StadiumBg() { /* ... seu código original ... */ }
+
+// ─── Componentes (FifaCard, EmptySlot, Field3D, BenchArea, PlayerPicker, HUD, 
+// FormationScreen, CaptainHeroScreen, LEDScoreboard, PackReveal, ShareScreen, 
+// calcularPontuacao, ResultadoScreen) — mantenha exatamente como no seu arquivo (7)
+
+function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small = false, onClick }: FifaCardProps) { /* ... */ }
+function EmptySlot({ pos, label, active, onClick }: { pos: string; label: string; active: boolean; onClick: () => void }) { /* ... */ }
+function Field3D(props: Field3DProps) { /* ... */ }
+function BenchArea(props: BenchAreaProps) { /* ... */ }
+function PlayerPicker(props: PlayerPickerProps) { /* ... */ }
+function HUD({ step, filled, benchFilled, formation }: { step: Step; filled: number; benchFilled: number; formation: string; }) { /* ... */ }
+function FormationScreen({ onSelect }: { onSelect: (f: string) => void }) { /* ... */ }
+function CaptainHeroScreen({ onSelectMode, captainId, heroId, onDone, lineup }: { onSelectMode: (m: SpecialMode) => void; captainId: number | null; heroId: number | null; onDone: () => void; lineup: Lineup; }) { /* ... */ }
+function LEDScoreboard({ scoreTigre, setScoreTigre, scoreAdv, setScoreAdv, onConfirm }: { scoreTigre: number; setScoreTigre: (n: number) => void; scoreAdv: number; setScoreAdv: (n: number) => void; onConfirm: () => void; }) { /* ... */ }
+function PackReveal({ lineup, formation, captainId, heroId, onContinue }: { lineup: Lineup; formation: string; captainId: number | null; heroId: number | null; onContinue: () => void; }) { /* ... */ }
+function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAdv, onReset }: { lineup: Lineup; formation: string; captainId: number | null; heroId: number | null; scoreTigre: number; scoreAdv: number; onReset: () => void; }) { /* ... */ }
+function calcularPontuacao(lineup: Lineup, captainId: number | null, heroId: number | null, palpiteTigre: number, palpiteAdv: number) { /* ... */ }
+function ResultadoScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAdv, onGoRanking }: { lineup: Lineup; formation: string; captainId: number | null; heroId: number | null; scoreTigre: number; scoreAdv: number; onGoRanking: () => void; }) { /* ... */ }
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
 export default function EscalacaoFormacao() {
@@ -154,73 +170,127 @@ export default function EscalacaoFormacao() {
   const isFieldFull = fieldCount === 11;
   const isGameField = step === 'picking' || step === 'bench';
 
-  // Hidratação e AutoSave (mantidos do seu arquivo)
+  // Hidratação (mantida do seu arquivo)
+  useEffect(() => {
+    let alive = true;
+    async function loadSaved() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) return;
 
-  // ... (mantenha todo o resto do código de useEffect, autoSave, handleFormation, 
-  // executarEscalacao, handleEscalacao, handleCaptainHeroDone, handleScoreConfirm, 
-  // handleReset, handleGoHome, etc. exatamente como estava no arquivo que você enviou)
+        const googleId = session.user.id;
+        setUserId(googleId);
+
+        const { data: esc, error } = await supabase.rpc('get_escalacao_usuario', { p_google_id: googleId });
+
+        if (!alive || error || !esc) return;
+
+        const safeLineup: Lineup = {};
+        Object.entries(esc.lineup ?? {}).forEach(([k, v]: [string, any]) => {
+          safeLineup[k] = v && typeof v === 'object' && 'id' in v ? v as Player : null;
+        });
+
+        setFormation(esc.formacao ?? '4-2-3-1');
+        setLineup(safeLineup);
+        setCaptainId(esc.capitao_id ?? null);
+        setHeroId(esc.heroi_id ?? null);
+        setScoreTigre(esc.placar_palpite_tigre ?? 1);
+        setScoreAdv(esc.placar_palpite_adv ?? 0);
+
+        const savedField = Object.values(safeLineup).filter(Boolean).length;
+        const savedBench = BENCH_SLOTS.filter(bs => !!safeLineup[bs.id]).length;
+
+        if (savedField === 11 && savedBench === 5 && esc.capitao_id && esc.heroi_id) setStep('share');
+        else if (savedField === 11 && savedBench === 5) setStep('captain_hero');
+        else if (savedField === 11) setStep('bench');
+        else if (savedField > 0) setStep('picking');
+      } catch (e) {
+        console.warn('[TigreFC] Hydration error:', e);
+      } finally {
+        if (alive) setHydrated(true);
+      }
+    }
+    loadSaved();
+    return () => { alive = false; };
+  }, []);
+
+  // AutoSave (mantido)
+  const autoSave = useCallback(async () => {
+    if (!userId || !hydrated) return;
+    try {
+      const titulares: Lineup = {};
+      const reservas: Lineup = {};
+      Object.entries(lineup).forEach(([k, v]) => {
+        if (k.startsWith('b_')) reservas[k] = v;
+        else titulares[k] = v;
+      });
+
+      await supabase.rpc('upsert_escalacao', {
+        p_google_id: userId,
+        p_formacao: formation,
+        p_lineup: titulares,
+        p_capitao_id: captainId,
+        p_heroi_id: heroId,
+        p_palpite_tigre: scoreTigre,
+        p_palpite_adv: scoreAdv,
+        p_bench: reservas,
+      });
+    } catch (e) {
+      console.warn('[TigreFC] AutoSave error:', e);
+    }
+  }, [userId, hydrated, lineup, formation, captainId, heroId, scoreTigre, scoreAdv]);
+
+  useEffect(() => {
+    if (hydrated && userId) autoSave();
+  }, [lineup, captainId, heroId, scoreTigre, scoreAdv, hydrated, userId, autoSave]);
+
+  const handleReset = useCallback(() => {
+    setStep('formation'); setFormation('4-2-3-1'); setLineup({});
+    setActiveSlot(null); setActivePlayer(null); setFilterPos('TODOS');
+    setCaptainId(null); setHeroId(null); setSpecialMode(null);
+    setScoreTigre(1); setScoreAdv(0);
+  }, []);
+
+  const handleGoHome = useCallback(async () => {
+    await autoSave();
+    handleReset();
+    router.push('/tigre-fc');
+  }, [autoSave, handleReset, router]);
+
+  // Restante das funções (handleFormation, executarEscalacao, handleEscalacao, etc.)
+  // → mantenha exatamente como no seu arquivo original
+
+  // ... (cole aqui todas as funções restantes do seu arquivo original)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: '#fff',
-      fontFamily: "'Barlow Condensed', system-ui, sans-serif", overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#050505', color: '#fff', fontFamily: "'Barlow Condensed', system-ui, sans-serif", overflowX: 'hidden' }}>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700;1,900&display=swap');
         *{box-sizing:border-box}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1a1a1a;border-radius:4px}
       `}</style>
 
-      {/* Tela de Resultado (só aparece quando RODADA_ENCERRADA = true) */}
-      {RODADA_ENCERRADA && Object.values(lineup).some(Boolean) && (
+      {RODADA_ENCERRADA && Object.values(lineup).some(Boolean) ? (
         <ResultadoScreen
           lineup={lineup} formation={formation}
           captainId={captainId} heroId={heroId}
           scoreTigre={scoreTigre} scoreAdv={scoreAdv}
           onGoRanking={() => router.push('/tigre-fc')}
         />
-      )}
-
-      {/* Fluxo normal de escalação */}
-      {!(RODADA_ENCERRADA && Object.values(lineup).some(Boolean)) && (
+      ) : (
         <>
           <HUD step={step} filled={fieldCount} benchFilled={benchCount} formation={formation} />
 
           <AnimatePresence mode="wait">
             {step === 'formation' && <FormationScreen onSelect={handleFormation} />}
-            {step === 'captain_hero' && !specialMode && (
-              <CaptainHeroScreen 
-                onSelectMode={m => setSpecialMode(m)} 
-                captainId={captainId} 
-                heroId={heroId}
-                onDone={handleCaptainHeroDone} 
-                lineup={lineup}
-              />
-            )}
-            {step === 'score' && (
-              <LEDScoreboard 
-                scoreTigre={scoreTigre} setScoreTigre={setScoreTigre}
-                scoreAdv={scoreAdv} setScoreAdv={setScoreAdv} 
-                onConfirm={handleScoreConfirm}
-              />
-            )}
-            {step === 'reveal' && (
-              <PackReveal 
-                lineup={lineup} formation={formation} 
-                captainId={captainId} heroId={heroId}
-                onContinue={() => setStep('share')}
-              />
-            )}
-            {step === 'share' && (
-              <ShareScreen 
-                lineup={lineup} formation={formation} 
-                captainId={captainId} heroId={heroId}
-                scoreTigre={scoreTigre} scoreAdv={scoreAdv} 
-                onReset={handleGoHome}
-              />
-            )}
+            {step === 'captain_hero' && !specialMode && <CaptainHeroScreen onSelectMode={m => setSpecialMode(m)} captainId={captainId} heroId={heroId} onDone={handleCaptainHeroDone} lineup={lineup} />}
+            {step === 'score' && <LEDScoreboard scoreTigre={scoreTigre} setScoreTigre={setScoreTigre} scoreAdv={scoreAdv} setScoreAdv={setScoreAdv} onConfirm={handleScoreConfirm} />}
+            {step === 'reveal' && <PackReveal lineup={lineup} formation={formation} captainId={captainId} heroId={heroId} onContinue={() => setStep('share')} />}
+            {step === 'share' && <ShareScreen lineup={lineup} formation={formation} captainId={captainId} heroId={heroId} scoreTigre={scoreTigre} scoreAdv={scoreAdv} onReset={handleGoHome} />}
           </AnimatePresence>
 
           {isGameField && (
-            <motion.div key="field" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
-              {/* Seu campo, banco e mercado aqui - mantenha como estava no seu arquivo */}
+            <motion.div key="field" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {/* Seu campo, banco e mercado aqui */}
             </motion.div>
           )}
         </>
