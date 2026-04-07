@@ -9,19 +9,28 @@ import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
-// Sub-componente do Timer
-function TimerBlock({ value, label }: { value: string; label: string }) {
+// TimerBlock com destaque nos dias
+function TimerBlock({ value, label, isDays = false }: { 
+  value: string; 
+  label: string; 
+  isDays?: boolean 
+}) {
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="relative w-[72px] h-[80px] flex items-center justify-center bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-        <div className="absolute inset-0 flex flex-col">
-          <div className="h-1/2 border-b border-black/40" />
-        </div>
-        <span className="relative z-10 text-4xl font-black text-[#F5C400] font-mono tracking-tighter">
+      <div className={`relative w-[72px] h-[80px] flex items-center justify-center 
+        bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] 
+        border border-white/10 rounded-2xl shadow-2xl overflow-hidden
+        ${isDays ? 'border-yellow-500/60 shadow-[0_0_20px_rgba(245,196,0,0.4)]' : ''}`}>
+        
+        <span className={`relative z-10 text-4xl font-black font-mono tracking-tighter
+          ${isDays ? 'text-[#F5C400] drop-shadow-[0_0_12px_rgba(245,196,0,0.7)]' : 'text-white'}`}>
           {value}
         </span>
       </div>
-      <span className="text-[10px] font-black text-zinc-500 tracking-[0.2em] uppercase">{label}</span>
+      <span className={`text-[10px] font-black uppercase tracking-widest
+        ${isDays ? 'text-yellow-500' : 'text-zinc-500'}`}>
+        {label}
+      </span>
     </div>
   );
 }
@@ -39,7 +48,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Carregar dados
+  // Carregar dados (mantido igual)
   useEffect(() => {
     if (!mounted) return;
     async function init() {
@@ -66,13 +75,14 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     init();
   }, [mounted]);
 
-  // ==================== CRONÔMETRO CORRIGIDO ====================
+  // Cronômetro corrigido
   useEffect(() => {
     if (!jogo?.data_hora) return;
 
     const tick = () => {
-      const gameTime = new Date(jogo.data_hora).getTime();
-      const lockTime = gameTime - (90 * 60 * 1000); // 1h30 antes (como você estava usando)
+      const dateStr = jogo.data_hora.includes('T') ? jogo.data_hora : jogo.data_hora.replace(' ', 'T');
+      const gameTime = new Date(dateStr).getTime();
+      const lockTime = gameTime - (90 * 60 * 1000);
       const diff = lockTime - Date.now();
 
       if (diff <= 0) {
@@ -103,30 +113,31 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   return (
     <main className="min-h-screen bg-[#050505] text-white pb-20 font-sans overflow-x-hidden">
-      {/* HERO / HEADER */}
+      {/* HEADER PREMIUM */}
       <div className="relative pt-20 pb-28 text-center bg-gradient-to-b from-yellow-500/10 to-transparent">
         <img src={PATA_LOGO} className="w-16 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(245,196,0,0.5)]" />
         <h1 className="text-7xl font-black tracking-tighter italic">TIGRE <span className="text-[#F5C400]">FC</span></h1>
       </div>
 
       <div className="max-w-md mx-auto px-4 -mt-16 relative z-10">
+        
         {jogo && (
           <section className="mb-12">
             <div className="bg-[#0f0f0f]/90 backdrop-blur-2xl rounded-[40px] border border-white/5 p-8 shadow-2xl">
               
-              {/* LABEL STATUS */}
+              {/* STATUS */}
               <div className="flex justify-center mb-8">
                 <div className={`px-4 py-1 rounded-full border text-[10px] font-black tracking-widest uppercase ${mercadoAberto ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
                   {mercadoAberto ? '● Mercado Aberto' : '● Mercado Fechado'}
                 </div>
               </div>
 
-              {/* CRONÔMETRO COM DIAS */}
-              <div className="flex justify-between items-center mb-12 gap-3">
-                <TimerBlock value={timeLeft.d} label="Dias" />
-                <TimerBlock value={timeLeft.h} label="Horas" />
-                <TimerBlock value={timeLeft.m} label="Min" />
-                <TimerBlock value={timeLeft.s} label="Seg" />
+              {/* CRONÔMETRO COM 4 BLOCOS + RESPONSIVO */}
+              <div className="flex justify-between items-center mb-12 gap-2 sm:gap-3 px-1">
+                <TimerBlock value={timeLeft.d} label="DIAS" isDays={true} />
+                <TimerBlock value={timeLeft.h} label="HORAS" />
+                <TimerBlock value={timeLeft.m} label="MIN" />
+                <TimerBlock value={timeLeft.s} label="SEG" />
               </div>
 
               {/* CONFRONTO */}
