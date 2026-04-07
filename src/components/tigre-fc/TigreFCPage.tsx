@@ -48,7 +48,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Carregar dados (mantido igual)
+  // Carregar dados
   useEffect(() => {
     if (!mounted) return;
     async function init() {
@@ -75,14 +75,14 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     init();
   }, [mounted]);
 
-  // Cronômetro corrigido
+  // ==================== CRONÔMETRO COM DIAS ====================
   useEffect(() => {
     if (!jogo?.data_hora) return;
 
     const tick = () => {
       const dateStr = jogo.data_hora.includes('T') ? jogo.data_hora : jogo.data_hora.replace(' ', 'T');
       const gameTime = new Date(dateStr).getTime();
-      const lockTime = gameTime - (90 * 60 * 1000);
+      const lockTime = gameTime - (90 * 60 * 1000); // 1h30 antes
       const diff = lockTime - Date.now();
 
       if (diff <= 0) {
@@ -113,6 +113,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   return (
     <main className="min-h-screen bg-[#050505] text-white pb-20 font-sans overflow-x-hidden">
+      
       {/* HEADER PREMIUM */}
       <div className="relative pt-20 pb-28 text-center bg-gradient-to-b from-yellow-500/10 to-transparent">
         <img src={PATA_LOGO} className="w-16 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(245,196,0,0.5)]" />
@@ -132,7 +133,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                 </div>
               </div>
 
-              {/* CRONÔMETRO COM 4 BLOCOS + RESPONSIVO */}
+              {/* CRONÔMETRO COM 4 BLOCOS */}
               <div className="flex justify-between items-center mb-12 gap-2 sm:gap-3 px-1">
                 <TimerBlock value={timeLeft.d} label="DIAS" isDays={true} />
                 <TimerBlock value={timeLeft.h} label="HORAS" />
