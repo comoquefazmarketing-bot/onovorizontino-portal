@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
 const ESCUDO_NOVO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDOS/novorizontino.png';
-const ESCUDO_CRB  = 'https://upload.wikimedia.org/wikipedia/commons/7/73/CRB_logo.svg';
+const ESCUDO_ADV  = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Time = { nome: string; escudo_url: string };
@@ -23,8 +23,8 @@ function formatData(iso: string) {
 function isHoje(iso: string) {
   return new Date().toDateString() === new Date(iso).toDateString();
 }
-function isCRB(nome?: string) {
-  return nome?.toLowerCase().includes('crb') ?? false;
+function isNovo(nome?: string) {
+  return nome?.toLowerCase().includes('novorizontino') ?? false;
 }
 
 // ─── EscudoImg — crossOrigin + fallback + glow ────────────────────────────────
@@ -44,7 +44,7 @@ function EscudoImg({ src, alt, size = 56, glow, fallback }: {
       loading="eager"
       width={size}
       height={size}
-      onError={() => setImgSrc(fallback ?? ESCUDO_CRB)}
+      onError={() => setImgSrc(fallback ?? ESCUDO_ADV)}
       style={{
         width: size, height: size,
         objectFit: 'contain',
@@ -188,7 +188,7 @@ export default function EscalacaoPopup() {
                   src={jogo?.mandante.escudo_url ?? ESCUDO_NOVO}
                   alt={jogo?.mandante.nome ?? 'Novorizontino'}
                   fallback={ESCUDO_NOVO}
-                  glow={isCRB(jogo?.mandante.nome) ? '#EE2D31' : undefined}
+                  glow={isNovo(jogo?.mandante.nome) ? 'rgba(245,196,0,0.6)' : undefined}
                 />
                 <span style={{ fontSize: 10, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
                   {jogo?.mandante.nome ?? 'Novorizontino'}
@@ -201,13 +201,13 @@ export default function EscalacaoPopup() {
               {/* Visitante */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
                 <EscudoImg
-                  src={jogo?.visitante.escudo_url ?? ESCUDO_CRB}
-                  alt={jogo?.visitante.nome ?? 'CRB'}
-                  fallback={ESCUDO_CRB}
-                  glow={isCRB(jogo?.visitante.nome) ? '#EE2D31' : undefined}
+                  src={jogo?.visitante.escudo_url ?? ESCUDO_ADV}
+                  alt={jogo?.visitante.nome ?? 'América-MG'}
+                  fallback={ESCUDO_ADV}
+                  glow={isNovo(jogo?.visitante.nome) ? 'rgba(245,196,0,0.6)' : undefined}
                 />
                 <span style={{ fontSize: 10, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
-                  {jogo?.visitante.nome ?? 'CRB'}
+                  {jogo?.visitante.nome ?? 'América-MG'}
                 </span>
               </div>
 
