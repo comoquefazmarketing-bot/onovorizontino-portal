@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { supabase as sb } from '@/lib/supabase';
 
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
@@ -13,7 +13,6 @@ const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/pu
 const ESCUDOS_SERIE_B: Record<string, string> = {
   'novorizontino': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png',
   'america-mg': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png',
-  // Adicione outros escudos aqui se precisar
 };
 
 function resolveEscudo(slugOrNome?: string): string {
@@ -32,27 +31,27 @@ interface Jogo {
   local?: string;
 }
 
+interface RankingUser {
+  id: string;
+  nome: string;
+  apelido?: string;
+  avatar_url?: string;
+  pontos_total: number;
+}
+
 function FlipDigit({ value }: { value: string }) {
-  return (
-    <motion.span key={value} initial={{ rotateX: -90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ duration: 0.25 }}>
-      {value}
-    </motion.span>
-  );
+  return <motion.span key={value} initial={{ rotateX: -90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ duration: 0.25 }}>{value}</motion.span>;
 }
 
 function TimerBlock({ value, label }: { value: string; label: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-      <div style={{
-        width: 64, height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'linear-gradient(145deg, #0f0f0f, #1a1a00)', border: '1px solid rgba(245,196,0,0.3)',
-        borderRadius: 14
-      }}>
-        <span style={{ fontSize: 32, fontWeight: 900, color: '#F5C400' }}>
+      <div style={{ width: 68, height: 68, background: 'linear-gradient(145deg, #0f0f0f, #1a1a00)', border: '1px solid rgba(245,196,0,0.4)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 34, fontWeight: 900, color: '#F5C400' }}>
           <FlipDigit value={value[0]} /><FlipDigit value={value[1]} />
         </span>
       </div>
-      <span style={{ fontSize: 8, fontWeight: 900, color: '#666', letterSpacing: 2 }}>{label}</span>
+      <span style={{ fontSize: 9, fontWeight: 900, color: '#666', letterSpacing: 2 }}>{label}</span>
     </div>
   );
 }
@@ -62,18 +61,19 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   const [mounted, setMounted] = useState(false);
   const [jogo, setJogo] = useState<Jogo | null>(null);
+  const [ranking, setRanking] = useState<RankingUser[]>([]);
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
   const [mercadoAberto, setMercadoAberto] = useState(true);
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Carrega o jogo da 4ª rodada
+  // Carrega jogo da 4ª rodada
   useEffect(() => {
     if (!mounted) return;
 
     setJogo({
       id: 4,
-      data_hora: '2026-04-12T18:00:00',   // ← Data e horário correto
+      data_hora: '2026-04-12T18:00:00',
       competicao: 'Brasileirão Série B',
       rodada: '4ª Rodada',
       local: 'Arena da Independência • Belo Horizonte',
@@ -82,17 +82,30 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     });
   }, [mounted]);
 
-  // Timer + controle do mercado (fecha 1h antes)
+  // Carrega Ranking Público
+  useEffect(() => {
+    async function loadRanking() {
+      const { data } = await sb
+        .from('tigre_fc_usuarios')
+        .select('id, nome, apelido, avatar_url, pontos_total')
+        .order('pontos_total', { ascending: false })
+        .limit(10);
+
+      if (data) setRanking(data);
+    }
+    loadRanking();
+  }, []);
+
+  // Timer
   useEffect(() => {
     if (!jogo?.data_hora) return;
 
     const tick = () => {
       const gameTime = new Date(jogo.data_hora).getTime();
       const now = Date.now();
-      const fechamento = gameTime - 60 * 60 * 1000; // 1 hora antes
+      const fechamento = gameTime - 60 * 60 * 1000; // 1h antes
 
       const diff = fechamento - now;
-
       if (diff <= 0) {
         setTimeLeft({ h: '00', m: '00', s: '00' });
         setMercadoAberto(false);
@@ -103,11 +116,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      setTimeLeft({
-        h: String(hours).padStart(2, '0'),
-        m: String(minutes).padStart(2, '0'),
-        s: String(seconds).padStart(2, '0'),
-      });
+      setTimeLeft({ h: String(hours).padStart(2, '0'), m: String(minutes).padStart(2, '0'), s: String(seconds).padStart(2, '0') });
     };
 
     const interval = setInterval(tick, 1000);
@@ -116,40 +125,33 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   }, [jogo]);
 
   if (!mounted || !jogo) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#050505', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <img src={PATA_LOGO} alt="Tigre FC" style={{ width: 80, opacity: 0.6 }} />
-          <p style={{ marginTop: 20 }}>Carregando...</p>
-        </div>
-      </div>
-    );
+    return <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>Carregando Tigre FC...</div>;
   }
 
   return (
     <main style={{ minHeight: '100vh', background: '#050505', color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }}>
-      
+
       {/* TIMER */}
-      <div style={{ padding: '60px 20px 30px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ padding: '50px 20px 20px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
           <TimerBlock value={timeLeft.h} label="HRS" />
-          <span style={{ fontSize: 40, color: '#F5C400', marginTop: -8 }}>:</span>
+          <span style={{ fontSize: 42, color: '#F5C400', marginTop: -10 }}>:</span>
           <TimerBlock value={timeLeft.m} label="MIN" />
-          <span style={{ fontSize: 40, color: '#F5C400', marginTop: -8 }}>:</span>
+          <span style={{ fontSize: 42, color: '#F5C400', marginTop: -10 }}>:</span>
           <TimerBlock value={timeLeft.s} label="SEG" />
         </div>
-        <p style={{ marginTop: 12, color: '#888', fontSize: 15 }}>
-          {mercadoAberto ? 'Mercado aberto até 1h antes do jogo' : 'Mercado fechado'}
+        <p style={{ marginTop: 12, color: '#888' }}>
+          Mercado aberto até 1h antes do jogo
         </p>
       </div>
 
-      {/* BOTÃO PRINCIPAL */}
-      <div style={{ textAlign: 'center', padding: '0 20px 40px' }}>
+      {/* BOTÃO CONVOCAR */}
+      <div style={{ textAlign: 'center', paddingBottom: 40 }}>
         <Link
           href={`/tigre-fc/escalar/${jogo.id}`}
           style={{
             display: 'inline-block',
-            padding: '16px 48px',
+            padding: '16px 52px',
             background: mercadoAberto ? '#F5C400' : '#333',
             color: mercadoAberto ? '#000' : '#777',
             fontSize: 18,
@@ -157,19 +159,61 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             textTransform: 'uppercase',
             borderRadius: 12,
             textDecoration: 'none',
-            pointerEvents: mercadoAberto ? 'auto' : 'none',
           }}
         >
           {mercadoAberto ? 'CONVOCAR TITULARES' : 'MERCADO FECHADO'}
         </Link>
       </div>
 
-      {/* === AQUI VOCÊ PODE RECOLOCAR O RESTO DA SUA PÁGINA === */}
-      {/* Hero, DestaquesFifa, Ranking, Chat, Perfil, etc. */}
+      {/* THE BEST TIGRE FC - mantido da sua última versão */}
+      <div style={{ textAlign: 'center', padding: '20px' }}>
+        <p style={{ color: '#F5C400', fontSize: 14, letterSpacing: 4, marginBottom: 8 }}>THE BEST TIGRE FC</p>
+        <p style={{ color: '#666', fontSize: 13 }}>RODADA 3 • NOVORIZONTINO 1×1 CRB</p>
 
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 30, marginTop: 30 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ background: '#111', padding: 12, borderRadius: 16, border: '2px solid #F5C400' }}>
+              <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ROMULO%20FUNDO%20TRANSPARENTE.png" alt="Rômulo" style={{ width: 140 }} />
+              <p style={{ margin: '10px 0 4px', fontSize: 22, fontWeight: 900 }}>15.8</p>
+              <p style={{ fontSize: 12, color: '#F5C400' }}>RATING ×2 • CAPITÃO</p>
+            </div>
+            <p style={{ marginTop: 8 }}>Rômulo</p>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ background: '#111', padding: 12, borderRadius: 16, border: '2px solid #00F3FF' }}>
+              <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CARLAO%20FUNDO%20TRANSPARENTE.png" alt="Carlão" style={{ width: 140 }} />
+              <p style={{ margin: '10px 0 4px', fontSize: 22, fontWeight: 900 }}>7.5</p>
+              <p style={{ fontSize: 12, color: '#00F3FF' }}>HERÓI DA RODADA</p>
+            </div>
+            <p style={{ marginTop: 8 }}>Carlão</p>
+          </div>
+        </div>
+      </div>
+
+      {/* RANKING PÚBLICO */}
+      <div style={{ padding: '40px 20px', background: '#0a0a0a' }}>
+        <h2 style={{ textAlign: 'center', color: '#F5C400', marginBottom: 20 }}>🏆 RANKING DA TORCIDA</h2>
+        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+          {ranking.map((user, index) => (
+            <div key={user.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid #222' }}>
+              <span style={{ width: 30, color: '#F5C400', fontWeight: 900 }}>{index + 1}º</span>
+              <img src={user.avatar_url || PATA_LOGO} alt={user.nome} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontWeight: 700 }}>{user.apelido || user.nome}</p>
+              </div>
+              <p style={{ color: '#F5C400', fontWeight: 900 }}>{user.pontos_total} pts</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Seções que você já tinha */}
       <DestaquesFifa />
       <TigreFCChat />
-      {/* <TigreFCPerfilPublico ... />  se precisar */}
+
+      {/* Se quiser adicionar o perfil público depois */}
+      {/* <TigreFCPerfilPublico /> */}
 
     </main>
   );
