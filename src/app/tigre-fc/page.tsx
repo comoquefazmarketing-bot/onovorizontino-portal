@@ -9,8 +9,7 @@ import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
 import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
-// ID Sofascore do último jogo realizado — atualizar após cada partida
-// Rodada 3: Novorizontino 1×1 CRB — 05/04/2026
+// ID Sofascore do último jogo realizado — Rodada 3: Novorizontino 1×1 CRB — 05/04/2026
 const SOFASCORE_EVENT_ID = 15526006;
 
 const ESCUDOS_SERIE_B: Record<string, string> = {
@@ -125,10 +124,7 @@ function SofascoreWidget() {
             <div style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:16,fontWeight:900,color:'#fff',textTransform:'uppercase',letterSpacing:-0.5,lineHeight:1}}>Análise do Campo</div>
           </div>
         </div>
-        <div style={{display:'flex',alignItems:'center',gap:5,padding:'4px 10px',borderRadius:999,background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)'}}>
-          <motion.div animate={{opacity:[1,0.2,1]}} transition={{duration:1.2,repeat:Infinity}} style={{width:5,height:5,borderRadius:'50%',background:'#EF4444'}} />
-          <span style={{fontSize:7,fontWeight:900,color:'#EF4444',letterSpacing:2,textTransform:'uppercase'}}>LIVE</span>
-        </div>
+        <LiveBadge />
       </div>
       <div style={{padding:'8px 16px 0',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <span style={{fontSize:9,fontWeight:700,color:'#333',textTransform:'uppercase',letterSpacing:1}}>Novorizontino × CRB — Rodada 3 · Última partida</span>
@@ -137,7 +133,7 @@ function SofascoreWidget() {
       <div style={{display:'flex',margin:'8px 0 0',borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            style={{flex:1,padding:'8px 4px',background:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #F5C400':'2px solid transparent',color:tab===t.id?'#F5C400':'#333',fontSize:9,fontWeight:900,textTransform:'uppercase',letterSpacing:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,transition:'all 0.2s',border:'none'}}>
+            style={{flex:1,padding:'10px 4px',background:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #F5C400':'2px solid transparent',color:tab===t.id?'#F5C400':'#333',fontSize:9,fontWeight:900,textTransform:'uppercase',letterSpacing:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,transition:'all 0.2s',border:'none'}}>
             <span style={{fontSize:14}}>{t.icon}</span>{t.label}
           </button>
         ))}
@@ -152,7 +148,7 @@ function SofascoreWidget() {
 }
 
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
-  use(params);
+  const resolvedParams = use(params);
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0,280], [1,0]);
   const heroScale   = useTransform(scrollY, [0,280], [1,1.06]);
@@ -175,6 +171,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         const { data: u } = await sb.from('tigre_fc_usuarios').select('id').eq('google_id', session.user.id).maybeSingle();
         if (u) setMeuId(u.id);
       }
+      
       const resJogo = await fetch('/api/proximo-jogo').then(r => r.json()).catch(() => null);
       if (resJogo?.jogos?.length > 0) {
         const j = resJogo.jogos[0];
@@ -182,13 +179,23 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (j.mandante  && !j.mandante.escudo_url?.startsWith('http'))  j.mandante.escudo_url  = resolveEscudo(j.mandante.slug  ?? j.mandante.nome);
         setJogo(j);
       } else {
-        // Fallback local — atualizar a cada rodada
-        setJogo({ id:4, data_hora:'2026-04-12T21:00:00Z', competicao:'Série B', rodada:'4ª Rodada', local:'Arena da Independência • BH',
-          mandante:  { nome:'América-MG',     slug:'america-mg',     escudo_url: ESCUDOS_SERIE_B['america-mg'] },
-          visitante: { nome:'Novorizontino',   slug:'novorizontino',  escudo_url: ESCUDOS_SERIE_B['novorizontino'] },
+        // Fallback Local - América-MG (Mandante) x Novorizontino (Visitante)
+        setJogo({ 
+          id: 4, 
+          data_hora: '2026-04-12T21:00:00Z', 
+          competicao: 'Série B', 
+          rodada: '4ª Rodada', 
+          local: 'Arena da Independência • BH',
+          mandante:  { nome: 'América-MG',   slug: 'america-mg',   escudo_url: ESCUDOS_SERIE_B['america-mg'] },
+          visitante: { nome: 'Novorizontino', slug: 'novorizontino', escudo_url: ESCUDOS_SERIE_B['novorizontino'] },
         });
       }
-      const { data: resRank } = await sb.from('tigre_fc_usuarios').select('id,nome,apelido,avatar_url,pontos_total').not('pontos_total','is',null).order('pontos_total',{ascending:false}).limit(10);
+      
+      const { data: resRank } = await sb.from('tigre_fc_usuarios')
+        .select('id,nome,apelido,avatar_url,pontos_total')
+        .not('pontos_total','is',null)
+        .order('pontos_total',{ascending:false})
+        .limit(10);
       if (resRank) setRanking(resRank as UsuarioRanking[]);
     }
     init();
@@ -198,9 +205,17 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     if (!jogo?.data_hora) return;
     const tick = () => {
       const gameTime = new Date(jogo.data_hora.includes('T') ? jogo.data_hora : jogo.data_hora.replace(' ','T')).getTime();
-      const diff = gameTime - (90*60*1000) - Date.now();
-      if (isNaN(diff) || diff <= 0) { setTimeLeft({h:'00',m:'00',s:'00'}); setMercadoAberto(false); return; }
-      setTimeLeft({ h:String(Math.floor(diff/3600000)).padStart(2,'0'), m:String(Math.floor((diff%3600000)/60000)).padStart(2,'0'), s:String(Math.floor((diff%60000)/1000)).padStart(2,'0') });
+      const diff = gameTime - (90*60*1000) - Date.now(); // Mercado fecha 1h30 antes
+      if (isNaN(diff) || diff <= 0) { 
+        setTimeLeft({h:'00',m:'00',s:'00'}); 
+        setMercadoAberto(false); 
+        return; 
+      }
+      setTimeLeft({ 
+        h: String(Math.floor(diff/3600000)).padStart(2,'0'), 
+        m: String(Math.floor((diff%3600000)/60000)).padStart(2,'0'), 
+        s: String(Math.floor((diff%60000)/1000)).padStart(2,'0') 
+      });
     };
     const t = setInterval(tick, 1000); tick();
     return () => clearInterval(t);
@@ -209,7 +224,8 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   if (!mounted) return <div style={{minHeight:'100vh',background:'#050505'}} />;
 
   const stagger = (i: number): { initial: TargetAndTransition; animate: TargetAndTransition; transition: Transition } => ({
-    initial: { opacity:0, y:28 }, animate: { opacity:1, y:0 },
+    initial: { opacity:0, y:28 }, 
+    animate: { opacity:1, y:0 },
     transition: { delay: 0.1 + i*0.1, duration:0.5, ease:EASE },
   });
 
@@ -217,29 +233,31 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     <main style={{minHeight:'100vh',background:'#050505',color:'#fff',overflowX:'hidden',fontFamily:"'Barlow Condensed',system-ui,sans-serif"}}>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700;1,900&display=swap');
-        *{box-sizing:border-box} ::-webkit-scrollbar{width:0} body{background:#050505}
+        *{box-sizing:border-box} 
+        ::-webkit-scrollbar{width:0} 
+        body{background:#050505}
         @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
         .text-shimmer{background:linear-gradient(90deg,#F5C400 0%,#fff8d6 40%,#F5C400 60%,#D4A200 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite}
         @keyframes hud-pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,196,0,0)}50%{box-shadow:0 0 0 6px rgba(245,196,0,0.06)}}
         .hud-pulse{animation:hud-pulse 2.5s ease-in-out infinite}
       `}</style>
 
-      {/* HERO */}
+      {/* HERO SECTION */}
       <motion.div style={{opacity:heroOpacity,scale:heroScale,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 80% 50% at 50% 0%,rgba(245,196,0,0.1) 0%,transparent 70%)'}} />
         <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(245,196,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(245,196,0,0.03) 1px,transparent 1px)',backgroundSize:'40px 40px'}} />
         <ParticlesBg />
         <div style={{position:'relative',zIndex:10,padding:'80px 24px 56px',textAlign:'center',maxWidth:480,margin:'0 auto'}}>
-          <motion.img src={PATA_LOGO} initial={{scale:0.5,opacity:0} as TargetAndTransition} animate={{scale:1,opacity:1} as TargetAndTransition} transition={{duration:0.6,ease:EASE}}
-            style={{width:68,height:68,objectFit:'contain',margin:'0 auto 16px',filter:'drop-shadow(0 0 20px rgba(245,196,0,0.5))',display:'block'}} alt="" />
-          <motion.div initial={{opacity:0,y:20} as TargetAndTransition} animate={{opacity:1,y:0} as TargetAndTransition} transition={{delay:0.2,duration:0.5,ease:EASE}}>
+          <motion.img src={PATA_LOGO} initial={{scale:0.5,opacity:0}} animate={{scale:1,opacity:1}} transition={{duration:0.6,ease:EASE}}
+            style={{width:68,height:68,objectFit:'contain',margin:'0 auto 16px',filter:'drop-shadow(0 0 20px rgba(245,196,0,0.5))',display:'block'}} alt="Tigre FC" />
+          <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.2,duration:0.5,ease:EASE}}>
             <div style={{fontSize:8,fontWeight:900,letterSpacing:6,color:'#F5C400',textTransform:'uppercase',marginBottom:8,opacity:0.6}}>FANTASY LEAGUE · SÉRIE B 2026</div>
             <h1 style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:84,fontWeight:900,letterSpacing:-4,lineHeight:0.85,textTransform:'uppercase',margin:'0 0 14px'}}>
               <span className="text-shimmer">TIGRE</span><br /><span style={{color:'#fff'}}>FC</span>
             </h1>
             <p style={{fontSize:10,fontWeight:700,color:'#333',letterSpacing:2,textTransform:'uppercase'}}>Monte. Dispute. Domine a torcida.</p>
           </motion.div>
-          <motion.div initial={{opacity:0} as TargetAndTransition} animate={{opacity:1} as TargetAndTransition} transition={{delay:0.5}}
+          <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.5}}
             style={{display:'flex',gap:8,justifyContent:'center',marginTop:20}}>
             <LiveBadge />
             <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'4px 10px',borderRadius:999,background:mercadoAberto?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)',border:`1px solid ${mercadoAberto?'rgba(34,197,94,0.3)':'rgba(239,68,68,0.3)'}`}}>
@@ -283,6 +301,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                         <div style={{display:'flex',gap:4,alignItems:'center'}}>
                           <TimerBlock value={timeLeft.h} label="HRS" />
                           <span style={{fontSize:18,fontWeight:900,color:'#F5C400',marginBottom:14}}>:</span>
+                          <span style={{display:'none'}}>{/* Separador visual apenas */}</span>
                           <TimerBlock value={timeLeft.m} label="MIN" />
                           <span style={{fontSize:18,fontWeight:900,color:'#F5C400',marginBottom:14}}>:</span>
                           <TimerBlock value={timeLeft.s} label="SEG" />
@@ -299,9 +318,9 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                         </div>
                       </div>
                     </div>
-                    <div className="hud-pulse" style={{borderRadius:18}}>
+                    <div className={mercadoAberto ? "hud-pulse" : ""} style={{borderRadius:18}}>
                       <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'17px 24px',borderRadius:18,background:mercadoAberto?'linear-gradient(135deg,#F5C400 0%,#D4A200 100%)':'#1a1a1a',color:mercadoAberto?'#000':'#333',fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:13,fontWeight:900,letterSpacing:3,textTransform:'uppercase',textDecoration:'none',boxShadow:mercadoAberto?'0 8px 28px rgba(245,196,0,0.25)':'none',border:mercadoAberto?'none':'1px solid #222'}}>
-                        <span style={{fontSize:16}}>⚡</span>{mercadoAberto?'CONVOCAR TITULARES':'MERCADO FECHADO'}
+                        <span style={{fontSize:16}}>{mercadoAberto?'⚡':'🔒'}</span>{mercadoAberto?'CONVOCAR TITULARES':'MERCADO FECHADO'}
                       </Link>
                     </div>
                     <div style={{display:'flex',justifyContent:'center',gap:28,marginTop:18}}>
@@ -320,17 +339,17 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           )}
         </AnimatePresence>
 
-        {/* ── SOFASCORE — abaixo do match card ── */}
+        {/* SOFASCORE WIDGET */}
         <motion.div {...stagger(1)}>
           <SofascoreWidget />
         </motion.div>
 
-        {/* ── DESTAQUES ── */}
+        {/* DESTAQUES FIFA */}
         <motion.div {...stagger(2)}>
           <DestaquesFifa />
         </motion.div>
 
-        {/* ── RANKING ── */}
+        {/* RANKING SECTION */}
         <motion.section {...stagger(3)} style={{marginTop:56}}>
           <SectionLabel sub="LEADERBOARD" title="ELITE RANKING" />
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
@@ -340,7 +359,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               const isFirst=i===0, isTop3=i<3;
               return (
                 <motion.div key={u.id}
-                  initial={{opacity:0,x:i%2===0?-16:16} as TargetAndTransition} animate={{opacity:1,x:0} as TargetAndTransition}
+                  initial={{opacity:0,x:i%2===0?-16:16}} animate={{opacity:1,x:0}}
                   transition={{delay:0.04*i,duration:0.4,ease:EASE}} whileHover={{scale:1.02,x:3}} whileTap={{scale:0.98}}
                   onClick={()=>setPerfilAberto(u.id)}
                   style={{display:'flex',alignItems:'center',gap:12,padding:isFirst?'18px':'13px 16px',borderRadius:isFirst?22:16,cursor:'pointer',position:'relative',overflow:'hidden',background:isFirst?'linear-gradient(135deg,#1a1400,#2a1f00,#1a1400)':'rgba(255,255,255,0.02)',border:isFirst?'1px solid rgba(245,196,0,0.35)':isTop3?'1px solid rgba(255,255,255,0.05)':'1px solid rgba(255,255,255,0.02)',boxShadow:isFirst?'0 0 32px rgba(245,196,0,0.08)':'none'}}>
@@ -353,7 +372,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:isFirst?20:16,fontWeight:900,fontStyle:'italic',color:isFirst?'#F5C400':'#fff',textTransform:'uppercase',letterSpacing:-0.5,lineHeight:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.apelido||u.nome}</div>
-                    <div style={{fontSize:7,fontWeight:900,color:isFirst?'rgba(245,196,0,0.4)':'#222',letterSpacing:2,textTransform:'uppercase',marginTop:3}}>{RANK_LABELS[i]}</div>
+                    <div style={{fontSize:7,fontWeight:900,color:isFirst?'rgba(245,196,0,0.4)':'#222',letterSpacing:2,textTransform:'uppercase',marginTop:3}}>{RANK_LABELS[i]||'COMPETIDOR'}</div>
                   </div>
                   <div style={{textAlign:'right',flexShrink:0}}>
                     <div style={{fontFamily:"'Barlow Condensed',Impact,sans-serif",fontSize:isFirst?34:26,fontWeight:900,fontStyle:'italic',color:isFirst?'#F5C400':isTop3?'#fff':'#333',lineHeight:1,textShadow:isFirst?'0 0 16px rgba(245,196,0,0.35)':'none'}}>{u.pontos_total||0}</div>
@@ -369,7 +388,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </Link>
         </motion.section>
 
-        {/* ── VESTIÁRIO ── */}
+        {/* VESTIÁRIO / CHAT */}
         <motion.section {...stagger(4)} style={{marginTop:56,marginBottom:60}}>
           <SectionLabel sub="LOUNGE" title="VESTIÁRIO" />
           <div style={{borderRadius:28,overflow:'hidden',border:'1px solid rgba(255,255,255,0.04)',background:'linear-gradient(145deg,#080808,#0d0d00)'}}>
@@ -377,14 +396,23 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               <span style={{fontSize:10,fontWeight:900,color:'#2a2a2a',letterSpacing:2,textTransform:'uppercase'}}>💬 Chat da Torcida</span>
               <LiveBadge />
             </div>
-            <div style={{height:520}}><TigreFCChat usuarioId={meuId} /></div>
+            <div style={{height:520}}>
+              <TigreFCChat usuarioId={meuId} />
+            </div>
           </div>
         </motion.section>
       </div>
 
-      {perfilAberto && (
-        <TigreFCPerfilPublico targetUsuarioId={perfilAberto} viewerUsuarioId={meuId} onClose={()=>setPerfilAberto(null)} />
-      )}
+      {/* MODAL PERFIL */}
+      <AnimatePresence>
+        {perfilAberto && (
+          <TigreFCPerfilPublico 
+            targetUsuarioId={perfilAberto} 
+            viewerUsuarioId={meuId} 
+            onClose={()=>setPerfilAberto(null)} 
+          />
+        )}
+      </AnimatePresence>
     </main>
   );
 }
