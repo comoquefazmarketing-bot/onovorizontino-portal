@@ -4,12 +4,16 @@ import Link from 'next/link';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { supabase as sb } from '@/lib/supabase';
 
+import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
+import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
+import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
+
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
 const ESCUDOS_SERIE_B: Record<string, string> = {
   'novorizontino': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png',
   'america-mg': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png',
-  // adicione os outros escudos aqui se precisar
+  // Adicione outros escudos aqui se precisar
 };
 
 function resolveEscudo(slugOrNome?: string): string {
@@ -61,18 +65,15 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
   const [mercadoAberto, setMercadoAberto] = useState(true);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Inicialização do jogo (4ª rodada)
+  // Carrega o jogo da 4ª rodada
   useEffect(() => {
     if (!mounted) return;
 
-    // Fallback direto para a 4ª rodada
     setJogo({
       id: 4,
-      data_hora: '2026-04-12T18:00:00',   // ← 12/04/2026 18:00
+      data_hora: '2026-04-12T18:00:00',   // ← Data e horário correto
       competicao: 'Brasileirão Série B',
       rodada: '4ª Rodada',
       local: 'Arena da Independência • Belo Horizonte',
@@ -81,7 +82,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     });
   }, [mounted]);
 
-  // Timer + Fechamento do mercado (1h antes)
+  // Timer + controle do mercado (fecha 1h antes)
   useEffect(() => {
     if (!jogo?.data_hora) return;
 
@@ -111,7 +112,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
     const interval = setInterval(tick, 1000);
     tick();
-
     return () => clearInterval(interval);
   }, [jogo]);
 
@@ -119,8 +119,8 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     return (
       <div style={{ minHeight: '100vh', background: '#050505', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <img src={PATA_LOGO} alt="Tigre FC" style={{ width: 80, opacity: 0.6, marginBottom: 20 }} />
-          <p>Carregando próximo jogo...</p>
+          <img src={PATA_LOGO} alt="Tigre FC" style={{ width: 80, opacity: 0.6 }} />
+          <p style={{ marginTop: 20 }}>Carregando...</p>
         </div>
       </div>
     );
@@ -128,27 +128,28 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   return (
     <main style={{ minHeight: '100vh', background: '#050505', color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }}>
-      {/* Timer */}
-      <div style={{ padding: '40px 20px 20px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center' }}>
+      
+      {/* TIMER */}
+      <div style={{ padding: '60px 20px 30px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', alignItems: 'center' }}>
           <TimerBlock value={timeLeft.h} label="HRS" />
-          <span style={{ fontSize: 36, color: '#F5C400', marginTop: -10 }}>:</span>
+          <span style={{ fontSize: 40, color: '#F5C400', marginTop: -8 }}>:</span>
           <TimerBlock value={timeLeft.m} label="MIN" />
-          <span style={{ fontSize: 36, color: '#F5C400', marginTop: -10 }}>:</span>
+          <span style={{ fontSize: 40, color: '#F5C400', marginTop: -8 }}>:</span>
           <TimerBlock value={timeLeft.s} label="SEG" />
         </div>
-        <p style={{ marginTop: 12, color: '#888', fontSize: 14 }}>
+        <p style={{ marginTop: 12, color: '#888', fontSize: 15 }}>
           {mercadoAberto ? 'Mercado aberto até 1h antes do jogo' : 'Mercado fechado'}
         </p>
       </div>
 
-      {/* Botão Convocar Titulares */}
-      <div style={{ textAlign: 'center', padding: '20px' }}>
+      {/* BOTÃO PRINCIPAL */}
+      <div style={{ textAlign: 'center', padding: '0 20px 40px' }}>
         <Link
           href={`/tigre-fc/escalar/${jogo.id}`}
           style={{
             display: 'inline-block',
-            padding: '16px 40px',
+            padding: '16px 48px',
             background: mercadoAberto ? '#F5C400' : '#333',
             color: mercadoAberto ? '#000' : '#777',
             fontSize: 18,
@@ -157,15 +158,19 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             borderRadius: 12,
             textDecoration: 'none',
             pointerEvents: mercadoAberto ? 'auto' : 'none',
-            opacity: mercadoAberto ? 1 : 0.6,
           }}
         >
           {mercadoAberto ? 'CONVOCAR TITULARES' : 'MERCADO FECHADO'}
         </Link>
       </div>
 
-      {/* Aqui você pode colocar novamente o resto da sua página (hero, ranking, chat, etc.) */}
-      {/* Se quiser, me avise que eu ajudo a trazer o resto de volta de forma limpa */}
+      {/* === AQUI VOCÊ PODE RECOLOCAR O RESTO DA SUA PÁGINA === */}
+      {/* Hero, DestaquesFifa, Ranking, Chat, Perfil, etc. */}
+
+      <DestaquesFifa />
+      <TigreFCChat />
+      {/* <TigreFCPerfilPublico ... />  se precisar */}
+
     </main>
   );
 }
