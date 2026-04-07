@@ -13,83 +13,44 @@ import { supabase } from '@/lib/supabase';
 // ─── Assets ──────────────────────────────────────────────────────────────────
 const BASE       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const ESCUDO     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-const ESCUDO_CRB = 'https://upload.wikimedia.org/wikipedia/commons/7/73/CRB_logo.svg';
+// ATUALIZADO PARA 4ª RODADA: Escudo do América-MG
+const ESCUDO_ADV = 'https://www.clipartmax.com/png/small/295-2959727_hd-logo-america-mineiro-fc-logo.png';
 const PATA       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 // ─── Assets "The Best" — fotos fundo transparente para destaque visual ───────
 const FOTO_ROMULO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ROMULO%20FUNDO%20TRANSPARENTE.png';
 const FOTO_CARLAO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CARLAO%20FUNDO%20TRANSPARENTE.png';
 
 // ─── Gatilho de rodada ───────────────────────────────────────────────────────
-// false → edição aberta  |  true → rodada encerrada, exibe pontuação real
-const RODADA_ENCERRADA = true;
+// ATUALIZADO PARA 4ª RODADA: false → mercado aberto para escalação
+const RODADA_ENCERRADA = false;
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DADOS OFICIAIS — Novorizontino 1×1 CRB
-// Sofascore ID: 15526006 | Série B 2026, Rodada 3 | 05/04/2026
-// Estádio Dr. Jorge Ismael de Biasi, Novo Horizonte
+// DADOS OFICIAIS — PRÓXIMO JOGO
+// América-MG × Novorizontino | Série B 2026, Rodada 4 | 12/04/2026
+// Arena da Independência, Belo Horizonte
 // ───────────────────────────────────────────────────────────────────────────────
-// GOLS:
-//   Carlão 74'      (Novorizontino) — entrou aos 65', substituiu Robson
-//   Dadá Belmonte 90'+4' (CRB)
-// ───────────────────────────────────────────────────────────────────────────────
-// ESCALAÇÃO TITULAR (11 que iniciaram):
-//   GK  31 César Augusto    id=1   rating 7.4
-//   DEF 20 N. Castrillón    id=6   rating 6.8
-//   DEF  5 Sander           id=8   rating 7.4
-//   DEF 25 Dantas            id=10  rating 6.2
-//   DEF  4 Patrick           id=12  rating 7.4
-//   MEI 18 L. Naldi          id=20  rating 6.8
-//   MEI 50 Juninho            id=23  rating 6.7
-//   MEI 10 Rômulo (POTM)     id=21  rating 7.9 ← Jogador da Partida
-//   MEI  8 C. Ortíz           id=36  rating 6.5
-//   ATA 16 Vinicius Paiva     id=32  rating 7.1
-//   ATA 11 Robson (c)         id=31  rating 6.1
-// ───────────────────────────────────────────────────────────────────────────────
-// SUBSTITUIÇÕES:
-//   46' +Oyama(id=19, 6.6)  +Lora(id=5, 6.4)   / -C.Ortíz  -L.Naldi
-//   65' +Carlão(id=38, 7.5) GOL 74'              / -Robson
-//   71' +N.Careca(id=35,6.4)                     / -V.Paiva
-//   80' +Bianqui(id=22, 6.6)                     / -N.Careca
+// NOTA: Os dados abaixo (placar, titulares_ids, ratings, heroi_id, potm_id)
+// são placeholders zerados/nulos, pois o jogo ainda não ocorreu.
+// Devem ser preenchidos quando RODADA_ENCERRADA for alterado para true.
 // ═══════════════════════════════════════════════════════════════════════════════
 const RESULTADO_JOGO = {
-  sofascore_id: 15526006,
-  adversario:   'CRB',
-  rodada:       'Série B 2026 · Rodada 3',
-  placar_novo:  1,   // Carlão 74'
-  placar_crb:   1,   // Dadá Belmonte 90+4'
-  data:         '05/04/2026',
-  local:        'Estádio Dr. Jorge Ismael de Biasi, Novo Horizonte',
+  sofascore_id: 15526006, // Placeholder, deve ser atualizado com o ID real do jogo
+  adversario:   'América-MG',
+  rodada:       'Série B 2026 · Rodada 4',
+  placar_novo:  0,   // Jogo não ocorreu
+  placar_adv:   0,   // Jogo não ocorreu
+  data:         '12/04/2026',
+  local:        'Arena da Independência, Belo Horizonte',
 
-  // IDs dos 11 titulares (mapeados para o PLAYERS array)
-  titulares_ids: new Set<number>([1, 6, 8, 10, 12, 20, 21, 23, 31, 32, 36]),
+  // IDs dos titulares (vazio, pré-jogo)
+  titulares_ids: new Set<number>([]),
 
-  // Herói fantasy: Carlão (id=38) — único gol do Novorizontino
-  heroi_id: 38,
+  // Herói fantasy e POTM (nulos, pré-jogo)
+  heroi_id: null,
+  potm_id: null,
 
-  // Player of the Match Sofascore: Rômulo (id=21) — nota 7.9
-  potm_id: 21,
-
-  // Ratings oficiais Sofascore (lidos da tela ID 15526006 em 05/04/2026)
-  ratings: {
-    // Titulares
-     1: 7.4,  // César Augusto (GOL #31)
-     6: 6.8,  // N. Castrillón (DEF #20)
-     8: 7.4,  // Sander (DEF #5)
-    10: 6.2,  // Dantas (ZAG #25)
-    12: 7.4,  // Patrick (ZAG #4)
-    20: 6.8,  // L. Naldi (MEI #18)
-    21: 7.9,  // Rômulo (MEI #10) ← POTM ⭐
-    23: 6.7,  // Juninho (MEI #50)
-    31: 6.1,  // Robson (ATA #11)
-    32: 7.1,  // Vinicius Paiva (ATA #16)
-    36: 6.5,  // C. Ortíz (MEI #8)
-    // Substitutos
-     5: 6.4,  // Jhilmar Lora (entrou 46')
-    19: 6.6,  // Luís Oyama (entrou 46')
-    38: 7.5,  // Carlão (entrou 65', GOL 74') ← HERÓI ⚽
-    35: 6.4,  // Nicolas Careca (71'–80')
-    22: 6.6,  // Matheus Bianqui (entrou 80')
-  } as Record<number, number>,
+  // Ratings oficiais Sofascore (vazio, pré-jogo)
+  ratings: {} as Record<number, number>,
 };
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Player      = { id: number; name: string; short: string; num: number; pos: string; foto: string };
@@ -120,7 +81,7 @@ interface FifaCardProps {
   onClick?: ()=>void;
 }
 
-// ─── Players ─────────────────────────────────────────────────────────────────
+// ─── Players (Mantido, sem alterações) ──────────────────────────────────────────
 const PLAYERS: Player[] = [
   { id:1,  name:'César Augusto',    short:'César',      num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id:2,  name:'Jordi',            short:'Jordi',      num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
@@ -163,19 +124,18 @@ const PLAYERS: Player[] = [
   { id:39, name:'Ronald Barcellos', short:'Ronald',     num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-// ─── Formações ────────────────────────────────────────────────────────────────
-// Coordenadas recalculadas para cards 30% maiores — mais respiro, sem encavalamento
+// ─── Formações (Mantido, sem alterações) ──────────────────────────────────────
 const FORMATIONS: Record<string, Slot[]> = {
   '4-2-3-1': [
     { id:'gk',  x:50, y:88, pos:'GOL', label:'GK' },
-    { id:'rb',  x:87, y:72, pos:'LAT', label:'RB' },  // laterais nas pontas
-    { id:'cb1', x:64, y:78, pos:'ZAG', label:'CB' },  // zagueiros mais separados
+    { id:'rb',  x:87, y:72, pos:'LAT', label:'RB' },
+    { id:'cb1', x:64, y:78, pos:'ZAG', label:'CB' },
     { id:'cb2', x:36, y:78, pos:'ZAG', label:'CB' },
     { id:'lb',  x:13, y:72, pos:'LAT', label:'LB' },
     { id:'dm1', x:34, y:57, pos:'MEI', label:'DM' },
     { id:'dm2', x:66, y:57, pos:'MEI', label:'DM' },
     { id:'am',  x:50, y:40, pos:'MEI', label:'AM' },
-    { id:'rw',  x:85, y:25, pos:'ATA', label:'RW' },  // pontas abertas
+    { id:'rw',  x:85, y:25, pos:'ATA', label:'RW' },
     { id:'lw',  x:15, y:25, pos:'ATA', label:'LW' },
     { id:'st',  x:50, y:11, pos:'ATA', label:'ST' },
   ],
@@ -233,7 +193,6 @@ const FORMATIONS: Record<string, Slot[]> = {
   ],
 };
 
-// Banco com posições obrigatórias
 const BENCH_SLOTS = [
   { id:'b_gol', pos:'GOL', label:'🧤 Goleiro' },
   { id:'b_zag', pos:'ZAG', label:'🛡️ Zagueiro' },
@@ -246,72 +205,48 @@ const POS_COLORS: Record<string, string> = {
   GOL:'#F5C400', ZAG:'#3B82F6', LAT:'#06B6D4', MEI:'#22C55E', ATA:'#EF4444',
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// UTILITÁRIOS DE FOTO DUPLA
-// ─────────────────────────────────────────────────────────────────────────────
-// ── FOTO DUPLA — recorte preciso por pose ─────────────────────────────
-// A imagem contém 2 poses lado a lado (mesma largura total).
-//
-// pose='static'      → Mercado: pose séria/esquerda
-//   object-position: 22% center  → mira no jogador esquerdo
-//   scale(1.4)                   → zoom para eliminar o jogador direito do frame
-//
-// pose='celebration' → Campo: pose comemoração/direita
-//   object-position: 78% center  → mira no jogador direito
-//   scale(1.5)                   → zoom maior para destacar a celebração
-//
+// ─── Utilidade de Estilo de Imagem (Mantido) ─────────────────────────────────
 function imgStyle(pose: 'static' | 'celebration'): React.CSSProperties {
   if (pose === 'static') {
-    // Mercado — pose séria (lado esquerdo da imagem dupla)
     return {
       position: 'absolute',
       top: '50%', left: '50%',
       width: '100%', height: '100%',
       objectFit: 'cover',
-      objectPosition: '22% center',  // centraliza o jogador da esquerda
-      transform: 'translate(-50%, -50%) scale(1.4)', // zoom remove o jogador direito
+      objectPosition: '22% center',
+      transform: 'translate(-50%, -50%) scale(1.4)',
       transformOrigin: 'center center',
     };
   }
-  // Campo — pose celebração (lado direito da imagem dupla)
   return {
     position: 'absolute',
     top: '50%', left: '50%',
     width: '100%', height: '100%',
     objectFit: 'cover',
-    objectPosition: '78% center',  // centraliza o jogador da direita
-    transform: 'translate(-50%, -50%) scale(1.5)', // zoom elimina o jogador esquerdo
+    objectPosition: '78% center',
+    transform: 'translate(-50%, -50%) scale(1.5)',
     transformOrigin: 'center center',
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STADIUM BG
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Stadium Bg (Mantido) ─────────────────────────────────────────────────────
 function StadiumBg() {
   return (
     <div style={{position:'absolute',inset:0,overflow:'hidden',background:'linear-gradient(180deg,#010508 0%,#030e09 55%,#061608 100%)'}}>
       <div style={{position:'absolute',bottom:0,left:0,right:0,height:'55%',background:'radial-gradient(ellipse 100% 70% at 50% 100%,rgba(16,80,16,0.4) 0%,transparent 70%)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',top:0,left:'7%',right:'7%',height:'42%',background:'linear-gradient(180deg,#040804 0%,#0a120a 60%,transparent 100%)',clipPath:'ellipse(55% 100% at 50% 0%)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',top:0,left:'7%',right:'7%',height:'36%',backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 4px,rgba(12,22,12,0.5) 4px,rgba(12,22,12,0.5) 5px)',opacity:0.7,clipPath:'ellipse(53% 100% at 50% 0%)',pointerEvents:'none'}}/>
-      {/* Laterais */}
       <div style={{position:'absolute',top:0,bottom:0,left:0,width:'12%',background:'linear-gradient(90deg,#030803,rgba(5,15,5,0.8) 70%,transparent)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',top:0,bottom:0,right:0,width:'12%',background:'linear-gradient(270deg,#030803,rgba(5,15,5,0.8) 70%,transparent)',pointerEvents:'none'}}/>
-      {/* Refletores top-left */}
       <div style={{position:'absolute',top:'-8%',left:'5%',width:3,height:'80%',background:'linear-gradient(180deg,rgba(255,252,210,0.32) 0%,rgba(255,252,210,0.06) 45%,transparent 100%)',transform:'rotate(22deg)',transformOrigin:'top center',filter:'blur(5px)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',top:'-8%',left:'7%',width:12,height:'70%',background:'linear-gradient(180deg,rgba(255,252,210,0.12) 0%,transparent 100%)',transform:'rotate(24deg)',transformOrigin:'top center',filter:'blur(16px)',pointerEvents:'none'}}/>
-      {/* Refletores top-right */}
       <div style={{position:'absolute',top:'-8%',right:'5%',width:3,height:'80%',background:'linear-gradient(180deg,rgba(255,252,210,0.32) 0%,rgba(255,252,210,0.06) 45%,transparent 100%)',transform:'rotate(-22deg)',transformOrigin:'top center',filter:'blur(5px)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',top:'-8%',right:'7%',width:12,height:'70%',background:'linear-gradient(180deg,rgba(255,252,210,0.12) 0%,transparent 100%)',transform:'rotate(-24deg)',transformOrigin:'top center',filter:'blur(16px)',pointerEvents:'none'}}/>
-      {/* Lens flare */}
       <div style={{position:'absolute',top:'1%',left:'8%',width:7,height:7,borderRadius:'50%',background:'white',boxShadow:'0 0 18px 10px rgba(255,255,210,0.38),0 0 50px 26px rgba(255,255,210,0.12)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',top:'1%',right:'8%',width:7,height:7,borderRadius:'50%',background:'white',boxShadow:'0 0 18px 10px rgba(255,255,210,0.38),0 0 50px 26px rgba(255,255,210,0.12)',pointerEvents:'none'}}/>
-      {/* Feixes diagonais convergindo */}
       <div style={{position:'absolute',top:'-10%',left:'2%',width:'60%',height:'90%',background:'linear-gradient(135deg,rgba(255,252,210,0.07) 0%,transparent 55%)',pointerEvents:'none',filter:'blur(20px)'}}/>
       <div style={{position:'absolute',top:'-10%',right:'2%',width:'60%',height:'90%',background:'linear-gradient(225deg,rgba(255,252,210,0.07) 0%,transparent 55%)',pointerEvents:'none',filter:'blur(20px)'}}/>
-      {/* Halo gramado */}
       <div style={{position:'absolute',bottom:'15%',left:'50%',transform:'translateX(-50%)',width:'80%',height:'30%',borderRadius:'50%',background:'radial-gradient(ellipse,rgba(16,80,16,0.35) 0%,transparent 70%)',filter:'blur(12px)',pointerEvents:'none'}}/>
-      {/* Fumaça */}
       {[{l:'8%',b:'30%',d:0,dur:7},{l:'45%',b:'26%',d:1.5,dur:6},{l:'80%',b:'31%',d:0.7,dur:8},{l:'25%',b:'22%',d:2.3,dur:5},{l:'63%',b:'20%',d:1.1,dur:9}].map((s,i)=>(
         <motion.div key={i}
           style={{position:'absolute',left:s.l,bottom:s.b,width:110,height:36,borderRadius:'50%',background:'radial-gradient(ellipse,rgba(180,220,180,0.07) 0%,transparent 70%)',filter:'blur(14px)',pointerEvents:'none'}}
@@ -322,13 +257,11 @@ function StadiumBg() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CARD FIFA VERTICAL — usado no campo
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── FifaCard (Mantido) ────────────────────────────────────────────────────────
 function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small=false, onClick }: FifaCardProps) {
   const col = isCaptain ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#888');
-  const W = small ? 44 : 62;   // +30% vs original (48→62, 38→44)
-  const H = Math.round(W * 1.4); // proporção ligeiramente mais alta
+  const W = small ? 44 : 62;
+  const H = Math.round(W * 1.4);
   const aura = isCaptain ? '0 0 28px rgba(245,196,0,0.9),0 0 60px rgba(245,196,0,0.4)'
     : isHero     ? '0 0 28px rgba(0,243,255,0.8),0 0 60px rgba(0,243,255,0.3)'
     : `0 0 12px ${col}60`;
@@ -342,12 +275,10 @@ function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small=false, o
       transition={{ type:'spring', stiffness:420, damping:22 }}
       style={{ position:'relative', background:'none', border:'none', padding:0, cursor:'pointer',
         display:'flex', flexDirection:'column', alignItems:'center', gap:0 }}>
-      {/* Pulse ring */}
       {pulsing && (
         <motion.div animate={{ scale:[1,1.9,1], opacity:[0.9,0,0.9] }} transition={{ duration:0.85, repeat:Infinity }}
           style={{ position:'absolute', inset:-5, borderRadius:8, border:`2px solid ${col}`, pointerEvents:'none' }}/>
       )}
-      {/* Badge */}
       {(isCaptain || isHero) && (
         <motion.div initial={{ scale:0 }} animate={{ scale:1 }}
           style={{ position:'absolute', top:-8, right:-6, zIndex:10, background:col, color:'#000',
@@ -356,26 +287,21 @@ function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small=false, o
           {isCaptain ? 'C' : '⭐'}
         </motion.div>
       )}
-      {/* Card body */}
       <div style={{ width:W, height:H, borderRadius:7, overflow:'hidden',
         border:`1.5px solid ${col}`, background:'#050505',
         boxShadow:aura, position:'relative' }}>
-        {/* Foto celebração — pose direita */}
         <div style={{ width:'100%', height:'78%', overflow:'hidden', position:'relative', background:'#0a0a0a' }}>
           <img src={player.foto} alt={player.short}
             onError={e => { (e.target as HTMLImageElement).src = PATA; }}
             style={imgStyle('celebration')} />
-          {/* Gradient fade bottom */}
           <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'40%',
             background:'linear-gradient(0deg,#050505 0%,transparent 100%)', pointerEvents:'none' }}/>
-          {/* Aura overlay */}
           {(isCaptain || isHero) && (
             <div style={{ position:'absolute', inset:0,
               background:`radial-gradient(circle at 50% 30%,${col}25 0%,transparent 70%)`,
               pointerEvents:'none' }}/>
           )}
         </div>
-        {/* Footer strip */}
         <div style={{ position:'absolute', bottom:0, width:'100%', height:'22%',
           background:`linear-gradient(135deg,${col}dd,${col}88)`,
           display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
@@ -390,16 +316,13 @@ function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small=false, o
           </div>
         </div>
       </div>
-      {/* Float shadow */}
       <motion.div animate={{ scaleX:[1,0.6,1], opacity:[0.25,0.1,0.25] }} transition={{ duration:2.5, repeat:Infinity }}
         style={{ width:W-8, height:4, borderRadius:'50%', background:'rgba(0,0,0,0.5)', filter:'blur(3px)', marginTop:3 }}/>
     </motion.button>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EMPTY SLOT
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── EmptySlot (Mantido) ──────────────────────────────────────────────────────
 function EmptySlot({ pos, label, active, onClick }: { pos:string; label:string; active:boolean; onClick:()=>void }) {
   const col = POS_COLORS[pos] ?? '#888';
   return (
@@ -425,16 +348,13 @@ function EmptySlot({ pos, label, active, onClick }: { pos:string; label:string; 
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CAMPO 3D
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Field3D (Mantido) ────────────────────────────────────────────────────────
 function Field3D({ lineup, slots, activeSlot, activePlayer, onSlotClick, specialMode, captainId, heroId }: Field3DProps) {
   const pulsing = !!specialMode;
   return (
     <div style={{ width:'100%', maxWidth:440, margin:'0 auto', perspective:'400px', perspectiveOrigin:'50% 10%' }}>
       <div style={{ position:'relative', width:'100%', paddingTop:'148%',
         transform:'rotateX(26deg)', transformOrigin:'bottom center', transformStyle:'preserve-3d' }}>
-        {/* Gramado */}
         <div style={{ position:'absolute', inset:0, borderRadius:18, overflow:'hidden',
           background:'linear-gradient(180deg,#0b3d0b 0%,#145214 18%,#1c6e1c 50%,#145214 82%,#0b3d0b 100%)',
           border:'2px solid rgba(255,255,255,0.2)',
@@ -456,7 +376,6 @@ function Field3D({ lineup, slots, activeSlot, activePlayer, onSlotClick, special
           <div style={{position:'absolute',bottom:0,left:0,right:0,height:'12%',
             background:'linear-gradient(0deg,rgba(170,215,170,0.06) 0%,transparent 100%)',pointerEvents:'none'}}/>
         </div>
-        {/* Slots */}
         <div style={{ position:'absolute', inset:0 }}>
           {slots.map(slot => {
             const player = lineup[slot.id] ?? null;
@@ -480,9 +399,7 @@ function Field3D({ lineup, slots, activeSlot, activePlayer, onSlotClick, special
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// BANCO DE RESERVAS (com posições obrigatórias)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── BenchArea (Mantido) ──────────────────────────────────────────────────────
 function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }: BenchAreaProps) {
   const benchCount = BENCH_SLOTS.filter(bs => !!lineup[bs.id]).length;
   const needsAlert = fieldFull && benchCount < 5;
@@ -504,7 +421,6 @@ function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }:
         backdropFilter:'blur(8px)', borderTop: needsAlert ? '1px solid rgba(245,196,0,0.4)' : '1px solid rgba(255,255,255,0.06)',
         position:'relative' }}>
 
-      {/* Banner "PROFESSOR" — visível só quando alerta ativo */}
       {needsAlert && (
         <motion.div
           initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }}
@@ -542,7 +458,6 @@ function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }:
           return (
             <div key={bs.id} onClick={() => onSlotClick(bs.id)}
               style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, cursor:'pointer' }}>
-              {/* Assento */}
               <div style={{ width:50, height:10, borderRadius:'5px 5px 0 0',
                 background: player ? `${col}30` : needsThis ? `${col}20` : 'rgba(255,255,255,0.03)',
                 border:`1px solid ${col}`, transition:'all 0.2s' }}/>
@@ -574,7 +489,6 @@ function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }:
           );
         })}
       </div>
-      {/* Faltam quais posições */}
       {(() => {
         const missing = BENCH_SLOTS.filter(bs => !lineup[bs.id]);
         if (missing.length === 0) return null;
@@ -590,9 +504,7 @@ function BenchArea({ lineup, activeSlot, activePlayer, onSlotClick, fieldFull }:
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MERCADO DE JOGADORES — Grid Elite 2 colunas
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── PlayerPicker (Mantido) ───────────────────────────────────────────────────
 function PlayerPicker({ lineup, filterPos, setFilterPos, onSelect, activeSlot, activePlayer, step, formation }: PlayerPickerProps) {
   const slots = FORMATIONS[formation] ?? FORMATIONS['4-2-3-1'];
   const usedIds = useMemo(() => new Set(Object.values(lineup).filter(Boolean).map(p => p!.id)), [lineup]);
@@ -601,7 +513,6 @@ function PlayerPicker({ lineup, filterPos, setFilterPos, onSelect, activeSlot, a
     [usedIds, filterPos]
   );
 
-  // Hint inteligente baseado no estado atual
   const hint = activeSlot
     ? `✦ Slot ativo — toque no jogador`
     : activePlayer
@@ -614,7 +525,6 @@ function PlayerPicker({ lineup, filterPos, setFilterPos, onSelect, activeSlot, a
 
   return (
     <div style={{ background:'#080808', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-      {/* Filtros */}
       <div style={{ display:'flex', gap:5, padding:'8px 12px', overflowX:'auto' }}>
         {['TODOS','GOL','ZAG','LAT','MEI','ATA'].map(f => (
           <button key={f} onClick={() => setFilterPos(f)}
@@ -627,10 +537,8 @@ function PlayerPicker({ lineup, filterPos, setFilterPos, onSelect, activeSlot, a
           </button>
         ))}
       </div>
-      {/* Hint */}
       <div style={{ padding:'0 12px 6px', fontSize:9, fontWeight:700, color:hintCol }}>{hint}</div>
 
-      {/* Grid de Elite — 2 colunas */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:9,
         padding:'0 10px 20px', maxHeight:310, overflowY:'auto' }}>
         {filtered.map(p => {
@@ -645,24 +553,18 @@ function PlayerPicker({ lineup, filterPos, setFilterPos, onSelect, activeSlot, a
                 borderRadius:14,
                 boxShadow: isActive
                   ? '0 0 0 1px rgba(245,196,0,0.25),0 0 24px rgba(245,196,0,0.25),0 8px 24px rgba(0,0,0,0.6)'
-                  : '0 4px 16px rgba(0,0,0,0.5)',
+                  : '0 4px 166px rgba(0,0,0,0.5)',
                 transition:'border 0.15s, box-shadow 0.15s' }}>
-              {/* Linha cor posição */}
               <div style={{ height:3, background: isActive ? '#F5C400' : col, opacity: isActive ? 1 : 0.7 }}/>
-              {/* Foto ESTÁTICA — pose esquerda */}
               <div style={{ width:'100%', aspectRatio:'3/4', overflow:'hidden', position:'relative', background:'#080808' }}>
                 <img src={p.foto} alt={p.short} onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
                   style={imgStyle('static')} />
-                {/* Gradient fade */}
                 <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'45%',
                   background:'linear-gradient(0deg,#0f0f0f 0%,transparent 100%)', pointerEvents:'none' }}/>
-                {/* Glow selecionado */}
                 {isActive && <div style={{ position:'absolute', inset:0,
                   background:'radial-gradient(circle at 50% 80%,rgba(245,196,0,0.15),transparent 70%)',
                   pointerEvents:'none' }}/>}
-                {/* Sem número — rosto limpo no mercado */}
               </div>
-              {/* Info */}
               <div style={{ padding:'7px 10px 9px' }}>
                 <div style={{ fontSize:8, fontWeight:900, color: isActive ? '#F5C400' : col,
                   letterSpacing:3, textTransform:'uppercase', marginBottom:2, fontStyle:'italic' }}>
@@ -697,9 +599,7 @@ function PlayerPicker({ lineup, filterPos, setFilterPos, onSelect, activeSlot, a
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HUD
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── HUD (Mantido) ────────────────────────────────────────────────────────────
 function HUD({ step, filled, benchFilled, formation }: {
   step:Step; filled:number; benchFilled:number; formation:string;
 }) {
@@ -754,9 +654,7 @@ function HUD({ step, filled, benchFilled, formation }: {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SELEÇÃO DE FORMAÇÃO
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── FormationScreen (Mantido) ────────────────────────────────────────────────
 function FormationScreen({ onSelect }: { onSelect:(f:string)=>void }) {
   const [hovered, setHovered] = useState<string|null>(null);
   const options = [
@@ -770,7 +668,6 @@ function FormationScreen({ onSelect }: { onSelect:(f:string)=>void }) {
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
       style={{ minHeight:'100vh', background:'linear-gradient(160deg,#050505 0%,#0a0800 50%,#050505 100%)',
         display:'flex', flexDirection:'column', padding:'24px 16px 48px' }}>
-      {/* Header */}
       <motion.div initial={{ y:-24, opacity:0 }} animate={{ y:0, opacity:1 }} transition={{ delay:0.1 }}
         style={{ textAlign:'center', marginBottom:36, marginTop:16 }}>
         <motion.img src={PATA} style={{ width:56, height:56, objectFit:'contain', margin:'0 auto 12px', display:'block',
@@ -788,7 +685,6 @@ function FormationScreen({ onSelect }: { onSelect:(f:string)=>void }) {
         </p>
       </motion.div>
 
-      {/* Options */}
       <div style={{ display:'flex', flexDirection:'column', gap:10, maxWidth:380, margin:'0 auto', width:'100%' }}>
         {options.map((opt, i) => {
           const isHov = hovered === opt.key;
@@ -830,9 +726,7 @@ function FormationScreen({ onSelect }: { onSelect:(f:string)=>void }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CAPITÃO & HERÓI
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── CaptainHeroScreen (Mantido) ──────────────────────────────────────────────
 function CaptainHeroScreen({ onSelectMode, captainId, heroId, onDone, lineup }: {
   onSelectMode:(m:SpecialMode)=>void; captainId:number|null; heroId:number|null;
   onDone:()=>void; lineup:Lineup;
@@ -844,7 +738,6 @@ function CaptainHeroScreen({ onSelectMode, captainId, heroId, onDone, lineup }: 
       style={{ position:'fixed', inset:0, zIndex:100,
         background:'linear-gradient(180deg,#000 0%,#060200 50%,#000 100%)',
         display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:22 }}>
-      {/* Stars */}
       <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
         {Array.from({length:55}).map((_,i)=>(
           <motion.div key={i} style={{ position:'absolute', width:1.5, height:1.5, borderRadius:'50%',
@@ -875,7 +768,6 @@ function CaptainHeroScreen({ onSelectMode, captainId, heroId, onDone, lineup }: 
         <motion.div key={i} initial={{ y:-160, opacity:0 }} animate={{ y:0, opacity:1 }}
           transition={{ type:'spring', stiffness:175, damping:16, delay:b.delay }}
           style={{ position:'relative', zIndex:1, width:'100%', maxWidth:320, marginBottom:12 }}>
-          {/* Meteor trail */}
           {!b.done && ['-44px','-30px','-16px'].map((t,j) => (
             <motion.div key={j} animate={{ opacity:[0.7,0], scaleY:[1,0.2] }}
               transition={{ duration:0.9, delay:b.delay+j*0.04, repeat:Infinity, repeatDelay:2.2 }}
@@ -892,7 +784,6 @@ function CaptainHeroScreen({ onSelectMode, captainId, heroId, onDone, lineup }: 
               color: b.done ? b.col : '#000', fontSize:13, fontWeight:900,
               textTransform:'uppercase', letterSpacing:2, cursor:'pointer',
               display:'flex', alignItems:'center', justifyContent:'center', gap:12 }}>
-            {/* Mini card do jogador escolhido */}
             {b.done ? (
               <>
                 <div style={{ width:28, height:38, borderRadius:5, overflow:'hidden',
@@ -931,9 +822,7 @@ function CaptainHeroScreen({ onSelectMode, captainId, heroId, onDone, lineup }: 
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PLACAR LED
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── LEDScoreboard (Mantido, Escudo Adv Atualizado) ───────────────────────────
 function LEDScoreboard({ scoreTigre, setScoreTigre, scoreAdv, setScoreAdv, onConfirm }: {
   scoreTigre:number; setScoreTigre:(n:number)=>void;
   scoreAdv:number; setScoreAdv:(n:number)=>void; onConfirm:()=>void;
@@ -963,7 +852,6 @@ function LEDScoreboard({ scoreTigre, setScoreTigre, scoreAdv, setScoreAdv, onCon
         style={{ width:'100%', maxWidth:360, marginBottom:28 }}>
         <div style={{ background:'linear-gradient(145deg,#150900,#211100)', border:'2px solid rgba(245,196,0,0.3)',
           borderRadius:20, padding:'18px 14px', boxShadow:'0 0 40px rgba(245,196,0,0.12),inset 0 0 20px rgba(0,0,0,0.5)' }}>
-          {/* LED bar */}
           <div style={{ display:'flex', justifyContent:'center', gap:3, marginBottom:14 }}>
             {Array.from({length:14}).map((_,i) => (
               <motion.div key={i} animate={{ opacity:[0.25,1,0.25] }} transition={{ duration:0.7, delay:i*0.05, repeat:Infinity }}
@@ -974,7 +862,7 @@ function LEDScoreboard({ scoreTigre, setScoreTigre, scoreAdv, setScoreAdv, onCon
             {/* Novo */}
             <div style={{ flex:1, textAlign:'center' }}>
               <img src={ESCUDO} style={{ width:44, height:44, objectFit:'contain',
-                filter:'drop-shadow(0 0 8px rgba(245,196,0,0.5))', margin:'0 auto 6px', display:'block' }}/>
+                filter:'drop-shadow(0 0 8px rgba(245,196,0,0.5))', margin:'0 auto 66px', display:'block' }}/>
               <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:10, fontWeight:900, color:'#F5C400', textTransform:'uppercase' }}>NOVO</div>
             </div>
             {/* Score controls */}
@@ -997,16 +885,16 @@ function LEDScoreboard({ scoreTigre, setScoreTigre, scoreAdv, setScoreAdv, onCon
                 </React.Fragment>
               ))}
             </div>
-            {/* CRB */}
+            {/* Adv (América-MG) */}
             <div style={{ flex:1, textAlign:'center' }}>
-              <img src={ESCUDO_CRB} alt="CRB"
+              {/* ATUALIZADO: Escudo e drop-shadow para o América-MG */}
+              <img src={ESCUDO_ADV} alt="América-MG"
                 crossOrigin="anonymous" loading="eager"
                 style={{ width:44, height:44, objectFit:'contain', margin:'0 auto 6px', display:'block',
-                  filter:'drop-shadow(0 0 10px #EE2D31)' }}/>
-              <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:10, fontWeight:900, color:'#EE2D31', textTransform:'uppercase' }}>CRB</div>
+                  filter:'drop-shadow(0 0 10px #007A37)' }}/>
+              <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:10, fontWeight:900, color:'#007A37', textTransform:'uppercase' }}>AMÉ</div>
             </div>
           </div>
-          {/* LED bar bottom */}
           <div style={{ display:'flex', justifyContent:'center', gap:3, marginTop:14 }}>
             {Array.from({length:14}).map((_,i) => (
               <motion.div key={i} animate={{ opacity:[0.25,1,0.25] }} transition={{ duration:0.7, delay:(13-i)*0.05, repeat:Infinity }}
@@ -1028,9 +916,7 @@ function LEDScoreboard({ scoreTigre, setScoreTigre, scoreAdv, setScoreAdv, onCon
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PACK OPENING REVEAL
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── PackReveal (Mantido, Escudos Atualizados) ───────────────────────────────
 function PackReveal({ lineup, formation, captainId, heroId, onContinue }: {
   lineup:Lineup; formation:string; captainId:number|null; heroId:number|null; onContinue:()=>void;
 }) {
@@ -1039,7 +925,6 @@ function PackReveal({ lineup, formation, captainId, heroId, onContinue }: {
   const players = slots.map(s => lineup[s.id]).filter(Boolean) as Player[];
 
   React.useEffect(() => {
-    // Flash → cards → done
     const t1 = setTimeout(() => setPhase('cards'), 900);
     const t2 = setTimeout(() => setPhase('done'), 3400);
     return () => { clearTimeout(t1); clearTimeout(t2); };
@@ -1049,7 +934,6 @@ function PackReveal({ lineup, formation, captainId, heroId, onContinue }: {
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
       style={{ position:'fixed', inset:0, zIndex:100, background:'#000',
         display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-      {/* Flash */}
       <AnimatePresence>
         {phase === 'flash' && (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:[0,1,1,0] }}
@@ -1059,20 +943,19 @@ function PackReveal({ lineup, formation, captainId, heroId, onContinue }: {
         )}
       </AnimatePresence>
 
-      {/* Title com escudos Novo × CRB */}
       <motion.div initial={{ scale:3, opacity:0 }} animate={{ scale:1, opacity:1 }}
         transition={{ delay:0.5, type:'spring', stiffness:200 }}
         style={{ textAlign:'center', marginBottom:28, zIndex:2 }}>
-        {/* Placar dos escudos */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:16, marginBottom:10 }}>
           <img src={ESCUDO} alt="Novorizontino" crossOrigin="anonymous" loading="eager"
             style={{ width:40, height:40, objectFit:'contain',
               filter:'drop-shadow(0 0 10px rgba(245,196,0,0.7))' }}/>
           <span style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:20, fontWeight:900,
             color:'rgba(245,196,0,0.4)', fontStyle:'italic' }}>VS</span>
-          <img src={ESCUDO_CRB} alt="CRB" crossOrigin="anonymous" loading="eager"
+          {/* ATUALIZADO: Escudo do América-MG */}
+          <img src={ESCUDO_ADV} alt="América-MG" crossOrigin="anonymous" loading="eager"
             style={{ width:40, height:40, objectFit:'contain',
-              filter:'drop-shadow(0 0 10px #EE2D31)' }}/>
+              filter:'drop-shadow(0 0 10px #007A37)' }}/>
         </div>
         <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:42, fontWeight:900,
           color:'#F5C400', textTransform:'uppercase', letterSpacing:-2, lineHeight:0.9,
@@ -1083,7 +966,6 @@ function PackReveal({ lineup, formation, captainId, heroId, onContinue }: {
           color:'#fff', textTransform:'uppercase', letterSpacing:4 }}>CONFIRMADO</div>
       </motion.div>
 
-      {/* Cards fan */}
       <div style={{ display:'flex', gap: players.length > 7 ? 4 : 8, justifyContent:'center',
         flexWrap:'wrap', maxWidth:340, marginBottom:24 }}>
         {players.map((p, i) => (
@@ -1112,9 +994,7 @@ function PackReveal({ lineup, formation, captainId, heroId, onContinue }: {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SHARE SCREEN — Story 9:16 com html-to-image
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── ShareScreen (Mantido, Dados/Escudos Story Atualizados) ─────────────────
 function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAdv, onReset }: {
   lineup:Lineup; formation:string; captainId:number|null; heroId:number|null;
   scoreTigre:number; scoreAdv:number; onReset:()=>void;
@@ -1129,7 +1009,6 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
   const hero  = heroId    ? PLAYERS.find(p=>p.id===heroId)    : null;
   const slots = FORMATIONS[formation] ?? FORMATIONS['4-2-3-1'];
 
-  // Linhas de jogadores: ATA → MEI → DEF → GOL (exibe de cima pra baixo)
   const rows = [
     slots.filter(s=>s.pos==='ATA').map(s=>lineup[s.id]).filter(Boolean) as Player[],
     slots.filter(s=>s.pos==='MEI').map(s=>lineup[s.id]).filter(Boolean) as Player[],
@@ -1137,11 +1016,11 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
     slots.filter(s=>s.pos==='GOL').map(s=>lineup[s.id]).filter(Boolean) as Player[],
   ].filter(r=>r.length>0);
 
+  // ATUALIZADO: Texto de compartilhamento para o jogo contra o América-MG
   const shareText = encodeURIComponent(
-    `🐯 Escalei meu time no Tigre FC!\nFormação: ${formation}\nPalpite: Novorizontino ${scoreTigre} × ${scoreAdv} CRB\nVocê consegue fazer melhor? 👇\nonovorizontino.com.br/tigre-fc`
+    `🐯 Escalei meu time no Tigre FC!\nFormação: ${formation}\nPalpite: América-MG ${scoreAdv} × ${scoreTigre} Novorizontino\nVocê consegue fazer melhor? 👇\nonovorizontino.com.br/tigre-fc`
   );
 
-  // ── Supabase upsert ──────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     if (saved) return;
     setSaving(true);
@@ -1152,13 +1031,13 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
           .select('id').eq('google_id', session.user.id).maybeSingle();
         if (u) {
           await supabase.rpc('upsert_escalacao', {
-            p_google_id:     session.user.id, // RPC resolve uuid internamente
+            p_google_id:     session.user.id,
             p_formacao:      formation,
-            p_lineup:        lineup,           // coluna real: lineup
-            p_capitao_id:    captainId,        // coluna real: capitao_id
+            p_lineup:        lineup,
+            p_capitao_id:    captainId,
             p_heroi_id:      heroId,
-            p_palpite_tigre: scoreTigre,       // coluna real: placar_palpite_tigre
-            p_palpite_adv:   scoreAdv,         // coluna real: placar_palpite_adv
+            p_palpite_tigre: scoreTigre,
+            p_palpite_adv:   scoreAdv,
             p_bench:         {},
           });
           setSaved(true);
@@ -1170,7 +1049,6 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
 
   React.useEffect(() => { handleSave(); }, []);
 
-  // ── Captura + Share / Download ──────────────────────────────────────────
   const handleDownload = async () => {
     if (dl) return;
     setDl(true);
@@ -1179,42 +1057,35 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
       const el = document.getElementById('tfc-story-card');
       if (!el) { setDl(false); setDlLabel('idle'); return; }
 
-      // Garante crossOrigin="anonymous" em TODAS as imagens do card
       el.querySelectorAll('img').forEach((img) => {
         img.crossOrigin = 'anonymous';
       });
 
-      // Aguarda imagens com crossOrigin recarregarem
       await new Promise(res => setTimeout(res, 120));
 
-      // html-to-image com pixelRatio:2 (alta resolução)
       const { toPng } = await import('html-to-image');
       const dataUrl = await toPng(el, {
         pixelRatio: 2,
         cacheBust: true,
         backgroundColor: '#050505',
-        style: { borderRadius: '0px' }, // evita corte no Safari
+        style: { borderRadius: '0px' },
       });
 
-      // Converte dataURL → Blob → File
       const res  = await fetch(dataUrl);
       const blob = await res.blob();
       const file = new File([blob], 'tigre-fc-meu-time.png', { type: 'image/png' });
 
       setDlLabel('done');
 
-      // Detecta Mobile vs Desktop
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
       if (isMobile && navigator.share && navigator.canShare?.({ files: [file] })) {
-        // Mobile: Web Share API nativa (abre WhatsApp, Insta, etc.)
         await navigator.share({
           title: 'Meu Time — Tigre FC 🐯',
-          text: `🐯 ${formation} | Palpite ${scoreTigre}×${scoreAdv}\nonovorizontino.com.br/tigre-fc`,
+          text: `🐯 ${formation} | Palpite ${scoreAdv}×${scoreTigre}\nonovorizontino.com.br/tigre-fc`,
           files: [file],
         });
       } else {
-        // Desktop: download direto do .png
         const url = URL.createObjectURL(blob);
         const a   = document.createElement('a');
         a.href = url; a.download = 'tigre-fc-meu-time.png'; a.click();
@@ -1223,11 +1094,9 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
     } catch (err) {
       console.warn('[TigreFC Share]', err);
       const errMsg = err instanceof Error ? err.message : String(err);
-      // Diagnóstico amigável
       if (errMsg.includes('tainted') || errMsg.includes('CORS') || errMsg.includes('SecurityError')) {
         alert('Erro de imagem (CORS). Tente novamente ou use o botão de copiar link.');
       }
-      // Fallback: copia link para área de transferência
       navigator.clipboard.writeText('https://onovorizontino.com.br/tigre-fc').catch(()=>{});
       setCopied(true); setTimeout(() => setCopied(false), 2500);
     }
@@ -1247,7 +1116,6 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
   return (
     <div style={{ padding:'12px 12px 60px', minHeight:'100vh', background:'#050505' }}>
 
-      {/* Título */}
       <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}
         style={{ textAlign:'center', marginBottom:14 }}>
         <div style={{ fontSize:8, fontWeight:900, letterSpacing:5, textTransform:'uppercase', marginBottom:4,
@@ -1260,39 +1128,31 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
         </h2>
       </motion.div>
 
-      {/* ── STORY CARD 9:16 ─────────────────────────────────────────────── */}
-      {/* Wrapper responsivo na tela */}
       <motion.div initial={{ opacity:0, scale:0.94 }} animate={{ opacity:1, scale:1 }} transition={{ delay:0.1, type:'spring', stiffness:200 }}
         style={{ width:'100%', maxWidth:360, margin:'0 auto', aspectRatio:'9/16',
           borderRadius:20, overflow:'hidden', boxShadow:'0 0 60px rgba(245,196,0,0.18)' }}>
 
-        {/* Card fixo 360×640 para captura — html-to-image fotografa exatamente isso */}
         <div id="tfc-story-card"
           style={{ width:360, height:640, position:'relative', overflow:'hidden',
             background:'linear-gradient(160deg,#070600 0%,#0e0c00 25%,#091200 55%,#050505 100%)',
             fontFamily:"'Barlow Condensed',Impact,sans-serif",
             display:'flex', flexDirection:'column' }}>
 
-          {/* Gramado SVG de fundo */}
           <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
             <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'55%',
               background:'radial-gradient(ellipse 100% 70% at 50% 100%,rgba(16,80,16,0.45) 0%,transparent 70%)' }}/>
-            {/* Linhas de campo sutis */}
             <svg viewBox="0 0 360 640" style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.04 }}>
               <ellipse cx="180" cy="420" rx="160" ry="80" stroke="white" strokeWidth="1" fill="none"/>
               <line x1="0" y1="380" x2="360" y2="380" stroke="white" strokeWidth="0.8"/>
             </svg>
-            {/* Refletores cantos */}
             <div style={{ position:'absolute', top:0, left:0, width:'50%', height:'70%',
               background:'linear-gradient(135deg,rgba(255,252,210,0.06) 0%,transparent 55%)', filter:'blur(20px)' }}/>
             <div style={{ position:'absolute', top:0, right:0, width:'50%', height:'70%',
               background:'linear-gradient(225deg,rgba(255,252,210,0.06) 0%,transparent 55%)', filter:'blur(20px)' }}/>
           </div>
 
-          {/* Linha dourada topo */}
           <div style={{ height:4, background:'linear-gradient(90deg,#8B6500,#F5C400,#D4A200,#F5C400,#8B6500)', flexShrink:0 }}/>
 
-          {/* Header */}
           <div style={{ padding:'10px 14px 8px', display:'flex', alignItems:'center', gap:10,
             background:'linear-gradient(90deg,rgba(245,196,0,0.1),transparent)',
             borderBottom:'1px solid rgba(245,196,0,0.12)', flexShrink:0, position:'relative', zIndex:2 }}>
@@ -1313,16 +1173,13 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
             </div>
           </div>
 
-          {/* ── Jogadores — cards FIFA +40%, overlap efeito baralho ── */}
           <div style={{ flex:1, padding:'8px 6px 0', display:'flex', flexDirection:'column',
             justifyContent:'center', gap:4, position:'relative', zIndex:2 }}>
             {rows.map((row, ri) => {
-              // Overlap: cards com margem negativa para efeito de baralho aberto
               const cardW = 58;
               const overlapOffset = row.length > 4 ? -6 : row.length > 3 ? -2 : 0;
               return (
                 <div key={ri} style={{ display:'flex', justifyContent:'center', alignItems:'flex-end',
-                  // Cada card avança sobre o anterior — efeito 3D de profundidade
                   marginLeft: overlapOffset * (row.length - 1) / 2,
                 }}>
                   {row.map((player, pi) => {
@@ -1331,11 +1188,9 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
                     const col = isCap ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#888');
                     return (
                       <div key={player.id} style={{ position:'relative', flexShrink:0,
-                        // Overlap lateral — cada card se sobrepõe ao anterior
                         marginLeft: pi === 0 ? 0 : overlapOffset,
                         zIndex: pi + 1,
                       }}>
-                        {/* Badge C / ⭐ */}
                         {(isCap||isHero) && (
                           <div style={{ position:'absolute', top:-8, right:-4, zIndex:10,
                             background:col, color:'#000', fontSize:8, fontWeight:900,
@@ -1344,14 +1199,12 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
                             {isCap ? 'C' : '⭐'}
                           </div>
                         )}
-                        {/* Card FIFA vertical 58×80 — +40% vs original */}
                         <div style={{ width:cardW, height:80, borderRadius:9, overflow:'hidden',
                           border:`2px solid ${col}`,
                           boxShadow: isCap||isHero
                             ? `0 0 20px ${col}99, 0 6px 16px rgba(0,0,0,0.9), 2px 0 0 rgba(0,0,0,0.5)`
                             : `0 0 10px ${col}60, 0 6px 14px rgba(0,0,0,0.8), 2px 0 0 rgba(0,0,0,0.4)`,
                           background:'#050505', position:'relative' }}>
-                          {/* Zona de foto */}
                           <div style={{ width:'100%', height:'74%', overflow:'hidden', position:'relative' }}>
                             <img src={player.foto} alt={player.short} crossOrigin="anonymous"
                               onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
@@ -1359,7 +1212,6 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
                             <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'35%',
                               background:'linear-gradient(0deg,#050505 0%,transparent 100%)', pointerEvents:'none' }}/>
                           </div>
-                          {/* Tarja nome — tipografia grande e robusta */}
                           <div style={{ position:'absolute', bottom:0, width:'100%', height:'26%',
                             background:`linear-gradient(135deg,${col}f0,${col}cc)`,
                             display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
@@ -1385,14 +1237,14 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
             })}
           </div>
 
-          {/* Stats strip */}
           <div style={{ display:'flex', flexShrink:0,
             borderTop:'1px solid rgba(245,196,0,0.1)', borderBottom:'1px solid rgba(245,196,0,0.1)',
             background:'rgba(0,0,0,0.35)', position:'relative', zIndex:2 }}>
             {[
               { label:'Capitão', value:cap?.short??'—',           icon:'©',  col:'#F5C400' },
               { label:'Herói',   value:hero?.short??'—',           icon:'⭐', col:'#00F3FF' },
-              { label:'Novo × CRB', value:`${scoreTigre}×${scoreAdv}`, icon:'🎯', col:'#22C55E' },
+              // ATUALIZADO: Rótulo e Placar do Story para América-MG (Adv) x Novo
+              { label:'Amé × Novo', value:`${scoreAdv}×${scoreTigre}`, icon:'🎯', col:'#007A37' },
             ].map((item, idx) => (
               <div key={item.label} style={{ flex:1, textAlign:'center', padding:'8px 3px',
                 borderRight: idx < 2 ? '1px solid rgba(245,196,0,0.08)' : 'none' }}>
@@ -1408,7 +1260,6 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
             ))}
           </div>
 
-          {/* CTA footer */}
           <div style={{ padding:'10px 14px', textAlign:'center', background:'rgba(0,0,0,0.25)',
             flexShrink:0, position:'relative', zIndex:2 }}>
             <div style={{ fontSize:13, fontWeight:900, color:'#fff', textTransform:'uppercase',
@@ -1422,16 +1273,13 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
             </div>
           </div>
 
-          {/* Linha dourada bottom */}
           <div style={{ height:4, background:'linear-gradient(90deg,#8B6500,#F5C400,#D4A200,#F5C400,#8B6500)', flexShrink:0 }}/>
         </div>
       </motion.div>
 
-      {/* ── Botões de Ação ──────────────────────────────────────────────── */}
       <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }}
         style={{ marginTop:14, maxWidth:360, margin:'14px auto 0' }}>
 
-        {/* Botão principal: Salvar + Compartilhar */}
         <motion.button onClick={handleDownload} whileTap={{ scale:0.96 }}
           disabled={dl}
           style={{ width:'100%', padding:'15px', marginBottom:10, borderRadius:16,
@@ -1445,7 +1293,6 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
           {dlText}
         </motion.button>
 
-        {/* Share buttons sociais */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7, marginBottom:9 }}>
           {SHARE_BTNS.map(b => (
             <motion.a key={b.l} href={b.h} target="_blank" rel="noreferrer" whileTap={{ scale:0.9 }}
@@ -1459,7 +1306,6 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
           ))}
         </div>
 
-        {/* Copiar link */}
         <motion.button
           onClick={async () => {
             await navigator.clipboard.writeText('https://onovorizontino.com.br/tigre-fc');
@@ -1474,7 +1320,6 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
           {copied ? '✓ Link copiado!' : '🔗 Copiar link'}
         </motion.button>
 
-        {/* Botão Ciclo da Vitória */}
         <motion.button onClick={onReset}
           whileTap={{ scale:0.97 }}
           whileHover={{ backgroundColor:'#F5C400', color:'#000' }}
@@ -1497,14 +1342,12 @@ function ShareScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAd
 }
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MOTOR DE PONTUAÇÃO — calcula pts do torcedor vs resultado real
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Motor de Pontuação (Placeholder para rodada futura) ─────────────────────
 interface PlacarResult {
-  pts_escalacao: number;  // +5 por cada titular acertado
-  pts_capitao:   number;  // rating do capitão × 2
-  pts_heroi:     number;  // +10 se herói certo
-  pts_palpite:   number;  // +15 exato | +5 resultado
+  pts_escalacao: number;
+  pts_capitao:   number;
+  pts_heroi:     number;
+  pts_palpite:   number;
   total:         number;
   acertou_exato: boolean;
   titulares_certos: number[];
@@ -1521,272 +1364,79 @@ function calcularPontuacao(
   let pts_escalacao = 0;
   let pts_capitao   = 0;
 
-  Object.values(lineup).forEach(p => {
-    if (!p) return;
-    if (RESULTADO_JOGO.titulares_ids.has(p.id)) {
-      titulares_certos.push(p.id);
-      pts_escalacao += 5;
-    }
-  });
-
-  // Capitão: rating × 2 (bônus = rating extra, base já está no escalação)
-  if (captainId && RESULTADO_JOGO.ratings[captainId]) {
-    pts_capitao = Math.round(RESULTADO_JOGO.ratings[captainId] * 2);
-  }
-
-  // Herói
-  const pts_heroi = heroId === RESULTADO_JOGO.heroi_id ? 10 : 0;
-
-  // Palpite
+  // Lógica de cálculo desativada (retorna zeros) pois RODADA_ENCERRADA é false.
+  // Será reativada quando o jogo ocorrer e RODADA_ENCERRADA for true.
+  
+  const pts_heroi = 0;
   let pts_palpite = 0;
   let acertou_exato = false;
-  const res_real  = RESULTADO_JOGO.placar_novo > RESULTADO_JOGO.placar_crb ? 'V'
-    : RESULTADO_JOGO.placar_novo < RESULTADO_JOGO.placar_crb ? 'D' : 'E';
-  const res_user  = palpiteTigre > palpiteAdv ? 'V' : palpiteTigre < palpiteAdv ? 'D' : 'E';
-
-  if (palpiteTigre === RESULTADO_JOGO.placar_novo && palpiteAdv === RESULTADO_JOGO.placar_crb) {
-    pts_palpite = 15; acertou_exato = true;
-  } else if (res_user === res_real) {
-    pts_palpite = 5;
-  }
 
   const total = pts_escalacao + pts_capitao + pts_heroi + pts_palpite;
   return { pts_escalacao, pts_capitao, pts_heroi, pts_palpite, total, acertou_exato, titulares_certos };
 }
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TELA DE RESULTADOS DA RODADA — Novorizontino vs CRB (Série B 2026)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── ResultadoScreen (Placeholder para rodada futura) ─────────────────────────
 function ResultadoScreen({ lineup, formation, captainId, heroId, scoreTigre, scoreAdv, onGoRanking }: {
   lineup: Lineup; formation: string; captainId: number|null; heroId: number|null;
   scoreTigre: number; scoreAdv: number; onGoRanking: ()=>void;
 }) {
   const slots  = FORMATIONS[formation] ?? FORMATIONS['4-2-3-1'];
   const result = calcularPontuacao(lineup, captainId, heroId, scoreTigre, scoreAdv);
-  const totalColor = result.total >= 50 ? '#22C55E' : result.total >= 30 ? '#F5C400' : '#EF4444';
+  const totalColor = '#666'; // Placeholder color
 
   return (
     <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
       style={{ minHeight:'100vh', background:'#050505', color:'#fff', padding:'0 0 60px',
         fontFamily:"'Barlow Condensed',system-ui,sans-serif" }}>
 
-      {/* Header */}
       <div style={{ padding:'20px 16px 16px',
         background:'linear-gradient(160deg,#0a0800,#141000)', borderBottom:'1px solid rgba(245,196,0,0.12)' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyBetween:'space-between', marginBottom:12 }}>
           <div>
             <div style={{ fontSize:7, fontWeight:900, color:'rgba(245,196,0,0.5)', letterSpacing:4, textTransform:'uppercase' }}>
               SÉRIE B 2026 · RODADA
             </div>
             <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif", fontSize:22, fontWeight:900,
               color:'#fff', textTransform:'uppercase', letterSpacing:-0.5, lineHeight:1 }}>
-              RESULTADO DA RODADA
+              APURAÇÃO DA RODADA
             </div>
           </div>
-          {/* Placar real */}
           <div style={{ textAlign:'right' }}>
             <div style={{ fontSize:8, color:'rgba(245,196,0,0.4)', fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>
-              RESULTADO OFICIAL
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <img src={ESCUDO} alt="Novo" crossOrigin="anonymous" loading="eager"
-                style={{ width:28, height:28, objectFit:'contain', filter:'drop-shadow(0 0 6px rgba(245,196,0,0.6))' }}/>
-              <span style={{ fontFamily:"'Courier New',monospace", fontSize:28, fontWeight:900, color:'#F5C400' }}>
-                {RESULTADO_JOGO.placar_novo}
-              </span>
-              <span style={{ fontSize:16, color:'#333', fontWeight:900 }}>×</span>
-              <span style={{ fontFamily:"'Courier New',monospace", fontSize:28, fontWeight:900, color:'#EE2D31' }}>
-                {RESULTADO_JOGO.placar_crb}
-              </span>
-              <img src={ESCUDO_CRB} alt="CRB" crossOrigin="anonymous" loading="eager"
-                style={{ width:28, height:28, objectFit:'contain', filter:'drop-shadow(0 0 6px #EE2D31)' }}/>
+              EM BREVE
             </div>
           </div>
         </div>
 
-        {/* Seus pontos */}
         <motion.div initial={{ scale:0.8, opacity:0 }} animate={{ scale:1, opacity:1 }}
           transition={{ delay:0.2, type:'spring', stiffness:200 }}
           style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px',
             background:`${totalColor}12`, border:`1.5px solid ${totalColor}40`, borderRadius:16 }}>
           <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif",
-            fontSize:56, fontWeight:900, color:totalColor, lineHeight:1,
-            textShadow:`0 0 24px ${totalColor}80` }}>
-            {result.total}
+            fontSize:56, fontWeight:900, color:totalColor, lineHeight:1 }}>
+            ?
           </div>
           <div>
             <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif",
               fontSize:22, fontWeight:900, color:'#fff', textTransform:'uppercase', lineHeight:1, letterSpacing:-0.5 }}>
-              SEUS PONTOS
+              PONTUAÇÃO
             </div>
             <div style={{ fontSize:10, color:'#555', fontWeight:700, textTransform:'uppercase', letterSpacing:2, marginTop:2 }}>
-              nesta rodada
+              Aguardando fim da rodada
             </div>
           </div>
-          {result.acertou_exato && (
-            <motion.div animate={{ scale:[1,1.1,1] }} transition={{ duration:0.8, repeat:Infinity }}
-              style={{ marginLeft:'auto', background:'linear-gradient(135deg,#F5C400,#D4A200)',
-                color:'#000', fontSize:9, fontWeight:900, padding:'5px 10px', borderRadius:8,
-                textTransform:'uppercase', letterSpacing:1 }}>
-              🎯 PLACAR EXATO!
-            </motion.div>
-          )}
         </motion.div>
       </div>
 
-      <div style={{ padding:'16px 14px 0', maxWidth:460, margin:'0 auto' }}>
-
-        {/* Breakdown */}
-        <div style={{ fontSize:8, fontWeight:900, color:'#333', letterSpacing:4, textTransform:'uppercase', marginBottom:10 }}>
-          DETALHAMENTO
-        </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:20 }}>
-          {[
-            { label:`Escalação (${result.titulares_certos.length} titular${result.titulares_certos.length!==1?'es':''} certos)`, pts:result.pts_escalacao, icon:'⚽', col:'#22C55E' },
-            { label:'Capitão (rating × 2)',         pts:result.pts_capitao,  icon:'©',  col:'#F5C400' },
-            { label:heroId===RESULTADO_JOGO.heroi_id ? 'Herói acertado! 🎉' : 'Herói errado', pts:result.pts_heroi, icon:'⭐', col:'#00F3FF' },
-            { label:result.acertou_exato ? 'Placar EXATO 🎯' : scoreTigre > scoreAdv ? 'Resultado correto' : 'Palpite errado', pts:result.pts_palpite, icon:'🎯', col:'#22C55E' },
-          ].map((item, i) => (
-            <motion.div key={i} initial={{ opacity:0, x:-12 }} animate={{ opacity:1, x:0 }}
-              transition={{ delay:0.1 + i * 0.07 }}
-              style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px',
-                background:'rgba(255,255,255,0.02)', borderRadius:12,
-                border:`1px solid ${item.pts > 0 ? item.col + '30' : 'rgba(255,255,255,0.05)'}` }}>
-              <span style={{ fontSize:18 }}>{item.icon}</span>
-              <div style={{ flex:1, fontSize:12, color: item.pts > 0 ? '#ccc' : '#333', fontWeight:700 }}>
-                {item.label}
-              </div>
-              <div style={{ fontFamily:"'Barlow Condensed',Impact,sans-serif",
-                fontSize:22, fontWeight:900, color: item.pts > 0 ? item.col : '#222', lineHeight:1 }}>
-                +{item.pts}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Campo comparativo */}
-        <div style={{ fontSize:8, fontWeight:900, color:'#333', letterSpacing:4, textTransform:'uppercase', marginBottom:10 }}>
-          SEU TIME vs REAL
-        </div>
-        <div style={{ position:'relative', width:'100%', maxWidth:400, margin:'0 auto',
-          perspective:'380px', perspectiveOrigin:'50% 10%' }}>
-          <div style={{ position:'relative', width:'100%', paddingTop:'95%',
-            transform:'rotateX(20deg)', transformOrigin:'bottom center', transformStyle:'preserve-3d' }}>
-            <div style={{ position:'absolute', inset:0, borderRadius:14, overflow:'hidden',
-              background:'linear-gradient(180deg,#0b3d0b 0%,#1c6e1c 50%,#0b3d0b 100%)',
-              border:'1.5px solid rgba(255,255,255,0.15)' }}>
-              <svg viewBox="0 0 100 95" preserveAspectRatio="none"
-                style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.18 }}>
-                <rect x="5" y="3" width="90" height="89" stroke="white" strokeWidth="1" fill="none"/>
-                <line x1="5" y1="47.5" x2="95" y2="47.5" stroke="white" strokeWidth="0.8"/>
-                <circle cx="50" cy="47.5" r="12" stroke="white" strokeWidth="0.8" fill="none"/>
-              </svg>
-            </div>
-            <div style={{ position:'absolute', inset:0 }}>
-              {slots.map(slot => {
-                const p = lineup[slot.id];
-                if (!p) return null;
-                const isTitular = RESULTADO_JOGO.titulares_ids.has(p.id);
-                const rating    = RESULTADO_JOGO.ratings[p.id];
-                const isCap     = captainId === p.id;
-                const isHero    = heroId    === p.id;
-                const col       = isCap ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[p.pos] ?? '#888');
-                return (
-                  <div key={slot.id} style={{ position:'absolute',
-                    left:`${slot.x}%`, top:`${slot.y}%`, transform:'translate(-50%,-50%)', zIndex:5 }}>
-                    <div style={{ position:'relative', width:36, height:50, borderRadius:6, overflow:'hidden',
-                      border:`2px solid ${isTitular ? col : '#2a2a2a'}`,
-                      background:'#050505',
-                      filter: isTitular ? 'none' : 'grayscale(100%) brightness(0.4)',
-                      boxShadow: isTitular ? `0 0 12px ${col}60` : 'none' }}>
-                      <div style={{ width:'100%', height:'76%', overflow:'hidden', position:'relative' }}>
-                        <img src={p.foto} alt={p.short} crossOrigin="anonymous"
-                          onError={e=>{(e.target as HTMLImageElement).src=PATA;}}
-                          style={imgStyle('celebration')} />
-                        <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'40%',
-                          background:'linear-gradient(0deg,#050505,transparent)', pointerEvents:'none' }}/>
-                      </div>
-                      <div style={{ position:'absolute', bottom:0, width:'100%', height:'24%',
-                        background:`linear-gradient(135deg,${isTitular ? col : '#2a2a2a'}dd,${isTitular ? col : '#2a2a2a'}88)`,
-                        display:'flex', alignItems:'center', justifyContent:'center' }}>
-                        <span style={{ fontSize:5.5, fontWeight:900, color: isTitular ? '#000' : '#555',
-                          textTransform:'uppercase', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', padding:'0 1px' }}>
-                          {p.short}
-                        </span>
-                      </div>
-                      {/* Badge nota Sofascore */}
-                      {rating && isTitular && (
-                        <div style={{ position:'absolute', top:-7, left:-5, zIndex:10,
-                          background: rating >= 8 ? '#22C55E' : rating >= 7 ? '#F5C400' : '#666',
-                          color:'#000', fontSize:7, fontWeight:900, padding:'1px 3px',
-                          borderRadius:4, lineHeight:1, boxShadow:'0 0 6px rgba(0,0,0,0.8)' }}>
-                          {rating.toFixed(1)}
-                        </div>
-                      )}
-                      {/* Banco */}
-                      {!isTitular && (
-                        <div style={{ position:'absolute', top:-7, left:-5, zIndex:10,
-                          background:'#1a1a1a', color:'#555', fontSize:7, fontWeight:900,
-                          padding:'1px 3px', borderRadius:4, lineHeight:1 }}>🪑</div>
-                      )}
-                      {/* C / ⭐ */}
-                      {(isCap||isHero) && (
-                        <div style={{ position:'absolute', top:-7, right:-5, zIndex:10,
-                          background:col, color:'#000', fontSize:7, fontWeight:900,
-                          padding:'1px 3px', borderRadius:4, lineHeight:1 }}>
-                          {isCap ? 'C' : '⭐'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Legenda */}
-        <div style={{ display:'flex', gap:16, justifyContent:'center', marginTop:10, flexWrap:'wrap' }}>
-          {[
-            { label:'Titular real (+5 pts)', color:'#22C55E', icon:null },
-            { label:'Ficou no banco', color:'#555', icon:'🪑' },
-            { label:'Nota Sofascore', color:'#22C55E', badge:'8.0' },
-          ].map((l,i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', gap:5, fontSize:9, color:'#555', fontWeight:700 }}>
-              {l.icon && <span>{l.icon}</span>}
-              {l.badge && <span style={{ background:l.color, color:'#000', fontSize:7, fontWeight:900,
-                padding:'0 3px', borderRadius:3 }}>{l.badge}</span>}
-              {!l.icon && !l.badge && <span style={{ display:'inline-block', width:10, height:10,
-                borderRadius:2, background:l.color }}/>}
-              {l.label}
-            </div>
-          ))}
-        </div>
-
-        {/* CTA Ranking */}
-        <motion.button onClick={onGoRanking}
-          whileTap={{ scale:0.96 }} whileHover={{ scale:1.02 }}
-          animate={{ boxShadow:['0 0 0 0 rgba(245,196,0,0)','0 0 28px rgba(245,196,0,0.6)','0 0 0 0 rgba(245,196,0,0)'] }}
-          transition={{ duration:2, repeat:Infinity }}
-          style={{ width:'100%', maxWidth:400, margin:'24px auto 0', display:'block',
-            padding:'18px', borderRadius:18, background:'linear-gradient(135deg,#F5C400,#D4A200)',
-            border:'none', color:'#000', fontSize:15, fontWeight:900,
-            textTransform:'uppercase', letterSpacing:2, cursor:'pointer' }}>
-          🏆 VER RANKING GERAL
-        </motion.button>
-        <div style={{ textAlign:'center', marginTop:10, fontSize:9, color:'#222',
-          fontWeight:700, textTransform:'uppercase', letterSpacing:2 }}>
-          onovorizontino.com.br/tigre-fc
-        </div>
+      <div style={{ padding:'16px 14px 0', maxWidth:460, margin:'0 auto', textAlign:'center', color:'#333' }}>
+        A apuração e o ranking desta rodada estarão disponíveis após o término da partida real.
       </div>
     </motion.div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// COMPONENTE PRINCIPAL
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Componente Principal (Mantido com Lógica de AutoSave Atualizada para Adv)
 export default function EscalacaoFormacao() {
   const router = useRouter();
 
@@ -1808,54 +1458,37 @@ export default function EscalacaoFormacao() {
   const fieldCount = useMemo(() => slots.filter(s => !!lineup[s.id]).length, [lineup, slots]);
   const benchCount = useMemo(() => BENCH_SLOTS.filter(bs => !!lineup[bs.id]).length, [lineup]);
   const isFieldFull = fieldCount === 11;
-  const isBenchFull = benchCount === 5;
 
-  // ── HIDRATAÇÃO: carrega escalação salva ao montar ──────────────────────────
+  // Carrega escalação salva (Mantido)
   useEffect(() => {
     let alive = true;
     async function loadSaved() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user?.id) return;
-
-        // Regra de Ouro: usa google_id via RPC server-side
         const googleId = session.user.id;
-
-        // Guarda o google_id para o autoSave usar na RPC
         setUserId(googleId);
-
-        // Carrega escalação via RPC (converte google_id internamente)
         const { data: esc, error } = await supabase
           .rpc('get_escalacao_usuario', { p_google_id: googleId });
-
         if (!alive || error || !esc || esc.error) return;
-
-        // Parse null-safe do lineup — tabela: escalacoes_usuarios, coluna: lineup
         const safeLineup: Lineup = {};
         const rawLineup = esc.lineup ?? {};
         if (rawLineup && typeof rawLineup === 'object') {
           Object.entries(rawLineup as Record<string, unknown>).forEach(([k, v]) => {
-            // Valida que o valor tem a forma mínima de um Player antes de atribuir
             if (v && typeof v === 'object' && 'id' in v && 'pos' in v) {
               safeLineup[k] = v as Player;
-            } else {
-              safeLineup[k] = null;
-            }
+            } else { safeLineup[k] = null; }
           });
         }
-
         setFormation(esc.formacao ?? '4-2-3-1');
         setLineup(safeLineup);
-        setCaptainId(esc.capitao_id ?? null);      // coluna real: capitao_id
+        setCaptainId(esc.capitao_id ?? null);
         setHeroId(esc.heroi_id ?? null);
-        setScoreTigre(esc.placar_palpite_tigre ?? 1); // coluna real
-        setScoreAdv(esc.placar_palpite_adv ?? 0);     // coluna real
-
-        // Avança a etapa conforme o que já está salvo
+        setScoreTigre(esc.placar_palpite_tigre ?? 1);
+        setScoreAdv(esc.placar_palpite_adv ?? 0);
         const savedSlots = FORMATIONS[esc.formacao ?? '4-2-3-1'] ?? FORMATIONS['4-2-3-1'];
         const savedField = savedSlots.filter((s: any) => !!safeLineup[s.id]).length;
         const savedBench = BENCH_SLOTS.filter(bs => !!safeLineup[bs.id]).length;
-
         if (savedField === 11 && savedBench === 5 && esc.capitao_id && esc.heroi_id) {
           setStep('share');
         } else if (savedField === 11 && savedBench === 5) {
@@ -1865,17 +1498,14 @@ export default function EscalacaoFormacao() {
         } else if (savedField > 0) {
           setStep('picking');
         }
-      } catch (e) {
-        console.warn('[TigreFC] Hydration error:', e);
-      } finally {
-        if (alive) setHydrated(true);
-      }
+      } catch (e) { console.warn('[TigreFC] Hydration error:', e);
+      } finally { if (alive) setHydrated(true); }
     }
     loadSaved();
     return () => { alive = false; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── AUTO-SAVE: via RPC upsert_escalacao (Regra de Ouro: google_id server-side)
+  // Auto-Save (Mantido, parâmetro p_palpite_adv mantido consistentemente)
   const autoSave = useCallback(async (
     currentLineup: Lineup,
     currentFormation: string,
@@ -1884,61 +1514,41 @@ export default function EscalacaoFormacao() {
     currentScoreTigre: number,
     currentScoreAdv: number,
   ) => {
-    if (!userId || !hydrated) return; // userId aqui é o google_id da sessão
+    if (!userId || !hydrated) return;
     try {
-      // Separa titulares e reservas para salvar nos campos corretos
       const titulares: Lineup = {};
       const reservas:  Lineup = {};
       Object.entries(currentLineup).forEach(([k, v]) => {
         if (k.startsWith('b_')) reservas[k] = v;
         else titulares[k] = v;
       });
-
-      if (process.env.NODE_ENV === 'development') {
-        const tCount = Object.values(titulares).filter(Boolean).length;
-        const bCount = Object.values(reservas).filter(Boolean).length;
-        console.log(`[TigreFC] autoSave → formação:${currentFormation} titulares:${tCount} reservas:${bCount} cap:${currentCaptain} herói:${currentHero}`);
-      }
-
-      const { data, error } = await supabase.rpc('upsert_escalacao', {
-        p_google_id:     userId,           // RPC converte → uuid internamente
+      await supabase.rpc('upsert_escalacao', {
+        p_google_id:     userId,
         p_formacao:      currentFormation,
-        p_lineup:        titulares,        // coluna: lineup
-        p_capitao_id:    currentCaptain,   // coluna: capitao_id
+        p_lineup:        titulares,
+        p_capitao_id:    currentCaptain,
         p_heroi_id:      currentHero,
-        p_palpite_tigre: currentScoreTigre, // coluna: placar_palpite_tigre
-        p_palpite_adv:   currentScoreAdv,   // coluna: placar_palpite_adv
+        p_palpite_tigre: currentScoreTigre,
+        // Mantido consistentemente com o banco de dados
+        p_palpite_adv:   currentScoreAdv,
         p_bench:         reservas,
       });
-
-      if (error) {
-        console.error('[TigreFC] upsert_escalacao error:', error.message, error.details);
-      } else if (data?.error) {
-        console.error('[TigreFC] RPC returned error:', data.error);
-      }
-    } catch (e) {
-      console.warn('[TigreFC] AutoSave unexpected error:', e);
-    }
+    } catch (e) { console.warn('[TigreFC] AutoSave error:', e); }
   }, [userId, hydrated]);
 
-  // Reset completo do ciclo
   const handleReset = useCallback(() => {
     setStep('formation'); setFormation('4-2-3-1'); setLineup({});
     setActiveSlot(null); setActivePlayer(null); setFilterPos('TODOS');
     setCaptainId(null); setHeroId(null); setSpecialMode(null);
     setScoreTigre(1); setScoreAdv(0);
-    // Não limpa userId/hydrated — mantém sessão
   }, []);
 
-  // Botão final → aguarda save e redireciona para o Hub do Tigre FC
   const handleGoHome = useCallback(async () => {
-    // Garante que o upsert foi concluído antes de navegar
     await autoSave(lineup, formation, captainId, heroId, scoreTigre, scoreAdv);
     handleReset();
     router.push('/tigre-fc');
   }, [handleReset, router, autoSave, lineup, formation, captainId, heroId, scoreTigre, scoreAdv]);
 
-  // Escolhe formação
   const handleFormation = useCallback((f: string) => {
     setFormation(f);
     setLineup({});
@@ -1946,7 +1556,6 @@ export default function EscalacaoFormacao() {
     confetti({ particleCount:60, spread:50, origin:{y:0.5}, colors:['#F5C400','#fff'] });
   }, []);
 
-  // Executa escalação
   const executarEscalacao = useCallback((slotId: string, player: Player) => {
     setLineup(prev => {
       const next = { ...prev };
@@ -1973,9 +1582,7 @@ export default function EscalacaoFormacao() {
     }, 350);
   }, [step, formation]);
 
-  // Clique bidirecional
   const handleEscalacao = useCallback((slotId?: string, player?: Player) => {
-    // Modo capitão/herói
     if (step === 'captain_hero' && specialMode && slotId) {
       const p = lineup[slotId];
       if (!p) return;
@@ -2005,12 +1612,8 @@ export default function EscalacaoFormacao() {
 
   const isGameField = step === 'picking' || step === 'bench';
 
-  // Vai para o ranking (Tigre FC hub)
-  const handleGoRanking = useCallback(() => {
-    router.push('/tigre-fc');
-  }, [router]);
+  const handleGoRanking = useCallback(() => { router.push('/tigre-fc'); }, [router]);
 
-  // Tela de carregamento enquanto busca escalação salva
   if (!hydrated) return (
     <div style={{ minHeight:'100vh', background:'#050505',
       display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
@@ -2018,8 +1621,7 @@ export default function EscalacaoFormacao() {
         style={{ width:56, height:56, objectFit:'contain', filter:'drop-shadow(0 0 16px rgba(245,196,0,0.6))' }}
         animate={{ opacity:[0.5,1,0.5], scale:[0.95,1.05,0.95] }}
         transition={{ duration:1.8, repeat:Infinity, ease:'easeInOut' }}/>
-      <div style={{ fontSize:10, fontWeight:900, color:'#F5C400', letterSpacing:4,
-        textTransform:'uppercase', fontFamily:"'Barlow Condensed',system-ui,sans-serif" }}>
+      <div style={{ fontSize:10, fontWeight:900, color:'#F5C400', letterSpacing:4, textTransform:'uppercase' }}>
         Carregando seu time...
       </div>
     </div>
@@ -2033,7 +1635,7 @@ export default function EscalacaoFormacao() {
         *{box-sizing:border-box}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1a1a1a;border-radius:4px}body{background:#050505}
       `}</style>
 
-      {/* Rodada encerrada — mostra apuração em vez do campo editável */}
+      {/* Resultado ativado apenas se RODADA_ENCERRADA for true */}
       {RODADA_ENCERRADA && Object.values(lineup).some(Boolean) && (
         <ResultadoScreen
           lineup={lineup} formation={formation}
@@ -2043,12 +1645,11 @@ export default function EscalacaoFormacao() {
         />
       )}
 
-      {/* HUD só aparece quando não está na tela de resultado */}
+      {/* HUD visível apenas durante a escalação */}
       {!(RODADA_ENCERRADA && Object.values(lineup).some(Boolean)) && (
         <HUD step={step} filled={fieldCount} benchFilled={benchCount} formation={formation}/>
       )}
 
-      {/* Overlays full-screen */}
       <AnimatePresence mode="wait">
         {step === 'formation' && (
           <motion.div key="formation" initial={{ opacity:0, x:40 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-40 }}
@@ -2082,7 +1683,6 @@ export default function EscalacaoFormacao() {
         )}
       </AnimatePresence>
 
-      {/* Campo principal (picking / bench) */}
       {isGameField && (
         <motion.div key="field" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
           <div style={{ position:'relative', overflow:'hidden', minHeight:360 }}>
@@ -2116,7 +1716,6 @@ export default function EscalacaoFormacao() {
         </motion.div>
       )}
 
-      {/* Seleção capitão/herói no campo */}
       {step === 'captain_hero' && specialMode && (
         <div style={{ position:'fixed', inset:0, zIndex:200, display:'flex', flexDirection:'column' }}>
           <div style={{ padding:'10px 14px', background:'rgba(0,0,0,0.92)', backdropFilter:'blur(10px)',
