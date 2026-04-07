@@ -80,8 +80,14 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           setJogo({
             id: 4,
             data_hora: '2026-04-12T18:00:00',
-            mandante: { nome: 'América-MG', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png' },
-            visitante: { nome: 'Novorizontino', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png' },
+            mandante: { 
+              nome: 'América-MG', 
+              escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png' 
+            },
+            visitante: { 
+              nome: 'Novorizontino', 
+              escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png' 
+            },
           });
         }
 
@@ -104,19 +110,24 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       const gameTime = new Date(jogo.data_hora).getTime();           // 12/04/2026 18:00
       const lockTime = gameTime - (60 * 60 * 1000);                  // Fecha 1 hora antes (17:00)
       const now = Date.now();
-      const diff = lockTime - now;
+      let diff = lockTime - now;
 
       if (diff <= 0) {
         setTimeLeft({ h: '00', m: '00', s: '00' });
         return;
       }
 
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      // Cálculo correto: converte dias para horas
+      const totalHours = Math.floor(diff / (1000 * 60 * 60));
+      diff %= (1000 * 60 * 60);
+
+      const minutes = Math.floor(diff / (1000 * 60));
+      diff %= (1000 * 60);
+
+      const seconds = Math.floor(diff / 1000);
 
       setTimeLeft({
-        h: String(hours).padStart(2, '0'),
+        h: String(totalHours).padStart(2, '0'),   // Agora mostra horas totais (ex: 120)
         m: String(minutes).padStart(2, '0'),
         s: String(seconds).padStart(2, '0'),
       });
@@ -135,7 +146,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       
       {/* HEADER PREMIUM */}
       <header ref={topRef} className="bg-[#F5C400] pt-20 pb-32 px-6 border-b-[12px] border-black text-center relative overflow-hidden">
-        {/* ... seu header mantido igual ... */}
+        {/* Seu header original aqui - mantenha como estava */}
       </header>
 
       <div className="max-w-md mx-auto px-4 -mt-20 relative z-20">
@@ -163,7 +174,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
               {/* Times */}
               <div className="flex justify-between items-center mb-10">
-                {/* Mandante */}
                 <div className="flex flex-col items-center">
                   <img src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} className="w-20 h-20 object-contain" />
                   <p className="text-sm font-bold mt-3 text-center">{jogo.mandante.nome}</p>
@@ -171,7 +181,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
                 <div className="text-3xl font-black text-zinc-700">VS</div>
 
-                {/* Visitante */}
                 <div className="flex flex-col items-center">
                   <img src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} className="w-20 h-20 object-contain" />
                   <p className="text-sm font-bold mt-3 text-center">{jogo.visitante.nome}</p>
@@ -179,7 +188,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               </div>
 
               {/* Botão Convocar */}
-              <Link 
+              <Link
                 href={`/tigre-fc/escalar/${jogo.id}`}
                 className="block w-full py-7 bg-[#F5C400] text-black font-black text-lg uppercase tracking-widest rounded-3xl text-center hover:bg-yellow-400 transition-all active:scale-95"
               >
@@ -191,8 +200,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
         <DestaquesFifa />
 
-        {/* Ranking, Chat, etc. — mantenha o resto do seu código aqui */}
-        {/* ... seu código de ranking, chat, tactical view, etc. ... */}
+        {/* Mantenha aqui o resto do seu código (Ranking, Chat, Tactical View, etc.) */}
 
       </div>
 
