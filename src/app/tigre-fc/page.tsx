@@ -9,13 +9,15 @@ import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
 import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
-const SOFASCORE_EVENT_ID = 15526004;
+// ID Sofascore do último jogo realizado — atualizar após cada partida
+// Rodada 3: Novorizontino 1×1 CRB — 05/04/2026
+const SOFASCORE_EVENT_ID = 15526006;
 
 const ESCUDOS_SERIE_B: Record<string, string> = {
   'novorizontino': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png',
   'juventude':     'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/juventude.png',
   'crb':           'https://upload.wikimedia.org/wikipedia/commons/7/73/CRB_logo.svg',
-  'america-mg':    'https://www.clipartmax.com/png/small/295-2959727_hd-logo-america-mineiro-fc-logo.png',
+  'america-mg':    'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png',
   'athletic-mg':   'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Athletic_Club_%28Minas_Gerais%29.svg/1280px-Athletic_Club_%28Minas_Gerais%29.svg.png',
   'atletico-go':   'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Atl%C3%A9tico_Clube_Goianiense_logo.svg/1280px-Atl%C3%A9tico_Clube_Goianiense_logo.svg.png',
   'avai':          'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Ava%C3%AD_Futebol_Clube_%28logo%29.svg/200px-Ava%C3%AD_Futebol_Clube_%28logo%29.svg.png',
@@ -129,7 +131,7 @@ function SofascoreWidget() {
         </div>
       </div>
       <div style={{padding:'8px 16px 0',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <span style={{fontSize:9,fontWeight:700,color:'#333',textTransform:'uppercase',letterSpacing:1}}>Juventude × Novorizontino — Rodada 1</span>
+        <span style={{fontSize:9,fontWeight:700,color:'#333',textTransform:'uppercase',letterSpacing:1}}>Novorizontino × CRB — Rodada 3 · Última partida</span>
         <span style={{fontSize:8,color:'#222',fontWeight:700}}>Use para escalar ↓</span>
       </div>
       <div style={{display:'flex',margin:'8px 0 0',borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
@@ -180,9 +182,10 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (j.mandante  && !j.mandante.escudo_url?.startsWith('http'))  j.mandante.escudo_url  = resolveEscudo(j.mandante.slug  ?? j.mandante.nome);
         setJogo(j);
       } else {
-        setJogo({ id:3, data_hora:'2026-04-05T21:00:00Z', competicao:'Série B', rodada:'3ª Rodada', local:'Jorjão • Novo Horizonte',
-          mandante:  { nome:'Novorizontino', slug:'novorizontino', escudo_url: ESCUDOS_SERIE_B['novorizontino'] },
-          visitante: { nome:'CRB',           slug:'crb',           escudo_url: ESCUDOS_SERIE_B['crb'] },
+        // Fallback local — atualizar a cada rodada
+        setJogo({ id:4, data_hora:'2026-04-12T21:00:00Z', competicao:'Série B', rodada:'4ª Rodada', local:'Arena da Independência • BH',
+          mandante:  { nome:'América-MG',     slug:'america-mg',     escudo_url: ESCUDOS_SERIE_B['america-mg'] },
+          visitante: { nome:'Novorizontino',   slug:'novorizontino',  escudo_url: ESCUDOS_SERIE_B['novorizontino'] },
         });
       }
       const { data: resRank } = await sb.from('tigre_fc_usuarios').select('id,nome,apelido,avatar_url,pontos_total').not('pontos_total','is',null).order('pontos_total',{ascending:false}).limit(10);
