@@ -10,16 +10,16 @@ import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
-// ─── PARSE DE DATA ROBUSTO ────────────────────────────────────────────────────
-// Suporta: '2026-04-12 21:00:00+00', '2026-04-12T21:00:00Z', '2026-04-12T18:00:00'
+// ─── PARSE DE DATA REFORMULADO (SOLUÇÃO PARA OS DIAS) ──────────────────────────
 function parseGameTime(raw: string): number {
   if (!raw) return 0;
-  const iso = raw.includes(' ') && !raw.includes('T') ? raw.replace(' ', 'T') : raw;
-  const withTz = /[Z+\-]\d{2}:?\d{2}$/.test(iso) || iso.endsWith('Z') ? iso : iso + '-03:00';
-  return new Date(withTz).getTime();
+  // Removemos o 'Z' e frações de segundo para forçar o JS a tratar a hora como LOCAL
+  // Isso evita que o fuso horário subtraia horas e mude o dia do cálculo
+  const cleanIso = raw.split('.')[0].replace('Z', '').replace(' ', 'T');
+  return new Date(cleanIso).getTime();
 }
 
-// ─── TIMER BLOCK ──────────────────────────────────────────────────────────────
+// ─── TIMER BLOCK (DESIGN PREMIUM) ─────────────────────────────────────────────
 function TimerBlock({ value, label, highlight = false }: {
   value: string; label: string; highlight?: boolean;
 }) {
@@ -49,7 +49,6 @@ function TimerBlock({ value, label, highlight = false }: {
   );
 }
 
-// ─── SEPARADOR ────────────────────────────────────────────────────────────────
 function TimerSep() {
   return (
     <div className="flex flex-col gap-[8px] pb-5 shrink-0">
@@ -59,16 +58,15 @@ function TimerSep() {
   );
 }
 
-// ─── PÁGINA ───────────────────────────────────────────────────────────────────
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
   use(params);
 
-  const [mounted,       setMounted]       = useState(false);
-  const [jogo,          setJogo]          = useState<any>(null);
-  const [ranking,       setRanking]       = useState<any[]>([]);
-  const [meuId,         setMeuId]         = useState<string | null>(null);
-  const [perfilAberto,  setPerfilAberto]  = useState<string | null>(null);
-  const [timeLeft,      setTimeLeft]      = useState({ d: '00', h: '00', m: '00', s: '00' });
+  const [mounted, setMounted] = useState(false);
+  const [jogo, setJogo] = useState<any>(null);
+  const [ranking, setRanking] = useState<any[]>([]);
+  const [meuId, setMeuId] = useState<string | null>(null);
+  const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState({ d: '00', h: '00', m: '00', s: '00' });
   const [mercadoAberto, setMercadoAberto] = useState(true);
 
   useEffect(() => { setMounted(true); }, []);
@@ -86,13 +84,14 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       if (resJogo?.jogos?.length > 0) {
         setJogo(resJogo.jogos[0]);
       } else {
+        // Fallback com data fixa sem o Z para garantir o teste
         setJogo({
           id: 4,
-          data_hora: '2026-04-12T21:00:00Z',
+          data_hora: '2026-04-12T18:00:00',
           competicao: 'Série B',
           rodada: '4ª Rodada',
           local: 'Arena da Independência • BH',
-          mandante:  { nome: 'América-MG',   escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png' },
+          mandante:  { nome: 'América-MG', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png' },
           visitante: { nome: 'Novorizontino', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png' },
         });
       }
@@ -105,23 +104,33 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     init();
   }, [mounted]);
 
-  // ── Cronômetro com DIAS ───────────────────────────────────────────────────
+  // ── LÓGICA DO CRONÔMETRO ATUALIZADA ─────────────────────────────────────────
   useEffect(() => {
     if (!jogo?.data_hora) return;
+    
     const gameTime = parseGameTime(jogo.data_hora);
-    const lockTime = gameTime - 90 * 60 * 1000; // 1h30 antes
+    const lockTime = gameTime - (90 * 60 * 1000); // Mercado fecha 1h30 antes
 
     const tick = () => {
-      const diff = lockTime - Date.now();
+      const now = Date.now();
+      const diff = lockTime - now;
+
       if (isNaN(diff) || diff <= 0) {
         setMercadoAberto(false);
         setTimeLeft({ d: '00', h: '00', m: '00', s: '00' });
         return;
       }
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
+
+      // Constantes para conversão precisa
+      const MS_IN_DAY = 1000 * 60 * 60 * 24;
+      const MS_IN_HOUR = 1000 * 60 * 60;
+      const MS_IN_MIN = 1000 * 60;
+
+      const d = Math.floor(diff / MS_IN_DAY);
+      const h = Math.floor((diff % MS_IN_DAY) / MS_IN_HOUR);
+      const m = Math.floor((diff % MS_IN_HOUR) / MS_IN_MIN);
+      const s = Math.floor((diff % MS_IN_MIN) / 1000);
+
       setMercadoAberto(true);
       setTimeLeft({
         d: String(d).padStart(2, '0'),
@@ -130,6 +139,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         s: String(s).padStart(2, '0'),
       });
     };
+
     const timer = setInterval(tick, 1000);
     tick();
     return () => clearInterval(timer);
@@ -184,15 +194,15 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                     </span>
                   </div>
 
-                  {/* CRONÔMETRO — DIAS · HORAS · MIN · SEG */}
+                  {/* CRONÔMETRO */}
                   <div className="flex items-end justify-center gap-1.5 mb-6">
-                    <TimerBlock value={timeLeft.d} label="DIAS"  highlight />
+                    <TimerBlock value={timeLeft.d} label="DIAS" highlight />
                     <TimerSep />
                     <TimerBlock value={timeLeft.h} label="HORAS" />
                     <TimerSep />
-                    <TimerBlock value={timeLeft.m} label="MIN"   />
+                    <TimerBlock value={timeLeft.m} label="MIN" />
                     <TimerSep />
-                    <TimerBlock value={timeLeft.s} label="SEG"   />
+                    <TimerBlock value={timeLeft.s} label="SEG" />
                   </div>
 
                   {/* Local */}
@@ -242,23 +252,12 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                   >
                     {mercadoAberto ? <><span>⚡</span> CONVOCAR TITULARES</> : <><span>🔒</span> MERCADO FECHADO</>}
                   </Link>
-
-                  {/* Status */}
-                  <div className="flex justify-center mt-4">
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${
-                      mercadoAberto ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${mercadoAberto ? 'bg-green-500' : 'bg-red-500'}`} />
-                      {mercadoAberto ? 'Mercado Aberto' : 'Mercado Fechado'}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
           </section>
         )}
 
-        {/* DESTAQUES */}
         <DestaquesFifa />
 
         {/* RANKING */}
@@ -318,10 +317,8 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             <TigreFCChat usuarioId={meuId} />
           </div>
         </section>
-
       </div>
 
-      {/* MODAL PERFIL */}
       <AnimatePresence>
         {perfilAberto && (
           <TigreFCPerfilPublico
