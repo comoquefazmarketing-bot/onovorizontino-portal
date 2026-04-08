@@ -10,31 +10,29 @@ import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
-// ─── PARSE DE DATA REFORMULADO (SOLUÇÃO PARA OS DIAS) ──────────────────────────
+// ─── PARSE DE DATA (TRATAMENTO LOCAL PARA EVITAR ERRO DE FUSO) ────────────────
 function parseGameTime(raw: string): number {
   if (!raw) return 0;
-  // Removemos o 'Z' e frações de segundo para forçar o JS a tratar a hora como LOCAL
-  // Isso evita que o fuso horário subtraia horas e mude o dia do cálculo
+  // Removemos o 'Z' para forçar o JS a tratar como hora local e evitar saltos de fuso
   const cleanIso = raw.split('.')[0].replace('Z', '').replace(' ', 'T');
   return new Date(cleanIso).getTime();
 }
 
-// ─── TIMER BLOCK (DESIGN PREMIUM) ─────────────────────────────────────────────
+// ─── TIMER BLOCK (HORAS TOTAIS) ─────────────────────────────────────────────
 function TimerBlock({ value, label, highlight = false }: {
   value: string; label: string; highlight?: boolean;
 }) {
   return (
     <div className="flex flex-col items-center gap-2">
       <div className={`
-        relative w-[66px] h-[74px] flex items-center justify-center
+        relative min-w-[72px] h-[74px] px-2 flex items-center justify-center
         bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] rounded-2xl overflow-hidden
         ${highlight
           ? 'border border-[#F5C400]/60 shadow-[0_0_20px_rgba(245,196,0,0.35)]'
           : 'border border-white/[0.08]'}
       `}>
         <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.12)_2px,rgba(0,0,0,0.12)_4px)] pointer-events-none" />
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/10" />
-        <span className={`relative z-10 text-[34px] font-black font-mono tabular-nums leading-none ${
+        <span className={`relative z-10 text-[32px] font-black font-mono tabular-nums leading-none ${
           highlight ? 'text-[#F5C400] drop-shadow-[0_0_12px_rgba(245,196,0,0.7)]' : 'text-white'
         }`}>
           {value}
@@ -51,7 +49,7 @@ function TimerBlock({ value, label, highlight = false }: {
 
 function TimerSep() {
   return (
-    <div className="flex flex-col gap-[8px] pb-5 shrink-0">
+    <div className="flex flex-col gap-[8px] pb-6 shrink-0 self-center">
       <div className="w-1 h-1 rounded-full bg-[#F5C400]/40 animate-pulse" />
       <div className="w-1 h-1 rounded-full bg-[#F5C400]/40 animate-pulse [animation-delay:300ms]" />
     </div>
@@ -66,7 +64,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   const [ranking, setRanking] = useState<any[]>([]);
   const [meuId, setMeuId] = useState<string | null>(null);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState({ d: '00', h: '00', m: '00', s: '00' });
+  const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
   const [mercadoAberto, setMercadoAberto] = useState(true);
 
   useEffect(() => { setMounted(true); }, []);
@@ -84,7 +82,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       if (resJogo?.jogos?.length > 0) {
         setJogo(resJogo.jogos[0]);
       } else {
-        // Fallback com data fixa sem o Z para garantir o teste
         setJogo({
           id: 4,
           data_hora: '2026-04-12T18:00:00',
@@ -96,47 +93,38 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         });
       }
 
-      const { data: resRank } = await sb.from('tigre_fc_usuarios')
-        .select('id, nome, apelido, avatar_url, pontos_total')
-        .order('pontos_total', { ascending: false }).limit(10);
+      const { data: resRank } = await sb.from('tigre_fc_usuarios').select('id, nome, apelido, avatar_url, pontos_total').order('pontos_total', { ascending: false }).limit(10);
       if (resRank) setRanking(resRank);
     }
     init();
   }, [mounted]);
 
-  // ── LÓGICA DO CRONÔMETRO ATUALIZADA ─────────────────────────────────────────
+  // ── LÓGICA DE HORAS TOTAIS (CONVITE / FECHAMENTO) ───────────────────────────
   useEffect(() => {
     if (!jogo?.data_hora) return;
     
     const gameTime = parseGameTime(jogo.data_hora);
-    const lockTime = gameTime - (90 * 60 * 1000); // Mercado fecha 1h30 antes
+    const lockTime = gameTime - (90 * 60 * 1000); // 1h30m antes do jogo
 
     const tick = () => {
-      const now = Date.now();
-      const diff = lockTime - now;
+      const diff = lockTime - Date.now();
 
-      if (isNaN(diff) || diff <= 0) {
+      if (diff <= 0) {
         setMercadoAberto(false);
-        setTimeLeft({ d: '00', h: '00', m: '00', s: '00' });
+        setTimeLeft({ h: '00', m: '00', s: '00' });
         return;
       }
 
-      // Constantes para conversão precisa
-      const MS_IN_DAY = 1000 * 60 * 60 * 24;
-      const MS_IN_HOUR = 1000 * 60 * 60;
-      const MS_IN_MIN = 1000 * 60;
-
-      const d = Math.floor(diff / MS_IN_DAY);
-      const h = Math.floor((diff % MS_IN_DAY) / MS_IN_HOUR);
-      const m = Math.floor((diff % MS_IN_HOUR) / MS_IN_MIN);
-      const s = Math.floor((diff % MS_IN_MIN) / 1000);
+      // Cálculo de horas totais acumuladas
+      const totalHours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
       setMercadoAberto(true);
       setTimeLeft({
-        d: String(d).padStart(2, '0'),
-        h: String(h).padStart(2, '0'),
-        m: String(m).padStart(2, '0'),
-        s: String(s).padStart(2, '0'),
+        h: String(totalHours).padStart(2, '0'),
+        m: String(minutes).padStart(2, '0'),
+        s: String(seconds).padStart(2, '0'),
       });
     };
 
@@ -158,99 +146,62 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       {/* HEADER */}
       <div className="relative pt-20 pb-28 text-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(245,196,0,0.1)_0%,transparent_70%)]" />
-        <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(255,255,255,0.007)_3px,rgba(255,255,255,0.007)_4px)]" />
         <div className="relative z-10">
           <img src={PATA_LOGO} className="w-16 mx-auto mb-4 drop-shadow-[0_0_20px_rgba(245,196,0,0.6)]" alt="" />
           <h1 className="text-7xl font-black tracking-[-4px] italic uppercase leading-none">
             TIGRE <span className="text-[#F5C400]">FC</span>
           </h1>
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600 mt-3">
-            Fantasy League · Série B 2026
-          </p>
         </div>
       </div>
 
       <div className="max-w-md mx-auto px-4 -mt-16 relative z-10 space-y-8">
 
-        {/* MATCH CARD */}
+        {/* MATCH CARD COM TIMER DE HORAS */}
         {jogo && (
           <section>
             <div className="relative">
               <div className="absolute -inset-[1px] rounded-[36px] bg-gradient-to-br from-[rgba(245,196,0,0.35)] via-transparent to-[rgba(245,196,0,0.1)]" />
               <div className="relative bg-gradient-to-b from-[#111108] to-[#0a0a0a] rounded-[34px] overflow-hidden border border-[rgba(245,196,0,0.08)]">
                 <div className="h-[3px] bg-gradient-to-r from-transparent via-[#F5C400] to-transparent" />
-                <div className="p-6 pt-5">
+                <div className="p-6">
 
-                  {/* Competição / Rodada */}
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[#F5C400] shadow-[0_0_6px_#F5C400]" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F5C400]">
-                        {jogo.competicao ?? 'Série B'}
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-700">
-                      {jogo.rodada ?? '4ª Rodada'}
-                    </span>
+                  <div className="text-center mb-6">
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">MERCADO FECHA EM</span>
                   </div>
 
-                  {/* CRONÔMETRO */}
-                  <div className="flex items-end justify-center gap-1.5 mb-6">
-                    <TimerBlock value={timeLeft.d} label="DIAS" highlight />
+                  {/* TIMER DE 3 BLOCOS (HORAS/MIN/SEG) */}
+                  <div className="flex items-center justify-center gap-3 mb-8">
+                    <TimerBlock value={timeLeft.h} label="HORAS" highlight />
                     <TimerSep />
-                    <TimerBlock value={timeLeft.h} label="HORAS" />
+                    <TimerBlock value={timeLeft.m} label="MINUTOS" />
                     <TimerSep />
-                    <TimerBlock value={timeLeft.m} label="MIN" />
-                    <TimerSep />
-                    <TimerBlock value={timeLeft.s} label="SEG" />
+                    <TimerBlock value={timeLeft.s} label="SEGUNDOS" />
                   </div>
-
-                  {/* Local */}
-                  {jogo.local && (
-                    <p className="text-center text-[9px] font-bold uppercase tracking-widest text-zinc-700 mb-5">
-                      {jogo.local}
-                    </p>
-                  )}
 
                   {/* Confronto */}
-                  <div className="flex items-center justify-between mb-7">
+                  <div className="flex items-center justify-between mb-8 px-2">
                     <div className="flex flex-col items-center gap-2 flex-1">
-                      <div className="w-16 h-16 flex items-center justify-center bg-[radial-gradient(circle,rgba(245,196,0,0.1),transparent_70%)] rounded-full">
-                        <img src={jogo.mandante.escudo_url} className="w-12 h-12 object-contain"
-                          alt={jogo.mandante.nome} onError={(e) => { (e.target as HTMLImageElement).src = PATA_LOGO; }} />
-                      </div>
-                      <span className="text-[10px] font-black uppercase text-center leading-tight text-white">{jogo.mandante.nome}</span>
-                      <div className="px-2 py-[2px] bg-[rgba(245,196,0,0.1)] border border-[rgba(245,196,0,0.2)] rounded">
-                        <span className="text-[7px] font-black uppercase tracking-wider text-[#F5C400]">MANDANTE</span>
-                      </div>
+                      <img src={jogo.mandante.escudo_url} className="w-12 h-12 object-contain" alt="" />
+                      <span className="text-[10px] font-black uppercase text-center text-white">{jogo.mandante.nome}</span>
                     </div>
-
-                    <div className="px-2">
+                    <div className="px-4">
                       <span className="text-xl font-black italic text-white/10">VS</span>
                     </div>
-
                     <div className="flex flex-col items-center gap-2 flex-1">
-                      <div className="w-16 h-16 flex items-center justify-center bg-[radial-gradient(circle,rgba(255,255,255,0.04),transparent_70%)] rounded-full">
-                        <img src={jogo.visitante.escudo_url} className="w-12 h-12 object-contain"
-                          alt={jogo.visitante.nome} onError={(e) => { (e.target as HTMLImageElement).src = PATA_LOGO; }} />
-                      </div>
-                      <span className="text-[10px] font-black uppercase text-center leading-tight text-white">{jogo.visitante.nome}</span>
-                      <div className="px-2 py-[2px] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded">
-                        <span className="text-[7px] font-black uppercase tracking-wider text-zinc-600">VISITANTE</span>
-                      </div>
+                      <img src={jogo.visitante.escudo_url} className="w-12 h-12 object-contain" alt="" />
+                      <span className="text-[10px] font-black uppercase text-center text-white">{jogo.visitante.nome}</span>
                     </div>
                   </div>
 
-                  {/* Botão */}
                   <Link
                     href={mercadoAberto ? `/tigre-fc/escalar/${jogo.id}` : '#'}
                     className={`flex items-center justify-center gap-2 w-full py-5 rounded-2xl text-sm font-black uppercase tracking-[0.2em] transition-all ${
                       mercadoAberto
-                        ? 'bg-gradient-to-r from-[#F5C400] to-[#D4A200] text-black shadow-[0_10px_30px_-8px_rgba(245,196,0,0.5)] active:scale-95 hover:scale-[1.02]'
+                        ? 'bg-[#F5C400] text-black shadow-[0_10px_30px_-8px_rgba(245,196,0,0.5)] active:scale-95'
                         : 'bg-zinc-900 text-zinc-600 border border-zinc-800 pointer-events-none'
                     }`}
                   >
-                    {mercadoAberto ? <><span>⚡</span> CONVOCAR TITULARES</> : <><span>🔒</span> MERCADO FECHADO</>}
+                    {mercadoAberto ? '⚡ CONVOCAR TITULARES' : '🔒 MERCADO FECHADO'}
                   </Link>
                 </div>
               </div>
@@ -267,38 +218,18 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Leaderboard</h2>
             <div className="h-[1px] flex-1 bg-gradient-to-l from-[rgba(245,196,0,0.3)] to-transparent" />
           </div>
-          <h3 className="text-3xl font-black italic uppercase tracking-tight text-white text-center mb-6">Líderes da Alcateia</h3>
           <div className="space-y-3">
-            {ranking.length === 0 ? (
-              <p className="text-center text-zinc-700 text-sm py-8 font-bold uppercase tracking-widest">Seja o primeiro a pontuar!</p>
-            ) : ranking.map((u, i) => (
+            {ranking.map((u, i) => (
               <div key={u.id} onClick={() => setPerfilAberto(u.id)}
-                className={`flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all ${
-                  i === 0
-                    ? 'bg-gradient-to-r from-[#1a1400] to-[#2a1f00] border border-[rgba(245,196,0,0.3)] shadow-[0_0_24px_rgba(245,196,0,0.08)]'
-                    : 'bg-white/[0.025] border border-white/5 hover:bg-white/5'
-                }`}
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.025] border border-white/5 cursor-pointer hover:bg-white/5"
               >
-                <div className="w-8 text-center shrink-0">
-                  {i === 0 && <span className="text-lg">🥇</span>}
-                  {i === 1 && <span className="text-lg">🥈</span>}
-                  {i === 2 && <span className="text-lg">🥉</span>}
-                  {i > 2  && <span className="text-lg font-black italic text-zinc-700">{String(i + 1).padStart(2, '0')}</span>}
+                <span className="w-6 text-center text-xs font-black italic text-zinc-700">{String(i + 1).padStart(2, '0')}</span>
+                <img src={u.avatar_url || PATA_LOGO} className="w-10 h-10 rounded-xl object-cover" alt="" />
+                <div className="flex-1">
+                  <p className="font-black uppercase text-sm">{u.apelido || u.nome}</p>
                 </div>
-                <div className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 ${i === 0 ? 'border-2 border-[rgba(245,196,0,0.4)]' : 'border border-white/5'}`}>
-                  <img src={u.avatar_url || PATA_LOGO} className="w-full h-full object-cover" alt={u.apelido || u.nome} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`font-black uppercase text-sm leading-none truncate ${i === 0 ? 'text-[#F5C400]' : 'text-white'}`}>
-                    {u.apelido || u.nome}
-                  </p>
-                  <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-700 mt-1">
-                    {i === 0 ? 'Líder da Alcateia' : 'Competidor Elite'}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className={`text-2xl font-black leading-none ${i === 0 ? 'text-[#F5C400]' : 'text-white'}`}>{u.pontos_total ?? 0}</p>
-                  <p className="text-[8px] font-black uppercase tracking-widest text-zinc-700 mt-0.5">PTS</p>
+                <div className="text-right">
+                  <p className="text-xl font-black text-[#F5C400]">{u.pontos_total ?? 0}</p>
                 </div>
               </div>
             ))}
@@ -307,12 +238,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
         {/* CHAT */}
         <section>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-[1px] flex-1 bg-gradient-to-r from-[rgba(245,196,0,0.3)] to-transparent" />
-            <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Lounge</h2>
-            <div className="h-[1px] flex-1 bg-gradient-to-l from-[rgba(245,196,0,0.3)] to-transparent" />
-          </div>
-          <h3 className="text-3xl font-black italic uppercase tracking-tight text-white text-center mb-6">Vestiário</h3>
+          <h3 className="text-3xl font-black italic uppercase text-white text-center mb-6">Vestiário</h3>
           <div className="rounded-3xl border border-white/5 overflow-hidden bg-black/40">
             <TigreFCChat usuarioId={meuId} />
           </div>
@@ -321,11 +247,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       <AnimatePresence>
         {perfilAberto && (
-          <TigreFCPerfilPublico
-            targetUsuarioId={perfilAberto}
-            viewerUsuarioId={meuId}
-            onClose={() => setPerfilAberto(null)}
-          />
+          <TigreFCPerfilPublico targetUsuarioId={perfilAberto} viewerUsuarioId={meuId} onClose={() => setPerfilAberto(null)} />
         )}
       </AnimatePresence>
     </main>
