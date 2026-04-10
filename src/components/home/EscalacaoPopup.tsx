@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
+const LOGO_PORTAL = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 const ESCUDO_NOVO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDOS/novorizontino.png';
 const ESCUDO_ADV  = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png';
 
@@ -27,13 +28,10 @@ function isNovo(nome?: string) {
   return nome?.toLowerCase().includes('novorizontino') ?? false;
 }
 
-// ─── EscudoImg — crossOrigin + fallback + glow ────────────────────────────────
-function EscudoImg({ src, alt, size = 56, glow, fallback }: {
+function EscudoImg({ src, alt, size = 64, glow, fallback }: {
   src: string; alt: string; size?: number; glow?: string; fallback?: string;
 }) {
   const [imgSrc, setImgSrc] = useState(src);
-
-  // Sincroniza com prop (caso o jogo carregue depois do mount)
   useEffect(() => { setImgSrc(src); }, [src]);
 
   return (
@@ -41,22 +39,18 @@ function EscudoImg({ src, alt, size = 56, glow, fallback }: {
       src={imgSrc}
       alt={alt}
       crossOrigin="anonymous"
-      loading="eager"
       width={size}
       height={size}
       onError={() => setImgSrc(fallback ?? ESCUDO_ADV)}
       style={{
         width: size, height: size,
         objectFit: 'contain',
-        filter: glow
-          ? `drop-shadow(0 0 10px ${glow})`
-          : 'drop-shadow(0 4px 8px rgba(245,196,0,0.3))',
+        filter: glow ? `drop-shadow(0 0 12px ${glow})` : 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))',
       }}
     />
   );
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
 export default function EscalacaoPopup() {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -85,204 +79,100 @@ export default function EscalacaoPopup() {
 
   if (!visible) return null;
 
+  // Determina se o jogo é FORA (Novorizontino é o visitante)
+  const jogoFora = jogo ? isNovo(jogo.visitante.nome) : false;
+
   return (
     <>
       <style>{`
-        @keyframes fadeIn    { from { opacity: 0 }              to { opacity: 1 } }
-        @keyframes fadeOut   { from { opacity: 1 }              to { opacity: 0 } }
-        @keyframes slideUp   { from { transform: translateY(100%) } to { transform: translateY(0) } }
-        @keyframes slideDown { from { transform: translateY(0) }    to { transform: translateY(100%) } }
-        @keyframes shimmer   { 0% { background-position: -200% center } 100% { background-position: 200% center } }
+        @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
+        @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+        @keyframes slideDown { from { transform: translateY(0) } to { transform: translateY(100%) } }
+        @keyframes shimmer { 0% { background-position: -200% center } 100% { background-position: 200% center } }
       `}</style>
 
-      {/* Overlay */}
-      <div
-        onClick={close}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 999,
-          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)',
-          animation: closing ? 'fadeOut 0.35s forwards' : 'fadeIn 0.3s forwards',
-        }}
-      />
+      <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', animation: closing ? 'fadeOut 0.35s forwards' : 'fadeIn 0.3s forwards' }} />
 
-      {/* Bottom sheet */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000,
-        animation: closing
-          ? 'slideDown 0.35s forwards'
-          : 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards',
-      }}>
-        <div style={{
-          background: 'linear-gradient(160deg,#0f0f0f,#1a1200 60%,#0f1a0f)',
-          borderRadius: '24px 24px 0 0',
-          borderTop: '3px solid #F5C400',
-          overflow: 'hidden',
-          maxWidth: 540, margin: '0 auto',
-          position: 'relative',
-        }}>
-          {/* Linha shimmer */}
-          <div style={{
-            position: 'absolute', top: 0, left: 0, width: '100%', height: 3,
-            background: 'linear-gradient(90deg,#F5C400,#fff,#F5C400)',
-            backgroundSize: '200%',
-            animation: 'shimmer 2s linear infinite',
-          }} />
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, animation: closing ? 'slideDown 0.35s forwards' : 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
+        <div style={{ background: 'linear-gradient(180deg, #121212 0%, #000 100%)', borderRadius: '32px 32px 0 0', borderTop: '4px solid #F5C400', maxWidth: 500, margin: '0 auto', position: 'relative', boxShadow: '0 -20px 40px rgba(0,0,0,0.5)' }}>
+          
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 4, background: 'linear-gradient(90deg, transparent, #F5C400, #fff, #F5C400, transparent)', backgroundSize: '200%', animation: 'shimmer 3s linear infinite' }} />
 
-          {/* Fechar */}
-          <button
-            onClick={close}
-            data-track="popup_fechar_x"
-            style={{
-              position: 'absolute', top: 16, right: 16,
-              width: 30, height: 30, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.08)', border: 'none',
-              color: '#666', fontSize: 16, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 10,
-            }}
-          >✕</button>
+          <div style={{ padding: '32px 24px' }}>
+            
+            {/* Logo do Portal */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                <img src={LOGO_PORTAL} alt="Portal O Novorizontino" style={{ height: 40, width: 'auto', filter: 'brightness(1.2)' }} />
+            </div>
 
-          <div style={{ padding: '24px 20px 32px' }}>
-
-            {/* ── Badge jogo / Série B ── */}
-            {jogo ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-                {isHoje(jogo.data_hora) && (
-                  <>
-                    <span style={{
-                      width: 8, height: 8, borderRadius: '50%', background: '#ef4444',
-                      display: 'inline-block',
-                      boxShadow: pulse ? '0 0 8px #ef4444' : 'none', transition: 'box-shadow 0.4s',
-                    }} />
-                    <span style={{ fontSize: 10, fontWeight: 900, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                      Hoje
+            {/* Info do Jogo */}
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(245,196,0,0.1)', padding: '6px 16px', borderRadius: '100px', border: '1px solid rgba(245,196,0,0.2)' }}>
+                    {jogo && isHoje(jogo.data_hora) && (
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', boxShadow: pulse ? '0 0 10px #ef4444' : 'none' }} />
+                    )}
+                    <span style={{ fontSize: 11, fontWeight: 900, color: '#F5C400', uppercase: true, letterSpacing: '0.1em' }}>
+                        {jogo ? `${formatData(jogo.data_hora)} — ${formatHorario(jogo.data_hora)}` : 'SÉRIE B 2026'}
                     </span>
-                  </>
-                )}
-                <span style={{ fontSize: 10, fontWeight: 900, color: '#F5C400', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                  {formatHorario(jogo.data_hora)}
-                </span>
-                <span style={{ fontSize: 10, color: '#555', fontWeight: 700, textTransform: 'uppercase' }}>
-                  · {jogo.competicao}
-                </span>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: '50%', background: '#F5C400',
-                  display: 'inline-block',
-                  boxShadow: pulse ? '0 0 8px #F5C400' : 'none', transition: 'box-shadow 0.4s',
-                }} />
-                <span style={{ fontSize: 10, fontWeight: 900, color: '#F5C400', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                  Série B 2026
-                </span>
-              </div>
-            )}
+                </div>
+                <p style={{ fontSize: 10, color: '#555', fontWeight: 700, marginTop: 8, textTransform: 'uppercase' }}>
+                    {jogo?.local ?? 'ESTÁDIO JORGE ISMAEL DE BIASI'}
+                </p>
+            </div>
 
-            {/* ── Escudos ── */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-
-              {/* Mandante */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
-                <EscudoImg
-                  src={jogo?.mandante.escudo_url ?? ESCUDO_NOVO}
-                  alt={jogo?.mandante.nome ?? 'Novorizontino'}
-                  fallback={ESCUDO_NOVO}
-                  glow={isNovo(jogo?.mandante.nome) ? 'rgba(245,196,0,0.6)' : undefined}
+            {/* Confronto */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', marginBottom: 32 }}>
+              
+              {/* LADO ESQUERDO */}
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <EscudoImg 
+                    src={jogo?.mandante.escudo_url ?? (jogoFora ? ESCUDO_ADV : ESCUDO_NOVO)} 
+                    alt="Mandante" 
+                    glow={!jogoFora ? '#F5C400' : undefined}
                 />
-                <span style={{ fontSize: 10, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
-                  {jogo?.mandante.nome ?? 'Novorizontino'}
-                </span>
+                <p style={{ fontSize: 11, fontWeight: 900, color: !jogoFora ? '#F5C400' : '#fff', marginTop: 10, textTransform: 'uppercase' }}>
+                    {jogo?.mandante.nome ?? (jogoFora ? 'Adversário' : 'Novorizontino')}
+                </p>
               </div>
 
-              {/* VS */}
-              <span style={{ fontSize: 18, fontWeight: 900, color: '#F5C400', padding: '0 8px' }}>VS</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ fontSize: 24, fontWeight: 900, color: '#F5C400', fontStyle: 'italic' }}>VS</span>
+                <span style={{ fontSize: 8, fontWeight: 900, color: '#333', textTransform: 'uppercase' }}>CONFRONTO</span>
+              </div>
 
-              {/* Visitante */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
-                <EscudoImg
-                  src={jogo?.visitante.escudo_url ?? ESCUDO_ADV}
-                  alt={jogo?.visitante.nome ?? 'América-MG'}
-                  fallback={ESCUDO_ADV}
-                  glow={isNovo(jogo?.visitante.nome) ? 'rgba(245,196,0,0.6)' : undefined}
+              {/* LADO DIREITO */}
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <EscudoImg 
+                    src={jogo?.visitante.escudo_url ?? (jogoFora ? ESCUDO_NOVO : ESCUDO_ADV)} 
+                    alt="Visitante" 
+                    glow={jogoFora ? '#F5C400' : undefined}
                 />
-                <span style={{ fontSize: 10, color: '#F5C400', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
-                  {jogo?.visitante.nome ?? 'América-MG'}
-                </span>
+                <p style={{ fontSize: 11, fontWeight: 900, color: jogoFora ? '#F5C400' : '#fff', marginTop: 10, textTransform: 'uppercase' }}>
+                    {jogo?.visitante.nome ?? (jogoFora ? 'Novorizontino' : 'Adversário')}
+                </p>
               </div>
 
             </div>
 
-            {/* ── Copy ── */}
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <h2 style={{
-                fontSize: 28, fontWeight: 900, color: '#fff',
-                fontStyle: 'italic', textTransform: 'uppercase',
-                letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 8,
-              }}>
-                QUAL É SUA<br />
-                <span style={{ color: '#F5C400' }}>ESCALAÇÃO IDEAL?</span>
+            {/* Chamada */}
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <h2 style={{ fontSize: 32, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', lineHeight: 0.9 }}>
+                QUAL É O SEU<br />
+                <span style={{ color: '#F5C400' }}>TIME IDEAL?</span>
               </h2>
-              <p style={{ fontSize: 13, color: '#777', lineHeight: 1.4 }}>
-                Monte os 11, crave o placar e dispute o ranking.<br />
-                {jogo
-                  ? `${jogo.mandante.nome} x ${jogo.visitante.nome} — ${formatData(jogo.data_hora)}`
-                  : 'Quem você coloca pra jogar hoje?'}
-              </p>
             </div>
 
-            {/* ── CTA Principal → Tigre FC ── */}
-            {/* Usando <a> para URL externa — Next.js Link é só para rotas internas */}
-            <a
-              href="https://www.onovorizontino.com.br/tigre-fc/sobre"
-              onClick={close}
-              data-track="popup_cta_tigre_fc"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                width: '100%', padding: '16px',
-                background: 'linear-gradient(135deg,#F5C400,#D4A200)',
-                color: '#000', fontWeight: 900, fontSize: 14,
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                borderRadius: 12, textDecoration: 'none',
-                boxShadow: '0 8px 24px rgba(245,196,0,0.4)',
-              }}
-            >
-              <span style={{ fontSize: 20 }}>🐯</span>
-              ENTRAR NO TIGRE FC
-            </a>
-
-            {/* ── CTA Secundário → Escalação simples (sem ranking) ── */}
-            <a
-              href="/escalacao"
-              onClick={close}
-              data-track="popup_cta_montar"
-              style={{
-                display: 'block', width: '100%', marginTop: 8,
-                padding: '12px', textAlign: 'center',
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                color: '#555', fontWeight: 700, fontSize: 12,
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                borderRadius: 12, textDecoration: 'none',
-              }}
-            >
-              ⚽ Só escalar (sem ranking)
-            </a>
-
-            {/* Dispensar */}
-            <button
-              onClick={close}
-              data-track="popup_agora_nao"
-              style={{
-                width: '100%', marginTop: 8, padding: '10px',
-                background: 'none', border: 'none',
-                color: '#333', fontSize: 11, fontWeight: 700,
-                textTransform: 'uppercase', letterSpacing: '0.1em',
-                cursor: 'pointer',
-              }}
-            >
-              Agora não
-            </button>
+            {/* Ação */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <a href="https://www.onovorizontino.com.br/tigre-fc/sobre" onClick={close} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '20px', background: '#F5C400', color: '#000', fontWeight: 900, fontSize: 15, textTransform: 'uppercase', borderRadius: 16, textDecoration: 'none', boxShadow: '0 10px 20px rgba(245,196,0,0.3)' }}>
+                    <span style={{ fontSize: 24 }}>🐯</span> MONTAR ESCALAÇÃO NO TIGRE FC
+                </a>
+                
+                <button onClick={close} style={{ background: 'none', border: 'none', color: '#444', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', cursor: 'pointer', padding: '10px' }}>
+                    FECHAR
+                </button>
+            </div>
 
           </div>
         </div>
