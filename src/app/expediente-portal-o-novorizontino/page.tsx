@@ -187,7 +187,7 @@ export default function ExpedientePage() {
 
           <div className="space-y-4 text-zinc-300 text-base leading-relaxed">
             <p>
-              O Portal O Novorizontino é um veículo de jornalismo digital independente fundado em 2021, registrado sob o CNPJ <strong className="text-white">43.945.464/0001-83</strong>. Toda a produção de conteúdo segue os princípios do jornalismo ético: verificação de informações, identificação de fontes e separação clara entre notícia e opinião.
+              O Portal O Novorizontino é uma iniciativa de comunicação digital lançada em 2026, mantida pela Como Que Faz Marketing Digital LTDA, organização fundada em 2021 (CNPJ <strong className="text-white">43.945.464/0001-83</strong>). Embora o portal represente uma nova fase editorial focada no jornalismo independente e na tecnologia aplicada ao esporte, ele herda a solidez administrativa e a experiência de uma estrutura empresarial ativa no mercado de São Paulo - SP desde 2021.
             </p>
             <p>
               Conteúdos patrocinados, publi-editoriais e parcerias comerciais são sempre identificados como tal, em separado do jornalismo editorial. A equipe de redação tem autonomia editorial independente da área comercial.
