@@ -79,7 +79,7 @@ export default function EscalacaoPopup() {
 
   if (!visible) return null;
 
-  // Determina se o jogo é FORA (Novorizontino é o visitante)
+  // Determina se o Novorizontino é o visitante (jogo fora)
   const jogoFora = jogo ? isNovo(jogo.visitante.nome) : false;
 
   return (
@@ -92,8 +92,10 @@ export default function EscalacaoPopup() {
         @keyframes shimmer { 0% { background-position: -200% center } 100% { background-position: 200% center } }
       `}</style>
 
+      {/* Overlay */}
       <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', animation: closing ? 'fadeOut 0.35s forwards' : 'fadeIn 0.3s forwards' }} />
 
+      {/* Sheet */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, animation: closing ? 'slideDown 0.35s forwards' : 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
         <div style={{ background: 'linear-gradient(180deg, #121212 0%, #000 100%)', borderRadius: '32px 32px 0 0', borderTop: '4px solid #F5C400', maxWidth: 500, margin: '0 auto', position: 'relative', boxShadow: '0 -20px 40px rgba(0,0,0,0.5)' }}>
           
@@ -112,7 +114,7 @@ export default function EscalacaoPopup() {
                     {jogo && isHoje(jogo.data_hora) && (
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', boxShadow: pulse ? '0 0 10px #ef4444' : 'none' }} />
                     )}
-                    <span style={{ fontSize: 11, fontWeight: 900, color: '#F5C400', uppercase: true, letterSpacing: '0.1em' }}>
+                    <span style={{ fontSize: 11, fontWeight: 900, color: '#F5C400', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                         {jogo ? `${formatData(jogo.data_hora)} — ${formatHorario(jogo.data_hora)}` : 'SÉRIE B 2026'}
                     </span>
                 </div>
