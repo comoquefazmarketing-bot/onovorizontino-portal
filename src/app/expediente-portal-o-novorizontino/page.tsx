@@ -228,7 +228,7 @@ export default function ExpedientePage() {
               <div>
                 <p className="text-green-400 text-[9px] font-black uppercase tracking-[0.3em] mb-1">Canal WhatsApp</p>
                 <p className="text-white text-sm font-black group-hover:text-green-400 transition-colors">
-                  A Alcateia — Canal Oficial
+                  O Novorizontino — Canal Oficial
                 </p>
               </div>
             </a>
