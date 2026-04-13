@@ -1,24 +1,24 @@
 'use client';
 
 // ─── THE BEST TIGRE FC ────────────────────────────────────────────────────────
-// Rodada 3 — Novorizontino 1×1 CRB (05/04/2026)
-// ✏️ Para atualizar: edite apenas os objetos `capitao` e `heroi` abaixo
+// Rodada 4 — América-MG 0×3 Novorizontino (13/04/2026)
+// ✏️ Destaques com Fundo Transparente: Sander (Capitão) e Juninho (Herói)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function DestaquesFifa() {
 
-  // CAPITÃO — Rômulo · Jogador da Partida · Rating 7.9 → exibido como 15.8 (×2)
+  // CAPITÃO — Sander · Nota 7.7 no SofaScore · Dominou o corredor esquerdo
   const capitao = {
-    nome:   'Rômulo',
-    pontos: 7.9,
-    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ROMULO%20FUNDO%20TRANSPARENTE.png',
+    nome:   'Sander',
+    pontos: 18.0, 
+    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/SANDER%20FUNDO%20TRANSPARENTE.png',
   };
 
-  // HERÓI — Carlão · Gol aos 74' · Rating 7.5
+  // HERÓI — Juninho · Nota 7.5 no SofaScore · Entrou e marcou 2 gols decisivos
   const heroi = {
-    nome:   'Carlão',
+    nome:   'Juninho',
     pontos: 7.5,
-    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CARLAO%20FUNDO%20TRANSPARENTE.png',
+    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JUNINHO%20FUNDO%20TRANSPARENTE.png',
   };
 
   const CardUT26 = ({ j, tipo }: { j: { nome: string; pontos: number; foto: string }; tipo: 'CAPITÃO' | 'HERÓI' }) => {
@@ -42,10 +42,10 @@ export default function DestaquesFifa() {
             boxShadow:     `inset 0 0 25px ${color}44`,
           }}
         >
-          {/* Shimmer */}
+          {/* Shimmer de card raro */}
           <div className="absolute inset-0 z-0 opacity-20 bg-gradient-to-tr from-transparent via-white to-transparent -translate-x-full animate-[shimmer_5s_infinite]" />
 
-          {/* Badge de pontos */}
+          {/* Badge de pontos e Rating */}
           <div className="relative z-10 p-4">
             <div className="flex flex-col leading-none">
               <span className="text-4xl font-[1000] text-white italic drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
@@ -63,7 +63,7 @@ export default function DestaquesFifa() {
             </div>
           </div>
 
-          {/* Foto PNG fundo transparente */}
+          {/* Foto PNG Transparente - Efeito de profundidade com scale */}
           <div className="relative z-10 w-full h-40 flex justify-center mt-[-15px]">
             <img
               src={j.foto}
@@ -74,7 +74,7 @@ export default function DestaquesFifa() {
             />
           </div>
 
-          {/* Nome e rodapé */}
+          {/* Nome e Rodapé do Card */}
           <div className="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/95 to-transparent pb-4 text-center px-2 z-10">
             <p className="text-white font-[1000] text-[12px] uppercase italic tracking-tighter">
               {j.nome}
@@ -97,9 +97,9 @@ export default function DestaquesFifa() {
         <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-yellow-500/40" />
       </div>
 
-      {/* Sub-label da rodada */}
+      {/* Identificação da Rodada Atual */}
       <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.4em] mb-6">
-        Rodada 3 · Novorizontino 1×1 CRB
+        Rodada 4 · América-MG 0×3 Novorizontino
       </p>
 
       <div className="flex justify-center gap-8 flex-wrap">
