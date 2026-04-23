@@ -6,6 +6,7 @@ import { supabase as sb } from '@/lib/supabase';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat          from '@/components/tigre-fc/TigreFCChat';
 import DestaquesFifa         from '@/components/tigre-fc/DestaquesFifa';
+import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
