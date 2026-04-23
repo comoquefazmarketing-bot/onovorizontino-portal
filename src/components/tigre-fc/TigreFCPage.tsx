@@ -76,7 +76,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-10 space-y-12">
 
-        {/* JUMBOTRON MODULAR COM DADOS ATUALIZADOS (ATHLETIC) */}
+        {/* JUMBOTRON MODULAR */}
         {jogo && (
           <JumbotronJogo 
             jogo={jogo} 
@@ -95,20 +95,20 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         {/* WIDGET SOFASCORE - ESCALAÇÃO (ENQUADRAMENTO CORRIGIDO) */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Escalação & Notas Reais</h2>
+            <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Live Radar System</h2>
             <span className="text-[9px] font-bold text-zinc-500 italic">FONTE: SOFASCORE</span>
           </div>
           
           <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 bg-[#121212] shadow-2xl">
-            {/* Altura aumentada para 680px para não cortar a base do campo */}
-            <div className="h-[680px] w-full overflow-hidden relative">
+            {/* Altura aumentada para 820px para mostrar goleiros e reservas sem corte */}
+            <div className="h-[820px] w-full overflow-hidden relative">
               <iframe 
                 id="sofa-lineups-embed-15526026" 
                 src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526026&widgetTheme=dark" 
                 className="absolute left-0 w-full border-0"
                 style={{
-                    height: '950px', // Altura interna do frame maior
-                    top: '-165px'    // Puxa o conteúdo para esconder o cabeçalho
+                    height: '1050px', // Altura interna do frame aumentada para carregar tudo
+                    top: '-150px'    // Ajuste do topo para centralizar o campo
                 }}
                 scrolling="no"
               />
@@ -116,22 +116,23 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
         </section>
 
-        {/* WIDGET SOFASCORE - CLASSIFICAÇÃO SÉRIE B */}
+        {/* WIDGET SOFASCORE - CLASSIFICAÇÃO SÉRIE B (FIXED VISIBILITY) */}
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Classificação Série B</h2>
+            <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Tabela de Classificação</h2>
             <div className="h-[1px] flex-1 bg-white/5" />
           </div>
           
           <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 bg-[#121212]">
-            <div className="h-[620px] w-full overflow-hidden relative">
+            {/* Altura de 950px garante que a tabela seja visível no container */}
+            <div className="h-[950px] w-full overflow-hidden relative">
               <iframe 
                 id="sofa-standings-embed-1449-89840" 
                 src="https://widgets.sofascore.com/pt-BR/embed/tournament/1449/season/89840/standings/Brasileiro%20Serie%20B%202026?widgetTitle=Brasileiro%20Serie%20B%202026&showCompetitionLogo=true&widgetTheme=dark" 
                 className="absolute left-0 w-full border-0"
                 style={{
-                    height: '1123px',
-                    top: '-40px' // Crop suave no topo da tabela
+                    height: '1200px',
+                    top: '-45px' // Remove o cabeçalho redundante do widget
                 }}
                 scrolling="no" 
               />
