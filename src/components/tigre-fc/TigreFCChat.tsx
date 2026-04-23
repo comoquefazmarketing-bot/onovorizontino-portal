@@ -1,134 +1,437 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
+// src/components/tigre-fc/TigreFCChat.tsx
+// Chat do vestiário com sistema de patentes + RLS por nível
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 
-const NIVEL_ICON: Record<string,string>  = { Novato:'🌱', Fiel:'⚡', Garra:'🔥', Lenda:'🐯' };
-const NIVEL_COLOR: Record<string,string> = { Novato:'#6b7280', Fiel:'#F5C400', Garra:'#F5C400', Lenda:'#FFD700' };
+// ── Design tokens LED ─────────────────────────────────────
+const C = {
+  gold:   '#F5C400', cyan: '#00F3FF', red: '#FF2D55', purple: '#BF5FFF',
+  glowGold:   '0 0 6px rgba(245,196,0,0.5)',
+  glowCyan:   '0 0 6px rgba(0,243,255,0.5)',
+  glowPurple: '0 0 6px rgba(191,95,255,0.5)',
+};
 
-type Props = { usuarioId?: string | null; usuarioNivel?: string };
+// ── Patentes ──────────────────────────────────────────────
+const PATENTES = [
+  { nivel: 'Recruta',    num: 0, cor: 'rgba(255,255,255,0.3)',  bg: 'rgba(255,255,255,0.06)', escreve: false },
+  { nivel: 'Torcedor',   num: 1, cor: '#F5C400',               bg: 'rgba(245,196,0,0.12)',   escreve: true },
+  { nivel: 'Fanático',   num: 2, cor: '#00F3FF',               bg: 'rgba(0,243,255,0.1)',    escreve: true },
+  { nivel: 'Ultras',     num: 3, cor: '#4FC3F7',               bg: 'rgba(79,195,247,0.1)',   escreve: true },
+  { nivel: 'Fiel',       num: 4, cor: '#F5C400',               bg: 'rgba(245,196,0,0.15)',   escreve: true },
+  { nivel: 'Comandante', num: 5, cor: '#BF5FFF',               bg: 'rgba(191,95,255,0.12)',  escreve: true },
+] as const;
 
-export default function TigreFCChat({ usuarioId, usuarioNivel }: Props) {
-  const [msgs, setMsgs]     = useState<any[]>([]);
-  const [texto, setTexto]   = useState('');
-  const [enviando, setEnv]  = useState(false);
-  const [loading, setLoad]  = useState(true);
-  const [erro, setErro]     = useState('');
-  const scrollRef           = useRef<HTMLDivElement>(null);
+function getPatente(nivel: string) {
+  return PATENTES.find(p => p.nivel === nivel) ?? PATENTES[0];
+}
 
-  useEffect(() => {
-    supabase.from('tigre_fc_chat_geral')
-      .select('*, usuario:usuario_id(apelido,nome,avatar_url,nivel)')
-      .order('criado_em', { ascending: false })
-      .limit(50)
-      .then(({ data, error }) => {
-        if (error) { setErro('Chat temporariamente indisponível.'); }
-        else { setMsgs((data || []).reverse()); }
-        setLoad(false);
-      });
+// ── Badge de patente ──────────────────────────────────────
+function PatenteBadge({ nivel, size = 'sm' }: { nivel: string; size?: 'sm' | 'xs' }) {
+  const p = getPatente(nivel);
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+      fontSize: size === 'xs' ? 9 : 10,
+      fontWeight: 900, letterSpacing: '0.15em',
+      padding: size === 'xs' ? '1px 5px' : '2px 7px',
+      borderRadius: 4,
+      background: p.bg,
+      border: `1px solid ${p.cor}22`,
+      color: p.cor,
+      textShadow: p.num >= 4 ? `0 0 6px ${p.cor}` : 'none',
+      fontFamily: "'Barlow Condensed',sans-serif",
+    }}>
+      {nivel.toUpperCase()}
+    </span>
+  );
+}
 
-    const channel = supabase.channel('chat-geral')
-      .on('postgres_changes', { event:'INSERT', schema:'public', table:'tigre_fc_chat_geral' },
-        async (payload) => {
-          const { data } = await supabase.from('tigre_fc_chat_geral')
-            .select('*, usuario:usuario_id(apelido,nome,avatar_url,nivel)')
-            .eq('id', payload.new.id).single();
-          if (data) setMsgs(prev => [...prev, data]);
-        }).subscribe();
-    return () => { supabase.removeChannel(channel); };
+// ── Avatar ────────────────────────────────────────────────
+function Avatar({ src, nome, nivel, size = 32 }: { src?: string | null; nome: string; nivel: string; size?: number }) {
+  const p = getPatente(nivel);
+  const initials = nome.slice(0, 2).toUpperCase();
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
+      border: `1.5px solid ${p.cor}44`,
+      boxShadow: p.num >= 5 ? `0 0 8px ${p.cor}55` : 'none',
+      overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: src ? 'transparent' : p.bg,
+      fontSize: size * 0.38, fontWeight: 900, color: p.cor,
+      fontFamily: "'Barlow Condensed',sans-serif",
+    }}>
+      {src ? <img src={src} alt={nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+    </div>
+  );
+}
+
+// ── Tipos ─────────────────────────────────────────────────
+interface MsgRow {
+  id: string;
+  mensagem: string;
+  tipo: string;
+  criado_em: string;
+  usuario_id: string;
+  usuario: {
+    id: string;
+    apelido: string | null;
+    nome: string | null;
+    avatar_url: string | null;
+    nivel: string;
+    nivel_numerico: number;
+  };
+}
+
+interface Props {
+  usuarioId?: string | null;
+}
+
+// ── Componente principal ──────────────────────────────────
+export default function TigreFCChat({ usuarioId }: Props) {
+  const [msgs,      setMsgs]      = useState<MsgRow[]>([]);
+  const [input,     setInput]     = useState('');
+  const [loading,   setLoading]   = useState(true);
+  const [sending,   setSending]   = useState(false);
+  const [erro,      setErro]      = useState('');
+  const [online,    setOnline]    = useState(0);
+  const [meuNivel,  setMeuNivel]  = useState<typeof PATENTES[number] | null>(null);
+  const [meuUser,   setMeuUser]   = useState<{ google_id: string; nivel: string; nivel_numerico: number } | null>(null);
+  const bottomRef   = useRef<HTMLDivElement>(null);
+  const inputRef    = useRef<HTMLInputElement>(null);
+
+  const scrollBottom = useCallback(() => {
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
   }, []);
 
-  // FIX SCROLL: scrollIntoView com block:'nearest' para NÃO mover a página
-  // Apenas rola dentro do container do chat
+  // ── Carrega sessão e perfil ───────────────────────────
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [msgs]);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return;
+      const { data: u } = await supabase
+        .from('tigre_fc_usuarios')
+        .select('id, nivel, nivel_numerico, google_id')
+        .eq('google_id', session.user.id)
+        .maybeSingle();
+      if (u) {
+        setMeuUser(u);
+        setMeuNivel(getPatente(u.nivel));
+      }
+    });
+  }, []);
 
+  // ── Carrega mensagens iniciais ────────────────────────
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const { data } = await supabase
+        .from('tigre_fc_chat_geral')
+        .select(`
+          id, mensagem, tipo, criado_em, usuario_id,
+          usuario:usuario_id (
+            id, apelido, nome, avatar_url, nivel, nivel_numerico
+          )
+        `)
+        .eq('deletado', false)
+        .order('criado_em', { ascending: true })
+        .limit(60);
+      if (data) setMsgs(data as unknown as MsgRow[]);
+      setLoading(false);
+      scrollBottom();
+    }
+    load();
+  }, [scrollBottom]);
+
+  // ── Realtime: novas mensagens ─────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel('chat-vestiario')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tigre_fc_chat_geral' },
+        async (payload) => {
+          // Busca o usuário da nova mensagem
+          const { data: u } = await supabase
+            .from('tigre_fc_usuarios')
+            .select('id, apelido, nome, avatar_url, nivel, nivel_numerico')
+            .eq('id', payload.new.usuario_id)
+            .maybeSingle();
+
+          const nova: MsgRow = {
+            ...(payload.new as any),
+            usuario: u ?? {
+              id: payload.new.usuario_id,
+              apelido: null, nome: 'Torcedor',
+              avatar_url: null, nivel: 'Recruta', nivel_numerico: 0,
+            },
+          };
+
+          setMsgs(prev => {
+            if (prev.find(m => m.id === nova.id)) return prev;
+            return [...prev, nova];
+          });
+          scrollBottom();
+        }
+      )
+      // Presence para contador online
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        setOnline(Object.keys(state).length);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED' && usuarioId) {
+          await channel.track({ usuario_id: usuarioId, online_at: new Date().toISOString() });
+        }
+      });
+
+    return () => { supabase.removeChannel(channel); };
+  }, [usuarioId, scrollBottom]);
+
+  // ── Envia mensagem ────────────────────────────────────
   const enviar = async () => {
-    if (!texto.trim() || !usuarioId || enviando) return;
-    setEnv(true);
-    const { error } = await supabase.from('tigre_fc_chat_geral')
-      .insert({ usuario_id: usuarioId, mensagem: texto.trim() });
-    if (!error) setTexto('');
-    setEnv(false);
+    const txt = input.trim();
+    if (!txt || sending || !meuUser) return;
+
+    setErro('');
+    setSending(true);
+
+    const { data, error } = await supabase
+      .rpc('fn_enviar_mensagem_chat', {
+        p_google_id: meuUser.google_id,
+        p_mensagem:  txt,
+        p_tipo:      'texto',
+      });
+
+    setSending(false);
+
+    if (error || data?.error) {
+      const code = data?.error ?? 'erro_desconhecido';
+      setErro(
+        code === 'nivel_insuficiente' ? `Você precisa ser ${data?.precisa} para escrever.` :
+        code === 'rate_limit'         ? 'Devagar aí! Espera uns segundos.' :
+        code === 'usuario_banido'     ? 'Você está banido do chat.' :
+        'Erro ao enviar. Tente novamente.'
+      );
+      return;
+    }
+
+    setInput('');
+    inputRef.current?.focus();
   };
 
+  // ── Formata hora ──────────────────────────────────────
+  const hora = (iso: string) => {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  };
+
+  const podeEscrever = meuNivel ? meuNivel.escreve : false;
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%', background:'#080808' }}>
+    <div style={{
+      display: 'flex', flexDirection: 'column', height: '100%',
+      background: '#000', fontFamily: "'Barlow Condensed',Impact,sans-serif",
+      position: 'relative',
+    }}>
 
-      <div style={{ padding:'12px 16px', borderBottom:'1px solid #111', display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-        <div style={{ width:8, height:8, borderRadius:'50%', background: erro?'#ef4444':'#4ade80' }} />
-        <div style={{ fontSize:13, fontWeight:900, color:'#fff', textTransform:'uppercase', letterSpacing:1 }}>Chat da Torcida</div>
-        <div style={{ marginLeft:'auto', fontSize:10, color:'#555' }}>{msgs.length} msgs</div>
+      <style>{`
+        @keyframes msg-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes led-scan{0%{background-position:-200% center}100%{background-position:200% center}}
+        .msg-row{animation:msg-in 0.25s ease}
+        .chat-input::placeholder{color:rgba(255,255,255,0.2)}
+        .chat-input:focus{outline:none;border-color:rgba(245,196,0,0.4)!important;background:rgba(245,196,0,0.04)!important}
+      `}</style>
+
+      {/* Scan bar topo */}
+      <div style={{
+        position:'absolute',top:0,left:0,right:0,height:1,zIndex:10,pointerEvents:'none',
+        background:`linear-gradient(90deg,transparent,${C.gold},#fff,${C.cyan},transparent)`,
+        backgroundSize:'200%', animation:'led-scan 3s linear infinite',
+      }} />
+
+      {/* Header */}
+      <div style={{
+        display:'flex',alignItems:'center',justifyContent:'space-between',
+        padding:'10px 14px',
+        borderBottom:'1px solid rgba(245,196,0,0.1)',
+        background:'rgba(245,196,0,0.03)',
+        flexShrink: 0,
+      }}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <span style={{width:6,height:6,borderRadius:'50%',background:'#22C55E',
+            boxShadow:'0 0 6px #22C55E',display:'inline-block',animation:'pulse 1s ease-in-out infinite'}}/>
+          <span style={{fontSize:11,fontWeight:900,letterSpacing:'0.3em',color:C.gold,textShadow:C.glowGold}}>
+            VESTIÁRIO
+          </span>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          {online > 0 && (
+            <span style={{fontSize:10,color:C.cyan,fontWeight:700,textShadow:C.glowCyan}}>
+              {online} online
+            </span>
+          )}
+          {meuNivel && <PatenteBadge nivel={meuNivel.nivel} size="xs" />}
+        </div>
       </div>
 
-      {/* FIX: overflow:'auto' no container correto para scroll interno */}
-      <div
-        ref={scrollRef}
-        style={{ flex:1, overflowY:'auto', padding:'12px 16px', display:'flex', flexDirection:'column', gap:10 }}
-      >
+      {/* Mensagens */}
+      <div style={{
+        flex:1, overflowY:'auto', padding:'10px 12px',
+        display:'flex', flexDirection:'column', gap:10,
+        scrollbarWidth:'none',
+      }}>
         {loading ? (
-          <div style={{ textAlign:'center', color:'#555', fontSize:13, paddingTop:20 }}>Carregando chat...</div>
-        ) : erro ? (
-          <div style={{ textAlign:'center', color:'#f87171', fontSize:13, paddingTop:20 }}>{erro}</div>
-        ) : msgs.length === 0 ? (
-          <div style={{ textAlign:'center', color:'#333', fontSize:13, paddingTop:20 }}>
-            <div style={{ fontSize:32, marginBottom:8 }}>🐯</div>
-            Nenhuma mensagem ainda. Começa a resenha!
+          <div style={{textAlign:'center',color:'rgba(255,255,255,0.2)',fontSize:11,paddingTop:40}}>
+            Carregando...
           </div>
-        ) : msgs.map((msg: any) => {
-          const u = msg.usuario;
-          const isMe = msg.usuario_id === usuarioId;
-          const cor = NIVEL_COLOR[u?.nivel] || '#555';
-          const isLenda = u?.nivel === 'Lenda';
-          return (
-            <div key={msg.id} style={{ display:'flex', gap:8, alignItems:'flex-start', flexDirection: isMe ? 'row-reverse' : 'row' }}>
-              {u?.avatar_url ? (
-                <img src={u.avatar_url} style={{ width:30, height:30, borderRadius:'50%', border:`1.5px solid ${cor}`, objectFit:'cover', flexShrink:0 }} />
-              ) : (
-                <div style={{ width:30, height:30, borderRadius:'50%', background: isLenda?'#FFD700':cor, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#111', flexShrink:0 }}>
-                  {(u?.apelido||u?.nome||'?').charAt(0)}
-                </div>
-              )}
-              <div style={{ maxWidth:'72%', background: isLenda?'linear-gradient(135deg,#1a1200,#111)':isMe?'#1a1a1a':'#111', border: isLenda?'1px solid #FFD70040':isMe?'1px solid #222':'1px solid #1a1a1a', borderRadius: isMe?'12px 2px 12px 12px':'2px 12px 12px 12px', padding:'8px 12px' }}>
-                <div style={{ fontSize:10, fontWeight:900, color:cor, marginBottom:3, display:'flex', alignItems:'center', gap:4 }}>
-                  {NIVEL_ICON[u?.nivel]} {u?.apelido || u?.nome}
-                  {isLenda && <span>👑</span>}
-                </div>
-                <div style={{ fontSize:13, color:'#ccc', lineHeight:1.5, wordBreak:'break-word' }}>{msg.mensagem}</div>
-                <div style={{ fontSize:9, color:'#333', marginTop:4, textAlign: isMe?'left':'right' }}>
-                  {new Date(msg.criado_em).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div style={{ padding:'10px 16px 16px', borderTop:'1px solid #111', flexShrink:0, background:'#0a0a0a' }}>
-        {usuarioId ? (
-          <div style={{ display:'flex', gap:8 }}>
-            <input value={texto} onChange={e => setTexto(e.target.value.slice(0,300))}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && enviar()}
-              placeholder="Fala, torcedor... 🐯"
-              style={{ flex:1, padding:'10px 14px', background:'#111', border:'1px solid #222', borderRadius:20, color:'#fff', fontSize:14, outline:'none' }} />
-            <button onClick={enviar} disabled={!texto.trim() || enviando}
-              style={{ width:42, height:42, borderRadius:'50%', background: texto.trim()?'#F5C400':'#1a1a1a', color: texto.trim()?'#111':'#444', border:'none', fontWeight:900, fontSize:16, cursor: texto.trim()?'pointer':'not-allowed', display:'flex', alignItems:'center', justifyContent:'center' }}>
-              {enviando ? '…' : '↑'}
-            </button>
+        ) : msgs.length === 0 ? (
+          <div style={{textAlign:'center',color:'rgba(255,255,255,0.2)',fontSize:11,paddingTop:40}}>
+            Seja o primeiro a falar no vestiário
           </div>
         ) : (
-          <div style={{ textAlign:'center', fontSize:12, color:'#555', padding:'8px 0' }}>
-            Entre para participar da resenha
+          msgs.map(msg => {
+            const u = msg.usuario;
+            const nome = u.apelido ?? u.nome ?? 'Torcedor';
+            const isMe = u.id === usuarioId;
+            return (
+              <div
+                key={msg.id}
+                className="msg-row"
+                style={{
+                  display:'flex', gap:8, alignItems:'flex-start',
+                  flexDirection: isMe ? 'row-reverse' : 'row',
+                }}
+              >
+                <Avatar src={u.avatar_url} nome={nome} nivel={u.nivel ?? 'Recruta'} />
+                <div style={{ maxWidth:'75%', minWidth:0 }}>
+                  <div style={{
+                    display:'flex', alignItems:'center', gap:6,
+                    marginBottom:3, flexWrap:'wrap',
+                    justifyContent: isMe ? 'flex-end' : 'flex-start',
+                  }}>
+                    <span style={{
+                      fontSize:11, fontWeight:900,
+                      color: isMe ? C.gold : '#fff',
+                      textShadow: isMe ? C.glowGold : 'none',
+                    }}>
+                      {isMe ? 'Você' : nome}
+                    </span>
+                    <PatenteBadge nivel={u.nivel ?? 'Recruta'} size="xs" />
+                    <span style={{fontSize:10,color:'rgba(255,255,255,0.2)'}}>{hora(msg.criado_em)}</span>
+                  </div>
+                  <div style={{
+                    fontSize:13, lineHeight:1.45,
+                    background: isMe
+                      ? 'rgba(245,196,0,0.08)'
+                      : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${isMe ? 'rgba(245,196,0,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                    borderRadius: isMe ? '10px 2px 10px 10px' : '2px 10px 10px 10px',
+                    padding:'8px 10px',
+                    color: isMe ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.65)',
+                    wordBreak: 'break-word',
+                  }}>
+                    {msg.mensagem}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div style={{
+        borderTop:'1px solid rgba(245,196,0,0.1)',
+        padding:'10px 12px',
+        background:'rgba(0,0,0,0.6)',
+        flexShrink: 0,
+      }}>
+        {!meuUser ? (
+          <div style={{
+            textAlign:'center', fontSize:11, color:'rgba(255,255,255,0.25)',
+            padding:'6px', letterSpacing:'0.1em',
+          }}>
+            <a href="/login" style={{color:C.gold,textDecoration:'none',textShadow:C.glowGold}}>
+              Entre com Google
+            </a>
+            {' '}para participar do vestiário
           </div>
+        ) : !podeEscrever ? (
+          <div style={{
+            display:'flex',alignItems:'center',gap:8,
+            fontSize:11,color:'rgba(255,255,255,0.2)',
+            justifyContent:'center',padding:'4px',
+          }}>
+            <span>Acumule 50 pts para escrever no chat</span>
+          </div>
+        ) : (
+          <>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <input
+                ref={inputRef}
+                className="chat-input"
+                value={input}
+                onChange={e => { setInput(e.target.value); setErro(''); }}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), enviar())}
+                placeholder="Manda a sua..."
+                maxLength={280}
+                disabled={sending}
+                style={{
+                  flex:1,
+                  background:'rgba(255,255,255,0.04)',
+                  border:'1px solid rgba(245,196,0,0.18)',
+                  borderRadius:8,
+                  color:'#fff',
+                  fontFamily:"'Barlow Condensed',sans-serif",
+                  fontSize:14, fontWeight:600,
+                  padding:'9px 12px',
+                  transition:'border-color 0.2s,background 0.2s',
+                }}
+              />
+              <button
+                onClick={enviar}
+                disabled={sending || !input.trim()}
+                style={{
+                  background: input.trim()
+                    ? `linear-gradient(135deg,${C.gold},#D4A200)`
+                    : 'rgba(255,255,255,0.06)',
+                  border:'none',
+                  borderRadius:8,
+                  color: input.trim() ? '#000' : 'rgba(255,255,255,0.2)',
+                  fontFamily:"'Barlow Condensed',sans-serif",
+                  fontSize:12, fontWeight:900,
+                  letterSpacing:'0.15em',
+                  padding:'9px 16px',
+                  cursor: input.trim() ? 'pointer' : 'default',
+                  transition:'all 0.2s',
+                  boxShadow: input.trim() ? C.glowGold : 'none',
+                  whiteSpace:'nowrap',
+                }}
+              >
+                {sending ? '...' : 'ENVIAR'}
+              </button>
+            </div>
+            <div style={{
+              display:'flex', justifyContent:'space-between',
+              marginTop:5, paddingLeft:2,
+            }}>
+              {erro ? (
+                <span style={{fontSize:10,color:C.red,letterSpacing:'0.05em'}}>{erro}</span>
+              ) : (
+                <span style={{fontSize:10,color:'rgba(255,255,255,0.15)'}}>
+                  {meuNivel?.nivel === 'Fanático' || (meuNivel?.num ?? 0) >= 2
+                    ? 'texto · emotes desbloqueados'
+                    : 'texto'}
+                </span>
+              )}
+              <span style={{fontSize:10,color:'rgba(255,255,255,0.12)'}}>{input.length}/280</span>
+            </div>
+          </>
         )}
       </div>
+
     </div>
   );
 }
