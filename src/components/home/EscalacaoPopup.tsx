@@ -12,17 +12,36 @@ export default function EscalacaoPopup() {
   const [jogo, setJogo] = useState<any>(null);
 
   useEffect(() => {
-    // Dados da API: América-MG (Mandante) x Novorizontino (Visitante)
-    const dadosApi = [{"idx":3,"id":4,"competicao":"Série B","rodada":"4ª Rodada","mandante_slug":"america-mg","visitante_slug":"novorizontino","data_hora":"2026-04-12 21:00:00+00","local":"Arena da Independência • BH","ativo":true}];
-    if (dadosApi?.[0]) setJogo(dadosApi[0]);
-    
-    const t = setTimeout(() => setVisible(true), 1500);
-    return () => clearTimeout(t);
+    // Dados da Rodada Atual
+    const dadosApi = [{
+        id: 4,
+        competicao: "Série B",
+        rodada: "4ª Rodada",
+        mandante_slug: "america-mg",
+        visitante_slug: "novorizontino",
+        local: "Independência • BH"
+    }];
+    const jogoAtual = dadosApi[0];
+    setJogo(jogoAtual);
+
+    // MECANISMO DE PERSISTÊNCIA: Aparece apenas 1x por rodada
+    const storageKey = `popup_visto_rodada_${jogoAtual.id}`;
+    const jaVisto = localStorage.getItem(storageKey);
+
+    if (!jaVisto) {
+      // Delay de 8 segundos antes de aparecer
+      const t = setTimeout(() => {
+        setVisible(true);
+        // Salva que o usuário já viu esta rodada específica
+        localStorage.setItem(storageKey, 'true');
+      }, 8000);
+      return () => clearTimeout(t);
+    }
   }, []);
 
   const close = () => {
     setClosing(true);
-    setTimeout(() => setVisible(false), 350);
+    setTimeout(() => setVisible(false), 400);
   };
 
   if (!visible || !jogo) return null;
@@ -31,161 +50,114 @@ export default function EscalacaoPopup() {
 
   return (
     <>
-      <style>{`
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,900;1,900&display=swap');
+        
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
-        @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
-        @keyframes slideDown { from { transform: translateY(0) } to { transform: translateY(100%) } }
-        @keyframes scanline { 0% { bottom: 100% } 100% { bottom: 0% } }
+        @keyframes slideUpJumbo { 
+          from { transform: translateY(120%) skewX(-4deg); } 
+          to { transform: translateY(0) skewX(-4deg); } 
+        }
+        @keyframes slideDownJumbo { 
+          from { transform: translateY(0) skewX(-4deg); } 
+          to { transform: translateY(120%) skewX(-4deg); } 
+        }
+        
+        .jumbo-font { font-family: 'Barlow Condensed', sans-serif; }
       `}</style>
 
-      {/* Overlay */}
-      <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', animation: closing ? 'fadeOut 0.35s forwards' : 'fadeIn 0.3s forwards' }} />
+      {/* Overlay Escuro */}
+      <div 
+        onClick={close} 
+        style={{ 
+            position: 'fixed', inset: 0, zIndex: 9998, 
+            background: 'rgba(0,0,0,0.8)', 
+            backdropFilter: 'blur(4px)',
+            animation: closing ? 'fadeOut 0.4s forwards' : 'fadeIn 0.4s forwards' 
+        }} 
+      />
 
-      {/* Container Placar LED */}
-      <div style={{ 
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, 
-        animation: closing ? 'slideDown 0.35s forwards' : 'slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' 
+      {/* Mini Jumbotron Popup */}
+      <div className="jumbo-font" style={{ 
+        position: 'fixed', bottom: '20px', left: '10px', right: '10px', zIndex: 9999, 
+        display: 'flex', justifyContent: 'center', pointerEvents: 'none'
       }}>
         <div style={{ 
-          background: '#050505', 
-          borderRadius: '32px 32px 0 0', 
-          borderTop: '5px solid #F5C400', 
-          maxWidth: 500, margin: '0 auto', 
-          padding: '15px 0 35px',
+          background: '#080808', 
+          width: '100%', maxWidth: '420px',
+          border: '2px solid #F5C400',
+          padding: '20px',
           position: 'relative',
-          overflow: 'hidden',
-          boxShadow: '0 -15px 50px rgba(245,196,0,0.15)'
+          pointerEvents: 'auto',
+          // Inclinação clássica do Jumbotron
+          transform: 'skewX(-4deg)',
+          boxShadow: '0 20px 80px rgba(0,0,0,0.8), 0 0 30px rgba(245,196,0,0.1)',
+          animation: closing ? 'slideDownJumbo 0.4s ease-in forwards' : 'slideUpJumbo 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.05) forwards'
         }}>
-          
-          {/* Botão X para Fechar */}
-          <button 
-            onClick={close}
-            style={{
-              position: 'absolute', top: '15px', right: '15px',
-              background: 'none', border: 'none',
-              color: '#444', fontSize: '18px', fontWeight: 900,
-              cursor: 'pointer', zIndex: 10,
-              padding: '10px'
-            }}
-          >
-            ✕
-          </button>
 
-          {/* Efeito de Scanlines */}
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%)', backgroundSize: '100% 4px', zIndex: 1 }} />
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '2px', background: 'rgba(245,196,0,0.05)', animation: 'scanline 5s linear infinite', zIndex: 1 }} />
+          {/* Botão X Minimalista */}
+          <button onClick={close} style={{
+            position: 'absolute', top: '-15px', right: '10px', 
+            background: '#F5C400', border: 'none', color: '#000', 
+            width: '28px', height: '28px', fontWeight: 900, 
+            transform: 'skewX(4deg)', cursor: 'pointer', fontSize: '14px'
+          }}>✕</button>
 
-          <div style={{ position: 'relative', zIndex: 2, padding: '0 25px' }}>
+          {/* Header do Mini Jumbotron */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+             <img src={LOGO_PORTAL} style={{ height: '22px', filter: 'brightness(100)' }} />
+             <div style={{ background: '#F5C400', color: '#000', padding: '2px 8px', fontSize: '10px', fontWeight: 900 }}>
+                {jogo.rodada.toUpperCase()}
+             </div>
+          </div>
+
+          {/* Área de Jogo */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', background: '#111', padding: '15px 10px', border: '1px solid #222' }}>
             
-            {/* Header: Logo & Badge */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', marginBottom: 20 }}>
-              <img src={LOGO_PORTAL} alt="Portal" style={{ height: 28, filter: 'brightness(0) invert(1)', marginBottom: 12 }} />
-              <div style={{ 
-                background: '#F5C400', color: '#000', 
-                padding: '3px 10px', borderRadius: '4px', 
-                fontSize: '9px', fontWeight: 900, 
-                letterSpacing: '1.5px', textTransform: 'uppercase' 
-              }}>
-                GAMEDAY • {jogo.competicao.toUpperCase()}
-              </div>
+            {/* Time 1 */}
+            <div style={{ textAlign: 'center', width: '35%' }}>
+                <img src={isVisitante ? ESCUDO_ADV : ESCUDO_NOVO} style={{ width: '45px', marginBottom: '5px' }} />
+                <div style={{ fontSize: '10px', color: '#fff', fontWeight: 900, textTransform: 'uppercase' }}>
+                    {isVisitante ? 'AME-MG' : 'NOVO'}
+                </div>
             </div>
 
-            {/* O PLACAR (LED STYLE) */}
-            <div style={{ 
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(255,255,255,0.02)', borderRadius: '16px', 
-              padding: '20px 0', border: '1px solid rgba(255,255,255,0.05)',
-              marginBottom: 25
-            }}>
-              
-              {/* MANDANTE */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', width: '40%' }}>
-                <img 
-                  src={isVisitante ? ESCUDO_ADV : ESCUDO_NOVO} 
-                  style={{ 
-                    width: 60, height: 60, objectFit: 'contain',
-                    filter: !isVisitante ? 'drop-shadow(0 0 12px #F5C400)' : 'grayscale(0.3)' 
-                  }} 
-                />
-                <p style={{ 
-                  color: !isVisitante ? '#F5C400' : '#fff', 
-                  fontSize: '10px', fontWeight: 900, textTransform: 'uppercase',
-                  textAlign: 'center'
-                }}>
-                  {isVisitante ? 'AMÉRICA-MG' : 'NOVORIZONTINO'}
-                </p>
-              </div>
-
-              {/* VS BOX */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '20%' }}>
-                <div style={{ fontSize: '24px', fontWeight: 900, color: '#F5C400', fontStyle: 'italic', lineHeight: 1 }}>VS</div>
-                <div style={{ fontSize: '7px', color: '#444', fontWeight: 900, marginTop: 4 }}>LIVE</div>
-              </div>
-
-              {/* VISITANTE */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', width: '40%' }}>
-                <img 
-                  src={isVisitante ? ESCUDO_NOVO : ESCUDO_ADV} 
-                  style={{ 
-                    width: 60, height: 60, objectFit: 'contain',
-                    filter: isVisitante ? 'drop-shadow(0 0 12px #F5C400)' : 'grayscale(0.3)' 
-                  }} 
-                />
-                <p style={{ 
-                  color: isVisitante ? '#F5C400' : '#fff', 
-                  fontSize: '10px', fontWeight: 900, textTransform: 'uppercase',
-                  textAlign: 'center'
-                }}>
-                  {isVisitante ? 'NOVORIZONTINO' : 'AMÉRICA-MG'}
-                </p>
-              </div>
+            {/* VS Central */}
+            <div style={{ textAlign: 'center' }}>
+                <div style={{ color: '#F5C400', fontSize: '24px', fontWeight: 900, fontStyle: 'italic' }}>VS</div>
             </div>
 
-            {/* Chamada Principal */}
-            <div style={{ textAlign: 'center', marginBottom: 25 }}>
-              <h2 style={{ 
-                color: '#fff', fontSize: '28px', fontWeight: 900, 
-                fontStyle: 'italic', textTransform: 'uppercase', 
-                lineHeight: 0.9, letterSpacing: '-0.5px'
-              }}>
-                MONTE SUA <br/>
-                <span style={{ color: '#F5C400', fontSize: '32px' }}>ESCALAÇÃO</span>
-              </h2>
-              <p style={{ color: '#555', fontSize: '10px', fontWeight: 700, marginTop: 10, letterSpacing: '1px' }}>
-                {jogo.local.toUpperCase()}
-              </p>
-            </div>
-
-            {/* Botão Estilo Ação */}
-            <div style={{ padding: '0 5px' }}>
-              <a 
-                href="https://www.onovorizontino.com.br/tigre-fc/sobre" 
-                onClick={close}
-                style={{ 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
-                  background: '#F5C400', color: '#000', 
-                  textAlign: 'center', padding: '16px', borderRadius: '12px', 
-                  fontWeight: 900, textDecoration: 'none', fontSize: '14px',
-                  boxShadow: '0 8px 25px rgba(245,196,0,0.25)'
-                }}
-              >
-                <span style={{ fontSize: '20px' }}>🐯</span> 
-                ENTRAR NO TIGRE FC
-              </a>
-              
-              <button 
-                onClick={close} 
-                style={{ 
-                  display: 'block', width: '100%', background: 'none', border: 'none', 
-                  color: '#333', marginTop: 15, fontWeight: 800, 
-                  fontSize: '10px', cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase'
-                }}
-              >
-                AGORA NÃO
-              </button>
+            {/* Time 2 */}
+            <div style={{ textAlign: 'center', width: '35%' }}>
+                <img src={isVisitante ? ESCUDO_NOVO : ESCUDO_ADV} style={{ width: '45px', marginBottom: '5px' }} />
+                <div style={{ fontSize: '10px', color: isVisitante ? '#F5C400' : '#fff', fontWeight: 900, textTransform: 'uppercase' }}>
+                    {isVisitante ? 'NOVO' : 'AME-MG'}
+                </div>
             </div>
           </div>
+
+          {/* Texto de Chamada Impactante */}
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+             <h3 style={{ color: '#fff', fontSize: '26px', fontWeight: 900, fontStyle: 'italic', lineHeight: 0.9, letterSpacing: '-1px' }}>
+                MONTE SUA <br/>
+                <span style={{ color: '#F5C400', fontSize: '32px' }}>ESCALAÇÃO</span>
+             </h3>
+             <p style={{ color: '#444', fontSize: '9px', fontWeight: 900, marginTop: '8px', letterSpacing: '1px' }}>
+                {jogo.local.toUpperCase()}
+             </p>
+          </div>
+
+          {/* Botão de Ação */}
+          <a href="/tigre-fc" style={{
+             display: 'block', background: '#F5C400', color: '#000', 
+             textAlign: 'center', padding: '14px', marginTop: '20px',
+             fontSize: '14px', fontWeight: 900, textDecoration: 'none',
+             textTransform: 'uppercase', fontStyle: 'italic'
+          }}>
+             ACESSAR VESTIÁRIO 🐯
+          </a>
+
         </div>
       </div>
     </>
