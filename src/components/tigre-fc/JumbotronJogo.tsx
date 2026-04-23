@@ -20,7 +20,6 @@ interface Jogo {
   visitante: Time;
 }
 
-// AJUSTADO: Interface Stats para bater com o envio da Page
 interface Stats {
   ranking?: any[];
   participantes?: number;
@@ -79,7 +78,6 @@ function Countdown({ dataHora }: { dataHora: string }) {
 }
 
 export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false }: Props) {
-  // AJUSTADO: Destruturação com os nomes vindos da page.tsx
   const {
     ranking = [],
     participantes = 847,
@@ -117,12 +115,10 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
   return (
     <div style={{ fontFamily: "'Barlow Condensed',Impact,sans-serif", background: LED.bg, borderRadius: 16, overflow: 'hidden', position: 'relative', padding: 2 }}>
       
-      {/* LED pixel texture */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: 'radial-gradient(circle,rgba(245,196,0,0.05) 1px,transparent 1px)', backgroundSize: '4px 4px' }} />
 
       <div style={{ position: 'relative', zIndex: 1, padding: '20px 16px 24px' }}>
 
-        {/* Top bar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid rgba(245,196,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 6px #22C55E', display: 'inline-block' }} className="animate-pulse" />
@@ -133,10 +129,8 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           </span>
         </div>
 
-        {/* Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 1fr', gap: 12, alignItems: 'start' }}>
 
-          {/* LEFT: Live Machine Data */}
           <div style={panelStyle}>
             <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: '0.35em', color: 'rgba(245,196,0,0.5)', borderBottom: '1px solid rgba(245,196,0,0.1)', paddingBottom: 6 }}>MACHINE · DATA</div>
             <div>
@@ -150,7 +144,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
             </div>
           </div>
 
-          {/* CENTER: Jogo */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Countdown dataHora={jogo.data_hora} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 15 }}>
@@ -163,19 +156,17 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
             }}>CONVOCAR TITULARES</Link>
           </div>
 
-          {/* RIGHT: Ranking Sync */}
           <div style={panelStyle}>
             <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: '0.35em', color: 'rgba(245,196,0,0.5)', borderBottom: '1px solid rgba(245,196,0,0.1)', paddingBottom: 6 }}>RANKING · TOP 5</div>
             {ranking.slice(0, 5).map((u, i) => (
-              <div key={i} style={{ display: 'flex', justifyBetween: 'center', gap: 4 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', flex: 1 }}>{u.apelido || u.nome}</span>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.apelido || u.nome}</span>
                 <span style={{ fontSize: 10, fontWeight: 900, color: LED.gold }}>{u.pontos_total || 0}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
           {[
             { val: `${posicao}°`, lbl: 'SÉRIE B' },
