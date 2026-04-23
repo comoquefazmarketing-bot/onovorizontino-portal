@@ -14,7 +14,6 @@ interface Time {
   id: number;
   nome: string;
   escudo_url: string;
-  cor_primaria: string;
   sigla: string | null;
 }
 
@@ -25,10 +24,6 @@ interface Jogo {
   data_hora: string;
   local: string | null;
   transmissao: string | null;
-  placar_mandante: number | null;
-  placar_visitante: number | null;
-  finalizado: boolean;
-  ativo: boolean;
   mandante: Time;
   visitante: Time;
 }
@@ -55,7 +50,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   useEffect(() => {
     setMounted(true);
-    window.scrollTo({ top: 0, behavior: 'instant' });
     topRef.current?.focus();
   }, []);
 
@@ -67,11 +61,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       try {
         const { data: { session } } = await sb.auth.getSession();
         if (session?.user?.id) {
-          const { data: u } = await sb
-            .from('tigre_fc_usuarios')
-            .select('id')
-            .eq('google_id', session.user.id)
-            .maybeSingle();
+          const { data: u } = await sb.from('tigre_fc_usuarios').select('id').eq('google_id', session.user.id).maybeSingle();
           if (u) setMeuId(u.id);
         }
 
@@ -105,11 +95,38 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     <main className="min-h-screen bg-[#050505] text-white pb-40 font-sans overflow-x-hidden">
       
       {/* ESPAÇAMENTO PARA O TOPO */}
-      <div ref={topRef} tabIndex={-1} className="pt-10 outline-none" />
+      <div ref={topRef} tabIndex={-1} className="pt-2 outline-none" />
 
-      <div className="max-w-md mx-auto px-4 relative z-20">
+      {/* ── NOVO HEADER BROADCAST NEON (SCAN FULL WIDTH) ── */}
+      <header className="relative pt-12 pb-24 text-center overflow-hidden bg-black border-b border-white/5">
+        {/* Camada de Scan Neon que preenche o todo o espaço do header */}
+        <div className="absolute inset-0 opacity-10 led-scan-bar pointer-events-none z-0" style={{
+          backgroundImage: 'linear-gradient(90deg, transparent, #BF5FFF, #00F3FF, transparent)',
+          backgroundSize: '300% 100%'
+        }} />
+        
+        <div className="relative z-10 max-w-4xl mx-auto px-4">
+          <div className="relative inline-block mb-4">
+            <div className="absolute inset-0 bg-cyan-400 blur-[50px] opacity-30 rounded-full scale-125 animate-pulse" />
+            <img src={PATA_LOGO} className="w-16 h-auto mx-auto relative z-10 drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)]" alt="Tigre FC Logo" />
+          </div>
+          
+          {/* TÍTULO COM GLOW CIANO NEON */}
+          <h1 className="text-6xl font-black text-white italic uppercase leading-[0.85] tracking-tighter mb-4 led-cyan">
+            TIGRE <span className="text-[#F5C400]">FC</span>
+          </h1>
+          
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-black/40 rounded-full shadow-lg border border-white/10">
+            <div className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-pulse" />
+            <p className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.4em]">Broadcast Station</p>
+            <div className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-pulse" />
+          </div>
+        </div>
+      </header>
 
-        {/* ── NOVO JUMBOTRON (REPLACE DO CARD ANTIGO) ── */}
+      <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-20 space-y-12">
+
+        {/* ── NOVO JUMBOTRON MODULAR (HIEARQUIA REVISADA) ── */}
         {jogo ? (
           <section className="mb-10">
             <JumbotronJogo 
@@ -118,7 +135,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               stats={{
                 ranking: ranking.map(u => ({ apelido: u.apelido || u.nome || 'Jogador', pontos: u.pontos_total })),
                 participantes: ranking.length,
-                posicao: 4, // Exemplo: Posição do Novorizontino na Série B
+                posicao: 4, 
                 mediaSofa: 7.2,
                 golsSofridos: 5,
                 mvp: { nome: 'Sander', media: 7.60 }
@@ -131,79 +148,39 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
         )}
 
-        {/* ── DESTAQUES ── */}
-        <DestaquesFifa />
-
-        {/* ── RAIO-X TÁTICO (SOFASCORE) ── */}
-        <section className="mt-20">
-          <div className="flex flex-col items-center mb-6 text-center px-4">
-            <h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-cyan-400 mb-1">Tactical Radar</h2>
-            <p className="text-xl font-black uppercase italic tracking-tighter text-white">Escalações em Tempo Real</p>
-          </div>
-          <div className="bg-[#0a0a0a] rounded-[40px] overflow-hidden shadow-2xl border-4 border-zinc-900 relative h-[550px]">
-            <iframe
-              src={`https://widgets.sofascore.com/pt-BR/embed/lineups?id=${jogo?.id ?? 15526004}&widgetTheme=dark`}
-              className="w-full h-full border-none"
-              scrolling="no"
-              loading="lazy"
-              title="Tactical Lineups"
-            />
-          </div>
-        </section>
-
-        {/* ── RANKING ELITE ── */}
-        <section className="mt-24">
-          <div className="flex justify-between items-end mb-8 px-4">
-            <div>
-              <h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-500 mb-1">Global Ranking</h2>
-              <p className="text-2xl font-black uppercase italic tracking-tighter text-white">Top Performance</p>
-            </div>
-            <Link href="/tigre-fc/ranking" className="text-[10px] font-black text-gold uppercase border-b border-yellow-500/30 pb-1">
-              Ver Todos
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {ranking.slice(0, 5).map((u, i) => (
-              <div
-                key={u.id}
-                onClick={() => setPerfilAberto(u.id)}
-                className={`flex items-center p-4 cursor-pointer transition-all rounded-3xl border ${
-                  i === 0 
-                  ? 'bg-gradient-to-r from-[#F5C400] to-[#D4A200] border-none text-black scale-[1.02]' 
-                  : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
-                }`}
-              >
-                <span className="w-8 text-center font-black italic opacity-50">{i + 1}</span>
-                <img src={u.avatar_url || PATA_LOGO} className="w-10 h-10 rounded-xl object-cover mx-3 border border-black/10" alt="Avatar" />
-                <div className="flex-1">
-                  <p className="font-black uppercase italic text-sm truncate">{u.apelido || u.nome}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-xl leading-none">{u.pontos_total || 0}</p>
-                  <p className="text-[8px] font-black opacity-50 uppercase">PTS</p>
+        {/* RESTANTE DA PÁGINA (CHATS, RANKING, ETC) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+          
+          {/* CHAT VESTIÁRIO (Ocupando mais espaço) */}
+          <section className="h-[600px] rounded-[40px] border border-white/5 overflow-hidden bg-black/40 relative">
+            <TigreFCChat usuarioId={meuId} />
+          </section>
+          
+          <div className="space-y-8">
+            <DestaquesFifa />
+            
+            {/* RANKING ELITE EM LUZ ROXA */}
+            <section>
+              <div className="flex justify-between items-end mb-6 px-4">
+                <div>
+                  <h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-500 mb-1">Global Ranking</h2>
+                  <p className="text-xl font-black uppercase italic tracking-tighter text-white">Elite Top Performance</p>
                 </div>
               </div>
-            ))}
+              <div className="space-y-3">
+                {ranking.slice(0, 5).map((u, i) => (
+                  <div key={u.id} className={`flex items-center p-4 rounded-3xl border ${i === 0 ? 'bg-gradient-to-r from-[#F5C400] to-[#D4A200] border-none text-black' : 'bg-zinc-900/40 border-white/5'}`}>
+                    <span className="w-8 text-center font-black italic opacity-50">{i + 1}</span>
+                    <div className="flex-1">
+                      <p className="font-black uppercase italic text-sm truncate">{u.apelido || u.nome}</p>
+                    </div>
+                    <p className="font-black text-xl leading-none">{u.pontos_total || 0}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
-        </section>
-
-        {/* ── CHAT VESTIÁRIO ── */}
-        <section className="mt-24">
-          <div className="flex items-center justify-between mb-6 px-4">
-            <div>
-              <h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-red-500 mb-1">Locker Room</h2>
-              <p className="text-xl font-black uppercase italic tracking-tighter text-white">Chat da Galera</p>
-            </div>
-            <div className="flex items-center gap-1.5 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[8px] font-black text-green-500 uppercase">Live</span>
-            </div>
-          </div>
-          <div className="h-[500px] rounded-[40px] border border-white/5 overflow-hidden bg-black/40 shadow-inner">
-            <TigreFCChat usuarioId={meuId} />
-          </div>
-        </section>
+        </div>
 
       </div>
 
@@ -212,10 +189,21 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         <TigreFCPerfilPublico targetUsuarioId={perfilAberto} viewerUsuarioId={meuId} onClose={() => setPerfilAberto(null)} />
       )}
 
+      {/* ESTILOS GLOBAIS FORÇADOS PARA MUDANÇA */}
       <style jsx global>{`
         ::-webkit-scrollbar { width: 0px; }
-        body { background-color: #050505; color: white; }
-        :root { --gold: #F5C400; }
+        body { background-color: #050505; color: white; font-family: 'Barlow Condensed', sans-serif !important; }
+        
+        /* Força os tokens neon se não estiverem no global.css */
+        .led-cyan { color: #00F3FF !important; text-shadow: 0 0 10px rgba(0,243,255,0.7) !important; }
+        
+        .led-scan-bar {
+          animation: led-scan-header 5s linear infinite;
+        }
+        @keyframes led-scan-header {
+          0% { background-position: -300% 0; }
+          100% { background-position: 300% 0; }
+        }
       `}</style>
     </main>
   );
