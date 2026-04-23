@@ -85,14 +85,14 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               ranking: ranking.slice(0, 5),
               participantes: 847,
               posicao: 4,
-              golsSofridos: 0, // Destaque para o Clean Sheet contra o Athletic
-              mediaSofaTime: 7.08, // Nota real pós-jogo
+              golsSofridos: 0, 
+              mediaSofaTime: 7.08, 
               mvp: { nome: 'Neto Pessoa', media: 7.90 }, 
             }}
           />
         )}
 
-        {/* WIDGET SOFASCORE - O CAMPO DE JOGO (CROP) */}
+        {/* WIDGET SOFASCORE - ESCALAÇÃO (ENQUADRAMENTO CORRIGIDO) */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Escalação & Notas Reais</h2>
@@ -100,17 +100,42 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
           
           <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 bg-[#121212] shadow-2xl">
-            {/* O Truque do Corte: O container tem altura fixa e o iframe é empurrado para cima */}
-            <div className="h-[580px] w-full overflow-hidden relative">
+            {/* Altura aumentada para 680px para não cortar a base do campo */}
+            <div className="h-[680px] w-full overflow-hidden relative">
               <iframe 
                 id="sofa-lineups-embed-15526026" 
                 src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526026&widgetTheme=dark" 
-                className="absolute top-[-160px] left-0 w-full h-[800px] border-0"
+                className="absolute left-0 w-full border-0"
+                style={{
+                    height: '950px', // Altura interna do frame maior
+                    top: '-165px'    // Puxa o conteúdo para esconder o cabeçalho
+                }}
                 scrolling="no"
               />
             </div>
-            {/* Overlay sutil para integrar com o tema escuro */}
-            <div className="absolute inset-0 pointer-events-none border-[1px] border-white/5 rounded-[32px]" />
+          </div>
+        </section>
+
+        {/* WIDGET SOFASCORE - CLASSIFICAÇÃO SÉRIE B */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Classificação Série B</h2>
+            <div className="h-[1px] flex-1 bg-white/5" />
+          </div>
+          
+          <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 bg-[#121212]">
+            <div className="h-[620px] w-full overflow-hidden relative">
+              <iframe 
+                id="sofa-standings-embed-1449-89840" 
+                src="https://widgets.sofascore.com/pt-BR/embed/tournament/1449/season/89840/standings/Brasileiro%20Serie%20B%202026?widgetTitle=Brasileiro%20Serie%20B%202026&showCompetitionLogo=true&widgetTheme=dark" 
+                className="absolute left-0 w-full border-0"
+                style={{
+                    height: '1123px',
+                    top: '-40px' // Crop suave no topo da tabela
+                }}
+                scrolling="no" 
+              />
+            </div>
           </div>
         </section>
 
