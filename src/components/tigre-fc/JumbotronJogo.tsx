@@ -2,6 +2,7 @@
 // src/components/tigre-fc/JumbotronJogo.tsx
 // Sistema 4 cores: --gold --cyan --red --purple
 
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
