@@ -92,7 +92,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           />
         )}
 
-        {/* WIDGET SOFASCORE - ESCALAÇÃO (AJUSTADO PARA NÃO CORTAR O TOPO) */}
+        {/* WIDGET SOFASCORE - ESCALAÇÃO (ALINHADO POR CIMA) */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Live Radar System</h2>
@@ -100,15 +100,16 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
           
           <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 bg-[#121212] shadow-2xl">
-            {/* Altura de 850px para garantir que caiba o campo e os reservas em baixo */}
-            <div className="h-[850px] w-full overflow-hidden relative">
+            {/* Altura de 786px é a padrão do widget para mostrar tudo */}
+            <div className="h-[786px] w-full overflow-hidden relative">
               <iframe 
                 id="sofa-lineups-embed-15526026" 
                 src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526026&widgetTheme=dark" 
-                className="absolute left-0 w-full border-0"
+                className="w-full h-full border-0"
                 style={{
-                    height: '1000px', 
-                    top: '-60px' // AJUSTE CHAVE: Mudamos de -150px para -60px para o ataque "descer" e aparecer.
+                    position: 'absolute',
+                    top: '0', // Alinhado exatamente no topo
+                    left: '0'
                 }}
                 scrolling="no"
               />
@@ -116,7 +117,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
         </section>
 
-        {/* WIDGET SOFASCORE - CLASSIFICAÇÃO SÉRIE B */}
+        {/* WIDGET SOFASCORE - CLASSIFICAÇÃO SÉRIE B (ALINHADO POR CIMA) */}
         <section className="space-y-4">
           <div className="flex items-center gap-3">
             <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Tabela de Classificação</h2>
@@ -124,14 +125,16 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
           
           <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 bg-[#121212]">
-            <div className="h-[950px] w-full overflow-hidden relative">
+            {/* Altura de 1123px para mostrar a tabela inteira sem scroll */}
+            <div className="h-[1123px] w-full overflow-hidden relative">
               <iframe 
                 id="sofa-standings-embed-1449-89840" 
                 src="https://widgets.sofascore.com/pt-BR/embed/tournament/1449/season/89840/standings/Brasileiro%20Serie%20B%202026?widgetTitle=Brasileiro%20Serie%20B%202026&showCompetitionLogo=true&widgetTheme=dark" 
-                className="absolute left-0 w-full border-0"
+                className="w-full h-full border-0"
                 style={{
-                    height: '1100px',
-                    top: '-30px' // Ajuste leve para centralizar a tabela
+                    position: 'absolute',
+                    top: '0', // Alinhado no topo
+                    left: '0'
                 }}
                 scrolling="no" 
               />
