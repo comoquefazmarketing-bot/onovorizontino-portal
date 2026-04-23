@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react';
 const C = {
   gold: '#F5C400',
   cyan: '#00F3FF',
-  glowGold: '0 0 15px rgba(245,196,0,0.6), 0 0 30px rgba(245,196,0,0.3)',
+  glowGold: '0 0 15px rgba(245,196,0,0.6)',
   glowCyan: '0 0 12px rgba(0,243,255,0.7)',
 };
 
-export default function PopupTecnicoPro() {
+export default function PopupFinalVertical() {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
-    const storageKey = `v7_final_conversion`;
+    const storageKey = `v8_final_vertical`;
     if (!localStorage.getItem(storageKey)) {
       const t = setTimeout(() => {
         setVisible(true);
@@ -35,101 +35,99 @@ export default function PopupTecnicoPro() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,900;1,900&display=swap');
         
-        @keyframes entrance-jumbo {
-          0% { transform: translate(-50%, 150%) skewX(-6deg); opacity: 0; }
-          100% { transform: translate(-50%, 0) skewX(-6deg); opacity: 1; }
+        @keyframes slide-up-clean {
+          from { transform: translate(-50%, 20%); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
         }
 
         .jumbo-font { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; }
-        .skew-fix { transform: skewX(6deg); }
-        .btn-pulse:hover { transform: scale(1.05) skewX(6deg); filter: brightness(1.2); }
+        .btn-active:hover { transform: scale(1.02); filter: brightness(1.1); transition: 0.2s; }
       `}</style>
 
-      {/* Overlay de foco total */}
+      {/* Overlay com Blur */}
       <div onClick={close} style={{
         position: 'fixed', inset: 0, zIndex: 9998,
-        background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(15px)',
+        background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)',
         opacity: closing ? 0 : 1, transition: 'opacity 0.5s'
       }} />
 
+      {/* CONTAINER VERTICAL RETANGULAR */}
       <div className="jumbo-font" style={{
-        position: 'fixed', bottom: '12vh', left: '50%', zIndex: 9999,
-        width: '94%', maxWidth: '440px',
-        animation: 'entrance-jumbo 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        transform: 'translateX(-50%) skewX(-6deg)',
-        background: '#020202',
-        borderRadius: '24px',
-        border: `2px solid ${C.gold}`,
-        padding: '30px 20px',
-        boxShadow: '0 50px 100px rgba(0,0,0,1)',
-        textAlign: 'center'
+        position: 'fixed', bottom: '10vh', left: '50%', zIndex: 9999,
+        width: '90%', maxWidth: '400px',
+        animation: 'slide-up-clean 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        transform: 'translateX(-50%)',
+        background: '#080808',
+        borderRadius: '16px',
+        border: `1px solid ${C.gold}`,
+        padding: '40px 24px 30px',
+        boxShadow: '0 40px 80px rgba(0,0,0,0.8)',
+        textAlign: 'center',
+        overflow: 'visible' // Para o botão X poder "vazar" se quiser
       }}>
         
-        {/* Barra de Scan Neo-Futurista */}
-        <div style={{
-          position: 'absolute', top: 0, left: '10%', right: '10%', height: '2px',
-          background: `linear-gradient(90deg, transparent, ${C.cyan}, ${C.gold}, transparent)`,
-        }} />
+        {/* BOTÃO "X" PARA FECHAR */}
+        <button onClick={close} style={{
+          position: 'absolute', top: '15px', right: '15px',
+          background: 'rgba(255,255,255,0.05)', border: 'none',
+          color: '#fff', fontSize: '18px', width: '32px', height: '32px',
+          borderRadius: '50%', cursor: 'pointer', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', zIndex: 10
+        }}>✕</button>
 
-        <div className="skew-fix">
-          {/* Headline Desafiadora */}
-          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 900, fontStyle: 'italic', margin: 0 }}>
-            VOCÊ É O <span style={{ color: C.gold, textShadow: C.glowGold }}>TÉCNICO:</span>
+        {/* ESTRATÉGIA DE COPY: O DESAFIO AO TÉCNICO */}
+        <div style={{ marginBottom: '25px' }}>
+          <h2 style={{ color: '#fff', fontSize: '32px', fontWeight: 900, fontStyle: 'italic', margin: 0, lineHeight: 0.9 }}>
+            VOCÊ É O <br/>
+            <span style={{ color: C.gold, fontSize: '48px', textShadow: C.glowGold }}>TÉCNICO:</span>
           </h2>
-          <p style={{ color: C.cyan, fontSize: '18px', fontWeight: 900, marginTop: '5px', letterSpacing: '1px' }}>
+          <p style={{ color: C.cyan, fontSize: '16px', fontWeight: 900, marginTop: '8px', letterSpacing: '1px' }}>
             COMO VOCÊ ESCALARIA O TIGRE HOJE?
           </p>
+        </div>
 
-          {/* Arena de Escudos - O Coração do Engajamento */}
-          <div style={{ 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', 
-            gap: '25px', margin: '30px 0', background: 'rgba(255,255,255,0.03)',
-            padding: '20px', borderRadius: '15px'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <img src="https://upload.wikimedia.org/wikipedia/pt/1/17/Sport_Club_do_Recife.png" 
-                   style={{ width: '75px', height: '75px', objectFit: 'contain' }} />
-              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', marginTop: '8px' }}>VISITANTE</div>
-            </div>
-
-            <div style={{ fontSize: '24px', fontWeight: 900, color: 'rgba(255,255,255,0.1)' }}>VS</div>
-
-            <div style={{ textAlign: 'center' }}>
-              <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png" 
-                   style={{ width: '75px', height: '75px', objectFit: 'contain', filter: `drop-shadow(${C.glowGold})` }} />
-              <div style={{ color: C.gold, fontSize: '10px', marginTop: '8px', fontWeight: 900 }}>MANDANTE</div>
-            </div>
+        {/* CONFRONTO VISUAL */}
+        <div style={{ 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', 
+          gap: '20px', margin: '25px 0', background: 'rgba(255,255,255,0.02)',
+          padding: '20px 10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)'
+        }}>
+          <div style={{ flex: 1 }}>
+            <img src="https://upload.wikimedia.org/wikipedia/pt/1/17/Sport_Club_do_Recife.png" 
+                 style={{ width: '65px', height: '65px', objectFit: 'contain' }} />
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', marginTop: '5px' }}>SPORT</div>
           </div>
 
-          {/* Copy de fechamento focado em ação */}
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '25px', lineHeight: '1.4' }}>
-            O mercado está <strong>ABERTO</strong>. <br/> Mostre sua estratégia e conquiste o topo do ranking.
-          </p>
+          <div style={{ fontSize: '20px', fontWeight: 900, color: 'rgba(255,255,255,0.1)' }}>VS</div>
 
-          {/* CTA Principal */}
-          <a href="/tigre-fc" className="btn-pulse" style={{
-            display: 'block',
-            background: `linear-gradient(135deg, ${C.gold}, #D4A200)`,
-            color: '#000',
-            padding: '20px',
-            fontSize: '22px',
-            fontWeight: 900,
-            textDecoration: 'none',
-            fontStyle: 'italic',
-            borderRadius: '12px',
-            boxShadow: '0 15px 30px rgba(245,196,0,0.4)',
-            transition: '0.3s'
-          }}>
-            MONTAR MINHA ESCALAÇÃO →
-          </a>
-
-          <button onClick={close} style={{
-            background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)',
-            marginTop: '25px', cursor: 'pointer', fontSize: '11px', fontWeight: 900
-          }}>
-            NÃO, PREFIRO SÓ OLHAR
-          </button>
+          <div style={{ flex: 1 }}>
+            <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png" 
+                 style={{ width: '65px', height: '65px', objectFit: 'contain', filter: `drop-shadow(${C.glowGold})` }} />
+            <div style={{ color: C.gold, fontSize: '9px', marginTop: '5px', fontWeight: 900 }}>NOVO</div>
+          </div>
         </div>
+
+        {/* BENEFÍCIO E CTA */}
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', marginBottom: '25px' }}>
+          O mercado está <strong>ABERTO</strong>. Mostre sua estratégia <br/> e conquiste o topo do ranking.
+        </p>
+
+        <a href="/tigre-fc" className="btn-active" style={{
+          display: 'block',
+          background: `linear-gradient(135deg, ${C.gold}, #D4A200)`,
+          color: '#000',
+          padding: '20px',
+          fontSize: '18px',
+          fontWeight: 900,
+          textDecoration: 'none',
+          fontStyle: 'italic',
+          borderRadius: '8px',
+          boxShadow: '0 10px 25px rgba(245,196,0,0.3)',
+          transition: '0.2s'
+        }}>
+          MONTAR MINHA ESCALAÇÃO →
+        </a>
+
       </div>
     </>
   );
