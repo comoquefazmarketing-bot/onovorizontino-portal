@@ -7,7 +7,7 @@ import { supabase as sb } from '@/lib/supabase';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
 import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
-import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo'; // Importado conforme planejado
+import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
@@ -26,19 +26,16 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   useEffect(() => {
     if (!mounted) return;
     async function init() {
-      // 1. Sessão do Usuário
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user?.id) {
         const { data: u } = await sb.from('tigre_fc_usuarios').select('id').eq('google_id', session.user.id).maybeSingle();
         if (u) setMeuId(u.id);
       }
 
-      // 2. Busca do Próximo Jogo (Machine do SofaScore)
       const resJogo = await fetch('/api/proximo-jogo').then(r => r.json()).catch(() => null);
       if (resJogo?.jogos?.length > 0) {
         setJogo(resJogo.jogos[0]);
       } else {
-        // Fallback para o jogo contra o Sport ou América conforme nossos dados
         setJogo({
           id: 6,
           data_hora: '2026-04-25T20:30:00',
@@ -50,11 +47,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         });
       }
 
-      // 3. Busca do Ranking (Sincronizado com Supabase)
-      const { data: resRank } = await sb.from('tigre_fc_usuarios')
-        .select('id, nome, apelido, avatar_url, pontos_total')
-        .order('pontos_total', { ascending: false })
-        .limit(10);
+      const { data: resRank } = await sb.from('tigre_fc_usuarios').select('id, nome, apelido, avatar_url, pontos_total').order('pontos_total', { ascending: false }).limit(10);
       if (resRank) setRanking(resRank);
     }
     init();
@@ -70,7 +63,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700;1,900&display=swap');
       `}</style>
 
-      {/* HEADER PRINCIPAL */}
+      {/* HEADER */}
       <div className="relative pt-20 pb-28 text-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(245,196,0,0.1)_0%,transparent_70%)]" />
         <div className="relative z-10">
@@ -83,28 +76,47 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-10 space-y-12">
 
-        {/* NOVA JUMBOTRON (Estilo NBA/NFL) 
-            Substituindo o card antigo pela nossa Jumbotron Modular
-        */}
+        {/* JUMBOTRON MODULAR COM DADOS ATUALIZADOS (ATHLETIC) */}
         {jogo && (
           <JumbotronJogo 
             jogo={jogo} 
             mercadoFechado={mercadoFechado} 
             stats={{
-              ranking: ranking.slice(0, 5), // Exibe o Top 5 no painel de LED
-              participantes: 847, // Dados mockados para impacto visual
-              posicao: 4, // Posição atual do Tigre na Série B
-              golsSofridos: 5,
-              mediaSofaTime: 6.88, // Média real extraída do SofaScore
-              mvp: { nome: 'Sander', media: 7.60 }, // Destaque para o melhor avaliado
+              ranking: ranking.slice(0, 5),
+              participantes: 847,
+              posicao: 4,
+              golsSofridos: 0, // Destaque para o Clean Sheet contra o Athletic
+              mediaSofaTime: 7.08, // Nota real pós-jogo
+              mvp: { nome: 'Neto Pessoa', media: 7.90 }, 
             }}
           />
         )}
 
-        {/* DESTAQUES ESTILO FIFA/FC24 */}
+        {/* WIDGET SOFASCORE - O CAMPO DE JOGO (CROP) */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Escalação & Notas Reais</h2>
+            <span className="text-[9px] font-bold text-zinc-500 italic">FONTE: SOFASCORE</span>
+          </div>
+          
+          <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 bg-[#121212] shadow-2xl">
+            {/* O Truque do Corte: O container tem altura fixa e o iframe é empurrado para cima */}
+            <div className="h-[580px] w-full overflow-hidden relative">
+              <iframe 
+                id="sofa-lineups-embed-15526026" 
+                src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526026&widgetTheme=dark" 
+                className="absolute top-[-160px] left-0 w-full h-[800px] border-0"
+                scrolling="no"
+              />
+            </div>
+            {/* Overlay sutil para integrar com o tema escuro */}
+            <div className="absolute inset-0 pointer-events-none border-[1px] border-white/5 rounded-[32px]" />
+          </div>
+        </section>
+
         <DestaquesFifa />
 
-        {/* LEADERBOARD DETALHADO */}
+        {/* LEADERBOARD */}
         <section>
           <div className="flex items-center gap-3 mb-5">
             <div className="h-[1px] flex-1 bg-gradient-to-r from-[rgba(245,196,0,0.3)] to-transparent" />
@@ -129,7 +141,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
         </section>
 
-        {/* VESTIÁRIO (CHAT) */}
+        {/* CHAT */}
         <section>
           <h3 className="text-3xl font-black italic uppercase text-white text-center mb-6">Vestiário</h3>
           <div className="rounded-3xl border border-white/5 overflow-hidden bg-black/40 backdrop-blur-md">
@@ -138,7 +150,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </section>
       </div>
 
-      {/* OVERLAY DE PERFIL PÚBLICO */}
       <AnimatePresence>
         {perfilAberto && (
           <TigreFCPerfilPublico targetUsuarioId={perfilAberto} viewerUsuarioId={meuId} onClose={() => setPerfilAberto(null)} />
