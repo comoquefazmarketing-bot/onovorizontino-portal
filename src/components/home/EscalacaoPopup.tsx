@@ -1,19 +1,27 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+// Constantes idênticas ao seu Jumbotron oficial
+const C = {
+  gold: '#F5C400',
+  cyan: '#00F3FF',
+  glowGold: '0 0 15px rgba(245,196,0,0.6), 0 0 30px rgba(245,196,0,0.3)',
+  glowCyan: '0 0 10px rgba(0,243,255,0.7)',
+};
+
 export default function EscalacaoPopup() {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
-    // Delay de 8 segundos e trava de 1x por rodada (ID 5)
-    const storageKey = `visto_r5`;
+    // 8 segundos de delay e trava por rodada (ID 5)
+    const storageKey = `popup_rodada_5_visto`;
     if (!localStorage.getItem(storageKey)) {
-      const t = setTimeout(() => {
+      const timer = setTimeout(() => {
         setVisible(true);
         localStorage.setItem(storageKey, 'true');
       }, 8000);
-      return () => clearTimeout(t);
+      return () => clearTimeout(timer);
     }
   }, []);
 
@@ -29,100 +37,103 @@ export default function EscalacaoPopup() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,900;1,900&display=swap');
         
-        .jumbotron-theme {
+        .jumbo-mini-container {
           font-family: 'Barlow Condensed', sans-serif;
-          text-transform: uppercase;
+          animation: slideUp 0.6s cubic-bezier(0.2, 1, 0.3, 1) forwards;
         }
 
-        @keyframes slideJumbo {
+        @keyframes slideUp {
           from { transform: translate(-50%, 100%) skewX(-6deg); opacity: 0; }
           to { transform: translate(-50%, 0) skewX(-6deg); opacity: 1; }
         }
 
-        .glow-yellow { text-shadow: 0 0 15px rgba(245, 196, 0, 0.6); }
-        .glow-cyan { color: #00F3FF; text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
-        .btn-glow { box-shadow: 0 0 25px rgba(245, 196, 0, 0.5); }
+        .skew-fix { transform: skewX(6deg); }
       `}</style>
 
-      {/* Overlay Escuro com Blur */}
+      {/* Overlay de fundo */}
       <div onClick={close} style={{
         position: 'fixed', inset: 0, zIndex: 9998,
-        background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+        background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
         opacity: closing ? 0 : 1, transition: 'opacity 0.4s'
       }} />
 
-      {/* Mini Jumbotron Fiel ao Design */}
-      <div className="jumbotron-theme" style={{
+      {/* Container Principal Inclinado */}
+      <div className="jumbo-mini-container" style={{
         position: 'fixed', bottom: '40px', left: '50%', zIndex: 9999,
-        width: '90%', maxWidth: '420px',
-        animation: 'slideJumbo 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        width: '90%', maxWidth: '400px',
+        background: '#050505',
+        border: `2px solid ${C.gold}`,
+        padding: '25px',
+        boxShadow: '0 25px 50px rgba(0,0,0,0.8)',
         transform: 'translateX(-50%) skewX(-6deg)'
       }}>
         
-        <div style={{
-          background: '#050505',
-          border: '2px solid #F5C400',
-          padding: '25px',
-          position: 'relative',
-          boxShadow: '0 30px 60px rgba(0,0,0,0.9)'
-        }}>
+        {/* Botão Fechar no estilo "X" do Jumbotron */}
+        <button onClick={close} style={{
+          position: 'absolute', top: '-15px', left: '-10px',
+          background: C.gold, border: 'none', color: '#000',
+          width: '32px', height: '32px', fontWeight: 900, cursor: 'pointer',
+          boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+        }} className="skew-fix">X</button>
 
-          {/* Badge da Rodada */}
-          <div style={{ 
-            position: 'absolute', top: '15px', right: '15px', 
-            background: '#F5C400', color: '#000', padding: '2px 10px', 
-            fontWeight: 900, fontSize: '12px', transform: 'skewX(6deg)' 
-          }}>
-            5ª RODADA
-          </div>
+        {/* Rodada Badge */}
+        <div style={{ 
+          position: 'absolute', top: '15px', right: '15px', 
+          background: C.gold, color: '#000', padding: '2px 8px', 
+          fontSize: '11px', fontWeight: 900 
+        }} className="skew-fix">
+          5ª RODADA
+        </div>
 
-          {/* Confronto Centralizado */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', margin: '20px 0' }}>
-            <div style={{ textAlign: 'center', transform: 'skewX(6deg)' }}>
-              <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20SPORT%20RECIFE.png" style={{ width: '60px' }} />
-              <div style={{ color: '#aaa', fontSize: '12px', fontWeight: 900, marginTop: '8px' }}>SPORT</div>
+        {/* Conteúdo Interno com correção de inclinação */}
+        <div className="skew-fix" style={{ textAlign: 'center' }}>
+          
+          {/* Confronto */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '25px', padding: '0 10px' }}>
+            <div style={{ width: '80px' }}>
+              <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20SPORT%20RECIFE.png" 
+                   style={{ width: '100%', height: '60px', objectFit: 'contain' }} 
+                   onError={(e) => e.currentTarget.src = 'https://via.placeholder.com/60?text=SPORT'} />
+              <div style={{ color: '#666', fontSize: '10px', fontWeight: 900, marginTop: '5px' }}>SPORT RECIFE</div>
             </div>
 
-            <div style={{ transform: 'skewX(6deg)', textAlign: 'center' }}>
-              <div style={{ color: 'rgba(245,196,0,0.2)', fontSize: '30px', fontWeight: 900, fontStyle: 'italic' }}>VS</div>
-            </div>
+            <div style={{ fontStyle: 'italic', color: 'rgba(245,196,0,0.15)', fontSize: '24px', fontWeight: 900 }}>VS</div>
 
-            <div style={{ textAlign: 'center', transform: 'skewX(6deg)' }}>
+            <div style={{ width: '80px' }}>
               <img src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png" 
-                style={{ width: '60px', filter: 'drop-shadow(0 0 12px rgba(245,196,0,0.5))' }} 
-              />
-              <div style={{ color: '#F5C400', fontSize: '12px', fontWeight: 900, marginTop: '8px' }} className="glow-yellow">NOVO</div>
+                   style={{ width: '100%', height: '60px', objectFit: 'contain', filter: `drop-shadow(${C.glowGold})` }} />
+              <div style={{ color: C.gold, fontSize: '10px', fontWeight: 900, marginTop: '5px', textShadow: C.glowGold }}>NOVORIZONTINO</div>
             </div>
           </div>
 
-          {/* Texto de Chamada (Estilo Fantasy Station) */}
-          <div style={{ textAlign: 'center', marginBottom: '20px', transform: 'skewX(6deg)' }}>
-            <div className="glow-cyan" style={{ fontSize: '10px', letterSpacing: '3px', marginBottom: '5px' }}>
-              BROADCAST SYSTEM
+          {/* Chamada */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ color: C.cyan, fontSize: '9px', letterSpacing: '3px', fontWeight: 900, textShadow: C.glowCyan, marginBottom: '5px' }}>
+              BROADCAST STATION
             </div>
-            <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 900, fontStyle: 'italic', lineHeight: 0.8 }}>
+            <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 900, fontStyle: 'italic', lineHeight: 0.8, margin: 0 }}>
               MONTE SUA <br/>
-              <span style={{ color: '#F5C400', fontSize: '38px' }} className="glow-yellow">ESCALAÇÃO</span>
+              <span style={{ color: C.gold, fontSize: '36px', textShadow: C.glowGold }}>ESCALAÇÃO</span>
             </h2>
+            <p style={{ color: '#444', fontSize: '10px', fontWeight: 900, marginTop: '10px' }}>ARENA PERNAMBUCO • PE</p>
           </div>
 
-          {/* Botão idêntico ao "Convocar Titulares" */}
-          <a href="/tigre-fc" className="btn-glow" style={{
-            display: 'block', background: 'linear-gradient(135deg, #F5C400, #D4A200)',
-            color: '#000', textAlign: 'center', padding: '18px',
-            fontSize: '16px', fontWeight: 900, textDecoration: 'none',
-            fontStyle: 'italic', transform: 'skewX(6deg)', letterSpacing: '1px'
+          {/* Botão de Ação Estilo Jumbotron */}
+          <a href="/tigre-fc" style={{
+            display: 'block',
+            background: `linear-gradient(135deg, ${C.gold}, #D4A200)`,
+            color: '#000',
+            padding: '16px',
+            fontSize: '16px',
+            fontWeight: 900,
+            textDecoration: 'none',
+            fontStyle: 'italic',
+            borderRadius: '4px',
+            boxShadow: '0 0 20px rgba(245,196,0,0.4)',
+            transition: 'transform 0.2s'
           }}>
             ACESSAR VESTIÁRIO →
           </a>
-
-          {/* Botão Fechar (X) */}
-          <button onClick={close} style={{
-            position: 'absolute', top: '-15px', left: '-10px',
-            background: '#F5C400', border: 'none', color: '#000',
-            width: '30px', height: '30px', fontWeight: 900, cursor: 'pointer'
-          }}>X</button>
-
         </div>
       </div>
     </>
