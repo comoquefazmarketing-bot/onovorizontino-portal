@@ -11,14 +11,14 @@ export default function DestaquesFifa() {
   const capitao = {
     nome:   'Luís Oyama',
     pontos: 15.8, // 7.9 x 2
-    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/SANDER%20FUNDO%20TRANSPARENTE.png', // Substitua pela URL do Oyama se tiver
+    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/OYAMA%20FUNDO%20TRANSPARENTE.png', // Substitua pela URL do Oyama se tiver
   };
 
   // HERÓI — Robson · Nota 7.9 no SofaScore · Seguro na zaga e decisivo
   const heroi = {
     nome:   'Robson',
     pontos: 7.9,
-    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JUNINHO%20FUNDO%20TRANSPARENTE.png', // Substitua pela URL do Robson se tiver
+    foto:   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ROBSON%20FUNDO%20TRANSPARENTE.png', // Substitua pela URL do Robson se tiver
   };
 
   const CardUT26 = ({ j, tipo }: { j: { nome: string; pontos: number; foto: string }; tipo: 'CAPITÃO' | 'HERÓI' }) => {
