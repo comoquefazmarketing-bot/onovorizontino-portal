@@ -1,6 +1,6 @@
 'use client';
 // src/components/tigre-fc/JumbotronJogoReativo.tsx
-// Versão integral com Realtime internalizado e correções para Build (Tipagem de Stats)
+// Versão integral com Realtime internalizado e correções para Build
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
@@ -8,11 +8,11 @@ import { supabase } from '@/lib/supabase';
 
 // ── Design tokens ──────────────────────────────────────────
 const C = {
-  gold:      '#F5C400', cyan:   '#00F3FF',
-  red:       '#FF2D55', green:  '#22C55E',
-  glowGold:  '0 0 8px rgba(245,196,0,0.6),0 0 20px rgba(245,196,0,0.3)',
-  glowCyan:  '0 0 8px rgba(0,243,255,0.7),0 0 20px rgba(0,243,255,0.35)',
-  glowRed:   '0 0 8px rgba(255,45,85,0.7),0 0 20px rgba(255,45,85,0.35)',
+  gold: '#F5C400', cyan: '#00F3FF',
+  red: '#FF2D55', green: '#22C55E',
+  glowGold: '0 0 8px rgba(245,196,0,0.6),0 0 20px rgba(245,196,0,0.3)',
+  glowCyan: '0 0 8px rgba(0,243,255,0.7),0 0 20px rgba(0,243,255,0.35)',
+  glowRed: '0 0 8px rgba(255,45,85,0.7),0 0 20px rgba(255,45,85,0.35)',
 };
 
 // ── Tipos ──────────────────────────────────────────────────
@@ -21,37 +21,40 @@ type EventoTipo =
   | 'var_inicio' | 'var_confirmado' | 'var_cancelado' | 'idle';
 
 interface ScoutEvento {
-  tipo:        EventoTipo;
+  tipo: EventoTipo;
   jogador_id?: number;
-  ts:          number;
+  ts: number;
 }
 
 interface ScoutState {
-  evento:       ScoutEvento | null;
+  evento: ScoutEvento | null;
   varAndamento: boolean;
-  golsNovo:      number;
-  cartoes:      Array<{ tipo: 'amarelo' | 'vermelho' }>;
+  golsNovo: number;
+  cartoes: Array<{ tipo: 'amarelo' | 'vermelho' }>;
 }
 
-interface Time  { nome: string; escudo_url: string | null; sigla?: string | null }
-interface Jogo  {
-  id: number; competicao: string; rodada: string;
-  data_hora: string; local: string | null; transmissao: string | null;
-  mandante: Time; visitante: Time;
+interface Time { 
+  nome: string; 
+  escudo_url: string | null; 
+  sigla?: string | null 
 }
 
-// Corrigido: Interface Props agora aceita stats enviado pela page.tsx
+interface Jogo {
+  id: number; 
+  competicao: string; 
+  rodada: string;
+  data_hora: string; 
+  local: string | null; 
+  transmissao: string | null;
+  mandante: Time; 
+  visitante: Time;
+}
+
+// Interface Props corrigida
 interface Props { 
   jogo: Jogo; 
   mercadoFechado?: boolean;
-  stats?: {
-    ranking: { apelido: string; pontos: number; }[];
-    participantes: number;
-    posicao: number;
-    mediaSofa: number;
-    golsSofridos: number;
-    mvp: { nome: string; media: number; };
-  };
+  mediaSofa?: number;        // ← Corrigido aqui
 }
 
 // ── Confete CSS puro ─────────────────────
@@ -61,9 +64,9 @@ function dispararConfete() {
   for (let i = 0; i < 60; i++) {
     const el = document.createElement('div');
     const cor = cores[Math.floor(Math.random() * cores.length)];
-    const x   = Math.random() * 100;
+    const x = Math.random() * 100;
     const delay = Math.random() * 0.6;
-    const dur   = 1.2 + Math.random() * 0.8;
+    const dur = 1.2 + Math.random() * 0.8;
     el.style.cssText = `
       position:fixed;top:-10px;left:${x}%;width:8px;height:8px;
       background:${cor};border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
@@ -123,15 +126,13 @@ function useScoutState(jogoId: number) {
       }, (payload) => {
         const novo = payload.new as any;
         const prev = prevRef.current[novo?.jogador_id] ?? {};
-        const ts   = Date.now();
-
-        if (!novo) return;
+        const ts = Date.now();
 
         // GOL
         if ((novo.gols ?? 0) > (prev.gols ?? 0)) {
           setState(p => ({
             ...p,
-            evento:   { tipo: 'gol', jogador_id: novo.jogador_id, ts },
+            evento: { tipo: 'gol', jogador_id: novo.jogador_id, ts },
             golsNovo: p.golsNovo + 1,
           }));
           dispararConfete();
@@ -141,7 +142,7 @@ function useScoutState(jogoId: number) {
         else if ((novo.cartao_amarelo ?? 0) > (prev.cartao_amarelo ?? 0)) {
           setState(p => ({
             ...p,
-            evento:  { tipo: 'cartao_amarelo', jogador_id: novo.jogador_id, ts },
+            evento: { tipo: 'cartao_amarelo', jogador_id: novo.jogador_id, ts },
             cartoes: [...p.cartoes, { tipo: 'amarelo' }],
           }));
           clearEvento(3000);
@@ -150,27 +151,26 @@ function useScoutState(jogoId: number) {
         else if ((novo.cartao_vermelho ?? 0) > (prev.cartao_vermelho ?? 0)) {
           setState(p => ({
             ...p,
-            evento:  { tipo: 'cartao_vermelho', jogador_id: novo.jogador_id, ts },
+            evento: { tipo: 'cartao_vermelho', jogador_id: novo.jogador_id, ts },
             cartoes: [...p.cartoes, { tipo: 'vermelho' }],
           }));
           clearEvento(4000);
         }
-        // VAR INÍCIO
+        // VAR
         else if (novo.var_em_andamento === true && !prev.var_em_andamento) {
           setState(p => ({
             ...p,
-            evento:       { tipo: 'var_inicio', ts },
+            evento: { tipo: 'var_inicio', ts },
             varAndamento: true,
           }));
         }
-        // VAR ENCERRADO
         else if (novo.var_em_andamento === false && prev.var_em_andamento === true) {
           const confirmado = (novo.gols ?? 0) > (prev.gols ?? 0);
           setState(p => ({
             ...p,
-            evento:       { tipo: confirmado ? 'var_confirmado' : 'var_cancelado', ts },
+            evento: { tipo: confirmado ? 'var_confirmado' : 'var_cancelado', ts },
             varAndamento: false,
-            golsNovo:      confirmado ? p.golsNovo + 1 : p.golsNovo,
+            golsNovo: confirmado ? p.golsNovo + 1 : p.golsNovo,
           }));
           clearEvento(4000);
         }
@@ -204,16 +204,17 @@ function EventoOverlay({ evento }: { evento: ScoutEvento | null }) {
   if (!visible || !cur) return null;
 
   const map: Record<EventoTipo, { text: string; bg: string; color: string; glow: string }> = {
-    gol:             { text:'GOOOOOL!',          bg:'rgba(245,196,0,0.2)',  color:C.gold,    glow:C.glowGold },
-    cartao_amarelo:  { text:'CARTÃO AMARELO',    bg:'rgba(245,196,0,0.1)',  color:'#fff',    glow:'none' },
-    cartao_vermelho: { text:'CARTÃO VERMELHO',   bg:'rgba(255,45,85,0.25)', color:'#fff',    glow:C.glowRed },
-    var_inicio:      { text:'ANÁLISE VAR...',    bg:'rgba(0,243,255,0.1)',   color:C.cyan,    glow:C.glowCyan },
-    var_confirmado:  { text:'VAR: CONFIRMADO!',  bg:'rgba(34,197,94,0.15)', color:'#22C55E', glow:'none' },
-    var_cancelado:   { text:'VAR: CANCELADO',    bg:'rgba(255,45,85,0.15)', color:C.red,      glow:C.glowRed },
-    idle:            { text:'',                  bg:'transparent',           color:'#fff',    glow:'none' },
+    gol: { text:'GOOOOOL!', bg:'rgba(245,196,0,0.2)', color:C.gold, glow:C.glowGold },
+    cartao_amarelo: { text:'CARTÃO AMARELO', bg:'rgba(245,196,0,0.1)', color:'#fff', glow:'none' },
+    cartao_vermelho: { text:'CARTÃO VERMELHO', bg:'rgba(255,45,85,0.25)', color:'#fff', glow:C.glowRed },
+    var_inicio: { text:'ANÁLISE VAR...', bg:'rgba(0,243,255,0.1)', color:C.cyan, glow:C.glowCyan },
+    var_confirmado: { text:'VAR: CONFIRMADO!', bg:'rgba(34,197,94,0.15)', color:'#22C55E', glow:'none' },
+    var_cancelado: { text:'VAR: CANCELADO', bg:'rgba(255,45,85,0.15)', color:C.red, glow:C.glowRed },
+    idle: { text:'', bg:'transparent', color:'#fff', glow:'none' },
   };
 
   const cfg = map[cur.tipo];
+
   return (
     <div style={{
       position:'absolute', inset:0, zIndex:20, borderRadius:16,
@@ -239,8 +240,11 @@ function Countdown({ dataHora, paused }: { dataHora: string; paused: boolean }) 
   useEffect(() => {
     const calc = () => {
       if (paused) return;
-      const diff = new Date(dataHora).getTime() - Date.now();
-      if (diff <= 0) { setT({ h:'00', m:'00', s:'00', crit:true }); return; }
+      const diff = new Date(dataHora).getTime() - 90*60_000 - Date.now();
+      if (diff <= 0) { 
+        setT({ h:'00', m:'00', s:'00', crit:true }); 
+        return; 
+      }
       const h = Math.floor(diff / 3_600_000);
       const m = Math.floor((diff % 3_600_000) / 60_000);
       const s = Math.floor((diff % 60_000) / 1_000);
@@ -280,7 +284,7 @@ function Countdown({ dataHora, paused }: { dataHora: string; paused: boolean }) 
 }
 
 // ── Componente principal ───────────────────────────────────
-export default function JumbotronJogoReativo({ jogo, mercadoFechado = false, stats }: Props) {
+export default function JumbotronJogoReativo({ jogo, mercadoFechado = false }: Props) {
   const scout = useScoutState(jogo.id);
 
   const borderColor = scout.varAndamento ? C.cyan
@@ -308,6 +312,7 @@ export default function JumbotronJogoReativo({ jogo, mercadoFechado = false, sta
   const statusLabel = scout.varAndamento ? 'VAR'
     : scout.evento?.tipo === 'gol' ? 'GOOOOL!'
     : 'MERCADO ABERTO';
+
   const statusColor = scout.varAndamento ? C.cyan
     : scout.evento?.tipo === 'gol' ? C.gold : C.cyan;
 
@@ -344,7 +349,6 @@ export default function JumbotronJogoReativo({ jogo, mercadoFechado = false, sta
       <EventoOverlay evento={scout.evento} />
 
       <div style={{ position:'relative', zIndex:1, padding:'18px 14px 22px' }}>
-
         {/* Top bar */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, paddingBottom:10, borderBottom:'1px solid rgba(245,196,0,0.1)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:5 }}>
@@ -395,12 +399,10 @@ export default function JumbotronJogoReativo({ jogo, mercadoFechado = false, sta
               {(jogo.mandante.sigla || jogo.mandante.nome).toUpperCase()}
             </span>
           </div>
-
           <div style={{ textAlign:'center', padding:'0 4px' }}>
             <div style={{ fontSize:12, fontWeight:900, fontStyle:'italic', color:'rgba(245,196,0,0.18)' }}>VS</div>
             <div style={{ fontSize:9, fontWeight:900, color:C.gold, marginTop:2, textShadow:C.glowGold }}>{dataFmt} · {horaFmt}</div>
           </div>
-
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, flex:1 }}>
             <div style={{
               width:42, height:42, background:'#0d0d0d',
