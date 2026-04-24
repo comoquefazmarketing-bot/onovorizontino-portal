@@ -6,7 +6,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('postagens')
-      .select('id, titulo, slug, categoria, imagem_capa, criado_em, autor_ia')
+      .select('id, titulo, slug, categoria, imagem_capa, criado_em, autor_ia, conteudo, resumo_ia')
       .eq('status', 'published')
       .order('criado_em', { ascending: false })
       .limit(10);
@@ -18,6 +18,7 @@ export async function GET() {
 
     return NextResponse.json(data || []);
   } catch (err) {
+    console.error('Erro Interno:', err);
     return NextResponse.json([]);
   }
 }
