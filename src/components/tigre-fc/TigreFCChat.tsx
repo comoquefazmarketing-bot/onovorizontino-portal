@@ -84,8 +84,10 @@ interface MsgRow {
   };
 }
 
+// DEPOIS
 interface Props {
-  usuarioId?: string | null;
+  usuarioId?:    string | null;
+  usuarioNivel?: string | null; // ← adiciona isso
 }
 
 // ── Componente principal ──────────────────────────────────
