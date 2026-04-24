@@ -33,7 +33,7 @@ interface Stats {
   participantes?: number;
   posicao?:      number;
   golsSofridos?: number;
-  mediaSofaTime?: number;
+  mediaSofaTime: 7.2,
   mvp?:          { nome: string; media: number };
   meusPontos?:   number;
 }
