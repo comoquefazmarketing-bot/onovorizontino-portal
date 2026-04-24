@@ -13,7 +13,7 @@ import { supabase } from '@/lib/supabase';
 // ─── Assets ──────────────────────────────────────────────────────────────────
 const BASE       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const ESCUDO     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-const ESCUDO_ADV = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AMERICA%20MINEIRO.png';
+const ESCUDO_ADV = 'https://upload.wikimedia.org/wikipedia/pt/1/17/Sport_Club_do_Recife.png';
 const PATA       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
 const FOTO_ROMULO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ROMULO%20FUNDO%20TRANSPARENTE.png';
@@ -26,30 +26,14 @@ type Step        = 'formation' | 'picking' | 'bench' | 'captain_hero' | 'score' 
 type SpecialMode = 'CAPTAIN' | 'HERO' | null;
 type Slot        = { id: string; x: number; y: number; pos: string; label: string };
 
-// ─── Interfaces de Props ──────────────────────────────────────────────────────
 interface EscalacaoFormacaoProps {
-  jogoAtual?: any; // Adicionado para resolver o erro de build
-}
-
-interface Field3DProps {
-  lineup: Lineup; slots: Slot[];
-  activeSlot: string|null; activePlayer: Player|null;
-  onSlotClick: (id:string)=>void;
-  specialMode: SpecialMode; captainId: number|null; heroId: number|null;
-}
-interface BenchAreaProps {
-  lineup: Lineup; activeSlot: string|null; activePlayer: Player|null;
-  onSlotClick: (id:string)=>void; fieldFull: boolean;
-}
-interface PlayerPickerProps {
-  lineup: Lineup; filterPos: string; setFilterPos: (p:string)=>void;
-  onSelect: (p:Player)=>void; activeSlot: string|null; activePlayer: Player|null;
-  step: Step; formation: string;
-}
-interface FifaCardProps {
-  player: Player; isCaptain?: boolean; isHero?: boolean;
-  isActive?: boolean; pulsing?: boolean; small?: boolean;
-  onClick?: ()=>void;
+  jogoAtual?: {
+    id: number;
+    adversario_nome?: string;
+    adversario_escudo?: string;
+    campeonato?: string;
+    data_hora?: string;
+  };
 }
 
 // ─── Players ─────────────────────────────────────────────────────────────────
@@ -109,7 +93,19 @@ const FORMATIONS: Record<string, Slot[]> = {
     { id:'lw',  x:15, y:25, pos:'ATA', label:'LW' },
     { id:'st',  x:50, y:11, pos:'ATA', label:'ST' },
   ],
-  // ... (outras formações seguem a mesma lógica)
+  '4-3-3': [
+    { id:'gk',  x:50, y:88, pos:'GOL', label:'GK' },
+    { id:'rb',  x:87, y:72, pos:'LAT', label:'RB' },
+    { id:'cb1', x:64, y:78, pos:'ZAG', label:'CB' },
+    { id:'cb2', x:36, y:78, pos:'ZAG', label:'CB' },
+    { id:'lb',  x:13, y:72, pos:'LAT', label:'LB' },
+    { id:'cm1', x:50, y:58, pos:'MEI', label:'CM' },
+    { id:'cm2', x:25, y:50, pos:'MEI', label:'CM' },
+    { id:'cm3', x:75, y:50, pos:'MEI', label:'CM' },
+    { id:'rw',  x:80, y:20, pos:'ATA', label:'RW' },
+    { id:'lw',  x:20, y:20, pos:'ATA', label:'LW' },
+    { id:'st',  x:50, y:11, pos:'ATA', label:'ST' },
+  ],
 };
 
 const BENCH_SLOTS = [
@@ -124,7 +120,7 @@ const POS_COLORS: Record<string, string> = {
   GOL:'#F5C400', ZAG:'#3B82F6', LAT:'#06B6D4', MEI:'#22C55E', ATA:'#EF4444',
 };
 
-// ─── Componentes de Apoio ─────────────────────────────────────────────────────
+// ─── Componentes de UI ───────────────────────────────────────────────────────
 
 function imgStyle(pose: 'static' | 'celebration'): React.CSSProperties {
   const common: React.CSSProperties = {
@@ -132,41 +128,46 @@ function imgStyle(pose: 'static' | 'celebration'): React.CSSProperties {
     width: '100%', height: '100%', objectFit: 'cover',
     transformOrigin: 'center center',
   };
-  if (pose === 'static') {
-    return { ...common, objectPosition: '22% center', transform: 'translate(-50%, -50%) scale(1.4)' };
-  }
-  return { ...common, objectPosition: '78% center', transform: 'translate(-50%, -50%) scale(1.5)' };
+  return pose === 'static' 
+    ? { ...common, objectPosition: '22% center', transform: 'translate(-50%, -50%) scale(1.4)' }
+    : { ...common, objectPosition: '78% center', transform: 'translate(-50%, -50%) scale(1.5)' };
 }
 
-function StadiumBg() {
-  return (
-    <div style={{position:'absolute',inset:0,overflow:'hidden',background:'linear-gradient(180deg,#010508 0%,#030e09 55%,#061608 100%)'}}>
-        {/* ... (Simplificado para o exemplo, manter o seu original de design) */}
-    </div>
-  );
-}
+const StadiumBg = () => (
+  <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,#010508 0%,#030e09 55%,#061608 100%)', overflow:'hidden' }}>
+    <div style={{ position:'absolute', inset:0, opacity:0.1, backgroundImage:'radial-gradient(circle at 50% 50%, #fff 1px, transparent 1px)', backgroundSize:'40px 40px' }} />
+    <div style={{ position:'absolute', bottom:0, width:'100%', height:'50%', background:'radial-gradient(50% 100% at 50% 100%, rgba(34,197,94,0.15) 0%, transparent 100%)' }} />
+  </div>
+);
 
-function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small=false, onClick }: FifaCardProps) {
+function FifaCard({ player, isCaptain, isHero, isActive, pulsing, small=false, onClick }: any) {
   const col = isCaptain ? '#F5C400' : isHero ? '#00F3FF' : (POS_COLORS[player.pos] ?? '#888');
-  const W = small ? 44 : 62;
+  const W = small ? 48 : 64;
   const H = Math.round(W * 1.4);
-  const aura = isCaptain ? '0 0 28px rgba(245,196,0,0.9)' : isHero ? '0 0 28px rgba(0,243,255,0.8)' : `0 0 12px ${col}60`;
-
+  
   return (
-    <motion.button onClick={onClick} style={{ position:'relative', background:'none', border:'none', padding:0, cursor:'pointer' }}>
-      <div style={{ width:W, height:H, borderRadius:7, overflow:'hidden', border:`1.5px solid ${col}`, background:'#050505', boxShadow:aura, position:'relative' }}>
-        <div style={{ width:'100%', height:'78%', overflow:'hidden', position:'relative' }}>
-          <img src={player.foto} alt={player.short} style={imgStyle('celebration')} />
+    <motion.button onClick={onClick} whileTap={{ scale:0.9 }} style={{ background:'none', border:'none', padding:0, position:'relative' }}>
+      <div style={{ 
+        width:W, height:H, borderRadius:8, overflow:'hidden', border:`2px solid ${col}`, 
+        background:'#050505', boxShadow: pulsing ? `0 0 20px ${col}` : `0 0 10px ${col}40` 
+      }}>
+        <div style={{ width:'100%', height:'75%', position:'relative', overflow:'hidden' }}>
+          <img src={player.foto} style={imgStyle('celebration')} alt="" />
         </div>
-        <div style={{ position:'absolute', bottom:0, width:'100%', height:'22%', background:col, textAlign:'center' }}>
-          <span style={{ fontSize:7, fontWeight:900, color:'#000' }}>{player.short}</span>
+        <div style={{ height:'25%', background:col, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <span style={{ fontSize:small ? 8 : 10, fontWeight:900, color:'#000', textTransform:'uppercase' }}>{player.short}</span>
         </div>
       </div>
+      {(isCaptain || isHero) && (
+        <div style={{ position:'absolute', top:-6, right:-6, background:col, color:'#000', borderRadius:'50%', width:20, height:20, fontSize:12, fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #000' }}>
+          {isCaptain ? 'C' : '★'}
+        </div>
+      )}
     </motion.button>
   );
 }
 
-// ─── COMPONENTE PRINCIPAL CORRIGIDO ───────────────────────────────────────────
+// ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 
 export default function EscalacaoFormacao({ jogoAtual }: EscalacaoFormacaoProps) {
   const [step, setStep] = useState<Step>('formation');
@@ -176,92 +177,125 @@ export default function EscalacaoFormacao({ jogoAtual }: EscalacaoFormacaoProps)
   const [captainId, setCaptainId] = useState<number|null>(null);
   const [heroId, setHeroId] = useState<number|null>(null);
   const [specialMode, setSpecialMode] = useState<SpecialMode>(null);
-
-  // Estados do Palpite
   const [scoreTigre, setScoreTigre] = useState(0);
   const [scoreAdversario, setScoreAdversario] = useState(0);
 
-  const slots = FORMATIONS[formation] || FORMATIONS['4-2-3-1'];
+  const slots = useMemo(() => FORMATIONS[formation] || FORMATIONS['4-2-3-1'], [formation]);
 
   const handleEscalacao = (slotId: string, player: Player | undefined) => {
-    if (specialMode === 'CAPTAIN' && player) {
-        setCaptainId(player.id);
-        setSpecialMode(null);
-        return;
+    if (specialMode === 'CAPTAIN' && player) { setCaptainId(player.id); setSpecialMode(null); return; }
+    if (specialMode === 'HERO' && player) { setHeroId(player.id); setSpecialMode(null); return; }
+    if (player) {
+      setLineup(prev => ({ ...prev, [slotId]: player }));
+      setActiveSlot(null);
     }
-    if (specialMode === 'HERO' && player) {
-        setHeroId(player.id);
-        setSpecialMode(null);
-        return;
-    }
-    setLineup(prev => ({ ...prev, [slotId]: player || null }));
-    setActiveSlot(null);
   };
 
-  // Renderização baseada no Step
   return (
-    <div className="min-h-screen bg-black text-white font-sans overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden font-sans">
+      <StadiumBg />
+
       <AnimatePresence mode="wait">
         
-        {/* Step: Palpite (Onde o erro acontecia) */}
-        {step === 'score' && (
-          <motion.div key="score" initial={{ opacity:0 }} animate={{ opacity:1 }} className="flex-1 flex flex-col p-6">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter">Qual o seu palpite?</h2>
-              <p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Valendo pontos no ranking</p>
-            </div>
-
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center gap-8">
-                <div className="flex items-center justify-center gap-6 w-full">
-                    {/* Tigre */}
-                    <div className="flex flex-col items-center gap-3 flex-1">
-                        <img src={ESCUDO} className="w-16 h-16 object-contain" alt="Novorizontino" />
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Tigre</span>
-                        <input 
-                            type="number" 
-                            value={scoreTigre} 
-                            onChange={(e) => setScoreTigre(Number(e.target.value))}
-                            className="w-20 h-20 bg-black border-2 border-yellow-500 rounded-2xl text-center text-3xl font-black text-yellow-500 focus:outline-none"
-                        />
-                    </div>
-
-                    <div className="text-2xl font-black text-zinc-700">X</div>
-
-                    {/* Adversário Dinâmico */}
-                    <div className="flex flex-col items-center gap-3 flex-1">
-                        <img 
-                            src={jogoAtual?.adversario_escudo || ESCUDO_ADV} 
-                            className="w-16 h-16 object-contain" 
-                            alt="Adversário" 
-                        />
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest truncate max-w-[80px]">
-                            {jogoAtual?.adversario_nome || "Visitante"}
-                        </span>
-                        <input 
-                            type="number" 
-                            value={scoreAdversario} 
-                            onChange={(e) => setScoreAdversario(Number(e.target.value))}
-                            className="w-20 h-20 bg-black border-2 border-zinc-700 rounded-2xl text-center text-3xl font-black text-white focus:outline-none focus:border-zinc-500"
-                        />
-                    </div>
-                </div>
-
-                <button 
-                    onClick={() => setStep('reveal')}
-                    className="w-full bg-yellow-500 text-black py-4 rounded-xl font-black uppercase italic tracking-tight hover:bg-yellow-400 transition-colors"
-                >
-                    Confirmar e Ver Escalação
+        {/* STEP 1: FORMAÇÃO */}
+        {step === 'formation' && (
+          <motion.div key="f" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} className="flex-1 z-10 flex flex-col items-center justify-center p-6 text-center">
+            <img src={ESCUDO} className="w-24 h-24 mb-6 drop-shadow-[0_0_15px_rgba(245,196,0,0.5)]" alt="Tigre" />
+            <h1 className="text-3xl font-black italic uppercase tracking-tighter mb-2">Escolha sua Tática</h1>
+            <p className="text-zinc-500 text-sm mb-10 uppercase tracking-widest">A base do seu sucesso começa aqui</p>
+            <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+              {Object.keys(FORMATIONS).map(f => (
+                <button key={f} onClick={() => { setFormation(f); setStep('picking'); }} 
+                  className="bg-zinc-900 border-2 border-zinc-800 p-6 rounded-2xl font-black text-xl hover:border-yellow-500 transition-all">
+                  {f}
                 </button>
+              ))}
             </div>
           </motion.div>
         )}
 
-        {/* Adicione aqui os outros steps conforme sua lógica original */}
-        {step === 'formation' && (
-            <div className="p-10 text-center">
-                <h1 className="text-xl font-bold">Carregando Campo...</h1>
-                <button onClick={() => setStep('score')} className="mt-4 bg-white text-black px-4 py-2 rounded">Pular para Palpite</button>
+        {/* STEP 2: ESCALAÇÃO (CAMPO) */}
+        {step === 'picking' && (
+          <motion.div key="p" initial={{ opacity:0 }} animate={{ opacity:1 }} className="flex-1 z-10 flex flex-col relative">
+            <div className="p-4 flex items-center justify-between bg-black/60 backdrop-blur-md border-b border-white/5">
+               <div>
+                 <h2 className="text-yellow-500 font-black italic text-lg uppercase leading-none">{jogoAtual?.campeonato || 'LIGA TIGRE'}</h2>
+                 <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1 tracking-tighter">Vs {jogoAtual?.adversario_nome || 'Adversário'}</p>
+               </div>
+               <img src={jogoAtual?.adversario_escudo || ESCUDO_ADV} className="w-10 h-10 object-contain" alt="Adv" />
             </div>
+
+            <div className="flex-1 relative p-4">
+               {slots.map(s => (
+                 <div key={s.id} style={{ position:'absolute', left:`${s.x}%`, top:`${s.y}%`, transform:'translate(-50%, -50%)' }}>
+                   {lineup[s.id] ? (
+                     <FifaCard player={lineup[s.id]} onClick={() => setActiveSlot(s.id)} />
+                   ) : (
+                     <button onClick={() => setActiveSlot(s.id)} className="w-12 h-16 rounded-lg border-2 border-dashed border-zinc-700 bg-zinc-900/40 flex items-center justify-center text-zinc-600 text-xs font-bold">
+                       {s.label}
+                     </button>
+                   )}
+                 </div>
+               ))}
+            </div>
+
+            <div className="p-6">
+              <button onClick={() => setStep('score')} className="w-full bg-yellow-500 text-black py-4 rounded-2xl font-black uppercase italic tracking-tighter shadow-lg">
+                DEFINIR PALPITE →
+              </button>
+            </div>
+
+            {/* MODAL MERCADO */}
+            <AnimatePresence>
+              {activeSlot && (
+                <motion.div initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }} className="absolute inset-0 z-50 bg-black/95 p-6 flex flex-col">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-2xl font-black italic uppercase">Selecione o Jogador</h3>
+                    <button onClick={() => setActiveSlot(null)} className="text-zinc-500 font-bold">FECHAR</button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 overflow-y-auto pb-20">
+                    {PLAYERS.map(p => (
+                      <div key={p.id} onClick={() => handleEscalacao(activeSlot, p)} className="bg-zinc-900 rounded-xl p-2 border border-white/5 flex flex-col items-center">
+                        <img src={p.foto} className="w-full aspect-square object-cover rounded-lg mb-2" alt="" />
+                        <span className="text-[10px] font-black uppercase truncate w-full text-center">{p.short}</span>
+                        <span className="text-[8px] text-zinc-500 font-bold">{p.pos}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
+        {/* STEP 3: PALPITE */}
+        {step === 'score' && (
+          <motion.div key="s" initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} className="flex-1 z-10 flex flex-col justify-center p-6">
+            <div className="bg-zinc-900/90 border border-white/10 backdrop-blur-2xl rounded-[40px] p-8 shadow-2xl">
+              <div className="text-center mb-10">
+                <h2 className="text-2xl font-black italic uppercase italic tracking-tighter">Qual o placar final?</h2>
+              </div>
+              <div className="flex items-center justify-center gap-8 mb-12">
+                <div className="flex flex-col items-center gap-4">
+                  <img src={ESCUDO} className="w-16 h-16 drop-shadow-[0_0_10px_rgba(245,196,0,0.4)]" alt="Tigre" />
+                  <input type="number" value={scoreTigre} onChange={e => setScoreTigre(Number(e.target.value))} 
+                    className="w-20 h-24 bg-black/50 border-2 border-yellow-500 rounded-3xl text-center text-5xl font-black text-yellow-500 focus:outline-none" />
+                </div>
+                <div className="text-3xl font-black text-zinc-700 italic">VS</div>
+                <div className="flex flex-col items-center gap-4">
+                  <img src={jogoAtual?.adversario_escudo || ESCUDO_ADV} className="w-16 h-16" alt="Adv" />
+                  <input type="number" value={scoreAdversario} onChange={e => setScoreAdversario(Number(e.target.value))} 
+                    className="w-20 h-24 bg-black/50 border-2 border-zinc-700 rounded-3xl text-center text-5xl font-black text-white focus:outline-none" />
+                </div>
+              </div>
+              <button onClick={() => alert('Escalação Enviada com Sucesso!')} className="w-full bg-white text-black py-5 rounded-3xl font-black uppercase italic text-lg shadow-xl hover:bg-yellow-500 transition-colors">
+                ENVIAR ESCALAÇÃO
+              </button>
+              <button onClick={() => setStep('picking')} className="w-full mt-6 text-zinc-500 font-bold text-[10px] uppercase tracking-widest">
+                ← Ajustar Time
+              </button>
+            </div>
+          </motion.div>
         )}
 
       </AnimatePresence>
