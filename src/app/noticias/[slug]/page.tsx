@@ -15,14 +15,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .maybeSingle();
 
   if (!data) return { title: 'Notícia não encontrada' };
-  return { title: `${data.titulo} | O Novorizontino` };
+  return { 
+    title: `${data.titulo} | O Novorizontino`,
+    description: data.resumo_ia 
+  };
 }
 
 export default async function NoticiaPage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  // 1. Buscamos a postagem. Note que o campo no banco é 'conteudo'
   const { data: postagem, error } = await supabase
     .from('postagens')
     .select('id, titulo, conteudo, categoria, imagem_capa, criado_em, autor_ia, resumo_ia')
@@ -42,7 +44,7 @@ export default async function NoticiaPage({ params }: Props) {
       </div>
 
       <article className="max-w-4xl mx-auto px-4 mt-24">
-        {/* Header da Notícia */}
+        {/* Header */}
         <header className="mb-12">
           <span className="text-[#F5C400] font-black text-xs uppercase tracking-widest border-l-4 border-[#F5C400] pl-4 mb-6 block">
             {postagem.categoria || 'NOTÍCIA'}
@@ -57,35 +59,22 @@ export default async function NoticiaPage({ params }: Props) {
           )}
         </header>
 
-        {/* RENDERIZAÇÃO DO CONTEÚDO:
-            O segredo aqui é o 'max-w-none'. O seu HTML da tabela já tem estilos próprios.
-            Se o conteúdo sumir, remova a classe 'prose' para testar se é conflito de CSS.
+        {/* RENDERIZAÇÃO DO CONTEÚDO
+            Removi o 'styled-jsx' para o build passar.
+            Usei classes nativas do Tailwind para garantir que o HTML interno apareça.
         */}
-        <div 
-          className="content-area text-zinc-200"
-          style={{ fontSize: '1.2rem', lineHeight: '1.8' }}
-        >
+        <div className="relative text-zinc-200 text-xl leading-relaxed">
           <div 
             dangerouslySetInnerHTML={{ __html: postagem.conteudo }} 
-            className="all-unset" // Evita que estilos globais do site matem o HTML da tabela
+            className="[&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:my-8 [&_p]:mb-6 [&_h2]:text-white [&_h2]:font-black [&_h2]:uppercase [&_h2]:italic [&_h2]:text-3xl [&_h2]:mt-12 [&_h2]:mb-6 [&_strong]:text-white [&_table]:w-full [&_table]:my-8 [&_td]:p-4 [&_td]:border [&_td]:border-white/10"
           />
         </div>
 
-        {/* Componente de Comentários */}
+        {/* Comentários */}
         <div className="mt-20 pt-10 border-t border-white/5">
           <FalaAiTorcedor postagemId={postagem.id} />
         </div>
       </article>
-
-      {/* Estilos para garantir que o HTML interno apareça */}
-      <style jsx global>{`
-        .content-area img { max-width: 100%; height: auto; border-radius: 16px; margin: 2rem 0; }
-        .content-area p { margin-bottom: 1.5rem; }
-        .content-area h2 { color: #fff; font-weight: 900; text-transform: uppercase; margin-top: 3rem; font-style: italic; }
-        /* Garante que o fade-in do seu HTML funcione */
-        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
     </main>
   );
 }
