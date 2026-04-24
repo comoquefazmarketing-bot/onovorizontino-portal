@@ -4,217 +4,193 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
-// ── Design tokens ──────────────────────────────────────────
+// ── Design Tokens 2.0 ──────────────────────────────────────────
 const C = {
   gold:      '#F5C400', cyan:   '#00F3FF',
   red:       '#FF2D55', green:  '#22C55E',
   purple:    '#BF5FFF',
-  glowGold:  '0 0 8px rgba(245,196,0,0.6),0 0 20px rgba(245,196,0,0.3)',
-  glowCyan:  '0 0 8px rgba(0,243,255,0.7),0 0 20px rgba(0,243,255,0.35)',
-  glowRed:   '0 0 8px rgba(255,45,85,0.7),0 0 20px rgba(255,45,85,0.35)',
-  glowPurple:'0 0 8px rgba(191,95,255,0.7),0 0 20px rgba(191,95,255,0.35)',
+  glowGold:  '0 0 12px rgba(245,196,0,0.6), 0 0 25px rgba(245,196,0,0.3)',
+  glowCyan:  '0 0 12px rgba(0,243,255,0.7)',
+  glowPurple:'0 0 10px rgba(191,95,255,0.5)',
 };
 
 // ── Tipos ──────────────────────────────────────────────────
-type EventoTipo = 'gol' | 'cartao_amarelo' | 'cartao_vermelho' | 'var_inicio' | 'var_confirmado' | 'var_cancelado' | 'idle';
+interface Jogo { 
+  id: number; competicao: string; rodada: string; data_hora: string; 
+  local: string | null; transmissao: string | null; 
+  mandante: { nome: string; escudo_url: string | null; sigla?: string | null };
+  visitante: { nome: string; escudo_url: string | null; sigla?: string | null };
+}
 
-interface ScoutEvento { tipo: EventoTipo; jogador_id?: number; ts: number; }
-interface ScoutState { evento: ScoutEvento | null; varAndamento: boolean; golsNovo: number; cartoes: Array<{ tipo: 'amarelo' | 'vermelho' }>; }
-
-interface Time { nome: string; escudo_url: string | null; sigla?: string | null }
-interface Jogo { id: number; competicao: string; rodada: string; data_hora: string; local: string | null; transmissao: string | null; mandante: Time; visitante: Time; }
-interface RankUser { apelido: string; pontos: number }
 interface Stats { 
   topPontuador?: { nome: string; pts: number }; 
   mediaSofa?: number; 
   maisEscalado?: { nome: string; pct: number }; 
-  ranking?: RankUser[]; 
-  participantes?: number; 
-  posicao?: number; 
-  golsSofridos?: number; 
-  mediaSofaTime?: number; 
-  mvp?: { nome: string; media: number } 
+  ranking?: Array<{ apelido: string; pontos: number }>; 
+  posicao?: number; golsSofridos?: number; mediaSofaTime?: number; 
+  mvp?: { nome: string; media: number }; participantes?: number;
 }
 
-interface Props { jogo: Jogo; stats?: Stats; mercadoFechado?: boolean }
-
-// ── Hook Realtime ────────────────────────────
-function useScoutState(jogoId: number) {
-  const [state, setState] = useState<ScoutState>({ evento: null, varAndamento: false, golsNovo: 0, cartoes: [], });
-  const prevRef = useRef<Record<number, any>>({});
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const clearEvento = useCallback((delay = 3500) => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setState(p => ({ ...p, evento: null })), delay);
-  }, []);
-
-  useEffect(() => {
-    supabase.from('scouts_reais').select('*').eq('jogo_id', jogoId).then(({ data }) => {
-      if (!data) return;
-      let gols = 0;
-      const cartoes: ScoutState['cartoes'] = [];
-      data.forEach(s => {
-        prevRef.current[s.jogador_id] = s;
-        gols += s.gols ?? 0;
-        if (s.cartao_amarelo) cartoes.push({ tipo: 'amarelo' });
-        if (s.cartao_vermelho) cartoes.push({ tipo: 'vermelho' });
-      });
-      setState(p => ({ ...p, golsNovo: gols, cartoes, varAndamento: data.some(s => s.var_em_andamento) }));
-    });
-
-    const channel = supabase.channel(`scout-jogo-${jogoId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'scouts_reais', filter: `jogo_id=eq.${jogoId}` }, (payload) => {
-        const novo = payload.new as any;
-        const prev = prevRef.current[novo?.jogador_id] ?? {};
-        const ts = Date.now();
-
-        if ((novo.gols ?? 0) > (prev.gols ?? 0)) {
-          setState(p => ({ ...p, evento: { tipo: 'gol', jogador_id: novo.jogador_id, ts }, golsNovo: p.golsNovo + 1 }));
-          dispararConfete();
-          clearEvento(4000);
-        } else if ((novo.cartao_amarelo ?? 0) > (prev.cartao_amarelo ?? 0)) {
-          setState(p => ({ ...p, evento: { tipo: 'cartao_amarelo', jogador_id: novo.jogador_id, ts }, cartoes: [...p.cartoes, { tipo: 'amarelo' }] }));
-          clearEvento(3000);
-        } else if (novo.var_em_andamento === true && !prev.var_em_andamento) {
-          setState(p => ({ ...p, evento: { tipo: 'var_inicio', ts }, varAndamento: true }));
-        } else if (novo.var_em_andamento === false && prev.var_em_andamento === true) {
-          const confirmado = (novo.gols ?? 0) > (prev.gols ?? 0);
-          setState(p => ({ ...p, evento: { tipo: confirmado ? 'var_confirmado' : 'var_cancelado', ts }, varAndamento: false, golsNovo: confirmado ? p.golsNovo + 1 : p.golsNovo }));
-          clearEvento(4000);
-        }
-        prevRef.current[novo.jogador_id] = novo;
-      }).subscribe();
-
-    return () => { supabase.removeChannel(channel); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [jogoId, clearEvento]);
-
-  return state;
-}
-
-function dispararConfete() {
-  if (typeof document === 'undefined') return;
-  const cores = [C.gold, '#fff', '#ffeb85', '#D4A200'];
-  for (let i = 0; i < 40; i++) {
-    const el = document.createElement('div');
-    el.style.cssText = `position:fixed;top:-10px;left:${Math.random()*100}%;width:8px;height:8px;background:${cores[Math.floor(Math.random()*cores.length)]};z-index:9999;animation:confete-fall ${1.2+Math.random()}s ease-in forwards;`;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 2000);
-  }
-}
-
-function Bar({pct,color}:{pct:number;color:'gold'|'cyan'|'red'|'purple'}) {
-  const grad={gold:`${C.gold},rgba(245,196,0,0.3)`,cyan:`${C.cyan},rgba(0,243,255,0.3)`,red:`${C.red},rgba(255,45,85,0.3)`,purple:`${C.purple},rgba(191,95,255,0.3)`};
+// ── Componentes de Suporte ──────────────────────────────────
+function Bar({ pct, color }: { pct: number; color: keyof typeof C }) {
   return (
-    <div style={{height:2,background:'rgba(255,255,255,0.05)',borderRadius:1,marginTop:4}}>
-      <div style={{height:2,width:`${pct}%`,background:`linear-gradient(90deg,${grad[color]})`,borderRadius:1}}/>
+    <div style={{ height: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 1, marginTop: 4 }}>
+      <div style={{ 
+        height: 2, width: `${Math.min(pct, 100)}%`, 
+        background: C[color], boxShadow: `0 0 6px ${C[color]}`,
+        borderRadius: 1, transition: 'width 1s ease-in-out'
+      }} />
     </div>
   );
 }
 
-// ── Componente Principal ───────────────────────────────────
-export default function JumbotronJogoReativo({ jogo, stats = {}, mercadoFechado = false }: Props) {
-  const scout = useScoutState(jogo.id);
-  const { topPontuador={nome:'---',pts:0}, mediaSofa=0, maisEscalado={nome:'---',pct:0}, ranking=[], participantes=0, posicao=0, golsSofridos=0, mediaSofaTime=0, mvp={nome:'---',media:0} } = stats;
+function Countdown({ dataHora }: { dataHora: string }) {
+  const [t, setT] = useState({ h: '00', m: '00', s: '00' });
+  useEffect(() => {
+    const calc = () => {
+      const diff = new Date(dataHora).getTime() - Date.now();
+      if (diff <= 0) return;
+      const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+      setT({ h: String(h).padStart(2, '0'), m: String(m).padStart(2, '0'), s: String(s).padStart(2, '0') });
+    };
+    calc(); const id = setInterval(calc, 1000); return () => clearInterval(id);
+  }, [dataHora]);
+  return (
+    <div style={{ fontSize: 9, fontWeight: 900, color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 8 }}>
+      INÍCIO EM: <span style={{ color: '#fff' }}>{t.h}:{t.m}:{t.s}</span>
+    </div>
+  );
+}
 
-  const dataFmt = new Date(jogo.data_hora).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', timeZone:'America/Sao_Paulo' });
-  const horaFmt = new Date(jogo.data_hora).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
+// ── Componente Principal 2.0 ─────────────────────────────────
+export default function JumbotronReativoV2({ jogo, stats = {}, mercadoFechado = false }: { jogo: Jogo; stats?: Stats; mercadoFechado?: boolean }) {
+  const [gols, setGols] = useState(0);
+  const [isVar, setIsVar] = useState(false);
+  const [eventoAtivo, setEventoAtivo] = useState(false);
+
+  // Realtime
+  useEffect(() => {
+    const channel = supabase.channel(`live-${jogo.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'scouts_reais', filter: `jogo_id=eq.${jogo.id}` }, (payload: any) => {
+        const novo = payload.new;
+        if (novo.gols > 0) {
+          setGols(prev => prev + 1);
+          setEventoAtivo(true);
+          setTimeout(() => setEventoAtivo(false), 5000);
+        }
+        setIsVar(novo.var_em_andamento);
+      }).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [jogo.id]);
+
+  const dataFmt = new Date(jogo.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
   return (
     <div style={{
-      fontFamily:"'Barlow Condensed',Impact,sans-serif", background:'#000', borderRadius:16, overflow:'hidden', position:'relative', padding:2,
-      border: `1px solid ${scout.varAndamento ? C.cyan : scout.evento ? C.gold : 'rgba(245,196,0,0.2)'}`,
-      transition: 'all 0.4s'
+      fontFamily: "'Barlow Condensed', sans-serif", background: '#000', borderRadius: 16, 
+      border: `1px solid ${isVar ? C.cyan : eventoAtivo ? C.gold : 'rgba(245,196,0,0.2)'}`,
+      position: 'relative', overflow: 'hidden', padding: '1px'
     }}>
+      {/* Efeito de Scanline e Textura LED */}
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(245,196,0,0.03) 1px, transparent 1px)', backgroundSize: '4px 4px', pointerEvents: 'none' }} />
+      <div style={{ 
+        position: 'absolute', top: 0, left: 0, right: 0, height: 2, zIndex: 10,
+        background: `linear-gradient(90deg, transparent, ${isVar ? C.cyan : C.gold}, transparent)`,
+        animation: 'scan 3s linear infinite'
+      }} />
+
       <style>{`
-        @keyframes confete-fall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
-        @keyframes led-scan{0%{background-position:-200% center}100%{background-position:200% center}}
-        @keyframes pulse-gold-cta{0%,100%{box-shadow:0 0 20px rgba(245,196,0,0.4)}50%{box-shadow:0 0 35px rgba(245,196,0,0.7)}}
+        @keyframes scan { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes pulse-gold { 0%, 100% { box-shadow: 0 0 15px rgba(245,196,0,0.3); } 50% { box-shadow: 0 0 30px rgba(245,196,0,0.6); } }
       `}</style>
 
-      {/* Barra de Scan superior */}
-      <div style={{ position:'absolute', top:0, left:0, right:0, height:2, zIndex:11, background:`linear-gradient(90deg,transparent,${scout.varAndamento ? C.cyan : C.gold},transparent)`, backgroundSize:'200%', animation:'led-scan 2.5s linear infinite' }} />
-
-      <div style={{ position:'relative', zIndex:1, padding:'18px 14px 22px' }}>
+      <div style={{ position: 'relative', zIndex: 2, padding: '15px 12px' }}>
         
-        {/* Header com Status Realtime */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, paddingBottom:10, borderBottom:'1px solid rgba(245,196,0,0.1)' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-            <span style={{ width:6, height:6, borderRadius:'50%', background: scout.varAndamento ? C.cyan : C.green, boxShadow: `0 0 10px ${scout.varAndamento ? C.cyan : C.green}` }} />
-            <span style={{ fontSize:9, fontWeight:900, letterSpacing:'0.3em', color: scout.varAndamento ? C.cyan : C.gold }}>
-              {scout.varAndamento ? 'VAR EM ANÁLISE' : scout.evento?.tipo === 'gol' ? 'GOOOOL!' : 'AO VIVO / MERCADO'}
+        {/* HEADER STATUS */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: isVar ? C.cyan : C.green, boxShadow: `0 0 8px ${isVar ? C.cyan : C.green}` }} />
+            <span style={{ fontSize: 9, fontWeight: 900, color: isVar ? C.cyan : C.gold, letterSpacing: '2px' }}>
+              {isVar ? 'VAR EM ANÁLISE' : eventoAtivo ? 'GOOOOL!' : 'AO VIVO / MERCADO'}
             </span>
           </div>
-          <span style={{ fontSize:10, fontWeight:900, color:C.gold }}>{jogo.competicao.toUpperCase()}</span>
-          <span style={{ fontSize:9, color:'rgba(255,255,255,0.3)' }}>RODADA {jogo.rodada}</span>
+          <div style={{ fontSize: 10, fontWeight: 900, color: '#fff' }}>{jogo.competicao.toUpperCase()} <span style={{ color: 'rgba(255,255,255,0.3)', marginLeft: 5 }}>RD {jogo.rodada}</span></div>
         </div>
 
-        {/* 3 COLUNAS */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 156px 1fr', gap:10, alignItems:'start' }}>
+        {/* GRID PRINCIPAL: 1fr - 1.8fr - 1fr (Destaque Central) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr 1fr', gap: 10, alignItems: 'center' }}>
           
-          {/* ESQUERDA: Stats de Fantasy */}
-          <div style={{ background:'rgba(245,196,0,0.03)', border:'1px solid rgba(245,196,0,0.1)', borderRadius:10, padding:'11px 10px' }}>
-             <div style={{ marginBottom:9 }}>
-                <div style={{ fontSize:8, color:'rgba(255,255,255,0.3)' }}>TOP PONTUADOR</div>
-                <div style={{ fontSize:22, fontWeight:900, color:C.gold }}>{topPontuador.pts.toFixed(1)}</div>
-                <Bar pct={100} color="gold"/>
-             </div>
-             <div style={{ marginBottom:9 }}>
-                <div style={{ fontSize:8, color:C.red }}>MÉDIA SOFASCORE</div>
-                <div style={{ fontSize:22, fontWeight:900, color:C.red }}>{mediaSofa.toFixed(1)}</div>
-                <Bar pct={(mediaSofa/10)*100} color="red"/>
-             </div>
-             <div>
-                <div style={{ fontSize:8, color:C.cyan }}>+ ESCALADO</div>
-                <div style={{ fontSize:16, fontWeight:900, color:C.cyan }}>{maisEscalado.nome}</div>
-                <Bar pct={maisEscalado.pct} color="cyan"/>
-             </div>
+          {/* COLUNA 1: FANTASY STATS */}
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)' }}>TOP PONTOS</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: C.gold }}>{stats.topPontuador?.pts.toFixed(1) || '0.0'}</div>
+              <Bar pct={100} color="gold" />
+            </div>
+            <div>
+              <div style={{ fontSize: 7, color: C.red }}>MÉDIA SOFA</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: C.red }}>{stats.mediaSofa?.toFixed(1) || '0.0'}</div>
+              <Bar pct={(stats.mediaSofa || 0) * 10} color="red" />
+            </div>
           </div>
 
-          {/* CENTRO: Placar e Escudos */}
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
-            <div style={{ fontSize:32, fontWeight:900, fontStyle:'italic', color: scout.golsNovo > 0 ? C.gold : '#fff', textShadow: scout.golsNovo > 0 ? C.glowGold : 'none', marginBottom: 8 }}>
-               {scout.golsNovo} — 0
-            </div>
-            <div style={{ display:'flex', gap:15, alignItems:'center', marginBottom: 10 }}>
-               <img src={jogo.mandante.escudo_url || ''} style={{ width:35 }} />
-               <span style={{ color:'rgba(255,255,255,0.2)', fontWeight:900 }}>VS</span>
-               <img src={jogo.visitante.escudo_url || ''} style={{ width:35 }} />
-            </div>
-            {!mercadoFechado && (
-              <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{ width:'100%', background:C.gold, color:'#000', borderRadius:6, padding:'10px', textAlign:'center', fontWeight:900, fontSize:10, animation:'pulse-gold-cta 2s infinite', textDecoration:'none' }}>
-                CONVOCAR TITULARES →
-              </Link>
-            )}
-          </div>
-
-          {/* DIREITA: Ranking */}
-          <div style={{ borderRadius:10, padding:'11px 10px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(191,95,255,0.2)' }}>
-            <div style={{ fontSize:7, color:C.purple, marginBottom:8 }}>RANKING · TOP 5</div>
-            {ranking.slice(0,5).map((u,i)=>(
-              <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:10, marginBottom:4 }}>
-                <span style={{ color:'rgba(255,255,255,0.7)' }}>{u.apelido}</span>
-                <span style={{ color:C.purple, fontWeight:900 }}>{u.pontos}</span>
+          {/* COLUNA 2: PLACAR (O CENTRO DAS ATENÇÕES) */}
+          <div style={{ textAlign: 'center', padding: '0 5px' }}>
+            {!mercadoFechado && <Countdown dataHora={jogo.data_hora} />}
+            
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 15, marginBottom: 10 }}>
+              <div style={{ textAlign: 'center' }}>
+                <img src={jogo.mandante.escudo_url || ''} style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.2))' }} />
+                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{jogo.mandante.sigla}</div>
               </div>
-            ))}
+
+              <div style={{ fontSize: 36, fontWeight: 900, color: '#fff', fontStyle: 'italic', textShadow: eventoAtivo ? C.glowGold : 'none' }}>
+                {gols} <span style={{ color: 'rgba(245,196,0,0.2)', fontSize: 20 }}>—</span> 0
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                <img src={jogo.visitante.escudo_url || ''} style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(245,196,0,0.2))' }} />
+                <div style={{ fontSize: 8, color: C.gold, marginTop: 4 }}>{jogo.visitante.sigla}</div>
+              </div>
+            </div>
+
+            <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{ 
+              display: 'block', background: C.gold, color: '#000', fontSize: 10, fontWeight: 900, 
+              padding: '10px', borderRadius: 6, textDecoration: 'none', animation: 'pulse-gold 2s infinite'
+            }}>
+              CONVOCAR TITULARES →
+            </Link>
+          </div>
+
+          {/* COLUNA 3: RANKING REVISADO */}
+          <div style={{ 
+            background: 'linear-gradient(180deg, rgba(191,95,255,0.1) 0%, rgba(0,0,0,0) 100%)', 
+            padding: '10px 8px', borderRadius: 8, border: '1px solid rgba(191,95,255,0.2)' 
+          }}>
+            <div style={{ fontSize: 7, color: C.purple, fontWeight: 900, letterSpacing: '1px', marginBottom: 6, borderBottom: '1px solid rgba(191,95,255,0.1)' }}>TOP RANKING</div>
+            {stats.ranking?.slice(0, 4).map((r, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, marginBottom: 4 }}>
+                <span style={{ color: '#eee', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '40px' }}>{r.apelido}</span>
+                <span style={{ color: C.purple, fontWeight: 900, textShadow: C.glowPurple }}>{r.pontos}</span>
+              </div>
+            )) || <div style={{ fontSize: 8, color: '#333' }}>Calculando...</div>}
           </div>
         </div>
 
-        {/* BOTTOM: Stats do Clube */}
-        <div style={{ display:'flex', gap:5, marginTop:12, paddingTop:10, borderTop:'1px solid rgba(245,196,0,0.07)' }}>
+        {/* FOOTER: STATS DA SÉRIE B */}
+        <div style={{ display: 'flex', gap: 6, marginTop: 15, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           {[
-            {val:`${posicao}°`, lbl:'SÉRIE B', col:C.gold},
-            {val:golsSofridos, lbl:'GOLS SOF', col:C.red},
-            {val:mediaSofaTime.toFixed(2), lbl:'MÉDIA TIME', col:C.gold},
-            {val:mvp.media.toFixed(2), lbl:'MVP', col:C.cyan},
-          ].map((s,i)=>(
-            <div key={i} style={{ flex:1, textAlign:'center', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', borderRadius:6, padding:'5px' }}>
-              <div style={{ fontSize:16, fontWeight:900, color:s.col }}>{s.val}</div>
-              <div style={{ fontSize:6, color:'rgba(255,255,255,0.3)' }}>{s.lbl}</div>
+            { val: `${stats.posicao || '-'}º`, lbl: 'SÉRIE B', col: C.gold },
+            { val: stats.golsSofridos || 0, lbl: 'GOLS SOF', col: C.red },
+            { val: stats.mediaSofaTime?.toFixed(2) || '0.00', lbl: 'MÉDIA TIME', col: C.gold },
+            { val: stats.mvp?.media.toFixed(2) || '0.00', lbl: 'MVP', col: C.cyan },
+          ].map((item, i) => (
+            <div key={i} style={{ flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.03)', padding: '6px 2px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.03)' }}>
+              <div style={{ fontSize: 15, fontWeight: 900, color: item.col }}>{item.val}</div>
+              <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>{item.lbl}</div>
             </div>
           ))}
         </div>
-
       </div>
     </div>
   );
