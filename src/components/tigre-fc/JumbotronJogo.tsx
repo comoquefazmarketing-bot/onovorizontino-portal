@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
-// ── Design Tokens 2.0 ──────────────────────────────────────────
+// ── Design Tokens ──────────────────────────────────────────────
 const C = {
   gold:      '#F5C400', 
   cyan:      '#00F3FF',
@@ -31,8 +31,7 @@ interface Jogo {
 interface Stats { 
   topPontuador?: { nome: string; pts: number }; 
   mediaSofa?: number; 
-  maisEscalado?: { nome: string; pct: number }; 
-  ranking?: Array<{ apelido: string; pontos: number }>; 
+  ranking?: Array<{ apelido: string; nome: string; pontos: number }>; 
   posicao?: number; 
   golsSofridos?: number; 
   mediaSofaTime?: number; 
@@ -46,7 +45,7 @@ function Bar({ pct, color }: { pct: number; color: keyof typeof C }) {
     <div style={{ height: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 1, marginTop: 4 }}>
       <div style={{ 
         height: 2, width: `${Math.min(pct, 100)}%`, 
-        background: C[color], boxShadow: `0 0 6px ${C[color]}`,
+        background: C[color] as string, boxShadow: `0 0 6px ${C[color]}`,
         borderRadius: 1, transition: 'width 1s ease-in-out'
       }} />
     </div>
@@ -76,14 +75,14 @@ function Countdown({ dataHora }: { dataHora: string }) {
   );
 }
 
-// ── Componente Principal (Renomeado para evitar erro de Build) ──
+// ── Componente Principal ──────────────────────────────────
 export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false }: { jogo: Jogo; stats?: Stats; mercadoFechado?: boolean }) {
   const [gols, setGols] = useState(0);
   const [isVar, setIsVar] = useState(false);
   const [eventoAtivo, setEventoAtivo] = useState(false);
 
-  // Realtime Supabase
   useEffect(() => {
+    if (!jogo?.id) return;
     const channel = supabase.channel(`live-${jogo.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'scouts_reais', filter: `jogo_id=eq.${jogo.id}` }, (payload: any) => {
         const novo = payload.new;
@@ -92,7 +91,7 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           setEventoAtivo(true);
           setTimeout(() => setEventoAtivo(false), 5000);
         }
-        if (novo) setIsVar(novo.var_em_andamento);
+        if (novo) setIsVar(novo.var_em_andamento || false);
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [jogo.id]);
@@ -103,7 +102,11 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
       border: `1px solid ${isVar ? C.cyan : eventoAtivo ? C.gold : 'rgba(245,196,0,0.2)'}`,
       position: 'relative', overflow: 'hidden', padding: '1px'
     }}>
-      {/* Efeito de Scanline e Textura LED */}
+      <style>{`
+        @keyframes scan { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes pulse-gold { 0%, 100% { box-shadow: 0 0 15px rgba(245,196,0,0.3); } 50% { box-shadow: 0 0 30px rgba(245,196,0,0.6); } }
+      `}</style>
+
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(245,196,0,0.03) 1px, transparent 1px)', backgroundSize: '4px 4px', pointerEvents: 'none' }} />
       <div style={{ 
         position: 'absolute', top: 0, left: 0, right: 0, height: 2, zIndex: 10,
@@ -111,14 +114,9 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
         animation: 'scan 3s linear infinite'
       }} />
 
-      <style>{`
-        @keyframes scan { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        @keyframes pulse-gold { 0%, 100% { box-shadow: 0 0 15px rgba(245,196,0,0.3); } 50% { box-shadow: 0 0 30px rgba(245,196,0,0.6); } }
-      `}</style>
-
       <div style={{ position: 'relative', zIndex: 2, padding: '15px 12px' }}>
         
-        {/* HEADER STATUS */}
+        {/* HEADER */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: isVar ? C.cyan : C.green, boxShadow: `0 0 8px ${isVar ? C.cyan : C.green}` }} />
@@ -126,13 +124,13 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
               {isVar ? 'VAR EM ANÁLISE' : eventoAtivo ? 'GOOOOL!' : 'AO VIVO / MERCADO'}
             </span>
           </div>
-          <div style={{ fontSize: 10, fontWeight: 900, color: '#fff' }}>{jogo.competicao.toUpperCase()} <span style={{ color: 'rgba(255,255,255,0.3)', marginLeft: 5 }}>RD {jogo.rodada}</span></div>
+          <div style={{ fontSize: 10, fontWeight: 900, color: '#fff' }}>{jogo.competicao?.toUpperCase()} <span style={{ color: 'rgba(255,255,255,0.3)', marginLeft: 5 }}>RD {jogo.rodada}</span></div>
         </div>
 
-        {/* GRID PRINCIPAL */}
+        {/* GRID CENTRAL */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr 1fr', gap: 10, alignItems: 'center' }}>
           
-          {/* COLUNA 1: FANTASY STATS */}
+          {/* STATS ESQUERDA */}
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ marginBottom: 8 }}>
               <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)' }}>TOP PONTOS</div>
@@ -141,19 +139,19 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
             </div>
             <div>
               <div style={{ fontSize: 7, color: C.red }}>MÉDIA SOFA</div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: C.red }}>{stats.mediaSofa?.toFixed(1) || '0.0'}</div>
-              <Bar pct={(stats.mediaSofa || 0) * 10} color="red" />
+              <div style={{ fontSize: 18, fontWeight: 900, color: C.red }}>{stats.mediaSofaTime?.toFixed(1) || '0.0'}</div>
+              <Bar pct={(stats.mediaSofaTime || 0) * 10} color="red" />
             </div>
           </div>
 
-          {/* COLUNA 2: PLACAR */}
+          {/* PLACAR */}
           <div style={{ textAlign: 'center', padding: '0 5px' }}>
             {!mercadoFechado && <Countdown dataHora={jogo.data_hora} />}
             
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 15, marginBottom: 10 }}>
               <div style={{ textAlign: 'center' }}>
-                <img src={jogo.mandante.escudo_url || ''} alt="Mandante" style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.2))' }} />
-                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{jogo.mandante.sigla}</div>
+                <img src={jogo.mandante.escudo_url || ''} alt="" style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.2))' }} />
+                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{jogo.mandante.sigla || 'MAN'}</div>
               </div>
 
               <div style={{ fontSize: 36, fontWeight: 900, color: '#fff', fontStyle: 'italic', textShadow: eventoAtivo ? C.glowGold : 'none' }}>
@@ -161,20 +159,20 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
               </div>
 
               <div style={{ textAlign: 'center' }}>
-                <img src={jogo.visitante.escudo_url || ''} alt="Visitante" style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(245,196,0,0.2))' }} />
-                <div style={{ fontSize: 8, color: C.gold, marginTop: 4 }}>{jogo.visitante.sigla}</div>
+                <img src={jogo.visitante.escudo_url || ''} alt="" style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(245,196,0,0.2))' }} />
+                <div style={{ fontSize: 8, color: C.gold, marginTop: 4 }}>{jogo.visitante.sigla || 'VIS'}</div>
               </div>
             </div>
 
             <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{ 
               display: 'block', background: C.gold, color: '#000', fontSize: 10, fontWeight: 900, 
-              padding: '10px', borderRadius: 6, textDecoration: 'none', animation: 'pulse-gold 2s infinite'
+              padding: '10px', borderRadius: 6, textDecoration: 'none', textAlign: 'center', animation: 'pulse-gold 2s infinite'
             }}>
               CONVOCAR TITULARES →
             </Link>
           </div>
 
-          {/* COLUNA 3: RANKING */}
+          {/* RANKING DIREITA */}
           <div style={{ 
             background: 'linear-gradient(180deg, rgba(191,95,255,0.1) 0%, rgba(0,0,0,0) 100%)', 
             padding: '10px 8px', borderRadius: 8, border: '1px solid rgba(191,95,255,0.2)' 
@@ -182,22 +180,24 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
             <div style={{ fontSize: 7, color: C.purple, fontWeight: 900, letterSpacing: '1px', marginBottom: 6, borderBottom: '1px solid rgba(191,95,255,0.1)' }}>TOP RANKING</div>
             {stats.ranking?.slice(0, 4).map((r, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, marginBottom: 4 }}>
-                <span style={{ color: '#eee', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '40px' }}>{r.apelido}</span>
+                <span style={{ color: '#eee', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '40px' }}>
+                  {r.apelido || r.nome}
+                </span>
                 <span style={{ color: C.purple, fontWeight: 900, textShadow: C.glowPurple }}>{r.pontos}</span>
               </div>
             )) || <div style={{ fontSize: 8, color: '#333' }}>Calculando...</div>}
           </div>
         </div>
 
-        {/* FOOTER */}
+        {/* FOOTER STATS */}
         <div style={{ display: 'flex', gap: 6, marginTop: 15, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           {[
             { val: `${stats.posicao || '-'}º`, lbl: 'SÉRIE B', col: C.gold },
             { val: stats.golsSofridos || 0, lbl: 'GOLS SOF', col: C.red },
             { val: stats.mediaSofaTime?.toFixed(2) || '0.00', lbl: 'MÉDIA TIME', col: C.gold },
-            { val: stats.mvp?.media.toFixed(2) || '0.00', lbl: 'MVP', col: C.cyan },
+            { val: stats.mvp?.media?.toFixed(2) || '0.00', lbl: 'MVP', col: C.cyan },
           ].map((item, i) => (
-            <div key={i} style={{ flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.03)', padding: '6px 2px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.03)' }}>
+            <div key={i} style={{ flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.03)', padding: '6px 2px', borderRadius: 6 }}>
               <div style={{ fontSize: 15, fontWeight: 900, color: item.col }}>{item.val}</div>
               <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>{item.lbl}</div>
             </div>
