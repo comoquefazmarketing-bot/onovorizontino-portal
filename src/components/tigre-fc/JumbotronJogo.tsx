@@ -31,7 +31,7 @@ interface Jogo {
 interface Stats { 
   topPontuador?: { nome: string; pts: number }; 
   mediaSofa?: number; 
-  ranking?: Array<{ apelido: string; nome: string; pontos: number }>; 
+  ranking?: Array<{ apelido?: string; nome?: string; pontos: number }>;
   posicao?: number; 
   golsSofridos?: number; 
   mediaSofaTime?: number; 
