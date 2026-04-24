@@ -71,23 +71,26 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             jogo={jogo} 
             mercadoFechado={mercadoFechado} 
             stats={{
+              // Enviando o ranking formatado
               ranking: ranking.map(u => ({
                 nome: u.nome,
                 apelido: u.apelido,
                 pontos: u.pontos_total ?? 0
               })),
-              // Puxando os dados reais da última partida (ratings do print)
+              // Dados de performance (Capitão e Herói aparecem no topo do Jumbotron)
               capitao: { nome: 'NETO PESSOA', pts: 15.8 }, 
               heroi: { nome: 'RODRIGO SOARES', pts: 7.9 },
+              // Dados do rodapé do Jumbotron
               posicao: 4,
               golsSofridos: 5, 
               mediaSofaTime: 7.08, 
               mvp: { nome: 'Neto Pessoa', media: 7.60 }, 
+              participantes: ranking.length
             }}
           />
         )}
 
-        {/* Outras Seções (Chat, Leaderboard, etc) */}
+        {/* Leaderboard */}
         <section>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {ranking.map((u, i) => (
