@@ -12,7 +12,7 @@ import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
-  use(params);
+  const resolvedParams = use(params);
 
   const [mounted, setMounted] = useState(false);
   const [jogo, setJogo] = useState<any>(null);
@@ -42,8 +42,8 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           competicao: 'Série B',
           rodada: '6ª Rodada',
           local: 'Ilha do Retiro • Recife',
-          mandante:  { nome: 'Sport', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20SPORT.png' },
-          visitante: { nome: 'Novorizontino', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png' },
+          mandante:  { nome: 'Sport', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20SPORT.png', sigla: 'SPT' },
+          visitante: { nome: 'Novorizontino', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png', sigla: 'NOV' },
         });
       }
 
@@ -76,13 +76,21 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-10 space-y-12">
 
-        {/* JUMBOTRON MODULAR */}
+        {/* JUMBOTRON MODULAR - AJUSTADO PARA CORRIGIR O ERRO DE BUILD */}
         {jogo && (
           <JumbotronJogo 
             jogo={jogo} 
             mercadoFechado={mercadoFechado} 
             stats={{
-              ranking: ranking.slice(0, 5),
+              ranking: ranking.slice(0, 5).map(u => ({
+                nome: u.nome,
+                apelido: u.apelido,
+                pontos: u.pontos_total ?? 0
+              })),
+              topPontuador: { 
+                nome: ranking[0]?.apelido || ranking[0]?.nome || '---', 
+                pts: ranking[0]?.pontos_total || 0 
+              },
               participantes: 847,
               posicao: 4,
               golsSofridos: 0, 
@@ -92,7 +100,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           />
         )}
 
-        {/* WIDGET SOFASCORE - ESCALAÇÃO (ALINHADO POR CIMA) */}
+        {/* WIDGET SOFASCORE - ESCALAÇÃO */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Live Radar System</h2>
@@ -100,24 +108,19 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
           
           <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 bg-[#121212] shadow-2xl">
-            {/* Altura de 786px é a padrão do widget para mostrar tudo */}
             <div className="h-[786px] w-full overflow-hidden relative">
               <iframe 
                 id="sofa-lineups-embed-15526026" 
                 src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526026&widgetTheme=dark" 
                 className="w-full h-full border-0"
-                style={{
-                    position: 'absolute',
-                    top: '0', // Alinhado exatamente no topo
-                    left: '0'
-                }}
+                style={{ position: 'absolute', top: '0', left: '0' }}
                 scrolling="no"
               />
             </div>
           </div>
         </section>
 
-        {/* WIDGET SOFASCORE - CLASSIFICAÇÃO SÉRIE B (ALINHADO POR CIMA) */}
+        {/* WIDGET SOFASCORE - CLASSIFICAÇÃO */}
         <section className="space-y-4">
           <div className="flex items-center gap-3">
             <h2 className="text-[11px] font-black uppercase tracking-[0.5em] text-[#F5C400]">Tabela de Classificação</h2>
@@ -125,17 +128,12 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
           
           <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 bg-[#121212]">
-            {/* Altura de 1123px para mostrar a tabela inteira sem scroll */}
             <div className="h-[1123px] w-full overflow-hidden relative">
               <iframe 
                 id="sofa-standings-embed-1449-89840" 
                 src="https://widgets.sofascore.com/pt-BR/embed/tournament/1449/season/89840/standings/Brasileiro%20Serie%20B%202026?widgetTitle=Brasileiro%20Serie%20B%202026&showCompetitionLogo=true&widgetTheme=dark" 
                 className="w-full h-full border-0"
-                style={{
-                    position: 'absolute',
-                    top: '0', // Alinhado no topo
-                    left: '0'
-                }}
+                style={{ position: 'absolute', top: '0', left: '0' }}
                 scrolling="no" 
               />
             </div>
