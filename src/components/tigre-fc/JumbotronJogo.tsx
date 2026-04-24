@@ -1,6 +1,6 @@
 'use client';
 // src/components/tigre-fc/JumbotronJogoReativo.tsx
-// Versão integral com Realtime internalizado e correções para Build
+// Versão integral com Realtime internalizado e correções para Build (Tipagem de Stats)
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
@@ -29,7 +29,7 @@ interface ScoutEvento {
 interface ScoutState {
   evento:       ScoutEvento | null;
   varAndamento: boolean;
-  golsNovo:     number;
+  golsNovo:      number;
   cartoes:      Array<{ tipo: 'amarelo' | 'vermelho' }>;
 }
 
@@ -39,7 +39,20 @@ interface Jogo  {
   data_hora: string; local: string | null; transmissao: string | null;
   mandante: Time; visitante: Time;
 }
-interface Props { jogo: Jogo; mercadoFechado?: boolean }
+
+// Corrigido: Interface Props agora aceita stats enviado pela page.tsx
+interface Props { 
+  jogo: Jogo; 
+  mercadoFechado?: boolean;
+  stats?: {
+    ranking: { apelido: string; pontos: number; }[];
+    participantes: number;
+    posicao: number;
+    mediaSofa: number;
+    golsSofridos: number;
+    mvp: { nome: string; media: number; };
+  };
+}
 
 // ── Confete CSS puro ─────────────────────
 function dispararConfete() {
@@ -111,6 +124,8 @@ function useScoutState(jogoId: number) {
         const novo = payload.new as any;
         const prev = prevRef.current[novo?.jogador_id] ?? {};
         const ts   = Date.now();
+
+        if (!novo) return;
 
         // GOL
         if ((novo.gols ?? 0) > (prev.gols ?? 0)) {
@@ -224,7 +239,7 @@ function Countdown({ dataHora, paused }: { dataHora: string; paused: boolean }) 
   useEffect(() => {
     const calc = () => {
       if (paused) return;
-      const diff = new Date(dataHora).getTime() - 90*60_000 - Date.now();
+      const diff = new Date(dataHora).getTime() - Date.now();
       if (diff <= 0) { setT({ h:'00', m:'00', s:'00', crit:true }); return; }
       const h = Math.floor(diff / 3_600_000);
       const m = Math.floor((diff % 3_600_000) / 60_000);
@@ -265,7 +280,7 @@ function Countdown({ dataHora, paused }: { dataHora: string; paused: boolean }) 
 }
 
 // ── Componente principal ───────────────────────────────────
-export default function JumbotronJogoReativo({ jogo, mercadoFechado = false }: Props) {
+export default function JumbotronJogoReativo({ jogo, mercadoFechado = false, stats }: Props) {
   const scout = useScoutState(jogo.id);
 
   const borderColor = scout.varAndamento ? C.cyan
