@@ -1,16 +1,21 @@
+// src/app/noticias/page.tsx
+// CORREÇÃO: fetch REST direto (sem createClient) + sem filtro de status
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { createClient } from '@/utils/supabase/server';
 import type { Metadata } from 'next';
 
-export const revalidate = 60; // Cache de 1 minuto para performance
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Notícias do Grêmio Novorizontino | Série B 2026',
-  description: 'Todas as notícias do Grêmio Novorizontino. Cobertura completa da Série B 2026, mercado da bola e muito mais.',
+  description: 'Todas as notícias do Grêmio Novorizontino. Cobertura completa da Série B 2026.',
 };
 
-const CATEGORIAS = ['Todas', 'Copa Sul-Sudeste', 'Mercado', 'Crônica', 'Análise Tática', 'Pré-Jogo', 'Destaque'];
+const SUPA_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPA_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const CATEGORIAS = ['Todas', 'Copa Sul-Sudeste', 'Mercado', 'Crônica', 'Análise Tática', 'Pré-Jogo', 'Destaque', 'Resultados', 'Análises', 'Opinião'];
 
 export default async function NoticiasPage({
   searchParams,
@@ -18,25 +23,33 @@ export default async function NoticiasPage({
   searchParams: Promise<{ categoria?: string }>;
 }) {
   const { categoria } = await searchParams;
-  const supabase = await createClient();
 
-  // Query robusta buscando todos os campos necessários
-  let query = supabase
-    .from('postagens')
-    .select('id, titulo, slug, categoria, imagem_capa, criado_em, resumo_ia, autor_ia, conteudo')
-    .eq('status', 'published')
-    .order('criado_em', { ascending: false })
-    .limit(30);
+  // ── Fetch REST sem createClient e SEM filtro de status ──
+  // Motivo: muitas postagens têm status=null e seriam excluídas
+  let url = `${SUPA_URL}/rest/v1/postagens?select=id,titulo,slug,categoria,imagem_capa,criado_em,resumo_ia,autor_ia&order=criado_em.desc&limit=40`;
 
   if (categoria && categoria !== 'Todas') {
-    query = query.eq('categoria', categoria);
+    url += `&categoria=eq.${encodeURIComponent(categoria)}`;
   }
 
-  const { data: postagens } = await query;
+  let postagens: any[] = [];
+  try {
+    const res = await fetch(url, {
+      headers: {
+        apikey:        SUPA_ANON,
+        Authorization: `Bearer ${SUPA_ANON}`,
+      },
+      cache: 'no-store',
+    });
+    const data = await res.json();
+    postagens = Array.isArray(data) ? data : [];
+  } catch {
+    postagens = [];
+  }
 
   return (
     <main className="min-h-screen bg-black text-white pb-24 selection:bg-yellow-500">
-      
+
       {/* Cabeçalho */}
       <div className="border-b border-zinc-900 py-16 px-4 bg-gradient-to-b from-yellow-500/5 to-transparent">
         <div className="max-w-7xl mx-auto">
@@ -46,6 +59,9 @@ export default async function NoticiasPage({
           <h1 className="text-6xl md:text-8xl font-black uppercase italic leading-[0.8] tracking-tighter">
             RADAR <span className="text-yellow-500">TIGRE</span>
           </h1>
+          <p className="text-zinc-500 mt-4 text-sm font-medium uppercase tracking-widest">
+            Temporada 2026 · {postagens.length} matérias
+          </p>
         </div>
       </div>
 
@@ -58,9 +74,9 @@ export default async function NoticiasPage({
               <Link
                 key={cat}
                 href={cat === 'Todas' ? '/noticias' : `/noticias?categoria=${encodeURIComponent(cat)}`}
-                className={`flex-shrink-0 px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full border ${
+                className={`flex-shrink-0 px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full border ${
                   ativo
-                    ? 'bg-yellow-500 border-yellow-500 text-black'
+                    ? 'bg-yellow-500 border-yellow-500 text-black shadow-[0_0_16px_rgba(245,196,0,0.25)]'
                     : 'border-zinc-800 text-zinc-500 hover:border-yellow-500 hover:text-yellow-500'
                 }`}
               >
@@ -71,9 +87,9 @@ export default async function NoticiasPage({
         </div>
       </div>
 
-      {/* Listagem */}
+      {/* Grid */}
       <div className="max-w-7xl mx-auto px-4 mt-12">
-        {!postagens || postagens.length === 0 ? (
+        {postagens.length === 0 ? (
           <div className="text-center py-32 opacity-20">
             <p className="text-2xl font-black uppercase italic">Nenhuma matéria encontrada</p>
           </div>
@@ -90,6 +106,7 @@ export default async function NoticiasPage({
                     src={post.imagem_capa || '/jorjao.webp'}
                     alt={post.titulo}
                     fill
+                    loading={index < 6 ? 'eager' : 'lazy'}
                     className="object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[50%] group-hover:grayscale-0"
                     unoptimized
                   />
@@ -104,7 +121,7 @@ export default async function NoticiasPage({
                   <h2 className="text-white font-black uppercase italic text-xl leading-tight group-hover:text-yellow-500 transition-colors line-clamp-3">
                     {post.titulo}
                   </h2>
-                  
+
                   {post.resumo_ia && (
                     <p className="text-zinc-500 text-sm leading-relaxed line-clamp-2">
                       {post.resumo_ia}
@@ -113,15 +130,30 @@ export default async function NoticiasPage({
 
                   <div className="flex items-center justify-between mt-auto pt-6 border-t border-zinc-800/50">
                     <span className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest">
-                      {new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                      {new Date(post.criado_em).toLocaleDateString('pt-BR', {
+                        day: '2-digit', month: 'short', timeZone: 'America/Sao_Paulo',
+                      })}
                     </span>
-                    <span className="text-yellow-500/50 group-hover:text-yellow-500 transition-colors text-xs font-black">LEIA MAIS +</span>
+                    <span className="text-yellow-500/50 group-hover:text-yellow-500 transition-colors text-xs font-black">
+                      LEIA MAIS +
+                    </span>
                   </div>
                 </div>
               </Link>
             ))}
           </div>
         )}
+
+        {/* Botão voltar home — rodapé da listagem */}
+        <div className="mt-20 flex justify-center">
+          <Link
+            href="/"
+            className="flex items-center gap-3 text-zinc-500 hover:text-yellow-500 text-[10px] font-black uppercase tracking-[0.3em] transition-all group"
+          >
+            <span className="transition-transform group-hover:-translate-x-2">←</span>
+            VOLTAR PARA O INÍCIO
+          </Link>
+        </div>
       </div>
     </main>
   );
