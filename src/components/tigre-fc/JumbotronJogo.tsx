@@ -50,11 +50,12 @@ interface Jogo {
   visitante: Time;
 }
 
-// Interface Props corrigida
+// ── Interface Props Corrigida para o Build ─────────────────
 interface Props { 
   jogo: Jogo; 
   mercadoFechado?: boolean;
-  mediaSofa?: number;        // ← Corrigido aqui
+  stats?: any;         // ← Aceita o retorno do hook useRealtimeScout
+  mediaSofa?: number;  
 }
 
 // ── Confete CSS puro ─────────────────────
@@ -95,7 +96,8 @@ function useScoutState(jogoId: number) {
   }, []);
 
   useEffect(() => {
-    // Carrega estado inicial
+    if (!jogoId) return;
+
     supabase
       .from('scouts_reais')
       .select('jogador_id,gols,cartao_amarelo,cartao_vermelho,sg,var_em_andamento')
@@ -116,9 +118,8 @@ function useScoutState(jogoId: number) {
         }));
       });
 
-    // Realtime
     const channel = supabase
-      .channel(`scout-jogo-${jogoId}`)
+      .channel(`scout-jumbotron-${jogoId}`)
       .on('postgres_changes', {
         event: '*', schema: 'public',
         table: 'scouts_reais',
@@ -128,7 +129,6 @@ function useScoutState(jogoId: number) {
         const prev = prevRef.current[novo?.jogador_id] ?? {};
         const ts = Date.now();
 
-        // GOL
         if ((novo.gols ?? 0) > (prev.gols ?? 0)) {
           setState(p => ({
             ...p,
@@ -138,7 +138,6 @@ function useScoutState(jogoId: number) {
           dispararConfete();
           clearEvento(4000);
         }
-        // CARTÃO AMARELO
         else if ((novo.cartao_amarelo ?? 0) > (prev.cartao_amarelo ?? 0)) {
           setState(p => ({
             ...p,
@@ -147,7 +146,6 @@ function useScoutState(jogoId: number) {
           }));
           clearEvento(3000);
         }
-        // CARTÃO VERMELHO
         else if ((novo.cartao_vermelho ?? 0) > (prev.cartao_vermelho ?? 0)) {
           setState(p => ({
             ...p,
@@ -156,7 +154,6 @@ function useScoutState(jogoId: number) {
           }));
           clearEvento(4000);
         }
-        // VAR
         else if (novo.var_em_andamento === true && !prev.var_em_andamento) {
           setState(p => ({
             ...p,
@@ -174,7 +171,6 @@ function useScoutState(jogoId: number) {
           }));
           clearEvento(4000);
         }
-
         prevRef.current[novo.jogador_id] = novo;
       })
       .subscribe();
@@ -213,7 +209,7 @@ function EventoOverlay({ evento }: { evento: ScoutEvento | null }) {
     idle: { text:'', bg:'transparent', color:'#fff', glow:'none' },
   };
 
-  const cfg = map[cur.tipo];
+  const cfg = map[cur.tipo] || map.idle;
 
   return (
     <div style={{
@@ -240,7 +236,7 @@ function Countdown({ dataHora, paused }: { dataHora: string; paused: boolean }) 
   useEffect(() => {
     const calc = () => {
       if (paused) return;
-      const diff = new Date(dataHora).getTime() - 90*60_000 - Date.now();
+      const diff = new Date(dataHora).getTime() - Date.now();
       if (diff <= 0) { 
         setT({ h:'00', m:'00', s:'00', crit:true }); 
         return; 
@@ -284,8 +280,11 @@ function Countdown({ dataHora, paused }: { dataHora: string; paused: boolean }) 
 }
 
 // ── Componente principal ───────────────────────────────────
-export default function JumbotronJogoReativo({ jogo, mercadoFechado = false }: Props) {
-  const scout = useScoutState(jogo.id);
+export default function JumbotronJogoReativo({ jogo, mercadoFechado = false, stats }: Props) {
+  const scoutInternal = useScoutState(jogo.id);
+  
+  // Prioriza o scout do hook externo (passado via prop stats) se existir
+  const scout = stats?.evento !== undefined ? stats : scoutInternal;
 
   const borderColor = scout.varAndamento ? C.cyan
     : scout.evento?.tipo === 'gol' ? C.gold
@@ -311,10 +310,10 @@ export default function JumbotronJogoReativo({ jogo, mercadoFechado = false }: P
 
   const statusLabel = scout.varAndamento ? 'VAR'
     : scout.evento?.tipo === 'gol' ? 'GOOOOL!'
-    : 'MERCADO ABERTO';
+    : (mercadoFechado ? 'MERCADO FECHADO' : 'MERCADO ABERTO');
 
   const statusColor = scout.varAndamento ? C.cyan
-    : scout.evento?.tipo === 'gol' ? C.gold : C.cyan;
+    : scout.evento?.tipo === 'gol' ? C.gold : (mercadoFechado ? C.red : C.green);
 
   const dataFmt = new Date(jogo.data_hora).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', timeZone:'America/Sao_Paulo' });
   const horaFmt = new Date(jogo.data_hora).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
@@ -340,8 +339,7 @@ export default function JumbotronJogoReativo({ jogo, mercadoFechado = false }: P
 
       {/* LED textures */}
       <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:0, backgroundImage:'radial-gradient(circle,rgba(245,196,0,0.04) 1px,transparent 1px)', backgroundSize:'4px 4px' }} />
-      <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:0, backgroundImage:`repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(245,196,0,0.016) 12px,rgba(245,196,0,0.016) 14px),repeating-linear-gradient(-45deg,transparent,transparent 18px,rgba(245,196,0,0.012) 18px,rgba(245,196,0,0.012) 20px)` }} />
-
+      
       {/* Scan bar */}
       <div style={{ position:'absolute', top:0, left:0, right:0, height:2, zIndex:11, pointerEvents:'none', background:`linear-gradient(90deg,transparent,${scanColor},transparent)`, backgroundSize:'200%', animation:`led-scan ${scanSpeed} linear infinite`, transition:'background 0.3s' }} />
 
@@ -352,7 +350,7 @@ export default function JumbotronJogoReativo({ jogo, mercadoFechado = false }: P
         {/* Top bar */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, paddingBottom:10, borderBottom:'1px solid rgba(245,196,0,0.1)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-            <span style={{ width:6, height:6, borderRadius:'50%', background: scout.varAndamento ? C.cyan : C.green, boxShadow: scout.varAndamento ? `0 0 6px ${C.cyan},0 0 14px ${C.cyan}` : `0 0 6px ${C.green}`, display:'inline-block', animation:'blink-dot 1s ease-in-out infinite' }} />
+            <span style={{ width:6, height:6, borderRadius:'50%', background: statusColor, boxShadow: `0 0 6px ${statusColor}`, display:'inline-block', animation:'blink-dot 1s ease-in-out infinite' }} />
             <span style={{ fontSize:9, fontWeight:900, letterSpacing:'0.3em', color:statusColor, transition:'color 0.3s' }}>
               {statusLabel}
             </span>
@@ -361,7 +359,7 @@ export default function JumbotronJogoReativo({ jogo, mercadoFechado = false }: P
             {jogo.competicao.toUpperCase()}
           </span>
           <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.2em', color:'rgba(255,255,255,0.3)' }}>
-            RODADA {jogo.rodada}
+            RD {jogo.rodada}
           </span>
         </div>
 
@@ -373,11 +371,11 @@ export default function JumbotronJogoReativo({ jogo, mercadoFechado = false }: P
             textShadow: scout.golsNovo > 0 ? C.glowGold : 'none',
             letterSpacing:'-0.02em', lineHeight:1, transition:'color 0.5s',
           }}>
-            {scout.golsNovo > 0 ? `${scout.golsNovo} — 0` : '— — —'}
+            {scout.golsNovo > 0 ? `${scout.golsNovo} — 0` : '0 — 0'}
           </div>
-          {scout.cartoes.length > 0 && (
+          {scout.cartoes?.length > 0 && (
             <div style={{ display:'flex', justifyContent:'center', gap:4, marginTop:6 }}>
-              {scout.cartoes.slice(-4).map((c, i) => (
+              {scout.cartoes.slice(-4).map((c: any, i: number) => (
                 <div key={i} style={{ width:8, height:12, background:c.tipo==='amarelo'?C.gold:C.red, borderRadius:1, opacity:0.8, transform:'rotate(-8deg)' }} />
               ))}
             </div>
