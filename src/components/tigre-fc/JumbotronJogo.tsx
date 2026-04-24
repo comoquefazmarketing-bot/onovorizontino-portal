@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRealtimeScout, ScoutEvent } from '@/hooks/useRealtimeScout';
-import confetti from 'canvas-confetti'; // npm i canvas-confetti
+import Link from 'next/link';
 
 const C = {
   gold:'#F5C400', cyan:'#00F3FF', red:'#FF2D55', green:'#22C55E',
