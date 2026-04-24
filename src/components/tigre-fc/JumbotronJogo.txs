@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 // ── Design Tokens 2.0 ──────────────────────────────────────────
 const C = {
-  gold:      '#F5C400', cyan:   '#00F3FF',
-  red:       '#FF2D55', green:  '#22C55E',
+  gold:      '#F5C400', 
+  cyan:      '#00F3FF',
+  red:       '#FF2D55', 
+  green:     '#22C55E',
   purple:    '#BF5FFF',
   glowGold:  '0 0 12px rgba(245,196,0,0.6), 0 0 25px rgba(245,196,0,0.3)',
   glowCyan:  '0 0 12px rgba(0,243,255,0.7)',
@@ -16,8 +18,12 @@ const C = {
 
 // ── Tipos ──────────────────────────────────────────────────
 interface Jogo { 
-  id: number; competicao: string; rodada: string; data_hora: string; 
-  local: string | null; transmissao: string | null; 
+  id: number; 
+  competicao: string; 
+  rodada: string; 
+  data_hora: string; 
+  local: string | null; 
+  transmissao: string | null; 
   mandante: { nome: string; escudo_url: string | null; sigla?: string | null };
   visitante: { nome: string; escudo_url: string | null; sigla?: string | null };
 }
@@ -27,8 +33,11 @@ interface Stats {
   mediaSofa?: number; 
   maisEscalado?: { nome: string; pct: number }; 
   ranking?: Array<{ apelido: string; pontos: number }>; 
-  posicao?: number; golsSofridos?: number; mediaSofaTime?: number; 
-  mvp?: { nome: string; media: number }; participantes?: number;
+  posicao?: number; 
+  golsSofridos?: number; 
+  mediaSofaTime?: number; 
+  mvp?: { nome: string; media: number }; 
+  participantes?: number;
 }
 
 // ── Componentes de Suporte ──────────────────────────────────
@@ -50,11 +59,16 @@ function Countdown({ dataHora }: { dataHora: string }) {
     const calc = () => {
       const diff = new Date(dataHora).getTime() - Date.now();
       if (diff <= 0) return;
-      const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
       setT({ h: String(h).padStart(2, '0'), m: String(m).padStart(2, '0'), s: String(s).padStart(2, '0') });
     };
-    calc(); const id = setInterval(calc, 1000); return () => clearInterval(id);
+    calc(); 
+    const id = setInterval(calc, 1000); 
+    return () => clearInterval(id);
   }, [dataHora]);
+  
   return (
     <div style={{ fontSize: 9, fontWeight: 900, color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 8 }}>
       INÍCIO EM: <span style={{ color: '#fff' }}>{t.h}:{t.m}:{t.s}</span>
@@ -62,28 +76,26 @@ function Countdown({ dataHora }: { dataHora: string }) {
   );
 }
 
-// ── Componente Principal 2.0 ─────────────────────────────────
-export default function JumbotronReativoV2({ jogo, stats = {}, mercadoFechado = false }: { jogo: Jogo; stats?: Stats; mercadoFechado?: boolean }) {
+// ── Componente Principal (Renomeado para evitar erro de Build) ──
+export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false }: { jogo: Jogo; stats?: Stats; mercadoFechado?: boolean }) {
   const [gols, setGols] = useState(0);
   const [isVar, setIsVar] = useState(false);
   const [eventoAtivo, setEventoAtivo] = useState(false);
 
-  // Realtime
+  // Realtime Supabase
   useEffect(() => {
     const channel = supabase.channel(`live-${jogo.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'scouts_reais', filter: `jogo_id=eq.${jogo.id}` }, (payload: any) => {
         const novo = payload.new;
-        if (novo.gols > 0) {
+        if (novo && novo.gols > 0) {
           setGols(prev => prev + 1);
           setEventoAtivo(true);
           setTimeout(() => setEventoAtivo(false), 5000);
         }
-        setIsVar(novo.var_em_andamento);
+        if (novo) setIsVar(novo.var_em_andamento);
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [jogo.id]);
-
-  const dataFmt = new Date(jogo.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
   return (
     <div style={{
@@ -117,14 +129,14 @@ export default function JumbotronReativoV2({ jogo, stats = {}, mercadoFechado = 
           <div style={{ fontSize: 10, fontWeight: 900, color: '#fff' }}>{jogo.competicao.toUpperCase()} <span style={{ color: 'rgba(255,255,255,0.3)', marginLeft: 5 }}>RD {jogo.rodada}</span></div>
         </div>
 
-        {/* GRID PRINCIPAL: 1fr - 1.8fr - 1fr (Destaque Central) */}
+        {/* GRID PRINCIPAL */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr 1fr', gap: 10, alignItems: 'center' }}>
           
           {/* COLUNA 1: FANTASY STATS */}
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px 8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ marginBottom: 8 }}>
               <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)' }}>TOP PONTOS</div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: C.gold }}>{stats.topPontuador?.pts.toFixed(1) || '0.0'}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: C.gold }}>{stats.topPontuador?.pts?.toFixed(1) || '0.0'}</div>
               <Bar pct={100} color="gold" />
             </div>
             <div>
@@ -134,13 +146,13 @@ export default function JumbotronReativoV2({ jogo, stats = {}, mercadoFechado = 
             </div>
           </div>
 
-          {/* COLUNA 2: PLACAR (O CENTRO DAS ATENÇÕES) */}
+          {/* COLUNA 2: PLACAR */}
           <div style={{ textAlign: 'center', padding: '0 5px' }}>
             {!mercadoFechado && <Countdown dataHora={jogo.data_hora} />}
             
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 15, marginBottom: 10 }}>
               <div style={{ textAlign: 'center' }}>
-                <img src={jogo.mandante.escudo_url || ''} style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.2))' }} />
+                <img src={jogo.mandante.escudo_url || ''} alt="Mandante" style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.2))' }} />
                 <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{jogo.mandante.sigla}</div>
               </div>
 
@@ -149,7 +161,7 @@ export default function JumbotronReativoV2({ jogo, stats = {}, mercadoFechado = 
               </div>
 
               <div style={{ textAlign: 'center' }}>
-                <img src={jogo.visitante.escudo_url || ''} style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(245,196,0,0.2))' }} />
+                <img src={jogo.visitante.escudo_url || ''} alt="Visitante" style={{ width: 45, filter: 'drop-shadow(0 0 5px rgba(245,196,0,0.2))' }} />
                 <div style={{ fontSize: 8, color: C.gold, marginTop: 4 }}>{jogo.visitante.sigla}</div>
               </div>
             </div>
@@ -162,7 +174,7 @@ export default function JumbotronReativoV2({ jogo, stats = {}, mercadoFechado = 
             </Link>
           </div>
 
-          {/* COLUNA 3: RANKING REVISADO */}
+          {/* COLUNA 3: RANKING */}
           <div style={{ 
             background: 'linear-gradient(180deg, rgba(191,95,255,0.1) 0%, rgba(0,0,0,0) 100%)', 
             padding: '10px 8px', borderRadius: 8, border: '1px solid rgba(191,95,255,0.2)' 
@@ -177,7 +189,7 @@ export default function JumbotronReativoV2({ jogo, stats = {}, mercadoFechado = 
           </div>
         </div>
 
-        {/* FOOTER: STATS DA SÉRIE B */}
+        {/* FOOTER */}
         <div style={{ display: 'flex', gap: 6, marginTop: 15, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           {[
             { val: `${stats.posicao || '-'}º`, lbl: 'SÉRIE B', col: C.gold },
