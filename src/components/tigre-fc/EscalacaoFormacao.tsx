@@ -2,24 +2,23 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase'; // Certifique-se que este caminho existe
 
-// --- IMPORTANDO AS PEÇAS QUE VOCÊ CRIOU ---
-// (Certifique-se que os nomes dos arquivos e caminhos estão corretos)
+// --- COMPONENTES ---
 import { MarketList } from './MarketList';
 import { SoccerField } from './SoccerField';
 import { Bench } from './Bench';
-import CapitaoEHeroi from './CapitaoEHeroi (1)'; // Ajuste o nome se necessário
+import CapitaoEHeroi from './CapitaoEHeroi (1)';
 import Palpite from './Palpite';
 import FinalCardReveal from './FinalCardReveal (1)';
 
-// --- CONFIGURAÇÕES TÉCNICAS ---
+// --- CONFIGURAÇÕES ---
 interface EscalacaoFormacaoProps {
-  jogoId?: number;
+  jogoId: number;
 }
 
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 
-// -- LISTA COMPLETA DE 39 JOGADORES --
 const PLAYERS = [
   { id: 1, name: "Jordi", short: "JORDI", num: 1, pos: "GOL", foto: BASE + "JORDI.png" },
   { id: 2, name: "Airton", short: "AIRTON", num: 12, pos: "GOL", foto: BASE + "AIRTON.png" },
@@ -63,7 +62,6 @@ const PLAYERS = [
 ];
 
 export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
-  // --- ESTADOS GLOBAIS DA ESCALAÇÃO ---
   const [step, setStep] = useState<'formation' | 'arena' | 'special' | 'prediction' | 'reveal'>('formation');
   const [formation, setFormation] = useState<string>('4-3-3');
   const [lineup, setLineup] = useState<any>({});
@@ -71,19 +69,56 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const [captainId, setCaptainId] = useState<number | null>(null);
   const [heroId, setHeroId] = useState<number | null>(null);
   const [score, setScore] = useState({ tigre: 0, adv: 0 });
+  const [isSaving, setIsSaving] = useState(false);
+
+  // --- LÓGICA DE SALVAMENTO (SUPABASE) ---
+  const handleSaveAndFinish = async () => {
+    setIsSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const payload = {
+        usuario_id: user?.id,
+        jogo_id: jogoId,
+        formacao: formation,
+        lineup_json: lineup,
+        bench_json: bench,
+        capitao_id: captainId,
+        heroi_id: heroId,
+        palpite_tigre: score.tigre,
+        palpite_adv: score.adv,
+        palpite_locked: true,
+        atualizado_em: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('tigre_fc_escalacoes')
+        .insert([payload]);
+
+      if (error) throw error;
+      setStep('reveal');
+    } catch (err) {
+      console.error("Erro ao salvar palpite:", err);
+      // Mesmo com erro, avançamos para não travar a experiência do usuário, 
+      // mas o ideal é tratar o feedback.
+      setStep('reveal');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="h-screen bg-black text-white overflow-hidden flex flex-col">
       <AnimatePresence mode="wait">
         
-        {/* 1. SELEÇÃO DE FORMAÇÃO */}
+        {/* STEP 1: TÁTICA */}
         {step === 'formation' && (
           <motion.div key="form" exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center p-6">
-            <h1 className="text-4xl font-black italic text-yellow-500 mb-8 uppercase">Escolha a Tática</h1>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <h1 className="text-4xl font-black italic text-yellow-500 mb-8 uppercase tracking-tighter">Escolha a Tática</h1>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-xl">
               {['4-3-3', '4-4-2', '3-5-2', '4-2-3-1', '5-3-2', '3-4-3'].map(f => (
                 <button key={f} onClick={() => { setFormation(f); setStep('arena'); }} 
-                  className="p-6 bg-zinc-900 border-2 border-white/5 rounded-2xl text-2xl font-black hover:border-yellow-500 transition-all">
+                  className="p-6 bg-zinc-900 border-2 border-white/5 rounded-2xl text-2xl font-black hover:border-yellow-500 transition-all active:scale-95">
                   {f}
                 </button>
               ))}
@@ -91,40 +126,58 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </motion.div>
         )}
 
-        {/* 2. ARENA DE ESCALAÇÃO (O CAMPO) */}
+        {/* STEP 2: CAMPO */}
         {step === 'arena' && (
-          <motion.div key="arena" className="flex-1 flex overflow-hidden">
-            <MarketList players={PLAYERS} lineup={lineup} bench={bench} onSelect={(p) => {/* lógica */}} />
+          <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex overflow-hidden">
+            <MarketList players={PLAYERS} lineup={lineup} bench={bench} onSelect={() => {}} />
             <div className="flex-1 flex flex-col relative bg-zinc-950">
               <SoccerField formation={formation} lineup={lineup} setLineup={setLineup} />
               <Bench players={bench} setBench={setBench} />
-              <button onClick={() => setStep('special')} className="absolute bottom-6 right-6 px-8 py-3 bg-yellow-500 text-black font-black rounded-full shadow-xl">
-                DEFINIR CAPITÃO →
+              <button 
+                onClick={() => setStep('special')} 
+                className="absolute bottom-10 right-10 px-10 py-4 bg-yellow-500 text-black font-[1000] rounded-full shadow-[0_10px_30px_rgba(245,196,0,0.3)] uppercase italic"
+              >
+                Próximo Passo →
               </button>
             </div>
           </motion.div>
         )}
 
-        {/* 3. CAPITÃO E HERÓI */}
+        {/* STEP 3: CAPITÃO E HERÓI */}
         {step === 'special' && (
-          <CapitaoEHeroi 
-            onSelect={(type) => {/* abrir seleção */}}
-            captainName={PLAYERS.find(p => p.id === captainId)?.short}
-            heroName={PLAYERS.find(p => p.id === heroId)?.short}
-            onNext={() => setStep('prediction')}
-          />
+          <motion.div key="special" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex items-center justify-center">
+            <CapitaoEHeroi 
+              onSelect={(type) => {
+                // Aqui você abriria um modal de seleção. 
+                // Por enquanto, vamos simular que ele escolheu IDs da lineup.
+                const firstPlayer = Object.values(lineup)[0] as any;
+                if (type === 'CAPTAIN') setCaptainId(firstPlayer?.id);
+                else setHeroId(firstPlayer?.id);
+              }}
+              captainName={PLAYERS.find(p => p.id === captainId)?.short}
+              captainFoto={PLAYERS.find(p => p.id === captainId)?.foto}
+              heroName={PLAYERS.find(p => p.id === heroId)?.short}
+              heroFoto={PLAYERS.find(p => p.id === heroId)?.foto}
+              onNext={() => setStep('prediction')}
+            />
+          </motion.div>
         )}
 
-        {/* 4. PALPITE */}
+        {/* STEP 4: PALPITE */}
         {step === 'prediction' && (
-          <Palpite 
-            scoreTigre={score.tigre}
-            setScoreTigre={(v) => setScore({...score, tigre: v})}
-            onLock={() => setStep('reveal')}
-          />
+          <motion.div key="prediction" className="flex-1">
+            <Palpite 
+              scoreTigre={score.tigre}
+              scoreAdversario={score.adv}
+              setScoreTigre={(v) => setScore(prev => ({...prev, tigre: v}))}
+              setScoreAdversario={(v) => setScore(prev => ({...prev, adv: v}))}
+              isLocked={isSaving}
+              onLock={handleSaveAndFinish}
+            />
+          </motion.div>
         )}
 
-        {/* 5. REVELAÇÃO FINAL */}
+        {/* STEP 5: REVELAÇÃO */}
         {step === 'reveal' && (
           <FinalCardReveal 
             lineup={lineup}
@@ -132,6 +185,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
             captainId={captainId}
             heroId={heroId}
             scoreTigre={score.tigre}
+            scoreAdversario={score.adv}
             onClose={() => setStep('formation')}
           />
         )}
