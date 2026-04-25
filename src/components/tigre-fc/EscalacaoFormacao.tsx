@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/supabase'; // Certifique-se que este caminho existe
+import { supabase } from '@/lib/supabase'; // Ajuste conforme seu caminho de config
 
 // --- COMPONENTES ---
 import { MarketList } from './MarketList';
 import { SoccerField } from './SoccerField';
 import { Bench } from './Bench';
-import CapitaoEHeroi from './CapitaoEHeroi (1)';
+import CapitaoEHeroi from './CapitaoEHeroi'; // Nome limpo para evitar erros de build
 import Palpite from './Palpite';
-import FinalCardReveal from './FinalCardReveal (1)';
+import FinalCardReveal from './FinalCardReveal'; // Nome limpo para evitar erros de build
 
-// --- CONFIGURAÇÕES ---
+// --- CONFIGURAÇÕES TÉCNICAS ---
 interface EscalacaoFormacaoProps {
   jogoId: number;
 }
@@ -71,36 +71,33 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const [score, setScore] = useState({ tigre: 0, adv: 0 });
   const [isSaving, setIsSaving] = useState(false);
 
-  // --- LÓGICA DE SALVAMENTO (SUPABASE) ---
-  const handleSaveAndFinish = async () => {
+  // Lógica para salvar no Banco de Dados antes da revelação
+  const handleLockPalpite = async () => {
     setIsSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      const payload = {
-        usuario_id: user?.id,
-        jogo_id: jogoId,
-        formacao: formation,
-        lineup_json: lineup,
-        bench_json: bench,
-        capitao_id: captainId,
-        heroi_id: heroId,
-        palpite_tigre: score.tigre,
-        palpite_adv: score.adv,
-        palpite_locked: true,
-        atualizado_em: new Date().toISOString()
-      };
-
       const { error } = await supabase
         .from('tigre_fc_escalacoes')
-        .insert([payload]);
+        .upsert({
+          usuario_id: user?.id,
+          jogo_id: jogoId,
+          formacao: formation,
+          lineup_json: lineup,
+          bench_json: bench,
+          capitao_id: captainId,
+          heroi_id: heroId,
+          palpite_tigre: score.tigre,
+          palpite_adv: score.adv,
+          palpite_locked: true,
+          atualizado_em: new Date().toISOString()
+        }, { onConflict: 'usuario_id, jogo_id' });
 
       if (error) throw error;
       setStep('reveal');
     } catch (err) {
-      console.error("Erro ao salvar palpite:", err);
-      // Mesmo com erro, avançamos para não travar a experiência do usuário, 
-      // mas o ideal é tratar o feedback.
+      console.error("Erro ao salvar:", err);
+      // Avança mesmo com erro para não travar o usuário, mas o ideal é tratar o UI
       setStep('reveal');
     } finally {
       setIsSaving(false);
@@ -111,14 +108,23 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     <div className="h-screen bg-black text-white overflow-hidden flex flex-col">
       <AnimatePresence mode="wait">
         
-        {/* STEP 1: TÁTICA */}
+        {/* 1. SELEÇÃO DE FORMAÇÃO */}
         {step === 'formation' && (
-          <motion.div key="form" exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center p-6">
+          <motion.div 
+            key="form" 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }} 
+            className="flex-1 flex flex-col items-center justify-center p-6"
+          >
             <h1 className="text-4xl font-black italic text-yellow-500 mb-8 uppercase tracking-tighter">Escolha a Tática</h1>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-xl">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl">
               {['4-3-3', '4-4-2', '3-5-2', '4-2-3-1', '5-3-2', '3-4-3'].map(f => (
-                <button key={f} onClick={() => { setFormation(f); setStep('arena'); }} 
-                  className="p-6 bg-zinc-900 border-2 border-white/5 rounded-2xl text-2xl font-black hover:border-yellow-500 transition-all active:scale-95">
+                <button 
+                  key={f} 
+                  onClick={() => { setFormation(f); setStep('arena'); }} 
+                  className="p-6 bg-zinc-900 border-2 border-white/5 rounded-2xl text-2xl font-black hover:border-yellow-500 transition-all active:scale-95"
+                >
                   {f}
                 </button>
               ))}
@@ -126,33 +132,42 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </motion.div>
         )}
 
-        {/* STEP 2: CAMPO */}
+        {/* 2. ARENA DE ESCALAÇÃO */}
         {step === 'arena' && (
-          <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex overflow-hidden">
-            <MarketList players={PLAYERS} lineup={lineup} bench={bench} onSelect={() => {}} />
+          <motion.div 
+            key="arena" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-1 flex overflow-hidden"
+          >
+            <MarketList 
+              players={PLAYERS} 
+              lineup={lineup} 
+              bench={bench} 
+              onSelect={(p) => {
+                // A lógica de inserção no campo/reserva deve ser tratada aqui ou via SoccerField/Bench
+              }} 
+            />
             <div className="flex-1 flex flex-col relative bg-zinc-950">
               <SoccerField formation={formation} lineup={lineup} setLineup={setLineup} />
               <Bench players={bench} setBench={setBench} />
               <button 
                 onClick={() => setStep('special')} 
-                className="absolute bottom-10 right-10 px-10 py-4 bg-yellow-500 text-black font-[1000] rounded-full shadow-[0_10px_30px_rgba(245,196,0,0.3)] uppercase italic"
+                className="absolute bottom-10 right-10 px-10 py-4 bg-yellow-500 text-black font-[1000] rounded-full shadow-[0_10px_30px_rgba(245,196,0,0.3)] uppercase italic active:scale-90 transition-transform"
               >
-                Próximo Passo →
+                PRÓXIMO PASSO →
               </button>
             </div>
           </motion.div>
         )}
 
-        {/* STEP 3: CAPITÃO E HERÓI */}
+        {/* 3. CAPITÃO E HERÓI */}
         {step === 'special' && (
-          <motion.div key="special" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex items-center justify-center">
+          <motion.div key="special" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <CapitaoEHeroi 
               onSelect={(type) => {
-                // Aqui você abriria um modal de seleção. 
-                // Por enquanto, vamos simular que ele escolheu IDs da lineup.
-                const firstPlayer = Object.values(lineup)[0] as any;
-                if (type === 'CAPTAIN') setCaptainId(firstPlayer?.id);
-                else setHeroId(firstPlayer?.id);
+                // Aqui você pode disparar um modal de seleção filtrando apenas quem está na lineup
               }}
               captainName={PLAYERS.find(p => p.id === captainId)?.short}
               captainFoto={PLAYERS.find(p => p.id === captainId)?.foto}
@@ -163,21 +178,21 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </motion.div>
         )}
 
-        {/* STEP 4: PALPITE */}
+        {/* 4. PALPITE */}
         {step === 'prediction' && (
-          <motion.div key="prediction" className="flex-1">
+          <motion.div key="prediction" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Palpite 
               scoreTigre={score.tigre}
               scoreAdversario={score.adv}
               setScoreTigre={(v) => setScore(prev => ({...prev, tigre: v}))}
               setScoreAdversario={(v) => setScore(prev => ({...prev, adv: v}))}
               isLocked={isSaving}
-              onLock={handleSaveAndFinish}
+              onLock={handleLockPalpite}
             />
           </motion.div>
         )}
 
-        {/* STEP 5: REVELAÇÃO */}
+        {/* 5. REVELAÇÃO FINAL */}
         {step === 'reveal' && (
           <FinalCardReveal 
             lineup={lineup}
