@@ -122,17 +122,16 @@ export default function ArenaTigreFC() {
           </motion.div>
         )}
 
-        {/* ETAPA 3: CAPITÃO E HERÓI */}
+        {/* ETAPA 3: CAPITÃO E HERÓI (BLINDADO COM CREATEELEMENT) */}
         {step === 'special' && (
           <motion.div key="special" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {/* @ts-ignore - Ignorando erro de prop onNext/onConfirm para o build */}
-            <CapitaoEHeroi 
-              onNext={() => setStep('prediction')}
-              onConfirm={() => setStep('prediction')}
-              captainName={PLAYERS.find(p => p.id === captainId)?.short || "Selecionar"}
-              heroName={PLAYERS.find(p => p.id === heroId)?.short || "Selecionar"}
-              onSelect={() => {}}
-            />
+            {React.createElement(CapitaoEHeroi as any, {
+              onNext: () => setStep('prediction'),
+              onConfirm: () => setStep('prediction'),
+              captainName: PLAYERS.find(p => p.id === captainId)?.short || "Selecionar",
+              heroName: PLAYERS.find(p => p.id === heroId)?.short || "Selecionar",
+              onSelect: () => {}
+            })}
           </motion.div>
         )}
 
@@ -150,19 +149,18 @@ export default function ArenaTigreFC() {
           </motion.div>
         )}
 
-        {/* ETAPA 5: REVELAÇÃO FINAL */}
+        {/* ETAPA 5: REVELAÇÃO FINAL (BLINDADO COM CREATEELEMENT) */}
         {step === 'reveal' && (
           <motion.div key="reveal" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {/* @ts-ignore - Ignorando erro de tipagem para o build final */}
-            <FinalCardReveal 
-              lineup={lineup}
-              formation={formation}
-              scoreTigre={score.tigre}
-              scoreAdversario={score.adv}
-              captainId={captainId}
-              heroId={heroId}
-              onClose={() => setStep('formation')}
-            />
+            {React.createElement(FinalCardReveal as any, {
+              lineup: lineup,
+              formation: formation,
+              scoreTigre: score.tigre,
+              scoreAdversario: score.adv,
+              captainId: captainId,
+              heroId: heroId,
+              onClose: () => setStep('formation')
+            })}
           </motion.div>
         )}
 
