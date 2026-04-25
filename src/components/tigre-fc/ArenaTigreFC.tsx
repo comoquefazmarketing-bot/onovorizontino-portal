@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 // --- COMPONENTES MODULARES ---
 import SoccerField from './SoccerField';
-import { MarketList } from './MarketList';
+import MarketList from './MarketList';
 import Bench from './Bench';
 
 // --- COMPONENTES IMPORTADOS ---
