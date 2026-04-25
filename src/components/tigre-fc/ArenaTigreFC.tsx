@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 // --- NOSSOS NOVOS COMPONENTES MODULARES ---
-import { SoccerField } from './SoccerField';
+import SoccerField from './SoccerField';
 import { MarketList } from './MarketList';
-import { Bench } from './Bench';
+import Bench from './Bench';
 
 // --- SEUS COMPONENTES ANEXADOS (IMPORTADOS) ---
 import CapitaoEHeroi from './CapitaoEHeroi';
