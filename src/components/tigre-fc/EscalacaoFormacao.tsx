@@ -12,7 +12,6 @@ type Player = { id: number; name: string; short: string; num: number; pos: strin
 type Lineup = Record<string, Player | null>;
 type Step = 'arena' | 'summary';
 
-// Adicionando a interface para as Props que o Vercel exigiu
 interface EscalacaoFormacaoProps {
     jogoId?: number;
 }
@@ -63,41 +62,41 @@ const PLAYERS: Player[] = [
 // --- FORMAÇÕES ---
 const FORMATIONS = {
     "4-3-3": [
-        { id: '1', x: 50, y: 88, label: 'GOL' },
-        { id: '2', x: 15, y: 70, label: 'LE' }, { id: '3', x: 38, y: 75, label: 'ZAG' }, { id: '4', x: 62, y: 75, label: 'ZAG' }, { id: '5', x: 85, y: 70, label: 'LD' },
-        { id: '6', x: 30, y: 50, label: 'MEI' }, { id: '7', x: 70, y: 50, label: 'MEI' }, { id: '8', x: 50, y: 35, label: 'MEI' },
-        { id: '9', x: 20, y: 18, label: 'PE' }, { id: '10', x: 50, y: 12, label: 'ATA' }, { id: '11', x: 80, y: 18, label: 'PD' }
+        { id: '1', x: 50, y: 82, label: 'GOL' },
+        { id: '2', x: 18, y: 70, label: 'LE' }, { id: '3', x: 38, y: 72, label: 'ZAG' }, { id: '4', x: 62, y: 72, label: 'ZAG' }, { id: '5', x: 82, y: 70, label: 'LD' },
+        { id: '6', x: 30, y: 55, label: 'MEI' }, { id: '7', x: 70, y: 55, label: 'MEI' }, { id: '8', x: 50, y: 52, label: 'MEI' },
+        { id: '9', x: 25, y: 38, label: 'PE' }, { id: '10', x: 50, y: 35, label: 'ATA' }, { id: '11', x: 75, y: 38, label: 'PD' }
     ],
     "4-4-2": [
-        { id: '1', x: 50, y: 88, label: 'GOL' },
-        { id: '2', x: 15, y: 70, label: 'LE' }, { id: '3', x: 38, y: 75, label: 'ZAG' }, { id: '4', x: 62, y: 75, label: 'ZAG' }, { id: '5', x: 85, y: 70, label: 'LD' },
-        { id: '6', x: 25, y: 45, label: 'MEI' }, { id: '7', x: 42, y: 50, label: 'MEI' }, { id: '8', x: 58, y: 50, label: 'MEI' }, { id: '9', x: 75, y: 45, label: 'MEI' },
-        { id: '10', x: 40, y: 15, label: 'ATA' }, { id: '11', x: 60, y: 15, label: 'ATA' }
+        { id: '1', x: 50, y: 82, label: 'GOL' },
+        { id: '2', x: 18, y: 70, label: 'LE' }, { id: '3', x: 38, y: 72, label: 'ZAG' }, { id: '4', x: 62, y: 72, label: 'ZAG' }, { id: '5', x: 82, y: 70, label: 'LD' },
+        { id: '6', x: 22, y: 55, label: 'MEI' }, { id: '7', x: 42, y: 56, label: 'MEI' }, { id: '8', x: 58, y: 56, label: 'MEI' }, { id: '9', x: 78, y: 55, label: 'MEI' },
+        { id: '10', x: 40, y: 38, label: 'ATA' }, { id: '11', x: 60, y: 38, label: 'ATA' }
     ],
     "3-5-2": [
-        { id: '1', x: 50, y: 88, label: 'GOL' },
-        { id: '2', x: 30, y: 75, label: 'ZAG' }, { id: '3', x: 50, y: 78, label: 'ZAG' }, { id: '4', x: 70, y: 75, label: 'ZAG' },
-        { id: '5', x: 12, y: 45, label: 'ALA' }, { id: '6', x: 35, y: 50, label: 'MEI' }, { id: '7', x: 50, y: 55, label: 'MEI' }, { id: '8', x: 65, y: 50, label: 'MEI' }, { id: '9', x: 88, y: 45, label: 'ALA' },
-        { id: '10', x: 40, y: 18, label: 'ATA' }, { id: '11', x: 60, y: 18, label: 'ATA' }
+        { id: '1', x: 50, y: 82, label: 'GOL' },
+        { id: '2', x: 32, y: 72, label: 'ZAG' }, { id: '3', x: 50, y: 74, label: 'ZAG' }, { id: '4', x: 68, y: 72, label: 'ZAG' },
+        { id: '5', x: 15, y: 55, label: 'ALA' }, { id: '6', x: 35, y: 56, label: 'MEI' }, { id: '7', x: 50, y: 58, label: 'MEI' }, { id: '8', x: 65, y: 56, label: 'MEI' }, { id: '9', x: 85, y: 55, label: 'ALA' },
+        { id: '10', x: 42, y: 38, label: 'ATA' }, { id: '11', x: 58, y: 38, label: 'ATA' }
     ],
     "4-2-3-1": [
-        { id: '1', x: 50, y: 88, label: 'GOL' },
-        { id: '2', x: 15, y: 70, label: 'LE' }, { id: '3', x: 38, y: 75, label: 'ZAG' }, { id: '4', x: 62, y: 75, label: 'ZAG' }, { id: '5', x: 85, y: 70, label: 'LD' },
-        { id: '6', x: 40, y: 55, label: 'VOL' }, { id: '7', x: 60, y: 55, label: 'VOL' },
-        { id: '8', x: 25, y: 35, label: 'MEI' }, { id: '9', x: 50, y: 32, label: 'MEI' }, { id: '10', x: 75, y: 35, label: 'MEI' },
-        { id: '11', x: 50, y: 12, label: 'ATA' }
+        { id: '1', x: 50, y: 82, label: 'GOL' },
+        { id: '2', x: 18, y: 70, label: 'LE' }, { id: '3', x: 38, y: 72, label: 'ZAG' }, { id: '4', x: 62, y: 72, label: 'ZAG' }, { id: '5', x: 82, y: 70, label: 'LD' },
+        { id: '6', x: 40, y: 58, label: 'VOL' }, { id: '7', x: 60, y: 58, label: 'VOL' },
+        { id: '8', x: 25, y: 42, label: 'MEI' }, { id: '9', x: 50, y: 40, label: 'MEI' }, { id: '10', x: 75, y: 42, label: 'MEI' },
+        { id: '11', x: 50, y: 28, label: 'ATA' }
     ],
     "3-4-3": [
-        { id: '1', x: 50, y: 88, label: 'GOL' },
-        { id: '2', x: 30, y: 75, label: 'ZAG' }, { id: '3', x: 50, y: 78, label: 'ZAG' }, { id: '4', x: 70, y: 75, label: 'ZAG' },
-        { id: '5', x: 20, y: 50, label: 'MEI' }, { id: '6', x: 40, y: 52, label: 'MEI' }, { id: '7', x: 60, y: 52, label: 'MEI' }, { id: '8', x: 80, y: 50, label: 'MEI' },
-        { id: '9', x: 25, y: 18, label: 'ATA' }, { id: '10', x: 50, y: 12, label: 'ATA' }, { id: '11', x: 75, y: 18, label: 'ATA' }
+        { id: '1', x: 50, y: 82, label: 'GOL' },
+        { id: '2', x: 30, y: 72, label: 'ZAG' }, { id: '3', x: 50, y: 74, label: 'ZAG' }, { id: '4', x: 70, y: 72, label: 'ZAG' },
+        { id: '5', x: 20, y: 55, label: 'MEI' }, { id: '6', x: 40, y: 56, label: 'MEI' }, { id: '7', x: 60, y: 56, label: 'MEI' }, { id: '8', x: 80, y: 55, label: 'MEI' },
+        { id: '9', x: 25, y: 38, label: 'ATA' }, { id: '10', x: 50, y: 35, label: 'ATA' }, { id: '11', x: 75, y: 38, label: 'ATA' }
     ],
     "5-3-2": [
-        { id: '1', x: 50, y: 88, label: 'GOL' },
-        { id: '2', x: 12, y: 68, label: 'LAT' }, { id: '3', x: 31, y: 75, label: 'ZAG' }, { id: '4', x: 50, y: 78, label: 'ZAG' }, { id: '5', x: 69, y: 75, label: 'ZAG' }, { id: '6', x: 88, y: 68, label: 'LAT' },
-        { id: '7', x: 30, y: 48, label: 'MEI' }, { id: '8', x: 50, y: 52, label: 'MEI' }, { id: '9', x: 70, y: 48, label: 'MEI' },
-        { id: '10', x: 40, y: 18, label: 'ATA' }, { id: '11', x: 60, y: 18, label: 'ATA' }
+        { id: '1', x: 50, y: 82, label: 'GOL' },
+        { id: '2', x: 12, y: 68, label: 'LAT' }, { id: '3', x: 31, y: 72, label: 'ZAG' }, { id: '4', x: 50, y: 74, label: 'ZAG' }, { id: '5', x: 69, y: 72, label: 'ZAG' }, { id: '6', x: 88, y: 68, label: 'LAT' },
+        { id: '7', x: 30, y: 52, label: 'MEI' }, { id: '8', x: 50, y: 54, label: 'MEI' }, { id: '9', x: 70, y: 52, label: 'MEI' },
+        { id: '10', x: 40, y: 38, label: 'ATA' }, { id: '11', x: 60, y: 38, label: 'ATA' }
     ]
 };
 
@@ -107,10 +106,10 @@ function MarketCard({ player, onClick }: { player: Player; onClick: () => void }
         <motion.div
             whileTap={{ scale: 0.95 }}
             onClick={onClick}
-            className="flex flex-col bg-[#111] rounded-xl overflow-hidden border border-white/10 active:border-yellow-500 shadow-xl"
+            className="flex flex-col bg-[#111] rounded-xl overflow-hidden border border-white/10 active:border-yellow-500 shadow-xl cursor-pointer"
         >
-            <div className="relative aspect-square overflow-hidden bg-zinc-800">
-                <img src={player.foto} alt={player.name} className="w-full h-full object-cover" />
+            <div className="relative aspect-square overflow-hidden bg-zinc-800 flex items-center justify-center">
+                <img src={player.foto} alt={player.name} className="w-full h-full object-cover object-top" />
                 <div className="absolute top-1 left-1 bg-yellow-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded">
                     {player.pos}
                 </div>
@@ -123,10 +122,10 @@ function MarketCard({ player, onClick }: { player: Player; onClick: () => void }
     );
 }
 
-// COMPONENTE PRINCIPAL COM TIPAGEM DE PROPS AJUSTADA
 export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     const [step, setStep] = useState<Step>('arena');
     const [formationKey, setFormationKey] = useState<keyof typeof FORMATIONS>("4-3-3");
+    const [filter, setFilter] = useState<string>('TODOS');
     const [lineup, setLineup] = useState<Lineup>({});
     const [bench, setBench] = useState<(Player | null)[]>([null, null, null, null, null]);
     const [activeSlot, setActiveSlot] = useState<{ type: 'titular' | 'reserva', id: string | number } | null>(null);
@@ -135,6 +134,11 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     const filledTitulares = Object.values(lineup).filter(Boolean).length;
     const filledReservas = bench.filter(Boolean).length;
     const isBenchTime = filledTitulares === 11;
+
+    const filteredPlayers = useMemo(() => {
+        if (filter === 'TODOS') return PLAYERS;
+        return PLAYERS.filter(p => p.pos === filter);
+    }, [filter]);
 
     const handleSelectPlayer = (player: Player) => {
         if (!activeSlot) return;
@@ -146,136 +150,138 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
             setBench(newBench);
         }
         setActiveSlot(null);
-        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
-    const triggerBoom = () => {
-        const colors = ['#F5C400', '#FFF', '#FFD700'];
-        colors.forEach((c, i) => {
-            setTimeout(() => {
-                const f = document.createElement('div');
-                f.className = "fixed inset-0 z-[9999] pointer-events-none bg-yellow-500/20 animate-pulse";
-                document.body.appendChild(f);
-                setTimeout(() => f.remove(), 400);
-            }, i * 250);
-        });
-        setTimeout(() => setStep('summary'), 1200);
     };
 
     return (
-        <div className="min-h-screen bg-black text-white overflow-x-hidden selection:bg-yellow-500">
+        <div className="min-h-screen bg-black text-white overflow-x-hidden">
             <AnimatePresence mode="wait">
                 {step === 'arena' && (
-                    <div className="flex flex-col lg:flex-row min-h-screen">
-                        <div className="sticky top-0 lg:relative z-40 w-full lg:flex-1 h-[60vh] lg:h-screen bg-zinc-900 border-b lg:border-b-0 border-white/10 shadow-2xl">
-                            <div className="absolute inset-0">
-                                <img src={STADIUM_BG} alt="Stadium" className="w-full h-full object-cover opacity-40" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black" />
-                            </div>
-
-                            <div className="relative h-full flex flex-col items-center justify-center p-2" style={{ perspective: '1200px' }}>
-                                <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-2 z-50 bg-black/50 backdrop-blur-md p-1.5 rounded-full border border-white/10 overflow-x-auto max-w-[90vw] no-scrollbar">
-                                    {Object.keys(FORMATIONS).map((f) => (
-                                        <button 
-                                            key={f}
-                                            onClick={() => setFormationKey(f as keyof typeof FORMATIONS)}
-                                            className={`px-3 py-1 rounded-full text-[10px] font-black transition-all whitespace-nowrap
-                                            ${formationKey === f ? 'bg-yellow-500 text-black' : 'text-white/40 hover:text-white'}`}
-                                        >
-                                            {f}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                <motion.div layout style={{ rotateX: 12 }} className="relative w-full max-w-[420px] aspect-[10/13] bg-green-900/5 border-[2px] border-white/20 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                                    {currentSlots.map(s => (
-                                        <motion.div key={s.id} layoutId={s.id} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${s.x}%`, top: `${s.y}%` }}>
-                                            <motion.div 
-                                                onClick={() => setActiveSlot({ type: 'titular', id: s.id })}
-                                                className={`w-11 h-15 lg:w-16 lg:h-20 rounded-xl border-2 flex items-center justify-center transition-all overflow-hidden
-                                                ${activeSlot?.id === s.id ? 'border-yellow-500 shadow-[0_0_15px_#F5C400] scale-110' : 'border-white/20 bg-black/60'}`}
-                                            >
-                                                {lineup[s.id] ? (
-                                                    <img src={lineup[s.id]?.foto} className="w-full h-full object-cover" alt="Player" />
-                                                ) : (
-                                                    <span className="text-[8px] font-black text-white/30 tracking-tighter">{s.label}</span>
-                                                )}
-                                            </motion.div>
-                                        </motion.div>
-                                    ))}
-                                </motion.div>
-                            </div>
-                        </div>
-
-                        <div className="relative z-30 w-full lg:w-[450px] flex flex-col bg-[#050505]">
-                            <div className={`p-6 border-b border-white/5 transition-all duration-500
-                                ${isBenchTime && filledReservas < 5 ? 'bg-yellow-500/5 border-yellow-500/20' : 'bg-black'}`}>
-                                <h3 className={`text-center font-black tracking-widest text-[9px] mb-4 uppercase
-                                    ${isBenchTime ? 'text-yellow-500 animate-pulse' : 'text-white/20'}`}>
-                                    {isBenchTime ? '🐯 Complete seu banco (5 jogadores)' : 'Escale os 11 para abrir o banco'}
-                                </h3>
-                                <div className="flex justify-between gap-2 max-w-sm mx-auto">
-                                    {bench.map((p, i) => (
-                                        <motion.div
-                                            key={i}
-                                            animate={activeSlot?.id === i && activeSlot.type === 'reserva' ? { scale: 1.1, borderColor: '#F5C400' } : {}}
-                                            onClick={() => isBenchTime && setActiveSlot({ type: 'reserva', id: i })}
-                                            className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center overflow-hidden transition-all
-                                            ${activeSlot?.id === i ? 'border-yellow-500' : 'border-white/5'}
-                                            ${!isBenchTime ? 'opacity-20 grayscale' : 'cursor-pointer bg-zinc-900 shadow-lg'}`}
-                                        >
-                                            {p ? <img src={p.foto} alt="Bench" className="w-full h-full object-cover" /> : <span className="text-yellow-500/40 text-xl font-black">+</span>}
-                                        </motion.div>
-                                    ))}
+                    <div className="flex flex-col-reverse lg:flex-row min-h-screen">
+                        
+                        {/* MERCADO TIGRE (ESQUERDA) */}
+                        <div className="relative z-30 w-full lg:w-[450px] flex flex-col bg-[#050505] border-r border-white/10">
+                            <div className="p-4 bg-yellow-500 text-black font-black italic flex justify-between items-center sticky top-0 z-50">
+                                <span>MERCADO TIGRE</span>
+                                <div className="text-[10px] px-2 py-1 bg-black text-yellow-500 rounded-lg">
+                                    {isBenchTime ? "ESCOLHA O BANCO" : "ESCOLHA OS 11"}
                                 </div>
                             </div>
 
-                            <div className="sticky top-[60vh] lg:top-0 z-50 p-4 bg-yellow-500 text-black flex justify-between items-center shadow-xl">
-                                <span className="font-black italic tracking-tighter">ELENCO DISPONÍVEL</span>
-                                <span className="text-[10px] font-black uppercase">{activeSlot ? `Slot: ${activeSlot.id}` : 'Selecione no campo'}</span>
+                            {/* FILTROS DE POSIÇÃO */}
+                            <div className="flex gap-1 overflow-x-auto p-3 bg-zinc-900/50 no-scrollbar border-b border-white/5">
+                                {['TODOS', 'GOL', 'ZAG', 'LAT', 'MEI', 'ATA'].map(pos => (
+                                    <button 
+                                        key={pos}
+                                        onClick={() => setFilter(pos)}
+                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all whitespace-nowrap
+                                        ${filter === pos ? 'bg-yellow-500 text-black' : 'bg-black text-white/40 border border-white/10'}`}
+                                    >
+                                        {pos}
+                                    </button>
+                                ))}
                             </div>
 
-                            <div className="p-4 grid grid-cols-3 gap-3 bg-black">
-                                {PLAYERS.map(p => (
+                            {/* BANCO DE RESERVAS */}
+                            <div className="p-4 grid grid-cols-5 gap-2 bg-black border-b border-white/5">
+                                {bench.map((p, i) => (
+                                    <div 
+                                        key={i}
+                                        onClick={() => isBenchTime && setActiveSlot({ type: 'reserva', id: i })}
+                                        className={`aspect-[3/4] rounded-lg border-2 flex items-center justify-center overflow-hidden transition-all cursor-pointer
+                                        ${activeSlot?.id === i && activeSlot.type === 'reserva' ? 'border-yellow-500 bg-yellow-500/10' : 'border-white/10 bg-zinc-900'}`}
+                                    >
+                                        {p ? <img src={p.foto} className="w-full h-full object-cover object-top" /> : <span className="text-white/20 font-black">+</span>}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* LISTA DE JOGADORES */}
+                            <div className="p-4 grid grid-cols-3 gap-3 overflow-y-auto max-h-[50vh] lg:max-h-none lg:flex-1 no-scrollbar">
+                                {filteredPlayers.map(p => (
                                     <MarketCard key={p.id} player={p} onClick={() => handleSelectPlayer(p)} />
                                 ))}
                             </div>
 
-                            <div className="p-6 bg-black pb-12 lg:pb-6">
+                            <div className="p-4 bg-black">
                                 <button 
-                                    onClick={triggerBoom}
                                     disabled={filledTitulares < 11 || filledReservas < 5}
-                                    className={`w-full py-5 rounded-2xl font-black italic tracking-widest text-lg transition-all shadow-2xl
-                                    ${filledTitulares === 11 && filledReservas === 5 ? 'bg-yellow-500 text-black scale-100 active:scale-95' : 'bg-zinc-900 text-white/10'}`}
+                                    className={`w-full py-5 rounded-2xl font-black italic tracking-widest text-lg transition-all
+                                    ${filledTitulares === 11 && filledReservas === 5 ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'bg-zinc-800 text-white/10 cursor-not-allowed'}`}
                                 >
-                                    FINALIZAR ESCALAÇÃO 🐯
+                                    CONFIRMAR TIME 🐯
                                 </button>
                             </div>
                         </div>
-                    </div>
-                )}
 
-                {step === 'summary' && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-zinc-950">
-                        <img src={ESCUDO} alt="Club" className="w-24 mb-6 drop-shadow-[0_0_20px_rgba(245,196,0,0.3)]" />
-                        <h2 className="text-4xl font-black italic text-yellow-500 mb-2 tracking-tighter">TIME DEFINIDO!</h2>
-                        <div className="flex items-center gap-4 mb-12">
-                            <div className="bg-zinc-900/50 p-5 rounded-[2.5rem] border-2 border-yellow-500 shadow-2xl">
-                                <span className="block text-[10px] font-black mb-2 opacity-50 uppercase tracking-widest text-yellow-500">TIGRE</span>
-                                <input type="number" defaultValue="0" className="w-16 bg-transparent text-center text-5xl font-black focus:outline-none text-white" />
+                        {/* ÁREA DO CAMPO (DIREITA) */}
+                        <div className="relative z-40 w-full lg:flex-1 h-[65vh] lg:h-screen bg-black overflow-hidden">
+                            <div className="absolute inset-0">
+                                <img src={STADIUM_BG} alt="Arena Tigre FC" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                             </div>
-                            <span className="text-2xl font-black opacity-10 italic uppercase">vs</span>
-                            <div className="bg-zinc-900/50 p-5 rounded-[2.5rem] border-2 border-white/5 shadow-2xl">
-                                <span className="block text-[10px] font-black mb-2 opacity-30 uppercase tracking-widest">ADV</span>
-                                <input type="number" defaultValue="0" className="w-16 bg-transparent text-center text-5xl font-black focus:outline-none text-white/50" />
+
+                            {/* PERSPECTIVA DO CAMPO */}
+                            <div className="relative h-full w-full" style={{ perspective: '1200px' }}>
+                                <div 
+                                    className="absolute inset-0" 
+                                    style={{ 
+                                        transform: 'rotateX(20deg)', 
+                                        transformOrigin: 'bottom center'
+                                    }}
+                                >
+                                    {currentSlots.map(s => {
+                                        const scaleBase = (s.y / 100) * 0.7 + 0.4;
+                                        return (
+                                            <motion.div 
+                                                key={s.id} 
+                                                layout 
+                                                className="absolute -translate-x-1/2 -translate-y-1/2" 
+                                                style={{ left: `${s.x}%`, top: `${s.y}%` }}
+                                            >
+                                                <motion.div 
+                                                    onClick={() => setActiveSlot({ type: 'titular', id: s.id })}
+                                                    animate={{ 
+                                                        scale: activeSlot?.id === s.id ? scaleBase + 0.15 : scaleBase 
+                                                    }}
+                                                    className={`relative w-16 h-22 lg:w-24 lg:h-32 rounded-xl border-2 flex flex-col items-center justify-center transition-all shadow-2xl overflow-hidden
+                                                    ${activeSlot?.id === s.id ? 'border-yellow-500 shadow-[0_0_30px_#F5C400]' : 'border-white/30 bg-black/40 backdrop-blur-md'}`}
+                                                >
+                                                    {lineup[s.id] ? (
+                                                        <>
+                                                            <img src={lineup[s.id]?.foto} className="w-full h-full object-cover object-top" alt="Player" />
+                                                            <div className="absolute bottom-0 w-full bg-yellow-500 text-black text-[9px] font-black py-1 text-center uppercase tracking-tighter">
+                                                                {lineup[s.id]?.short}
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="text-yellow-500 text-2xl font-black">+</span>
+                                                            <span className="text-[8px] font-black text-white/50 uppercase">{s.label}</span>
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* SELETOR DE FORMAÇÃO */}
+                            <div className="absolute top-6 left-1/2 -translate-x-1/2 flex gap-1 z-50 bg-black/90 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 overflow-x-auto max-w-[90vw] no-scrollbar">
+                                {Object.keys(FORMATIONS).map((f) => (
+                                    <button 
+                                        key={f}
+                                        onClick={() => setFormationKey(f as keyof typeof FORMATIONS)}
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all whitespace-nowrap
+                                        ${formationKey === f ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20' : 'text-white/40 hover:text-white'}`}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                        <button className="bg-yellow-500 text-black px-12 py-5 rounded-full font-black italic tracking-tighter hover:scale-105 transition-all shadow-[0_10px_40px_rgba(245,196,0,0.2)]">
-                            GERAR MEU CARD 📱
-                        </button>
-                    </motion.div>
+
+                    </div>
                 )}
             </AnimatePresence>
         </div>
