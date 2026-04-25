@@ -20,6 +20,11 @@ type Step = 'formation' | 'arena' | 'summary';
 
 interface Slot { id: string; x: number; y: number; label: string; pos: string; }
 
+// Adicionado para corrigir o erro do Vercel
+interface ArenaProps {
+  jogoId?: number;
+}
+
 // ==================== LISTA COMPLETA: 39 JOGADORES ====================
 const PLAYERS: Player[] = [
   { id:1, name:'César Augusto', short:'César', num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
@@ -167,8 +172,8 @@ function MarketCard({ player, onClick }: { player: Player; onClick: () => void }
   );
 }
 
-function FieldCard({ player, label, isSelected, onClick }: { 
-  player: Player | null; label: string; isSelected: boolean; onClick: () => void;
+function FieldCard({ player, label, isSelected, onClick, isCapitão = false, isHeroi = false }: { 
+  player: Player | null; label: string; isSelected: boolean; onClick: () => void; isCapitão?: boolean; isHeroi?: boolean;
 }) {
   return (
     <motion.div
@@ -180,6 +185,8 @@ function FieldCard({ player, label, isSelected, onClick }: {
       {player ? (
         <>
           <img src={player.foto} className="absolute inset-0 w-full h-full object-cover object-top" alt={player.short} />
+          {isCapitão && <div className="absolute top-1 left-1 bg-yellow-500 text-black text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg border border-black/20">C</div>}
+          {isHeroi && <div className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg border border-black/20">H</div>}
           <div className="absolute bottom-0 inset-x-0 bg-black/80 py-1 text-center border-t border-white/10 backdrop-blur-sm">
             <p className="text-white text-[9px] lg:text-[10px] font-black uppercase tracking-tighter truncate px-1">{player.short}</p>
           </div>
@@ -196,10 +203,14 @@ function FieldCard({ player, label, isSelected, onClick }: {
 
 // ==================== MAIN COMPONENT ====================
 
-export default function ArenaFullEngine() {
+// Nome alterado para bater com o que o seu page.tsx está importando (ou vice-versa)
+export default function EscalacaoFormacao({ jogoId }: ArenaProps) {
   const [step, setStep] = useState<Step>('formation');
   const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-3-3');
   const [lineup, setLineup] = useState<Lineup>({});
+  const [reserves, setReserves] = useState<Lineup>({ r1: null, r2: null, r3: null, r4: null, r5: null });
+  const [capitãoId, setCapitãoId] = useState<string | null>(null);
+  const [heroiId, setHeroiId] = useState<string | null>(null);
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [filterPos, setFilterPos] = useState<string | null>(null);
 
@@ -210,20 +221,29 @@ export default function ArenaFullEngine() {
     filterPos ? PLAYERS.filter(p => p.pos === filterPos) : PLAYERS
   , [filterPos]);
 
+  const handleSelectPlayer = (player: Player) => {
+    if (!activeSlot) return;
+    if (activeSlot.startsWith('r')) {
+      setReserves(prev => ({ ...prev, [activeSlot]: player }));
+    } else {
+      setLineup(prev => ({ ...prev, [activeSlot]: player }));
+    }
+    setActiveSlot(null);
+  };
+
   return (
     <div className="min-h-screen bg-[#050505] text-white overflow-hidden font-sans selection:bg-yellow-500">
       <AnimatePresence mode="wait">
         
-        {/* PASSO 1: SELEÇÃO DE TÁTICA */}
         {step === 'formation' && (
-          <motion.div key="f-step" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }}
+          <motion.div key="f-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="min-h-screen flex flex-col items-center justify-center p-6 bg-[radial-gradient(circle_at_center,_#111_0%,_#000_100%)]">
-            <img src={ESCUDO} className="w-24 mb-10 drop-shadow-[0_0_30px_rgba(245,196,0,0.3)]" alt="Tigre" />
-            <h1 className="text-4xl lg:text-6xl font-black italic tracking-tighter mb-12 text-center uppercase">ESCOLHA O ESQUEMA</h1>
+            <img src={ESCUDO} className="w-24 mb-10" alt="Tigre" />
+            <h1 className="text-4xl lg:text-6xl font-black italic tracking-tighter mb-12 text-center uppercase">ESCOLHA A TÁTICA</h1>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-3xl">
               {Object.keys(FORMATIONS).map(f => (
                 <button key={f} onClick={() => { setFormation(f); setStep('arena'); }}
-                  className="py-10 rounded-3xl font-black text-4xl border-2 border-white/5 bg-zinc-900/40 hover:border-yellow-500 hover:bg-yellow-500/10 transition-all hover:scale-105 active:scale-95 italic">
+                  className="py-10 rounded-3xl font-black text-4xl border-2 border-white/5 bg-zinc-900/40 hover:border-yellow-500 hover:bg-yellow-500/10 transition-all italic">
                   {f}
                 </button>
               ))}
@@ -231,91 +251,90 @@ export default function ArenaFullEngine() {
           </motion.div>
         )}
 
-        {/* PASSO 2: ARENA TIGRE FC */}
         {step === 'arena' && (
           <motion.div key="a-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-screen relative">
             
-            {/* DRAWER DO MERCADO */}
             <AnimatePresence>
               {activeSlot && (
-                <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                  className="fixed inset-y-0 right-0 w-full lg:w-[450px] bg-black/90 backdrop-blur-3xl border-l border-white/10 z-[100] flex flex-col shadow-[-20px_0_60px_rgba(0,0,0,0.8)]">
+                <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30 }}
+                  className="fixed inset-y-0 right-0 w-full lg:w-[450px] bg-black/95 backdrop-blur-3xl border-l border-white/10 z-[100] flex flex-col">
                   <div className="p-7 bg-zinc-950 border-b border-white/5 flex justify-between items-center">
-                    <div className="leading-none">
-                      <h3 className="text-yellow-500 font-black italic text-3xl uppercase tracking-tighter">CONVOCAR</h3>
-                      <p className="text-[10px] text-zinc-500 font-bold uppercase mt-1">Slot tático: {slots.find(s => s.id === activeSlot)?.label}</p>
-                    </div>
-                    <button onClick={() => setActiveSlot(null)} className="w-12 h-12 rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-500 transition-all flex items-center justify-center">✕</button>
+                    <h3 className="text-yellow-500 font-black italic text-3xl uppercase tracking-tighter">CONVOCAR</h3>
+                    <button onClick={() => setActiveSlot(null)} className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">✕</button>
                   </div>
                   
-                  {/* FILTROS DINÂMICOS */}
-                  <div className="flex gap-2 p-5 overflow-x-auto no-scrollbar bg-black/40 border-b border-white/5">
+                  <div className="flex gap-2 p-5 overflow-x-auto no-scrollbar bg-black/40">
                     {['TODOS', 'GOL','ZAG','LAT','VOL','MEI','ATA'].map(pos => (
                       <button key={pos} onClick={() => setFilterPos(pos === 'TODOS' ? null : pos)}
-                        className={`px-6 py-2.5 rounded-xl text-[10px] font-black transition-all whitespace-nowrap border ${filterPos === pos || (pos==='TODOS' && !filterPos) ? 'bg-yellow-500 text-black border-yellow-500 shadow-[0_0_15px_rgba(245,196,0,0.4)]' : 'bg-zinc-900/50 text-zinc-500 border-white/5'}`}>
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black border ${filterPos === pos || (pos==='TODOS' && !filterPos) ? 'bg-yellow-500 text-black border-yellow-500' : 'bg-zinc-900/50 text-zinc-500 border-white/5'}`}>
                         {pos}
                       </button>
                     ))}
                   </div>
 
-                  {/* GRID DE JOGADORES */}
-                  <div className="flex-1 overflow-y-auto p-5 grid grid-cols-3 gap-4 content-start pb-40">
+                  <div className="flex-1 overflow-y-auto p-5 grid grid-cols-3 gap-4 pb-40">
                     {filteredPlayers.map(p => (
-                      <MarketCard key={p.id} player={p} onClick={() => { setLineup(prev => ({ ...prev, [activeSlot]: p })); setActiveSlot(null); }} />
+                      <MarketCard key={p.id} player={p} onClick={() => handleSelectPlayer(p)} />
                     ))}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* O ESTÁDIO EM PERSPECTIVA RETA */}
             <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
-               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-60 scale-105" alt="Arena Background" />
+               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Arena" />
                
-               {/* CAMPO DE JOGO */}
                <div className="relative w-full h-full max-w-[1400px] aspect-video">
-                  {/* TIGRE FC NEON NO FUNDO */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-5">
-                     <h2 className="text-[20vw] font-black italic uppercase tracking-tighter">TIGRE</h2>
-                  </div>
-
-                  {/* SLOTS DE POSICIONAMENTO */}
                   {slots.map((s) => (
-                    <div key={s.id} className="absolute transition-all duration-700" style={{ left: `${s.x}%`, top: `${s.y}%`, transform: 'translate(-50%, -50%)' }}>
-                      <FieldCard player={lineup[s.id] || null} label={s.label} isSelected={activeSlot === s.id} onClick={() => setActiveSlot(s.id)} />
+                    <div key={s.id} className="absolute" style={{ left: `${s.x}%`, top: `${s.y}%`, transform: 'translate(-50%, -50%)' }}>
+                      <FieldCard 
+                        player={lineup[s.id] || null} 
+                        label={s.label} 
+                        isSelected={activeSlot === s.id} 
+                        onClick={() => setActiveSlot(s.id)}
+                        isCapitão={capitãoId === s.id}
+                        isHeroi={heroiId === s.id}
+                      />
                     </div>
                   ))}
                </div>
 
-               {/* CONTROLES INFERIORES */}
-               <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[92%] max-w-3xl bg-zinc-900/70 backdrop-blur-2xl border border-white/10 p-5 rounded-[2.5rem] flex justify-between items-center shadow-2xl">
-                  <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
-                      <img src={ESCUDO} className="w-7 h-7" alt="Logo" />
-                    </div>
-                    <div className="leading-tight">
-                      <p className="text-white text-2xl font-black italic uppercase tracking-tighter leading-none">TIGRE FC</p>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.2em] mt-1 ${filledCount === 11 ? 'text-yellow-500' : 'text-zinc-500'}`}>
-                        {filledCount === 11 ? 'TIME COMPLETO' : `ESCALE SEU TIME: ${filledCount}/11`}
-                      </p>
-                    </div>
+               {/* BARRA INFERIOR COM RESERVAS E AÇÕES */}
+               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-5xl flex flex-col gap-4">
+                  
+                  {/* SLOTS DE RESERVAS (ESTILO CYBERPUNK) */}
+                  <div className="flex justify-center gap-3">
+                    {Object.keys(reserves).map((rid, idx) => (
+                      <div key={rid} onClick={() => setActiveSlot(rid)} className={`cursor-pointer w-14 h-14 rounded-xl border-2 transition-all flex items-center justify-center overflow-hidden ${activeSlot === rid ? 'border-yellow-500 scale-110' : 'border-white/10 bg-black/60'}`}>
+                        {reserves[rid] ? (
+                          <img src={reserves[rid]!.foto} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white/20 text-xs font-bold">R{idx+1}</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="flex gap-3">
-                    <button onClick={() => setStep('formation')} className="px-6 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest border border-white/5 transition-all">TÁTICA</button>
-                    {filledCount === 11 && (
-                      <motion.button initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                        className="bg-yellow-500 text-black px-10 py-4 rounded-2xl font-black italic uppercase tracking-tighter text-sm hover:shadow-[0_0_30px_rgba(245,196,0,0.5)] transition-all">
-                        AVANÇAR →
-                      </motion.button>
-                    )}
+                  <div className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 p-5 rounded-[2.5rem] flex justify-between items-center shadow-2xl">
+                    <div className="flex items-center gap-4">
+                      <img src={ESCUDO} className="w-8" alt="Logo" />
+                      <div className="leading-tight">
+                        <p className="text-white text-xl font-black italic uppercase tracking-tighter">ARENA TIGRE</p>
+                        <p className="text-[9px] font-black text-yellow-500 uppercase tracking-widest">{filledCount}/11 TITULARES</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button onClick={() => setStep('formation')} className="px-5 py-3 rounded-xl bg-white/5 text-[10px] font-black border border-white/5">TÁTICA</button>
+                      {filledCount === 11 && (
+                        <button className="bg-yellow-500 text-black px-8 py-3 rounded-xl font-black italic uppercase text-sm">PRÓXIMO →</button>
+                      )}
+                    </div>
                   </div>
                </div>
             </div>
-
           </motion.div>
         )}
-
       </AnimatePresence>
     </div>
   );
