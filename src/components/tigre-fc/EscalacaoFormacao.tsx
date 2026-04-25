@@ -58,7 +58,12 @@ const PLAYERS = [
   { id: 39, name: "Adriano", short: "ADRIANO", num: 40, pos: "ATA", foto: BASE + "ADRIANO.png" }
 ];
 
-export default function EscalacaoFormacao() {
+// Interface para aceitar o jogoId enviado pela Page [jogoId]/page.tsx
+interface EscalacaoProps {
+  jogoId?: number;
+}
+
+export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
   const [step, setStep] = useState<'formation' | 'arena' | 'special' | 'prediction' | 'reveal'>('formation');
   const [formation, setFormation] = useState<string>('4-3-3');
   const [lineup, setLineup] = useState<any>({});
@@ -77,6 +82,7 @@ export default function EscalacaoFormacao() {
     <div className="h-screen bg-black text-white overflow-hidden flex flex-col">
       <AnimatePresence mode="wait">
         
+        {/* ETAPA 1: SELEÇÃO DE TÁTICA */}
         {step === 'formation' && (
           <motion.div key="form" exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center p-6">
             <h1 className="text-4xl font-black italic text-yellow-500 mb-8 uppercase tracking-tighter">Escolha a Tática</h1>
@@ -94,6 +100,7 @@ export default function EscalacaoFormacao() {
           </motion.div>
         )}
 
+        {/* ETAPA 2: CAMPO DE ESCALAÇÃO */}
         {step === 'arena' && (
           <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex overflow-hidden">
             <MarketList 
@@ -120,9 +127,9 @@ export default function EscalacaoFormacao() {
           </motion.div>
         )}
 
+        {/* ETAPA 3: CAPITÃO E HERÓI (COM BYPASS DE TIPAGEM) */}
         {step === 'special' && (
           <motion.div key="special" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {/* BLINDAGEM PARA O BUILD PASSAR */}
             {React.createElement(CapitaoEHeroi as any, {
               onNext: () => setStep('prediction'),
               onConfirm: () => setStep('prediction'),
@@ -133,6 +140,7 @@ export default function EscalacaoFormacao() {
           </motion.div>
         )}
 
+        {/* ETAPA 4: PLACAR / PALPITE */}
         {step === 'prediction' && (
           <motion.div key="pred" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Palpite 
@@ -146,6 +154,7 @@ export default function EscalacaoFormacao() {
           </motion.div>
         )}
 
+        {/* ETAPA 5: CARD FINAL (COM BYPASS DE TIPAGEM) */}
         {step === 'reveal' && (
           <motion.div key="reveal" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {React.createElement(FinalCardReveal as any, {
