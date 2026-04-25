@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// ── Assets (Padrão v5) ────────────────
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 
 interface Player {
@@ -19,9 +18,8 @@ interface MarketListProps {
   players: Player[];
   isEscalado: (id: number) => boolean;
   onSelect: (player: Player) => void;
-  // Adicionadas para curar o erro do build da Vercel:
-  onDragStart?: (player: Player) => void;
-  onDragEnd?: () => void;
+  onDragStart?: (player: Player) => void; // Adicionado para o Build da Vercel
+  onDragEnd?: () => void;                 // Adicionado para o Build da Vercel
 }
 
 export default function MarketList({ 
@@ -33,8 +31,17 @@ export default function MarketList({
 }: MarketListProps) {
   
   const [filter, setFilter] = useState<string>('TODOS');
-  // Posições seguindo seu banco de dados
   const positions = ['TODOS', 'GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'ATA'];
+
+  const getFotoUrl = (player: Player) => {
+    // Se no banco já estiver o nome completo (ex: MARLON.jpg.webp), usamos ele
+    if (player.foto && player.foto.includes('.')) {
+      return `${BASE}${player.foto.replace(/\s/g, '%20')}`;
+    }
+    // Se não, tentamos o padrão: NOME-CURTO.jpg.webp
+    const fileName = player.short.toUpperCase().replace(/\s/g, '-');
+    return `${BASE}${fileName}.jpg.webp`;
+  };
 
   const filteredPlayers = filter === 'TODOS' 
     ? players 
@@ -42,12 +49,10 @@ export default function MarketList({
 
   return (
     <div className="w-80 bg-black border-r border-white/10 flex flex-col h-full shrink-0 shadow-2xl z-10">
-      {/* HEADER DO MERCADO */}
       <div className="p-5 border-b border-white/5 bg-zinc-950">
         <h2 className="text-2xl font-black italic text-yellow-500 uppercase tracking-tighter mb-4">
           MERCADO
         </h2>
-        
         <div className="flex flex-wrap gap-1.5">
           {positions.map(pos => (
             <button
@@ -65,22 +70,17 @@ export default function MarketList({
         </div>
       </div>
 
-      {/* LISTA DE JOGADORES */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-[#050505] custom-scrollbar">
         <AnimatePresence mode="popLayout">
           {filteredPlayers.map((player) => {
             const escalado = isEscalado(player.id);
-            const fotoUrl = player.foto.startsWith('http') ? player.foto : `${BASE}${player.foto}`;
-
+            
             return (
               <motion.div
                 key={player.id}
                 layout
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                // Aciona o drag se a prop existir
-                onDragStart={() => onDragStart?.(player)}
-                onDragEnd={() => onDragEnd?.()}
                 onClick={() => !escalado && onSelect(player)}
                 className={`group relative flex items-center p-2 rounded-xl border transition-all duration-300 ${
                   escalado 
@@ -88,20 +88,17 @@ export default function MarketList({
                     : 'bg-zinc-900/60 border-white/10 hover:border-yellow-500/50 hover:bg-zinc-800 cursor-pointer'
                 }`}
               >
-                {/* FOTO - FOCO 80% À ESQUERDA */}
                 <div className="relative w-14 h-14 bg-black rounded-lg overflow-hidden border border-white/10 shrink-0">
                   <img 
-                    src={fotoUrl} 
+                    src={getFotoUrl(player)} 
                     alt={player.short} 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    style={{ 
-                      // Alinhamento solicitado: foca a imagem à esquerda (mostra 80% do lado esquerdo)
-                      objectPosition: '20% center' 
-                    }}
+                    style={{ objectPosition: '20% center' }}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      if (!target.src.includes('.webp')) {
-                        target.src = target.src + '.jpg.webp';
+                      // Se falhou o .jpg.webp, tenta o .png (caso do Sander)
+                      if (target.src.includes('.jpg.webp')) {
+                        target.src = target.src.replace('.jpg.webp', '.png');
                       } else {
                         target.src = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
                         target.style.opacity = '0.3';
@@ -124,18 +121,7 @@ export default function MarketList({
                     {player.short}
                   </p>
                 </div>
-
-                <div className="ml-2">
-                  {escalado ? (
-                    <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center border border-green-500/40">
-                      <span className="text-green-500 text-[10px]">✓</span>
-                    </div>
-                  ) : (
-                    <div className="w-6 h-6 rounded-lg bg-white/5 group-hover:bg-yellow-500 flex items-center justify-center transition-all shadow-sm">
-                      <span className="text-white/20 group-hover:text-black text-lg font-bold">+</span>
-                    </div>
-                  )}
-                </div>
+                <div className="pr-2 text-white/20 font-bold">{escalado ? '✓' : '+'}</div>
               </motion.div>
             );
           })}
