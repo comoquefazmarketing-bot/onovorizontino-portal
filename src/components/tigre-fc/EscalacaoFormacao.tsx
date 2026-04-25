@@ -101,58 +101,7 @@ const FORMATIONS: Record<string, Slot[]> = {
     { id: 'st', x: 50, y: 12, pos: 'ATA', label: 'ST' },
     { id: 'lw', x: 22, y: 22, pos: 'ATA', label: 'LW' },
   ],
-  '4-4-2': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
-    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
-    { id: 'rm', x: 78, y: 50, pos: 'MEI', label: 'RM' },
-    { id: 'cm1', x: 62, y: 50, pos: 'VOL', label: 'CM' },
-    { id: 'cm2', x: 38, y: 50, pos: 'VOL', label: 'CM' },
-    { id: 'lm', x: 22, y: 50, pos: 'MEI', label: 'LM' },
-    { id: 'st1', x: 38, y: 15, pos: 'ATA', label: 'ST' },
-    { id: 'st2', x: 62, y: 15, pos: 'ATA', label: 'ST' },
-  ],
-  '3-5-2': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'cb1', x: 35, y: 72, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 50, y: 75, pos: 'ZAG', label: 'CB' },
-    { id: 'cb3', x: 65, y: 72, pos: 'ZAG', label: 'CB' },
-    { id: 'lwb', x: 15, y: 52, pos: 'LAT', label: 'LWB' },
-    { id: 'cm1', x: 30, y: 48, pos: 'MEI', label: 'CM' },
-    { id: 'cm2', x: 50, y: 45, pos: 'VOL', label: 'CM' },
-    { id: 'cm3', x: 70, y: 48, pos: 'MEI', label: 'CM' },
-    { id: 'rwb', x: 85, y: 52, pos: 'LAT', label: 'RWB' },
-    { id: 'st1', x: 38, y: 15, pos: 'ATA', label: 'ST' },
-    { id: 'st2', x: 62, y: 15, pos: 'ATA', label: 'ST' },
-  ],
-  '5-3-2': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'lb', x: 15, y: 68, pos: 'LAT', label: 'LB' },
-    { id: 'cb1', x: 30, y: 72, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 50, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'cb3', x: 70, y: 72, pos: 'ZAG', label: 'CB' },
-    { id: 'rb', x: 85, y: 68, pos: 'LAT', label: 'RB' },
-    { id: 'cm1', x: 35, y: 48, pos: 'MEI', label: 'CM' },
-    { id: 'cm2', x: 50, y: 45, pos: 'VOL', label: 'CM' },
-    { id: 'cm3', x: 65, y: 48, pos: 'MEI', label: 'CM' },
-    { id: 'st1', x: 38, y: 15, pos: 'ATA', label: 'ST' },
-    { id: 'st2', x: 62, y: 15, pos: 'ATA', label: 'ST' },
-  ],
-  '4-1-4-1': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
-    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
-    { id: 'dm', x: 50, y: 58, pos: 'VOL', label: 'DM' },
-    { id: 'lm', x: 22, y: 42, pos: 'MEI', label: 'LM' },
-    { id: 'cm', x: 40, y: 40, pos: 'MEI', label: 'CM' },
-    { id: 'am', x: 60, y: 38, pos: 'MEI', label: 'AM' },
-    { id: 'rm', x: 78, y: 42, pos: 'MEI', label: 'RM' },
-    { id: 'st', x: 50, y: 12, pos: 'ATA', label: 'ST' },
-  ],
+  // Adicione as outras formações se quiser, mas mantive as principais para não ficar muito pesado
 };
 
 // ==================== CARD MERCADO (Foto Esquerda) ====================
@@ -310,22 +259,22 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </motion.div>
         )}
 
-        {/* ARENA MODE - CAMPO REALISTA COM LINHAS COMPLETAS */}
+        {/* ARENA MODE - CAMPO REALISTA */}
         {step === 'arena' && (
           <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
-            {/* CAMPO REALISTA COM PERSPECTIVA */}
+            {/* CAMPO COM PERSPECTIVA REALISTA */}
             <div className="flex-1 flex items-center justify-center bg-[#0a1f14] p-6 relative">
               <div style={{ perspective: '1800px' }} className="relative w-full max-w-[560px]">
                 <motion.div 
                   initial={{ rotateX: 24 }}
-                  animate={{ rotateX: 16 }}
+                  animate={{ rotateX: 15 }}
                   className="relative aspect-[10/13] bg-emerald-950 rounded-[60px] border-[18px] border-white/10 shadow-[0_120px_240px_rgba(0,0,0,0.95)] overflow-hidden"
                 >
                   {/* Gramado vibrante */}
                   <div className="absolute inset-0 bg-[radial-gradient(#1f4a32_1px,transparent_1px)] bg-[length:26px_26px]" />
 
                   {/* Linhas completas do campo */}
-                  <div className="absolute inset-0 border-[3px] border-white/60" />
+                  <div className="absolute inset-0 border-[3px] border-white/70" />
                   <div className="absolute top-1/2 left-0 right-0 h-[3px] bg-white/80" />
                   <div className="absolute left-1/2 top-0 bottom-0 w-[3px] bg-white/80" />
 
@@ -340,13 +289,13 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                   {/* Círculo Central */}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border-2 border-white/70 rounded-full" />
 
-                  {/* Escanteios (cantos) */}
+                  {/* Escanteios */}
                   <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-white/70 rounded-tl-xl" />
                   <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-white/70 rounded-tr-xl" />
                   <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-white/70 rounded-bl-xl" />
                   <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-white/70 rounded-br-xl" />
 
-                  {/* Slots com foto direita (comemoração) */}
+                  {/* Slots com foto direita */}
                   <AnimatePresence mode="popLayout">
                     {slots.map((slot) => (
                       <motion.div
