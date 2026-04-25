@@ -155,12 +155,7 @@ const FORMATIONS: Record<string, Slot[]> = {
   ],
 };
 
-const POS_COLORS: Record<string, string> = {
-  GOL: '#F5C400', ZAG: '#00F3FF', LAT: '#4FC3F7',
-  VOL: '#BF5FFF', MEI: '#22C55E', ATA: '#FF2D55'
-};
-
-// ==================== CARD MERCADO (Foto Esquerda - Perfil) ====================
+// ==================== CARD MERCADO (Foto Esquerda) ====================
 function MarketCard({ player, onClick }: { player: Player; onClick: () => void }) {
   return (
     <motion.div
@@ -173,18 +168,18 @@ function MarketCard({ player, onClick }: { player: Player; onClick: () => void }
         src={player.foto} 
         alt={player.short}
         className="w-[200%] h-full object-cover transition-all duration-700 group-hover:scale-110"
-        style={{ objectPosition: '22% center' }} // Perfil esquerdo
+        style={{ objectPosition: '22% center' }}
       />
       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent h-20" />
-      <div className="absolute bottom-3 left-3 right-3 text-center">
-        <p className="font-black text-white text-sm tracking-wide">{player.short}</p>
+      <div className="absolute bottom-3 left-3 right-3">
+        <p className="font-black text-white text-sm">{player.short}</p>
         <p className="text-[#F5C400] text-xs font-mono">{player.pos} • #{player.num}</p>
       </div>
     </motion.div>
   );
 }
 
-// ==================== CARD CAMPO (Foto Direita - Comemoração) ====================
+// ==================== CARD CAMPO (Foto Direita + Campo Realista) ====================
 function FieldCard({ player, isSelected, onClick }: { 
   player: Player | null; 
   isSelected: boolean; 
@@ -203,13 +198,13 @@ function FieldCard({ player, isSelected, onClick }: {
           src={player.foto} 
           alt={player.short}
           className="absolute inset-0 w-[190%] h-full object-cover"
-          style={{ objectPosition: '78% center' }} // Comemoração direita
+          style={{ objectPosition: '78% center' }}
         />
       ) : (
         <div className="h-full flex items-center justify-center bg-black/70 text-5xl text-white/40 font-light">+</div>
       )}
       {player && (
-        <div className="absolute bottom-2 left-2 right-2 text-center">
+        <div className="absolute bottom-1.5 left-2 right-2 text-center">
           <p className="text-white text-xs font-black drop-shadow">{player.short}</p>
         </div>
       )}
@@ -221,7 +216,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const [step, setStep] = useState<Step>('tutorial');
   const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-2-3-1');
   const [lineup, setLineup] = useState<Lineup>({});
-  const [bench, setBench] = useState<Player[]>([]); // 5 reservas
+  const [bench, setBench] = useState<Player[]>([]);
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [filterPos, setFilterPos] = useState<string | null>(null);
   const [score, setScore] = useState({ tigre: 2, adv: 1 });
@@ -237,14 +232,9 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
   const handleSelectPlayer = (player: Player) => {
     if (!activeSlot) return;
-
-    // Se o slot já tem jogador, move para o banco (se tiver espaço)
-    if (lineup[activeSlot]) {
-      if (bench.length < 5) {
-        setBench(prev => [...prev, lineup[activeSlot]!]);
-      }
+    if (lineup[activeSlot] && bench.length < 5) {
+      setBench(prev => [...prev, lineup[activeSlot]!]);
     }
-
     setLineup(prev => ({ ...prev, [activeSlot]: player }));
     setActiveSlot(null);
     setFilterPos(null);
@@ -285,15 +275,8 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           <motion.div key="tutorial" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-black to-zinc-950">
             <img src={ESCUDO} className="w-32 mb-12 drop-shadow-2xl" alt="Tigre" />
-            <h1 className="text-6xl font-black italic text-[#F5C400] tracking-tighter mb-4">TIGRE FC</h1>
-            <p className="text-2xl mb-12 max-w-xs">Monte seu time como um técnico de verdade!</p>
-            <div className="max-w-md bg-zinc-900/70 p-6 rounded-2xl border border-white/10 text-left text-sm mb-10">
-              1. Escolha a formação<br />
-              2. Clique nos espaços do campo<br />
-              3. Escolha jogadores no mercado<br />
-              4. Adicione 5 reservas<br />
-              5. Dê seu palpite e compartilhe!
-            </div>
+            <h1 className="text-6xl font-black italic text-[#F5C400] tracking-tighter">TIGRE FC</h1>
+            <p className="text-2xl mt-4 mb-12">Monte seu time como um técnico de verdade!</p>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -327,20 +310,25 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </motion.div>
         )}
 
-        {/* ARENA MODE - CAMPO + MERCADO + BANCO */}
+        {/* ARENA MODE - CAMPO MELHORADO */}
         {step === 'arena' && (
           <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
-            {/* CAMPO 3D - Foto Direita (Comemoração) */}
+            {/* CAMPO */}
             <div className="flex-1 flex items-center justify-center bg-[#0a1f14] p-6 relative">
-              <div style={{ perspective: '1400px' }} className="relative w-full max-w-[520px]">
+              <div style={{ perspective: '1600px' }} className="relative w-full max-w-[540px]">
                 <motion.div 
-                  initial={{ rotateX: 20 }}
-                  animate={{ rotateX: 13 }}
-                  className="relative aspect-[10/13] bg-emerald-950 rounded-[50px] border-[14px] border-white/10 shadow-2xl overflow-hidden"
+                  initial={{ rotateX: 22 }}
+                  animate={{ rotateX: 14 }}
+                  className="relative aspect-[10/13] bg-emerald-950 rounded-[56px] border-[16px] border-white/10 shadow-[0_100px_200px_rgba(0,0,0,0.9)] overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(#1a3c2a_1px,transparent_1px)] bg-[length:24px_24px]" />
-                  <div className="absolute inset-0 border border-white/20" />
-                  <div className="absolute top-1/2 left-0 right-0 h-px bg-white/40" />
+                  {/* Gramado realista */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#1f4a32_0.8px,transparent_1px)] bg-[length:28px_28px]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(transparent_40%,rgba(255,255,255,0.08)_50%,transparent_60%)]" />
+
+                  {/* Linhas do campo */}
+                  <div className="absolute inset-0 border-2 border-white/40" />
+                  <div className="absolute top-1/2 left-0 right-0 h-[3px] bg-white/70" />
+                  <div className="absolute left-1/2 top-0 bottom-0 w-[3px] bg-white/70" />
 
                   <AnimatePresence mode="popLayout">
                     {slots.map((slot) => (
@@ -383,7 +371,6 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                 ))}
               </div>
 
-              {/* Grid Mercado - Foto Esquerda */}
               <div className="flex-1 p-5 overflow-y-auto grid grid-cols-3 gap-4">
                 <AnimatePresence>
                   {filteredPlayers.map(player => (
@@ -426,7 +413,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </div>
         )}
 
-        {/* SUMMARY + PALPITE MELHORADO */}
+        {/* SUMMARY + PALPITE */}
         {step === 'summary' && (
           <motion.div key="summary" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
             className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-black to-zinc-950">
