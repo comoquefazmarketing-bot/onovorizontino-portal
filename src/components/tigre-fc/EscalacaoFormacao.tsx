@@ -12,6 +12,11 @@ type Player = { id: number; name: string; short: string; num: number; pos: strin
 type Lineup = Record<string, Player | null>;
 type Step = 'arena' | 'summary';
 
+// Adicionando a interface para as Props que o Vercel exigiu
+interface EscalacaoFormacaoProps {
+    jogoId?: number;
+}
+
 // --- JOGADORES (39) ---
 const PLAYERS: Player[] = [
     { id:1, name:'César Augusto', short:'CÉSAR', num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
@@ -97,7 +102,6 @@ const FORMATIONS = {
 };
 
 // --- COMPONENTES AUXILIARES ---
-
 function MarketCard({ player, onClick }: { player: Player; onClick: () => void }) {
     return (
         <motion.div
@@ -106,7 +110,7 @@ function MarketCard({ player, onClick }: { player: Player; onClick: () => void }
             className="flex flex-col bg-[#111] rounded-xl overflow-hidden border border-white/10 active:border-yellow-500 shadow-xl"
         >
             <div className="relative aspect-square overflow-hidden bg-zinc-800">
-                <img src={player.foto} className="w-full h-full object-cover" />
+                <img src={player.foto} alt={player.name} className="w-full h-full object-cover" />
                 <div className="absolute top-1 left-1 bg-yellow-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded">
                     {player.pos}
                 </div>
@@ -119,7 +123,8 @@ function MarketCard({ player, onClick }: { player: Player; onClick: () => void }
     );
 }
 
-export default function ArenaTigreFC() {
+// COMPONENTE PRINCIPAL COM TIPAGEM DE PROPS AJUSTADA
+export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     const [step, setStep] = useState<Step>('arena');
     const [formationKey, setFormationKey] = useState<keyof typeof FORMATIONS>("4-3-3");
     const [lineup, setLineup] = useState<Lineup>({});
@@ -164,16 +169,13 @@ export default function ArenaTigreFC() {
             <AnimatePresence mode="wait">
                 {step === 'arena' && (
                     <div className="flex flex-col lg:flex-row min-h-screen">
-                        
-                        {/* 🏟️ CAMPO FIXO NO TOPO (MOBILE) */}
                         <div className="sticky top-0 lg:relative z-40 w-full lg:flex-1 h-[60vh] lg:h-screen bg-zinc-900 border-b lg:border-b-0 border-white/10 shadow-2xl">
                             <div className="absolute inset-0">
-                                <img src={STADIUM_BG} className="w-full h-full object-cover opacity-40" />
+                                <img src={STADIUM_BG} alt="Stadium" className="w-full h-full object-cover opacity-40" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black" />
                             </div>
 
                             <div className="relative h-full flex flex-col items-center justify-center p-2" style={{ perspective: '1200px' }}>
-                                {/* SELETOR DE TATICA NO CAMPO */}
                                 <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-2 z-50 bg-black/50 backdrop-blur-md p-1.5 rounded-full border border-white/10 overflow-x-auto max-w-[90vw] no-scrollbar">
                                     {Object.keys(FORMATIONS).map((f) => (
                                         <button 
@@ -187,25 +189,16 @@ export default function ArenaTigreFC() {
                                     ))}
                                 </div>
 
-                                <motion.div 
-                                    layout
-                                    style={{ rotateX: 12 }} 
-                                    className="relative w-full max-w-[420px] aspect-[10/13] bg-green-900/5 border-[2px] border-white/20 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
-                                >
+                                <motion.div layout style={{ rotateX: 12 }} className="relative w-full max-w-[420px] aspect-[10/13] bg-green-900/5 border-[2px] border-white/20 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                                     {currentSlots.map(s => (
-                                        <motion.div 
-                                            key={s.id} 
-                                            layoutId={s.id}
-                                            className="absolute -translate-x-1/2 -translate-y-1/2" 
-                                            style={{ left: `${s.x}%`, top: `${s.y}%` }}
-                                        >
+                                        <motion.div key={s.id} layoutId={s.id} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${s.x}%`, top: `${s.y}%` }}>
                                             <motion.div 
                                                 onClick={() => setActiveSlot({ type: 'titular', id: s.id })}
                                                 className={`w-11 h-15 lg:w-16 lg:h-20 rounded-xl border-2 flex items-center justify-center transition-all overflow-hidden
                                                 ${activeSlot?.id === s.id ? 'border-yellow-500 shadow-[0_0_15px_#F5C400] scale-110' : 'border-white/20 bg-black/60'}`}
                                             >
                                                 {lineup[s.id] ? (
-                                                    <img src={lineup[s.id]?.foto} className="w-full h-full object-cover" />
+                                                    <img src={lineup[s.id]?.foto} className="w-full h-full object-cover" alt="Player" />
                                                 ) : (
                                                     <span className="text-[8px] font-black text-white/30 tracking-tighter">{s.label}</span>
                                                 )}
@@ -216,10 +209,7 @@ export default function ArenaTigreFC() {
                             </div>
                         </div>
 
-                        {/* 🛒 ÁREA DE ESCOLHA ABAIXO */}
                         <div className="relative z-30 w-full lg:w-[450px] flex flex-col bg-[#050505]">
-                            
-                            {/* BANCO DE RESERVAS */}
                             <div className={`p-6 border-b border-white/5 transition-all duration-500
                                 ${isBenchTime && filledReservas < 5 ? 'bg-yellow-500/5 border-yellow-500/20' : 'bg-black'}`}>
                                 <h3 className={`text-center font-black tracking-widest text-[9px] mb-4 uppercase
@@ -236,31 +226,23 @@ export default function ArenaTigreFC() {
                                             ${activeSlot?.id === i ? 'border-yellow-500' : 'border-white/5'}
                                             ${!isBenchTime ? 'opacity-20 grayscale' : 'cursor-pointer bg-zinc-900 shadow-lg'}`}
                                         >
-                                            {p ? <img src={p.foto} className="w-full h-full object-cover" /> : <span className="text-yellow-500/40 text-xl font-black">+</span>}
+                                            {p ? <img src={p.foto} alt="Bench" className="w-full h-full object-cover" /> : <span className="text-yellow-500/40 text-xl font-black">+</span>}
                                         </motion.div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* BARRA DE MERCADO */}
                             <div className="sticky top-[60vh] lg:top-0 z-50 p-4 bg-yellow-500 text-black flex justify-between items-center shadow-xl">
                                 <span className="font-black italic tracking-tighter">ELENCO DISPONÍVEL</span>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-black animate-ping" />
-                                    <span className="text-[10px] font-black uppercase">
-                                        {activeSlot ? `Slot: ${activeSlot.id}` : 'Selecione no campo'}
-                                    </span>
-                                </div>
+                                <span className="text-[10px] font-black uppercase">{activeSlot ? `Slot: ${activeSlot.id}` : 'Selecione no campo'}</span>
                             </div>
 
-                            {/* LISTA DE JOGADORES */}
                             <div className="p-4 grid grid-cols-3 gap-3 bg-black">
                                 {PLAYERS.map(p => (
                                     <MarketCard key={p.id} player={p} onClick={() => handleSelectPlayer(p)} />
                                 ))}
                             </div>
 
-                            {/* BOTÃO FINALIZAR */}
                             <div className="p-6 bg-black pb-12 lg:pb-6">
                                 <button 
                                     onClick={triggerBoom}
@@ -270,9 +252,6 @@ export default function ArenaTigreFC() {
                                 >
                                     FINALIZAR ESCALAÇÃO 🐯
                                 </button>
-                                <p className="text-center text-white/20 text-[9px] mt-4 uppercase font-bold tracking-widest">
-                                    {filledTitulares}/11 Titulares • {filledReservas}/5 Reservas
-                                </p>
                             </div>
                         </div>
                     </div>
@@ -280,10 +259,8 @@ export default function ArenaTigreFC() {
 
                 {step === 'summary' && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-zinc-950">
-                        <img src={ESCUDO} className="w-24 mb-6 drop-shadow-[0_0_20px_rgba(245,196,0,0.3)]" />
+                        <img src={ESCUDO} alt="Club" className="w-24 mb-6 drop-shadow-[0_0_20px_rgba(245,196,0,0.3)]" />
                         <h2 className="text-4xl font-black italic text-yellow-500 mb-2 tracking-tighter">TIME DEFINIDO!</h2>
-                        <p className="text-white/40 text-sm mb-10 font-medium">Qual seu palpite para o jogo?</p>
-                        
                         <div className="flex items-center gap-4 mb-12">
                             <div className="bg-zinc-900/50 p-5 rounded-[2.5rem] border-2 border-yellow-500 shadow-2xl">
                                 <span className="block text-[10px] font-black mb-2 opacity-50 uppercase tracking-widest text-yellow-500">TIGRE</span>
@@ -295,9 +272,8 @@ export default function ArenaTigreFC() {
                                 <input type="number" defaultValue="0" className="w-16 bg-transparent text-center text-5xl font-black focus:outline-none text-white/50" />
                             </div>
                         </div>
-
                         <button className="bg-yellow-500 text-black px-12 py-5 rounded-full font-black italic tracking-tighter hover:scale-105 transition-all shadow-[0_10px_40px_rgba(245,196,0,0.2)]">
-                            GERAR MEU CARD DO TORCEDOR 📱
+                            GERAR MEU CARD 📱
                         </button>
                     </motion.div>
                 )}
