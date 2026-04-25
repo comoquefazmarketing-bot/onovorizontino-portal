@@ -1,99 +1,40 @@
 'use client';
+import { motion } from 'framer-motion';
+import { Player } from '@/types/futebol';
 
-import React, { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+interface MarketListProps {
+  players: Player[];
+  isEscalado: (id: number) => boolean;
+  onSelect: (p: Player) => void;
+  onDragStart: (p: Player) => void;
+  onDragEnd: (point: any) => void;
+}
 
-// --- COMPONENTES MODULARES ---
-import SoccerField from './SoccerField';
-import { MarketList } from './MarketList';
-import Bench from './Bench';
-
-// --- COMPONENTES IMPORTADOS ---
-import CapitaoEHeroi from './CapitaoEHeroi';
-import Palpite from './Palpite';
-import FinalCardReveal from './FinalCardReveal';
-
-// --- DADOS LOCAIS ---
-const FORMATIONS = {
-  '4-3-3': { name: '4-3-3', positions: ['gk', 'rb', 'cb1', 'cb2', 'lb', 'cm1', 'cm2', 'cm3', 'st1', 'st2', 'st3'] },
-  '4-4-2': { name: '4-4-2', positions: ['gk', 'rb', 'cb1', 'cb2', 'lb', 'cm1', 'cm2', 'cm3', 'cm4', 'st1', 'st2'] },
-};
-
-const PLAYERS = [
-  { id: 1, name: "César Augusto", short: "César", pos: "GOL", num: 1, foto: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/CESAR-AUGUSTO.jpg.webp" },
-  { id: 10, name: "Dantas", short: "Dantas", pos: "ZAG", num: 3, foto: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/DANTAAS.jpg.webp" },
-  { id: 8, name: "Sander", short: "Sander", pos: "LAT", num: 33, foto: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/SANDER.jpg.webp" },
-  { id: 31, name: "Robson", short: "Robson", pos: "ATA", num: 9, foto: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/ROBSON.jpg.webp" },
-];
-
-export default function ArenaTigreFC() {
-  const [step, setStep] = useState<'formation' | 'arena' | 'special' | 'prediction' | 'reveal'>('formation');
-  const [formation, setFormation] = useState<string>('4-3-3');
-  const [lineup, setLineup] = useState<any>({});
-  const [bench, setBench] = useState<any[]>(Array(7).fill(null));
-  const [captainId, setCaptainId] = useState<number | null>(null);
-  const [heroId, setHeroId] = useState<number | null>(null);
-  const [score, setScore] = useState({ tigre: 0, adv: 0 });
-
-  // Funções exigidas pelo MarketList
-  const isEscalado = (id: number) => {
-    const noCampo = Object.values(lineup).some((p: any) => p?.id === id);
-    const noBanco = bench.some((p: any) => p?.id === id);
-    return noCampo || noBanco;
-  };
-
-  const handleSelect = (p: any) => {
-    if (isEscalado(p.id)) return;
-    setLineup((prev: any) => ({ ...prev, [p.pos.toLowerCase()]: p }));
-  };
-
+export default function MarketList({ players, isEscalado, onSelect, onDragStart, onDragEnd }: MarketListProps) {
   return (
-    <div className="h-screen bg-black text-white overflow-hidden flex flex-col">
-      <AnimatePresence mode="wait">
-        
-        {step === 'formation' && (
-          <motion.div key="form" exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center p-6">
-            <h2 className="text-2xl font-black mb-8 text-yellow-500 uppercase">Escolha sua Tática</h2>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {Object.keys(FORMATIONS).map((f) => (
-                <button key={f} onClick={() => setFormation(f)} className={`px-8 py-4 rounded-xl font-bold border-2 ${formation === f ? 'border-yellow-500' : 'border-zinc-800'}`}>{f}</button>
-              ))}
-            </div>
-            <button onClick={() => setStep('arena')} className="bg-yellow-500 text-black px-12 py-4 rounded-full font-black">COMEÇAR</button>
-          </motion.div>
-        )}
-
-        {step === 'arena' && (
-          <motion.div key="arena" className="flex-1 flex overflow-hidden">
-            <MarketList 
-              players={PLAYERS} 
-              isEscalado={isEscalado}
-              onSelect={handleSelect}
-              onDragStart={() => {}} // Placeholder para build
-              onDragEnd={() => {}}   // Placeholder para build
-            />
-            
-            <div className="flex-1 flex flex-col relative bg-zinc-950">
-               <SoccerField formation={formation} lineup={lineup} setLineup={setLineup} />
-               <Bench players={bench} setBench={setBench} />
-               <button onClick={() => setStep('special')} className="absolute bottom-32 right-8 bg-yellow-500 text-black px-8 py-3 rounded-full font-black">PRÓXIMO →</button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ... Outros steps (Special, Prediction, Reveal) mantendo o padrão anterior */}
-        {step === 'special' && (
-          <motion.div key="special" className="flex-1">
-            <CapitaoEHeroi 
-              onNext={() => setStep('prediction')}
-              captainName={PLAYERS.find(p => p.id === captainId)?.short || "Não selecionado"}
-              heroName={PLAYERS.find(p => p.id === heroId)?.short || "Não selecionado"}
-              onSelect={() => {}}
-            />
-          </motion.div>
-        )}
-
-      </AnimatePresence>
+    <div className="w-72 border-r border-white/5 bg-zinc-900/50 p-4 overflow-y-auto space-y-2">
+      <p className="text-[10px] font-black text-zinc-500 tracking-widest uppercase mb-4">Elenco</p>
+      {players.map(p => (
+        <motion.div
+          key={p.id}
+          drag
+          dragMomentum={false}
+          onDragStart={() => onDragStart(p)}
+          onDragEnd={(_, info) => onDragEnd(info.point)}
+          onClick={() => onSelect(p)}
+          className={`relative h-16 rounded-lg overflow-hidden border-2 flex items-stretch transition-all cursor-grab active:cursor-grabbing ${
+            isEscalado(p.id) ? 'opacity-30 border-yellow-500/50 grayscale' : 'border-white/10 bg-zinc-900/80 hover:border-white/30'
+          }`}
+        >
+          <div className="w-14 bg-black flex-shrink-0">
+            <img src={p.foto} className="w-full h-full object-cover" style={{ objectPosition: '50% 10%' }} />
+          </div>
+          <div className="flex-1 flex flex-col justify-center px-3 min-w-0">
+            <p className="text-[10px] font-black text-white uppercase truncate">{p.name}</p>
+            <p className="text-[8px] text-yellow-500 font-bold">{p.pos} • {p.num}</p>
+          </div>
+        </motion.div>
+      ))}
     </div>
   );
 }
