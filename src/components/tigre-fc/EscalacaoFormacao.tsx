@@ -1,21 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
-// ── Assets ────────────────────────────────────────────────
+// ── Assets & Config ───────────────────────────────────────
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const STADIUM_BG = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
+const ESCUDO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
 
-// ── Tipagem ───────────────────────────────────────────────
 type Player = { id: number; name: string; short: string; num: number; pos: string; foto: string; };
 type SlotState = { player: Player | null; x: number; y: number; label: string };
-type SlotMap = Record<string, SlotState>;
-type Step = 'formation' | 'arena' | 'summary';
+type Step = 'formation' | 'starters' | 'reserves' | 'special' | 'prediction' | 'final';
 
-interface ArenaTigreFCProps { jogoId?: number; }
-
-// ── Lista de Jogadores ────────────────────────────────────
+// ── Lista Completa (39 Jogadores) ─────────────────────────
 const PLAYERS: Player[] = [
   { id:1,  name:'César Augusto',    short:'César',      num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id:2,  name:'Jordi',            short:'Jordi',      num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
@@ -58,244 +56,364 @@ const PLAYERS: Player[] = [
   { id:39, name:'Ronald Barcellos', short:'Ronald',     num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-const FORMATIONS = {
-  '4-3-3': [
-    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:82, y:65, label:'LD' },
-    { id:'cb1', x:62, y:75, label:'ZAG' }, { id:'cb2', x:38, y:75, label:'ZAG' },
-    { id:'lb', x:18, y:65, label:'LE' }, { id:'cm1', x:50, y:58, label:'VOL' },
-    { id:'cm2', x:32, y:45, label:'MC' }, { id:'cm3', x:68, y:45, label:'MC' },
-    { id:'rw', x:78, y:22, label:'PD' }, { id:'st', x:50, y:15, label:'CA' },
-    { id:'lw', x:22, y:22, label:'PE' }
-  ],
-  '4-4-2': [
-    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:82, y:65, label:'LD' },
-    { id:'cb1', x:62, y:75, label:'ZAG' }, { id:'cb2', x:38, y:75, label:'ZAG' },
-    { id:'lb', x:18, y:65, label:'LE' }, { id:'cm1', x:40, y:52, label:'MC' },
-    { id:'cm2', x:60, y:52, label:'MC' }, { id:'rm', x:80, y:42, label:'MD' },
-    { id:'lm', x:20, y:42, label:'ME' }, { id:'st1', x:40, y:20, label:'ATA' },
-    { id:'st2', x:60, y:20, label:'ATA' }
-  ],
-  '3-5-2': [
-    { id:'gk', x:50, y:85, label:'GOL' }, { id:'cb1', x:50, y:75, label:'ZAG' },
-    { id:'cb2', x:70, y:70, label:'ZAG' }, { id:'cb3', x:30, y:70, label:'ZAG' },
-    { id:'rm', x:85, y:45, label:'ALA' }, { id:'lm', x:15, y:45, label:'ALA' },
-    { id:'dm', x:50, y:55, label:'VOL' }, { id:'cm1', x:35, y:42, label:'MC' },
-    { id:'cm2', x:65, y:42, label:'MC' }, { id:'st1', x:40, y:20, label:'ATA' },
-    { id:'st2', x:60, y:20, label:'ATA' }
-  ],
-  '4-2-3-1': [
-    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:82, y:65, label:'LD' },
-    { id:'cb1', x:62, y:75, label:'ZAG' }, { id:'cb2', x:38, y:75, label:'ZAG' },
-    { id:'lb', x:18, y:65, label:'LE' }, { id:'dm1', x:40, y:58, label:'VOL' },
-    { id:'dm2', x:60, y:58, label:'VOL' }, { id:'am', x:50, y:40, label:'MEI' },
-    { id:'rw', x:80, y:30, label:'PD' }, { id:'lw', x:20, y:30, label:'PE' },
-    { id:'st', x:50, y:15, label:'CA' }
-  ],
-  '5-3-2': [
-    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:85, y:60, label:'LD' },
-    { id:'lb', x:15, y:60, label:'LE' }, { id:'cb1', x:50, y:75, label:'ZAG' },
-    { id:'cb2', x:68, y:72, label:'ZAG' }, { id:'cb3', x:32, y:72, label:'ZAG' },
-    { id:'cm1', x:50, y:50, label:'MC' }, { id:'cm2', x:30, y:45, label:'MC' },
-    { id:'cm3', x:70, y:45, label:'MC' }, { id:'st1', x:42, y:20, label:'ATA' },
-    { id:'st2', x:58, y:20, label:'ATA' }
-  ],
-  '3-4-3': [
-    { id:'gk', x:50, y:85, label:'GOL' }, { id:'cb1', x:50, y:75, label:'ZAG' },
-    { id:'cb2', x:70, y:70, label:'ZAG' }, { id:'cb3', x:30, y:70, label:'ZAG' },
-    { id:'cm1', x:42, y:50, label:'MC' }, { id:'cm2', x:58, y:50, label:'MC' },
-    { id:'rm', x:85, y:45, label:'MD' }, { id:'lm', x:15, y:45, label:'ME' },
-    { id:'rw', x:75, y:22, label:'PD' }, { id:'st', x:50, y:15, label:'CA' },
-    { id:'lw', x:25, y:22, label:'PE' }
-  ]
+const FORMATIONS: Record<string, any[]> = {
+  '4-3-3': [{id:'gk',x:50,y:88,label:'GOL'},{id:'rb',x:82,y:68,label:'LD'},{id:'cb1',x:62,y:78,label:'ZAG'},{id:'cb2',x:38,y:78,label:'ZAG'},{id:'lb',x:18,y:68,label:'LE'},{id:'cm1',x:50,y:58,label:'VOL'},{id:'cm2',x:32,y:45,label:'MC'},{id:'cm3',x:68,y:45,label:'MC'},{id:'rw',x:78,y:22,label:'PD'},{id:'st',x:50,y:15,label:'CA'},{id:'lw',x:22,y:22,label:'PE'}],
+  '4-4-2': [{id:'gk',x:50,y:88,label:'GOL'},{id:'rb',x:82,y:68,label:'LD'},{id:'cb1',x:62,y:78,label:'ZAG'},{id:'cb2',x:38,y:78,label:'ZAG'},{id:'lb',x:18,y:68,label:'LE'},{id:'cm1',x:40,y:52,label:'MC'},{id:'cm2',x:60,y:52,label:'MC'},{id:'rm',x:80,y:42,label:'MD'},{id:'lm',x:20,y:42,label:'ME'},{id:'st1',x:40,y:20,label:'ATA'},{id:'st2',x:60,y:20,label:'ATA'}],
+  '3-5-2': [{id:'gk',x:50,y:88,label:'GOL'},{id:'cb1',x:50,y:78,label:'ZAG'},{id:'cb2',x:70,y:72,label:'ZAG'},{id:'cb3',x:30,y:72,label:'ZAG'},{id:'rm',x:85,y:48,label:'ALA'},{id:'lm',x:15,y:48,label:'ALA'},{id:'dm',x:50,y:58,label:'VOL'},{id:'cm1',x:35,y:42,label:'MC'},{id:'cm2',x:65,y:42,label:'MC'},{id:'st1',x:40,y:20,label:'ATA'},{id:'st2',x:60,y:20,label:'ATA'}],
+  '4-2-3-1': [{id:'gk',x:50,y:88,label:'GOL'},{id:'rb',x:82,y:68,label:'LD'},{id:'cb1',x:62,y:78,label:'ZAG'},{id:'cb2',x:38,y:78,label:'ZAG'},{id:'lb',x:18,y:68,label:'LE'},{id:'dm1',x:40,y:60,label:'VOL'},{id:'dm2',x:60,y:60,label:'VOL'},{id:'am',x:50,y:42,label:'MEI'},{id:'rw',x:80,y:28,label:'PD'},{id:'lw',x:20,y:28,label:'PE'},{id:'st',x:50,y:15,label:'CA'}],
+  '5-3-2': [{id:'gk',x:50,y:88,label:'GOL'},{id:'rb',x:85,y:62,label:'LD'},{id:'lb',x:15,y:62,label:'LE'},{id:'cb1',x:50,y:78,label:'ZAG'},{id:'cb2',x:68,y:75,label:'ZAG'},{id:'cb3',x:32,y:75,label:'ZAG'},{id:'cm1',x:50,y:52,label:'MC'},{id:'cm2',x:30,y:48,label:'MC'},{id:'cm3',x:70,y:48,label:'MC'},{id:'st1',x:42,y:20,label:'ATA'},{id:'st2',x:58,y:20,label:'ATA'}],
+  '3-4-3': [{id:'gk',x:50,y:88,label:'GOL'},{id:'cb1',x:50,y:78,label:'ZAG'},{id:'cb2',x:70,y:72,label:'ZAG'},{id:'cb3',x:30,y:72,label:'ZAG'},{id:'cm1',x:42,y:52,label:'MC'},{id:'cm2',x:58,y:52,label:'MC'},{id:'rm',x:85,y:48,label:'MD'},{id:'lm',x:15,y:48,label:'ME'},{id:'rw',x:75,y:22,label:'PD'},{id:'st',x:50,y:15,label:'CA'},{id:'lw',x:25,y:22,label:'PE'}]
 };
 
-// ── Mercado & Cards ───────────────────────────────────────
-function MarketCard({ player, isEscalado, isOrigin, onClick, onDragStart, onDragEnd }: any) {
+// ── Componentes de UI ─────────────────────────────────────
+function MarketCard({ player, isEscalado, isOrigin, onDragStart }: any) {
   return (
     <motion.div
-      drag dragMomentum={false} onDragStart={onDragStart} onDragEnd={(_, info) => onDragEnd(info)}
-      onClick={onClick}
-      className={`relative h-20 rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing flex items-stretch transition-all ${
+      draggable
+      onDragStart={onDragStart}
+      className={`relative h-16 rounded-xl overflow-hidden border-2 cursor-grab active:cursor-grabbing flex items-stretch transition-all ${
         isOrigin ? 'border-cyan-400 shadow-[0_0_15px_cyan]' : 
-        isEscalado ? 'border-yellow-500/50 opacity-40' : 'border-white/10 bg-zinc-900/80'
+        isEscalado ? 'border-white/5 opacity-30 grayscale' : 'border-white/10 bg-zinc-900/80 hover:border-yellow-500/50'
       }`}
     >
-      <div className="w-16 bg-black flex-shrink-0">
+      <div className="w-14 bg-black flex-shrink-0">
         <img src={player.foto} className="w-full h-full object-cover" style={{ objectPosition: '50% 15%' }} />
       </div>
-      <div className="flex-1 p-2 flex flex-col justify-center">
-        <p className="text-[11px] font-black uppercase truncate">{player.short}</p>
-        <p className="text-[9px] text-yellow-500 font-bold">{player.pos} • {player.num}</p>
+      <div className="flex-1 p-2 flex flex-col justify-center min-w-0">
+        <p className="text-[10px] font-black uppercase truncate leading-none mb-1">{player.short}</p>
+        <p className="text-[8px] text-yellow-500 font-bold">{player.pos} • {player.num}</p>
       </div>
     </motion.div>
   );
 }
 
-function FieldCard({ player, label, isSelected, scale, onClick, onDragStart, onDragEnd, fieldRef }: any) {
-  const size = 78 * scale;
-  return (
-    <motion.div
-      drag dragMomentum={false} dragConstraints={fieldRef}
-      onDragStart={onDragStart} onDragEnd={(_, info) => onDragEnd(info)}
-      onClick={onClick}
-      style={{ width: size, height: size * 1.3, zIndex: isSelected ? 100 : 10 }}
-      className={`relative rounded-xl overflow-hidden border-2 transition-all flex flex-col items-center justify-center cursor-move ${
-        isSelected ? 'border-yellow-400 shadow-[0_0_20px_yellow]' :
-        player ? 'border-white/40 bg-black/40' : 'border-dashed border-white/20 bg-black/20'
-      }`}
-    >
-      {player ? (
-        <>
-          <img src={player.foto} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '50% 15%' }} />
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/40 to-transparent" />
-          <div className="absolute bottom-0 w-full p-1 text-center">
-            <p className="text-[9px] font-black text-white uppercase truncate">{player.short}</p>
-            <p className="text-[7px] text-yellow-500 font-black">{player.pos}</p>
-          </div>
-        </>
-      ) : (
-        <span className="text-[10px] font-black text-white/30">{label}</span>
-      )}
-    </motion.div>
-  );
-}
-
-export default function ArenaTigreFC({ jogoId }: ArenaTigreFCProps) {
+// ── Main Component ────────────────────────────────────────
+export default function ArenaTigreFC() {
   const [step, setStep] = useState<Step>('formation');
-  const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-3-3');
-  const [slotMap, setSlotMap] = useState<SlotMap>({});
+  const [formation, setFormation] = useState<string>('4-3-3');
+  const [slotMap, setSlotMap] = useState<Record<string, SlotState>>({});
   const [bench, setBench] = useState<(Player | null)[]>(Array(7).fill(null));
   const [origin, setOrigin] = useState<any>(null);
-  const [activeSlot, setActiveSlot] = useState<string | null>(null);
+  const [hero, setHero] = useState<Player | null>(null);
+  const [captain, setCaptain] = useState<Player | null>(null);
+  const [prediction, setPrediction] = useState({ home: 2, away: 0 });
+  const [tempMsg, setTempMsg] = useState<string | null>(null);
+  
   const fieldRef = useRef<HTMLDivElement>(null);
 
+  // Inicializar formação
   useEffect(() => {
-    const initial: SlotMap = {};
+    const initial: any = {};
     FORMATIONS[formation].forEach(s => {
       initial[s.id] = { player: null, x: s.x, y: s.y, label: s.label };
     });
     setSlotMap(initial);
   }, [formation]);
 
-  const handleResetPos = () => {
-    const defaultCoords = FORMATIONS[formation];
-    setSlotMap(prev => {
-      const newMap = { ...prev };
-      defaultCoords.forEach(d => {
-        if (newMap[d.id]) {
-          newMap[d.id].x = d.x;
-          newMap[d.id].y = d.y;
-        }
-      });
-      return newMap;
-    });
-  };
-
-  const handleDrop = (point: { x: number, y: number }) => {
-    if (!origin || !fieldRef.current) return;
-    const rect = fieldRef.current.getBoundingClientRect();
-    const rx = ((point.x - rect.left) / rect.width) * 100;
-    const ry = ((point.y - rect.top) / rect.height) * 100;
-
-    const targetSlot = Object.keys(slotMap).find(id => {
-      const s = slotMap[id];
-      return Math.sqrt(Math.pow(s.x - rx, 2) + Math.pow(s.y - ry, 2)) < 8;
-    });
-
-    if (targetSlot) {
-      const targetPlayer = slotMap[targetSlot].player;
-      setSlotMap(prev => ({ ...prev, [targetSlot]: { ...prev[targetSlot], player: origin.player } }));
-      if (origin.type === 'field') setSlotMap(prev => ({ ...prev, [origin.id]: { ...prev[origin.id], player: targetPlayer } }));
-      else if (origin.type === 'bench') { const nb = [...bench]; nb[origin.id] = targetPlayer; setBench(nb); }
-    } else if (origin.type === 'field') {
-      setSlotMap(prev => ({ ...prev, [origin.id]: { ...prev[origin.id], x: rx, y: ry } }));
+  // Boom 1: 11 Titulares Escolhidos
+  useEffect(() => {
+    const isFull = Object.values(slotMap).every(s => s.player !== null);
+    if (isFull && step === 'starters') {
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#EAB308', '#FFFFFF', '#000000'] });
+      setTempMsg("BOOM! TIME ESCALADO! AGORA O BANCO...");
+      setTimeout(() => {
+        setStep('reserves');
+        setTempMsg(null);
+      }, 2500);
     }
+  }, [slotMap, step]);
+
+  // Boom 2: Banco Escolhido
+  useEffect(() => {
+    const isBenchFull = bench.every(p => p !== null);
+    if (isBenchFull && step === 'reserves') {
+      confetti({ particleCount: 100, gravity: 2, colors: ['#06b6d4'] });
+      setTempMsg("BOOM! RESERVAS PRONTOS!");
+      setTimeout(() => {
+        setStep('special');
+        setTempMsg(null);
+      }, 2000);
+    }
+  }, [bench, step]);
+
+  // ── Lógica de Swap (Troca) ───────────────────────────────
+  const executeSwap = (targetType: 'field' | 'bench', targetId: string | number) => {
+    if (!origin) return;
+
+    setSlotMap(prevSlots => {
+      const newSlots = { ...prevSlots };
+      const newBench = [...bench];
+
+      let playerToMove = origin.player;
+      let playerAtTarget = targetType === 'field' ? prevSlots[targetId as string].player : bench[targetId as number];
+
+      // 1. Limpar origem
+      if (origin.type === 'field') newSlots[origin.id].player = null;
+      if (origin.type === 'bench') newBench[origin.id] = null;
+
+      // 2. Colocar no destino e tratar a troca (swap)
+      if (targetType === 'field') {
+        newSlots[targetId as string].player = playerToMove;
+        // Se tinha alguém no destino, manda para a origem do arrasto
+        if (playerAtTarget) {
+          if (origin.type === 'field') newSlots[origin.id].player = playerAtTarget;
+          else if (origin.type === 'bench') newBench[origin.id] = playerAtTarget;
+        }
+      } else {
+        newBench[targetId as number] = playerToMove;
+        if (playerAtTarget) {
+          if (origin.type === 'field') newSlots[origin.id].player = playerAtTarget;
+          else if (origin.type === 'bench') newBench[origin.id] = playerAtTarget;
+        }
+      }
+
+      setBench(newBench);
+      return newSlots;
+    });
     setOrigin(null);
   };
 
   return (
-    <div className="h-screen bg-black text-white font-sans overflow-hidden flex flex-col">
-      {step === 'formation' ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950">
-          <h1 className="text-4xl font-black italic text-yellow-500 mb-8">ARENA TIGRE FC</h1>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl">
-            {Object.keys(FORMATIONS).map(f => (
-              <button key={f} onClick={() => { setFormation(f as any); setStep('arena'); }}
-                className="p-6 border-2 border-white/5 bg-zinc-900 rounded-2xl text-2xl font-black hover:border-yellow-500 active:scale-95 transition-all"
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex overflow-hidden">
-          <div className="w-72 border-r border-white/5 bg-zinc-900/50 p-4 overflow-y-auto space-y-2">
-            <p className="text-[10px] font-black text-zinc-500 tracking-widest uppercase mb-4">Elenco</p>
-            {PLAYERS.map(p => (
-              <MarketCard key={p.id} player={p} 
-                isEscalado={Object.values(slotMap).some(s => s.player?.id === p.id) || bench.some(b => b?.id === p.id)}
-                isOrigin={origin?.player.id === p.id}
-                onClick={() => activeSlot ? (setSlotMap(prev => ({...prev, [activeSlot]: {...prev[activeSlot], player: p}})), setActiveSlot(null)) : setOrigin({type:'market', player:p})}
-                onDragStart={() => setOrigin({type:'market', player:p})}
-                onDragEnd={(pt:any) => handleDrop(pt)}
-              />
-            ))}
-          </div>
-
-          <div className="flex-1 flex flex-col relative bg-zinc-950">
-            <div ref={fieldRef} className="flex-1 relative m-4 border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-              <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-60" />
-              
-              {/* Botões Flutuantes */}
-              <div className="absolute top-4 right-4 flex gap-2 z-[100]">
-                <button onClick={handleResetPos} title="Reorganizar Formação" className="p-3 bg-black/60 border border-white/10 rounded-full hover:bg-yellow-500 hover:text-black transition-all">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+    <div className="h-screen bg-black text-white font-sans overflow-hidden flex flex-col select-none">
+      <AnimatePresence mode="wait">
+        
+        {/* STEP 1: FORMAÇÃO */}
+        {step === 'formation' && (
+          <motion.div key="f" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: -100 }}
+            className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950"
+          >
+            <motion.img animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }} src={ESCUDO} className="w-24 mb-6 drop-shadow-[0_0_30px_rgba(234,179,8,0.3)]" />
+            <h1 className="text-4xl font-black italic text-yellow-500 mb-12 tracking-tighter uppercase">Arena Tigre FC</h1>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl">
+              {Object.keys(FORMATIONS).map(f => (
+                <button key={f} onClick={() => { setFormation(f); setStep('starters'); }}
+                  className="group relative p-8 bg-zinc-900 rounded-3xl border-2 border-white/5 hover:border-yellow-500 transition-all active:scale-95"
+                >
+                  <span className="text-3xl font-black italic group-hover:text-yellow-500 transition-colors">{f}</span>
+                  <div className="absolute inset-0 bg-yellow-500/5 opacity-0 group-hover:opacity-100 rounded-3xl transition-opacity" />
                 </button>
-                <button onClick={() => setStep('summary')} className="px-6 py-2 bg-yellow-500 text-black font-black italic rounded-full shadow-lg">FINALIZAR →</button>
-              </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-              {Object.entries(slotMap).map(([id, s]) => (
-                <div key={id} className="absolute" style={{ left: `${s.x}%`, top: `${s.y}%`, transform: 'translate(-50%, -50%)' }}>
-                  <FieldCard player={s.player} label={s.label} scale={0.75 + (s.y/250)} isSelected={activeSlot === id}
-                    fieldRef={fieldRef}
-                    onClick={() => s.player ? setOrigin({type:'field', id, player:s.player}) : setActiveSlot(id)}
-                    onDragStart={() => s.player && setOrigin({type:'field', id, player:s.player})}
-                    onDragEnd={(pt:any) => handleDrop(pt)}
-                  />
-                </div>
+        {/* STEP 2 & 3: ESCALAÇÃO (Campo + Banco) */}
+        {(step === 'starters' || step === 'reserves') && (
+          <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex overflow-hidden bg-zinc-950">
+            
+            {/* Mercado / Elenco */}
+            <div className="w-72 border-r border-white/5 bg-black/50 p-4 overflow-y-auto space-y-2 custom-scrollbar">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[10px] font-black text-zinc-500 tracking-[0.2em] uppercase">Mercado Tigre</p>
+                <div className="px-2 py-0.5 bg-yellow-500 text-black text-[9px] font-black rounded">39 ATLETAS</div>
+              </div>
+              {PLAYERS.map(p => (
+                <MarketCard key={p.id} player={p} 
+                  isEscalado={Object.values(slotMap).some(s => s.player?.id === p.id) || bench.some(b => b?.id === p.id)}
+                  isOrigin={origin?.player.id === p.id}
+                  onDragStart={() => setOrigin({ type: 'market', player: p })}
+                />
               ))}
             </div>
 
-            {/* Banco de Reservas */}
-            <div className="h-32 bg-black/80 p-4 border-t border-white/5">
-              <div className="flex gap-2 h-full">
-                {bench.map((p, i) => (
-                  <div key={i} onClick={() => origin && (setBench(prev => {const nb=[...prev]; nb[i]=origin.player; return nb;}), setOrigin(null))}
-                    className="flex-1 border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center relative overflow-hidden bg-white/5"
+            {/* Campo de Jogo */}
+            <div className="flex-1 flex flex-col relative p-4">
+              <AnimatePresence>
+                {tempMsg && (
+                  <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -50, opacity: 0 }}
+                    className="absolute top-10 left-1/2 -translate-x-1/2 z-[200] bg-yellow-500 text-black px-8 py-3 rounded-full font-black italic shadow-[0_0_50px_rgba(234,179,8,0.5)]"
                   >
-                    {p ? <img src={p.foto} className="w-full h-full object-cover" style={{objectPosition:'50% 10%'}} /> : <span className="text-[10px] font-black text-white/20">R{i+1}</span>}
-                  </div>
+                    {tempMsg}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div ref={fieldRef} className="flex-1 relative rounded-[40px] overflow-hidden border border-white/10 shadow-2xl bg-black"
+                onDragOver={(e) => e.preventDefault()}
+              >
+                <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                
+                {/* Slots do Campo */}
+                {Object.entries(slotMap).map(([id, s]) => (
+                  <motion.div key={id} style={{ left: `${s.x}%`, top: `${s.y}%` }}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => executeSwap('field', id)}
+                  >
+                    <div draggable onDragStart={() => s.player && setOrigin({ type: 'field', id, player: s.player })}
+                      className={`w-16 h-20 rounded-xl border-2 flex flex-col items-center justify-center transition-all cursor-pointer ${
+                        s.player ? 'border-white/40 bg-zinc-900 shadow-xl' : 'border-dashed border-white/10 bg-white/5 hover:border-yellow-500/50'
+                      }`}
+                    >
+                      {s.player ? (
+                        <>
+                          <img src={s.player.foto} className="w-full h-full object-cover rounded-lg" />
+                          <div className="absolute bottom-0 w-full bg-black/80 py-1 text-[8px] font-black text-center uppercase border-t border-white/10">{s.player.short}</div>
+                        </>
+                      ) : <span className="text-[9px] font-black text-white/20">{s.label}</span>}
+                    </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {step === 'summary' && (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950">
-          <div className="bg-zinc-900 p-8 rounded-3xl border border-white/10 w-full max-w-md text-center">
-            <h2 className="text-2xl font-black italic text-yellow-500 mb-6 uppercase">Escalação Pronta</h2>
-            <div className="bg-black/50 p-4 rounded-xl border border-white/5 text-left mb-6 space-y-1">
-              {Object.values(slotMap).map(s => s.player && <p key={s.player.id} className="text-xs font-bold uppercase"><span className="text-yellow-500">{s.player.num}</span> • {s.player.name}</p>)}
+              {/* BANCO DE RESERVAS (O Pulsar Neon) */}
+              <motion.div 
+                animate={step === 'reserves' ? { 
+                  boxShadow: ['0 0 0px #06b6d4', '0 0 25px #06b6d4', '0 0 0px #06b6d4'],
+                  borderColor: ['rgba(255,255,255,0.05)', '#06b6d4', 'rgba(255,255,255,0.05)']
+                } : {}}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="mt-6 h-32 rounded-3xl border-2 border-white/5 bg-zinc-900/50 p-4 flex gap-3 relative overflow-hidden"
+              >
+                <div className="absolute top-2 left-4 text-[8px] font-black text-cyan-400/50 uppercase tracking-widest">Banco de Reservas</div>
+                {bench.map((p, i) => (
+                  <div key={i} 
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => executeSwap('bench', i)}
+                    draggable={!!p}
+                    onDragStart={() => p && setOrigin({ type: 'bench', id: i, player: p })}
+                    className={`flex-1 mt-2 rounded-2xl border-2 transition-all flex items-center justify-center relative overflow-hidden bg-black/40 ${
+                      p ? 'border-white/20' : 'border-dashed border-white/5'
+                    } ${step === 'reserves' && !p ? 'animate-pulse bg-cyan-500/5 border-cyan-500/30' : ''}`}
+                  >
+                    {p ? <img src={p.foto} className="w-full h-full object-cover" /> : <span className="text-[10px] text-white/10 font-black italic">R{i+1}</span>}
+                  </div>
+                ))}
+              </motion.div>
             </div>
-            <button onClick={() => setStep('arena')} className="w-full py-4 text-zinc-500 font-bold hover:text-white mb-2">VOLTAR E AJUSTAR</button>
-            <button onClick={() => window.location.reload()} className="w-full py-4 bg-yellow-500 text-black font-black italic rounded-xl">RECOMEÇAR</button>
-          </div>
-          <p className="mt-8 text-[9px] text-zinc-600 font-black tracking-[0.3em] uppercase">Criado por Felipe Makarios • Arena Tigre FC</p>
-        </div>
-      )}
+          </motion.div>
+        )}
+
+        {/* STEP 4: HERO & CAPTAIN */}
+        {step === 'special' && (
+          <motion.div key="spec" initial={{ x: 500 }} animate={{ x: 0 }} className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950">
+             <h2 className="text-5xl font-black italic text-yellow-500 mb-12 uppercase tracking-tighter text-center">Os Protagonistas</h2>
+             <div className="flex gap-12">
+                <div className="text-center group">
+                  <p className="text-[10px] font-black mb-4 text-cyan-400 tracking-widest uppercase group-hover:scale-110 transition-transform">Herói do Jogo</p>
+                  <div className={`w-40 h-56 rounded-[30px] border-4 transition-all overflow-hidden cursor-pointer ${hero ? 'border-cyan-400 shadow-[0_0_50px_rgba(6,182,212,0.4)] scale-105' : 'border-white/10 bg-zinc-900 hover:border-cyan-500/50'}`}>
+                    <select onChange={(e) => setHero(PLAYERS.find(p => p.id === Number(e.target.value)) || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10">
+                      <option value="">Escolher</option>
+                      {PLAYERS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    {hero && <img src={hero.foto} className="w-full h-full object-cover" />}
+                    {!hero && <div className="h-full flex items-center justify-center text-4xl text-white/10">?</div>}
+                  </div>
+                </div>
+
+                <div className="text-center group">
+                  <p className="text-[10px] font-black mb-4 text-yellow-500 tracking-widest uppercase group-hover:scale-110 transition-transform">Capitão</p>
+                  <div className={`w-40 h-56 rounded-[30px] border-4 transition-all overflow-hidden cursor-pointer ${captain ? 'border-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.4)] scale-105' : 'border-white/10 bg-zinc-900 hover:border-yellow-500/50'}`}>
+                    <select onChange={(e) => setCaptain(PLAYERS.find(p => p.id === Number(e.target.value)) || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10">
+                      <option value="">Escolher</option>
+                      {PLAYERS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    {captain && <img src={captain.foto} className="w-full h-full object-cover" />}
+                    {!captain && <div className="h-full flex items-center justify-center text-4xl text-white/10">?</div>}
+                  </div>
+                </div>
+             </div>
+             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+               onClick={() => setStep('prediction')} disabled={!hero || !captain}
+               className="mt-16 px-16 py-6 bg-white text-black font-black italic rounded-full disabled:opacity-20 transition-all uppercase text-xl shadow-2xl"
+             >
+               Confirmar Liderança
+             </motion.button>
+          </motion.div>
+        )}
+
+        {/* STEP 5: PREDICTION (PALPITE) */}
+        {step === 'prediction' && (
+          <motion.div key="pred" className="flex-1 flex flex-col items-center justify-center p-6 bg-yellow-500 text-black">
+            <h2 className="text-6xl font-black italic mb-16 uppercase tracking-tighter text-center leading-none">Qual o seu<br/>Palpite?</h2>
+            <div className="flex items-center gap-8 mb-20 bg-black/5 p-12 rounded-[50px] border border-black/10">
+               <div className="flex flex-col items-center">
+                  <img src={ESCUDO} className="w-32 mb-6 drop-shadow-2xl" />
+                  <input type="number" value={prediction.home} onChange={e => setPrediction({...prediction, home: Number(e.target.value)})} 
+                    className="w-28 h-28 text-center text-6xl font-black bg-black text-white rounded-3xl shadow-2xl outline-none" />
+               </div>
+               <span className="text-8xl font-black italic opacity-20">X</span>
+               <div className="flex flex-col items-center">
+                  <div className="w-32 h-32 bg-black/20 rounded-full mb-6 flex items-center justify-center text-4xl font-black italic opacity-30 tracking-tighter">ADV</div>
+                  <input type="number" value={prediction.away} onChange={e => setPrediction({...prediction, away: Number(e.target.value)})} 
+                    className="w-28 h-28 text-center text-6xl font-black bg-black text-white rounded-3xl shadow-2xl outline-none" />
+               </div>
+            </div>
+            <button onClick={() => { confetti(); setStep('final'); }} className="px-14 py-8 bg-black text-white font-black italic rounded-full text-3xl hover:scale-110 transition-transform uppercase shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+              BOOOOM! Gerar Card
+            </button>
+          </motion.div>
+        )}
+
+        {/* STEP 6: CARD FINAL (ESTILO FIFA) */}
+        {step === 'final' && (
+          <motion.div key="final" initial={{ y: 800 }} animate={{ y: 0 }} className="flex-1 flex flex-col items-center justify-center bg-zinc-950 p-4">
+             {/* FIFA CARD CONTAINER */}
+             <div id="capture-card" className="w-[380px] bg-gradient-to-b from-yellow-300 via-yellow-600 to-black p-1 rounded-[45px] shadow-[0_0_100px_rgba(234,179,8,0.2)]">
+                <div className="bg-[#0a0a0a] rounded-[42px] overflow-hidden p-8 relative">
+                   <div className="absolute -top-20 -right-20 w-64 h-64 bg-yellow-500/10 blur-[80px]" />
+                   
+                   <div className="relative z-10">
+                     <p className="text-[10px] font-black text-yellow-500 tracking-[0.5em] mb-6 uppercase text-center">Convocação Arena Tigre</p>
+                     
+                     <div className="flex items-center justify-center gap-4 mb-8">
+                        <img src={ESCUDO} className="w-16" />
+                        <h3 className="text-5xl font-black italic text-white tracking-tighter leading-none">TIGRE<br/><span className="text-yellow-500">FC</span></h3>
+                     </div>
+                     
+                     <div className="flex justify-around mb-8 bg-white/5 py-6 rounded-3xl border border-white/10">
+                        <div className="text-center">
+                          <img src={hero?.foto} className="w-16 h-16 rounded-full border-2 border-cyan-400 mx-auto mb-2 object-cover" />
+                          <p className="text-[8px] font-black text-cyan-400 uppercase tracking-widest">HERÓI</p>
+                          <p className="text-xs font-black uppercase">{hero?.short}</p>
+                        </div>
+                        <div className="w-[1px] bg-white/10" />
+                        <div className="text-center">
+                          <img src={captain?.foto} className="w-16 h-16 rounded-full border-2 border-yellow-500 mx-auto mb-2 object-cover" />
+                          <p className="text-[8px] font-black text-yellow-500 uppercase tracking-widest">CAPITÃO</p>
+                          <p className="text-xs font-black uppercase">{captain?.short}</p>
+                        </div>
+                     </div>
+
+                     <div className="space-y-1 mb-8">
+                        {Object.values(slotMap).map((s, idx) => s.player && (
+                          <div key={idx} className="flex justify-between items-center text-[11px] px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                            <span className="font-black text-yellow-500 w-5">{s.player.num}</span>
+                            <span className="font-bold uppercase flex-1 ml-4 text-white/90">{s.player.name}</span>
+                            <span className="text-zinc-600 font-black text-[9px] uppercase tracking-tighter">{s.label}</span>
+                          </div>
+                        ))}
+                     </div>
+
+                     <div className="bg-yellow-500 p-5 rounded-[25px] text-center shadow-xl">
+                        <p className="text-black font-black text-sm uppercase italic tracking-widest">Palpite: Tigre {prediction.home} x {prediction.away} ADV</p>
+                     </div>
+                   </div>
+                </div>
+             </div>
+
+             <div className="mt-10 flex gap-4 w-full max-w-sm">
+                <button onClick={() => window.print()} className="flex-1 py-6 bg-zinc-900 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] border border-white/10 hover:bg-zinc-800 transition-all">Salvar Card</button>
+                <button onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: 'Arena Tigre FC', text: 'Minha escalação oficial!', url: window.location.href });
+                  }
+                }} className="flex-1 py-6 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl hover:scale-105 transition-transform">Compartilhar</button>
+             </div>
+             
+             <p className="mt-8 text-[9px] text-zinc-600 font-black tracking-[0.5em] uppercase text-center">Felipe Makarios • Arena Tigre FC</p>
+             <button onClick={() => window.location.reload()} className="mt-4 text-[9px] text-yellow-500/50 font-black uppercase underline">Refazer Estratégia</button>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #EAB308; }
+      `}</style>
     </div>
   );
 }
