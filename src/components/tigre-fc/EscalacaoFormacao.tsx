@@ -59,44 +59,44 @@ const PLAYERS: Player[] = [
     { id:39, name:'Ronald Barcellos', short:'RONALD', num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-// --- FORMAÇÕES ---
+// --- FORMAÇÕES (Coordenadas X ajustadas para aproximar os jogadores e manter dentro das 4 linhas) ---
 const FORMATIONS = {
     "4-3-3": [
-        { id: '1', x: 50, y: 82, label: 'GOL' },
-        { id: '2', x: 18, y: 70, label: 'LE' }, { id: '3', x: 38, y: 72, label: 'ZAG' }, { id: '4', x: 62, y: 72, label: 'ZAG' }, { id: '5', x: 82, y: 70, label: 'LD' },
-        { id: '6', x: 30, y: 55, label: 'MEI' }, { id: '7', x: 70, y: 55, label: 'MEI' }, { id: '8', x: 50, y: 52, label: 'MEI' },
-        { id: '9', x: 25, y: 38, label: 'PE' }, { id: '10', x: 50, y: 35, label: 'ATA' }, { id: '11', x: 75, y: 38, label: 'PD' }
+        { id: '1', x: 50, y: 88, label: 'GOL' },
+        { id: '2', x: 25, y: 72, label: 'LE' }, { id: '3', x: 42, y: 74, label: 'ZAG' }, { id: '4', x: 58, y: 74, label: 'ZAG' }, { id: '5', x: 75, y: 72, label: 'LD' },
+        { id: '6', x: 35, y: 58, label: 'MEI' }, { id: '7', x: 65, y: 58, label: 'MEI' }, { id: '8', x: 50, y: 56, label: 'MEI' },
+        { id: '9', x: 30, y: 40, label: 'PE' }, { id: '10', x: 50, y: 38, label: 'ATA' }, { id: '11', x: 70, y: 40, label: 'PD' }
     ],
     "4-4-2": [
-        { id: '1', x: 50, y: 82, label: 'GOL' },
-        { id: '2', x: 18, y: 70, label: 'LE' }, { id: '3', x: 38, y: 72, label: 'ZAG' }, { id: '4', x: 62, y: 72, label: 'ZAG' }, { id: '5', x: 82, y: 70, label: 'LD' },
-        { id: '6', x: 22, y: 55, label: 'MEI' }, { id: '7', x: 42, y: 56, label: 'MEI' }, { id: '8', x: 58, y: 56, label: 'MEI' }, { id: '9', x: 78, y: 55, label: 'MEI' },
-        { id: '10', x: 40, y: 38, label: 'ATA' }, { id: '11', x: 60, y: 38, label: 'ATA' }
+        { id: '1', x: 50, y: 88, label: 'GOL' },
+        { id: '2', x: 25, y: 72, label: 'LE' }, { id: '3', x: 42, y: 74, label: 'ZAG' }, { id: '4', x: 58, y: 74, label: 'ZAG' }, { id: '5', x: 75, y: 72, label: 'LD' },
+        { id: '6', x: 28, y: 58, label: 'MEI' }, { id: '7', x: 42, y: 58, label: 'MEI' }, { id: '8', x: 58, y: 58, label: 'MEI' }, { id: '9', x: 72, y: 58, label: 'MEI' },
+        { id: '10', x: 42, y: 40, label: 'ATA' }, { id: '11', x: 58, y: 40, label: 'ATA' }
     ],
     "3-5-2": [
-        { id: '1', x: 50, y: 82, label: 'GOL' },
-        { id: '2', x: 32, y: 72, label: 'ZAG' }, { id: '3', x: 50, y: 74, label: 'ZAG' }, { id: '4', x: 68, y: 72, label: 'ZAG' },
-        { id: '5', x: 15, y: 55, label: 'ALA' }, { id: '6', x: 35, y: 56, label: 'MEI' }, { id: '7', x: 50, y: 58, label: 'MEI' }, { id: '8', x: 65, y: 56, label: 'MEI' }, { id: '9', x: 85, y: 55, label: 'ALA' },
-        { id: '10', x: 42, y: 38, label: 'ATA' }, { id: '11', x: 58, y: 38, label: 'ATA' }
+        { id: '1', x: 50, y: 88, label: 'GOL' },
+        { id: '2', x: 38, y: 74, label: 'ZAG' }, { id: '3', x: 50, y: 76, label: 'ZAG' }, { id: '4', x: 62, y: 74, label: 'ZAG' },
+        { id: '5', x: 22, y: 58, label: 'ALA' }, { id: '6', x: 38, y: 60, label: 'MEI' }, { id: '7', x: 50, y: 62, label: 'MEI' }, { id: '8', x: 62, y: 60, label: 'MEI' }, { id: '9', x: 78, y: 58, label: 'ALA' },
+        { id: '10', x: 42, y: 42, label: 'ATA' }, { id: '11', x: 58, y: 42, label: 'ATA' }
     ],
     "4-2-3-1": [
-        { id: '1', x: 50, y: 82, label: 'GOL' },
-        { id: '2', x: 18, y: 70, label: 'LE' }, { id: '3', x: 38, y: 72, label: 'ZAG' }, { id: '4', x: 62, y: 72, label: 'ZAG' }, { id: '5', x: 82, y: 70, label: 'LD' },
-        { id: '6', x: 40, y: 58, label: 'VOL' }, { id: '7', x: 60, y: 58, label: 'VOL' },
-        { id: '8', x: 25, y: 42, label: 'MEI' }, { id: '9', x: 50, y: 40, label: 'MEI' }, { id: '10', x: 75, y: 42, label: 'MEI' },
-        { id: '11', x: 50, y: 28, label: 'ATA' }
+        { id: '1', x: 50, y: 88, label: 'GOL' },
+        { id: '2', x: 25, y: 72, label: 'LE' }, { id: '3', x: 42, y: 74, label: 'ZAG' }, { id: '4', x: 58, y: 74, label: 'ZAG' }, { id: '5', x: 75, y: 72, label: 'LD' },
+        { id: '6', x: 42, y: 62, label: 'VOL' }, { id: '7', x: 58, y: 62, label: 'VOL' },
+        { id: '8', x: 30, y: 48, label: 'MEI' }, { id: '9', x: 50, y: 46, label: 'MEI' }, { id: '10', x: 70, y: 48, label: 'MEI' },
+        { id: '11', x: 50, y: 34, label: 'ATA' }
     ],
     "3-4-3": [
-        { id: '1', x: 50, y: 82, label: 'GOL' },
-        { id: '2', x: 30, y: 72, label: 'ZAG' }, { id: '3', x: 50, y: 74, label: 'ZAG' }, { id: '4', x: 70, y: 72, label: 'ZAG' },
-        { id: '5', x: 20, y: 55, label: 'MEI' }, { id: '6', x: 40, y: 56, label: 'MEI' }, { id: '7', x: 60, y: 56, label: 'MEI' }, { id: '8', x: 80, y: 55, label: 'MEI' },
-        { id: '9', x: 25, y: 38, label: 'ATA' }, { id: '10', x: 50, y: 35, label: 'ATA' }, { id: '11', x: 75, y: 38, label: 'ATA' }
+        { id: '1', x: 50, y: 88, label: 'GOL' },
+        { id: '2', x: 35, y: 74, label: 'ZAG' }, { id: '3', x: 50, y: 76, label: 'ZAG' }, { id: '4', x: 65, y: 74, label: 'ZAG' },
+        { id: '5', x: 28, y: 58, label: 'MEI' }, { id: '6', x: 42, y: 60, label: 'MEI' }, { id: '7', x: 58, y: 60, label: 'MEI' }, { id: '8', x: 72, y: 58, label: 'MEI' },
+        { id: '9', x: 32, y: 42, label: 'ATA' }, { id: '10', x: 50, y: 40, label: 'ATA' }, { id: '11', x: 68, y: 42, label: 'ATA' }
     ],
     "5-3-2": [
-        { id: '1', x: 50, y: 82, label: 'GOL' },
-        { id: '2', x: 12, y: 68, label: 'LAT' }, { id: '3', x: 31, y: 72, label: 'ZAG' }, { id: '4', x: 50, y: 74, label: 'ZAG' }, { id: '5', x: 69, y: 72, label: 'ZAG' }, { id: '6', x: 88, y: 68, label: 'LAT' },
-        { id: '7', x: 30, y: 52, label: 'MEI' }, { id: '8', x: 50, y: 54, label: 'MEI' }, { id: '9', x: 70, y: 52, label: 'MEI' },
-        { id: '10', x: 40, y: 38, label: 'ATA' }, { id: '11', x: 60, y: 38, label: 'ATA' }
+        { id: '1', x: 50, y: 88, label: 'GOL' },
+        { id: '2', x: 20, y: 70, label: 'LAT' }, { id: '3', x: 35, y: 74, label: 'ZAG' }, { id: '4', x: 50, y: 76, label: 'ZAG' }, { id: '5', x: 65, y: 74, label: 'ZAG' }, { id: '6', x: 80, y: 70, label: 'LAT' },
+        { id: '7', x: 35, y: 56, label: 'MEI' }, { id: '8', x: 50, y: 58, label: 'MEI' }, { id: '9', x: 65, y: 56, label: 'MEI' },
+        { id: '10', x: 42, y: 42, label: 'ATA' }, { id: '11', x: 58, y: 42, label: 'ATA' }
     ]
 };
 
@@ -156,7 +156,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
         <div className="min-h-screen bg-black text-white overflow-x-hidden">
             <AnimatePresence mode="wait">
                 {step === 'arena' && (
-                    <div className="flex flex-col-reverse lg:flex-row min-h-screen">
+                    <div className="flex flex-col lg:flex-row min-h-screen">
                         
                         {/* MERCADO TIGRE (ESQUERDA) */}
                         <div className="relative z-30 w-full lg:w-[450px] flex flex-col bg-[#050505] border-r border-white/10">
@@ -167,7 +167,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                                 </div>
                             </div>
 
-                            {/* FILTROS DE POSIÇÃO */}
+                            {/* FILTROS DE POSIÇÃO - BOTÕES RESTAURADOS */}
                             <div className="flex gap-1 overflow-x-auto p-3 bg-zinc-900/50 no-scrollbar border-b border-white/5">
                                 {['TODOS', 'GOL', 'ZAG', 'LAT', 'MEI', 'ATA'].map(pos => (
                                     <button 
@@ -195,7 +195,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                                 ))}
                             </div>
 
-                            {/* LISTA DE JOGADORES */}
+                            {/* LISTA DE JOGADORES - ALINHAMENTO DE IMAGEM NO CARD CORRIGIDO */}
                             <div className="p-4 grid grid-cols-3 gap-3 overflow-y-auto max-h-[50vh] lg:max-h-none lg:flex-1 no-scrollbar">
                                 {filteredPlayers.map(p => (
                                     <MarketCard key={p.id} player={p} onClick={() => handleSelectPlayer(p)} />
@@ -220,17 +220,17 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                             </div>
 
-                            {/* PERSPECTIVA DO CAMPO */}
-                            <div className="relative h-full w-full" style={{ perspective: '1200px' }}>
+                            {/* PERSPECTIVA DO CAMPO E ROTAÇÃO DOS CARDS */}
+                            <div className="relative h-full w-full" style={{ perspective: '1400px' }}>
                                 <div 
                                     className="absolute inset-0" 
                                     style={{ 
-                                        transform: 'rotateX(20deg)', 
-                                        transformOrigin: 'bottom center'
+                                        transform: 'rotateX(35deg) rotateY(-5deg)', // Rotação para alinhar com a perspectiva da foto
+                                        transformOrigin: 'center bottom'
                                     }}
                                 >
                                     {currentSlots.map(s => {
-                                        const scaleBase = (s.y / 100) * 0.7 + 0.4;
+                                        const scaleBase = (s.y / 100) * 0.5 + 0.4;
                                         return (
                                             <motion.div 
                                                 key={s.id} 
@@ -241,8 +241,10 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                                                 <motion.div 
                                                     onClick={() => setActiveSlot({ type: 'titular', id: s.id })}
                                                     animate={{ 
-                                                        scale: activeSlot?.id === s.id ? scaleBase + 0.15 : scaleBase 
+                                                        scale: activeSlot?.id === s.id ? scaleBase + 0.1 : scaleBase 
                                                     }}
+                                                    // Rotação individual do card para compensar a inclinação do campo
+                                                    style={{ transform: 'rotateX(-40deg)' }} 
                                                     className={`relative w-16 h-22 lg:w-24 lg:h-32 rounded-xl border-2 flex flex-col items-center justify-center transition-all shadow-2xl overflow-hidden
                                                     ${activeSlot?.id === s.id ? 'border-yellow-500 shadow-[0_0_30px_#F5C400]' : 'border-white/30 bg-black/40 backdrop-blur-md'}`}
                                                 >
