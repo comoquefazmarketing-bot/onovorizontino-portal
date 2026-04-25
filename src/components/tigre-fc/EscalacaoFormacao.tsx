@@ -6,24 +6,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const ESCUDO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
 
-type Player = { 
-  id: number; 
-  name: string; 
-  short: string; 
-  num: number; 
-  pos: string; 
-  foto: string 
+type Player = {
+  id: number;
+  name: string;
+  short: string;
+  num: number;
+  pos: string;
+  foto: string;
 };
 
 type Lineup = Record<string, Player | null>;
 type Step = 'tutorial' | 'formation' | 'arena' | 'summary';
 
-interface Slot { 
-  id: string; 
-  x: number; 
-  y: number; 
-  pos: string; 
-  label: string 
+interface Slot {
+  id: string;
+  x: number;
+  y: number;
+  pos: string;
+  label: string;
+}
+
+// Props do componente (OBRIGATÓRIO para evitar erro no build)
+interface EscalacaoFormacaoProps {
+  jogoId?: number;
 }
 
 // ==================== 39 JOGADORES ====================
@@ -69,22 +74,94 @@ const PLAYERS: Player[] = [
   { id:39, name:'Ronald Barcellos', short:'Ronald', num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-// ==================== FORMAÇÕES (6) ====================
+// ==================== 6 FORMAÇÕES ====================
 const FORMATIONS: Record<string, Slot[]> = {
-  '4-2-3-1': [ /* ... mesmo do seu código ... */ ],
-  '4-3-3': [ /* ... mesmo do seu código ... */ ],
-  '4-4-2': [ /* adicionei as que faltavam para ficar completo */ ],
-  '3-5-2': [ /* ... */ ],
-  '5-3-2': [ /* ... */ ],
-  '4-1-4-1': [ /* ... */ ],
+  '4-2-3-1': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
+    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
+    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
+    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
+    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
+    { id: 'dm1', x: 35, y: 53, pos: 'VOL', label: 'DM' },
+    { id: 'dm2', x: 65, y: 53, pos: 'VOL', label: 'DM' },
+    { id: 'am', x: 50, y: 37, pos: 'MEI', label: 'AM' },
+    { id: 'rw', x: 78, y: 22, pos: 'MEI', label: 'RW' },
+    { id: 'lw', x: 22, y: 22, pos: 'MEI', label: 'LW' },
+    { id: 'st', x: 50, y: 10, pos: 'ATA', label: 'ST' },
+  ],
+  '4-3-3': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
+    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
+    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
+    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
+    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
+    { id: 'cm1', x: 30, y: 52, pos: 'MEI', label: 'CM' },
+    { id: 'cm2', x: 50, y: 52, pos: 'VOL', label: 'CM' },
+    { id: 'cm3', x: 70, y: 52, pos: 'MEI', label: 'CM' },
+    { id: 'rw', x: 78, y: 22, pos: 'ATA', label: 'RW' },
+    { id: 'st', x: 50, y: 12, pos: 'ATA', label: 'ST' },
+    { id: 'lw', x: 22, y: 22, pos: 'ATA', label: 'LW' },
+  ],
+  '4-4-2': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
+    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
+    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
+    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
+    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
+    { id: 'rm', x: 78, y: 50, pos: 'MEI', label: 'RM' },
+    { id: 'cm1', x: 62, y: 50, pos: 'VOL', label: 'CM' },
+    { id: 'cm2', x: 38, y: 50, pos: 'VOL', label: 'CM' },
+    { id: 'lm', x: 22, y: 50, pos: 'MEI', label: 'LM' },
+    { id: 'st1', x: 38, y: 15, pos: 'ATA', label: 'ST' },
+    { id: 'st2', x: 62, y: 15, pos: 'ATA', label: 'ST' },
+  ],
+  '3-5-2': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
+    { id: 'cb1', x: 35, y: 72, pos: 'ZAG', label: 'CB' },
+    { id: 'cb2', x: 50, y: 75, pos: 'ZAG', label: 'CB' },
+    { id: 'cb3', x: 65, y: 72, pos: 'ZAG', label: 'CB' },
+    { id: 'lwb', x: 15, y: 52, pos: 'LAT', label: 'LWB' },
+    { id: 'cm1', x: 30, y: 48, pos: 'MEI', label: 'CM' },
+    { id: 'cm2', x: 50, y: 45, pos: 'VOL', label: 'CM' },
+    { id: 'cm3', x: 70, y: 48, pos: 'MEI', label: 'CM' },
+    { id: 'rwb', x: 85, y: 52, pos: 'LAT', label: 'RWB' },
+    { id: 'st1', x: 38, y: 15, pos: 'ATA', label: 'ST' },
+    { id: 'st2', x: 62, y: 15, pos: 'ATA', label: 'ST' },
+  ],
+  '5-3-2': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
+    { id: 'lb', x: 15, y: 68, pos: 'LAT', label: 'LB' },
+    { id: 'cb1', x: 30, y: 72, pos: 'ZAG', label: 'CB' },
+    { id: 'cb2', x: 50, y: 73, pos: 'ZAG', label: 'CB' },
+    { id: 'cb3', x: 70, y: 72, pos: 'ZAG', label: 'CB' },
+    { id: 'rb', x: 85, y: 68, pos: 'LAT', label: 'RB' },
+    { id: 'cm1', x: 35, y: 48, pos: 'MEI', label: 'CM' },
+    { id: 'cm2', x: 50, y: 45, pos: 'VOL', label: 'CM' },
+    { id: 'cm3', x: 65, y: 48, pos: 'MEI', label: 'CM' },
+    { id: 'st1', x: 38, y: 15, pos: 'ATA', label: 'ST' },
+    { id: 'st2', x: 62, y: 15, pos: 'ATA', label: 'ST' },
+  ],
+  '4-1-4-1': [
+    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
+    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
+    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
+    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
+    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
+    { id: 'dm', x: 50, y: 58, pos: 'VOL', label: 'DM' },
+    { id: 'lm', x: 22, y: 42, pos: 'MEI', label: 'LM' },
+    { id: 'cm', x: 40, y: 40, pos: 'MEI', label: 'CM' },
+    { id: 'am', x: 60, y: 38, pos: 'MEI', label: 'AM' },
+    { id: 'rm', x: 78, y: 42, pos: 'MEI', label: 'RM' },
+    { id: 'st', x: 50, y: 12, pos: 'ATA', label: 'ST' },
+  ],
 };
 
 const POS_COLORS: Record<string, string> = {
-  GOL: '#F5C400', ZAG: '#00F3FF', LAT: '#4FC3F7', 
+  GOL: '#F5C400', ZAG: '#00F3FF', LAT: '#4FC3F7',
   VOL: '#BF5FFF', MEI: '#22C55E', ATA: '#FF2D55'
 };
 
-// ==================== CARD JOGADOR (FIFA Style) ====================
+// ==================== CARD FIFA ====================
 function FifaPlayerCard({ 
   player, 
   isSelected, 
@@ -100,7 +177,10 @@ function FifaPlayerCard({
       whileTap={{ scale: 0.9 }}
       onClick={onClick}
       className={`relative w-16 h-20 rounded-2xl overflow-hidden border-2 shadow-xl transition-all cursor-pointer
-        ${isSelected ? 'border-[#F5C400] scale-110 shadow-[0_0_30px_#F5C40080]' : 'border-white/20 hover:border-white/50'}`}
+        ${isSelected 
+          ? 'border-[#F5C400] scale-110 shadow-[0_0_30px_#F5C40080]' 
+          : 'border-white/20 hover:border-white/50'
+        }`}
     >
       {player ? (
         <>
@@ -117,7 +197,8 @@ function FifaPlayerCard({
   );
 }
 
-export default function EscalacaoPremium() {
+// ==================== COMPONENTE PRINCIPAL ====================
+export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const [step, setStep] = useState<Step>('tutorial');
   const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-2-3-1');
   const [lineup, setLineup] = useState<Lineup>({});
@@ -145,45 +226,46 @@ export default function EscalacaoPremium() {
     <div className="min-h-screen bg-[#050505] text-white overflow-hidden font-sans">
       <AnimatePresence mode="wait">
 
-        {/* TUTORIAL INICIAL - Bem-vindo ao jogo */}
+        {/* TUTORIAL */}
         {step === 'tutorial' && (
-          <motion.div 
+          <motion.div
             key="tutorial"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-black to-zinc-950"
           >
-            <div className="mb-10">
-              <img src={ESCUDO} className="w-28 mx-auto drop-shadow-2xl" alt="Tigre" />
-            </div>
+            <img src={ESCUDO} className="w-28 mx-auto drop-shadow-2xl mb-10" alt="Tigre" />
             <h1 className="text-5xl font-black italic tracking-tighter mb-4 text-[#F5C400]">TIGRE FC</h1>
             <p className="text-2xl font-light mb-12 max-w-xs">Monte seu time como um técnico de verdade!</p>
 
-            <div className="max-w-md space-y-6 text-left text-sm">
-              <div className="bg-zinc-900/70 p-5 rounded-2xl border border-white/10">
-                1. Escolha a formação<br />
-                2. Arraste ou clique nos jogadores no mercado<br />
-                3. Dê seu palpite de placar<br />
-                4. Salve e compartilhe!
-              </div>
+            <div className="max-w-md bg-zinc-900/70 p-6 rounded-2xl border border-white/10 text-left text-sm mb-10">
+              1. Escolha a formação<br />
+              2. Clique nos espaços do campo<br />
+              3. Escolha os jogadores no mercado<br />
+              4. Dê seu palpite e salve!
             </div>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setStep('formation')}
-              className="mt-12 bg-[#F5C400] text-black font-black text-xl px-14 py-5 rounded-2xl hover:bg-yellow-400 transition-all active:scale-95"
+              className="bg-[#F5C400] text-black font-black text-xl px-14 py-5 rounded-2xl hover:bg-yellow-400 transition-all active:scale-95"
             >
               COMEÇAR A MONTAR O TIME ⚽
             </motion.button>
           </motion.div>
         )}
 
-        {/* ESCOLHA DE FORMAÇÃO */}
+        {/* FORMAÇÃO */}
         {step === 'formation' && (
-          <motion.div key="formation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black">
+          <motion.div 
+            key="formation" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black"
+          >
             <img src={ESCUDO} className="w-24 mb-8" alt="Tigre" />
             <h1 className="text-4xl font-black italic tracking-[-1px] mb-2">Escolha sua Formação</h1>
             <p className="text-zinc-400 mb-10">Qual estilo de jogo você quer hoje?</p>
@@ -194,7 +276,10 @@ export default function EscalacaoPremium() {
                   key={f}
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.94 }}
-                  onClick={() => { setFormation(f as keyof typeof FORMATIONS); setStep('arena'); }}
+                  onClick={() => { 
+                    setFormation(f as keyof typeof FORMATIONS); 
+                    setStep('arena'); 
+                  }}
                   className="py-8 border-2 border-white/10 hover:border-[#F5C400] rounded-3xl font-black text-2xl transition-all hover:bg-white/5"
                 >
                   {f}
@@ -204,14 +289,13 @@ export default function EscalacaoPremium() {
           </motion.div>
         )}
 
-        {/* ARENA MODE - O coração divertido do jogo */}
+        {/* ARENA MODE */}
         {step === 'arena' && (
           <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
-            
             {/* CAMPO 3D */}
             <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-emerald-950 to-black p-4 relative">
               <div style={{ perspective: '1100px' }} className="relative w-full max-w-[460px]">
-                <motion.div 
+                <motion.div
                   initial={{ rotateX: 18 }}
                   animate={{ rotateX: 12 }}
                   className="relative aspect-[10/13] bg-[#0a2a18] rounded-[44px] border-8 border-white/10 shadow-2xl overflow-hidden"
@@ -228,8 +312,8 @@ export default function EscalacaoPremium() {
                         style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
                         onClick={() => { setActiveSlot(slot.id); setFilterPos(null); }}
                       >
-                        <FifaPlayerCard 
-                          player={lineup[slot.id] || null} 
+                        <FifaPlayerCard
+                          player={lineup[slot.id] || null}
                           isSelected={activeSlot === slot.id}
                           onClick={() => { setActiveSlot(slot.id); setFilterPos(null); }}
                         />
@@ -240,16 +324,17 @@ export default function EscalacaoPremium() {
               </div>
             </div>
 
-            {/* MERCADO - Sempre visível e divertido */}
+            {/* MERCADO */}
             <div className="w-full lg:w-[440px] bg-zinc-950 border-l border-white/10 flex flex-col">
               <div className="p-6 border-b border-white/10">
                 <h2 className="text-[#F5C400] font-black text-2xl italic">MERCADO TIGRE</h2>
                 <p className="text-sm text-zinc-400 mt-1">
-                  {activeSlot ? `Escolhendo para: ${slots.find(s => s.id === activeSlot)?.label}` : 'Toque em um espaço vazio no campo'}
+                  {activeSlot 
+                    ? `Escolhendo para: ${slots.find(s => s.id === activeSlot)?.label}` 
+                    : 'Toque em um espaço vazio no campo'}
                 </p>
               </div>
 
-              {/* Filtros rápidos */}
               <div className="flex gap-2 p-4 overflow-x-auto bg-black border-b border-white/10">
                 {['GOL','LAT','ZAG','VOL','MEI','ATA'].map(pos => (
                   <button
@@ -264,7 +349,6 @@ export default function EscalacaoPremium() {
                 ))}
               </div>
 
-              {/* Grid de jogadores */}
               <div className="flex-1 p-4 overflow-y-auto grid grid-cols-4 gap-3">
                 <AnimatePresence>
                   {filteredPlayers.map((player) => (
@@ -288,7 +372,7 @@ export default function EscalacaoPremium() {
               </div>
 
               <div className="p-6 border-t border-white/10 bg-black">
-                <button 
+                <button
                   onClick={() => setStep('summary')}
                   disabled={filledSlots < 11}
                   className={`w-full py-5 rounded-2xl font-black text-lg uppercase tracking-widest transition-all ${
@@ -304,11 +388,11 @@ export default function EscalacaoPremium() {
           </div>
         )}
 
-        {/* RESUMO + PALPITE */}
+        {/* SUMMARY + PALPITE */}
         {step === 'summary' && (
-          <motion.div 
-            key="summary" 
-            initial={{ opacity: 0, y: 30 }} 
+          <motion.div
+            key="summary"
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             className="min-h-screen flex flex-col items-center justify-center p-6 text-center"
           >
@@ -317,9 +401,9 @@ export default function EscalacaoPremium() {
             <div className="flex items-center gap-10 mb-12">
               <div className="flex flex-col items-center">
                 <img src={ESCUDO} className="w-20 mb-4" alt="Tigre" />
-                <input 
-                  type="number" 
-                  value={score.tigre} 
+                <input
+                  type="number"
+                  value={score.tigre}
                   onChange={(e) => setScore({ ...score, tigre: Number(e.target.value) })}
                   className="w-28 h-28 bg-zinc-900 border-4 border-[#F5C400] rounded-3xl text-center text-6xl font-black focus:outline-none"
                 />
@@ -327,9 +411,9 @@ export default function EscalacaoPremium() {
               <span className="text-5xl font-light text-white/30">×</span>
               <div className="flex flex-col items-center">
                 <div className="w-20 h-20 rounded-full bg-zinc-800 mb-4 flex items-center justify-center text-xs font-bold">ADV</div>
-                <input 
-                  type="number" 
-                  value={score.adv} 
+                <input
+                  type="number"
+                  value={score.adv}
                   onChange={(e) => setScore({ ...score, adv: Number(e.target.value) })}
                   className="w-28 h-28 bg-zinc-900 border-4 border-white/20 rounded-3xl text-center text-6xl font-black focus:outline-none"
                 />
