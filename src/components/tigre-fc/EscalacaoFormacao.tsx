@@ -1,249 +1,469 @@
 'use client';
-
 /**
- * ArenaTigreFC — FULL ENGINE 
- * FOCO: 39 Jogadores, 6 Formações, Perspectiva Reta e UX High-End.
+ * EscalacaoFormacao — Arena Tigre FC PS5/FIFA Edition
+ * Mágico de Oz: imagem do estádio como background, cards FUT por cima
+ * Steps: formation → picking (campo+drawer) → bench → score → reveal
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
-// --- CONFIGURAÇÕES DE ASSETS ---
-const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
-const ESCUDO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-const STADIUM_BG = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
+// ── Assets ────────────────────────────────────────────────
+const BASE         = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
+const ESCUDO       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+const ARENA_BG     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGREFC.png';
+const FOTO_ROMULO  = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ROMULO%20FUNDO%20TRANSPARENTE.png';
+const FOTO_CARLAO  = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CARLAO%20FUNDO%20TRANSPARENTE.png';
+const SUPA_URL     = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPA_ANON    = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// --- TIPAGEM ---
-type Player = { id: number; name: string; short: string; num: number; pos: string; foto: string; };
+// ── Tipos ─────────────────────────────────────────────────
+type Player = { id: number; name: string; short: string; num: number | null; pos: string; foto: string; overall: number };
 type Lineup = Record<string, Player | null>;
-type Step = 'formation' | 'arena' | 'summary';
+type Step   = 'formation' | 'picking' | 'bench' | 'score' | 'reveal';
+type Slot   = { id: string; x: number; y: number; pos: string; label: string };
+type ActiveSlot = string | 'captain_pick' | 'hero_pick' | null;
 
-interface Slot { id: string; x: number; y: number; label: string; pos: string; }
-
-// Adicionado para corrigir o erro do Vercel
-interface ArenaProps {
-  jogoId?: number;
+interface Jogo {
+  id:           number;
+  competicao?:  string;
+  rodada?:      string;
+  data_hora?:   string;
+  local?:       string;
+  transmissao?: string;
+  mandante?:  { nome: string; escudo_url: string | null; sigla?: string | null };
+  visitante?: { nome: string; escudo_url: string | null; sigla?: string | null };
 }
 
-// ==================== LISTA COMPLETA: 39 JOGADORES ====================
-const PLAYERS: Player[] = [
-  { id:1, name:'César Augusto', short:'César', num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
-  { id:2, name:'Jordi', short:'Jordi', num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
-  { id:3, name:'João Scapin', short:'Scapin', num:12, pos:'GOL', foto:BASE+'JOAO-SCAPIN.jpg.webp' },
-  { id:4, name:'Lucas Ribeiro', short:'Lucas', num:1, pos:'GOL', foto:BASE+'LUCAS-RIBEIRO.jpg.webp' },
-  { id:5, name:'Lora', short:'Lora', num:2, pos:'LAT', foto:BASE+'LORA.jpg.webp' },
-  { id:6, name:'Castrillón', short:'Castrillón', num:6, pos:'LAT', foto:BASE+'CASTRILLON.jpg.webp' },
-  { id:7, name:'Arthur Barbosa', short:'A.Barbosa', num:22, pos:'LAT', foto:BASE+'ARTHUR-BARBOSA.jpg.webp' },
-  { id:8, name:'Sander', short:'Sander', num:33, pos:'LAT', foto:BASE+'SANDER.jpg.webp' },
-  { id:9, name:'Maykon Jesus', short:'Maykon', num:27, pos:'LAT', foto:BASE+'MAYKON-JESUS.jpg.webp' },
-  { id:10, name:'Dantas', short:'Dantas', num:3, pos:'ZAG', foto:BASE+'DANTAAS.jpg.webp' },
-  { id:11, name:'Eduardo Brock', short:'E.Brock', num:5, pos:'ZAG', foto:BASE+'EDUARDO-BROCK.jpg.webp' },
-  { id:12, name:'Patrick', short:'Patrick', num:4, pos:'ZAG', foto:BASE+'PATRICK.jpg.webp' },
-  { id:13, name:'Gabriel Bahia', short:'G.Bahia', num:14, pos:'ZAG', foto:BASE+'GABRIEL-BAHIA.jpg.webp' },
-  { id:14, name:'Carlinhos', short:'Carlinhos', num:25, pos:'ZAG', foto:BASE+'CARLINHOS.jpg.webp' },
-  { id:15, name:'Alemão', short:'Alemão', num:28, pos:'ZAG', foto:BASE+'ALEMAO.jpg.webp' },
-  { id:16, name:'Renato Palm', short:'R.Palm', num:24, pos:'ZAG', foto:BASE+'RENATO-PALM.jpg.webp' },
-  { id:17, name:'Alvariño', short:'Alvariño', num:35, pos:'ZAG', foto:BASE+'IVAN-ALVARINO.jpg.webp' },
-  { id:18, name:'Bruno Santana', short:'B.Santana', num:33, pos:'ZAG', foto:BASE+'BRUNO-SANTANA.jpg.webp' },
-  { id:19, name:'Luís Oyama', short:'Oyama', num:8, pos:'MEI', foto:BASE+'LUIS-OYAMA.jpg.webp' },
-  { id:20, name:'Léo Naldi', short:'L.Naldi', num:7, pos:'MEI', foto:BASE+'LEO-NALDI.jpg.webp' },
-  { id:21, name:'Rômulo', short:'Rômulo', num:10, pos:'MEI', foto:BASE+'ROMULO.jpg.webp' },
-  { id:22, name:'Matheus Bianqui', short:'Bianqui', num:11, pos:'MEI', foto:BASE+'MATHEUS-BIANQUI.jpg.webp' },
-  { id:23, name:'Juninho', short:'Juninho', num:20, pos:'MEI', foto:BASE+'JUNINHO.jpg.webp' },
-  { id:24, name:'Tavinho', short:'Tavinho', num:17, pos:'MEI', foto:BASE+'TAVINHO.jpg.webp' },
-  { id:25, name:'Diego Galo', short:'D.Galo', num:29, pos:'MEI', foto:BASE+'DIEGO-GALO.jpg.webp' },
-  { id:26, name:'Marlon', short:'Marlon', num:30, pos:'MEI', foto:BASE+'MARLON.jpg.webp' },
-  { id:27, name:'Hector Bianchi', short:'Hector', num:16, pos:'MEI', foto:BASE+'HECTOR-BIACHI.jpg.webp' },
-  { id:28, name:'Nogueira', short:'Nogueira', num:36, pos:'MEI', foto:BASE+'NOGUEIRA.jpg.webp' },
-  { id:29, name:'Luiz Gabriel', short:'L.Gabriel', num:37, pos:'MEI', foto:BASE+'LUIZ-GABRIEL.jpg.webp' },
-  { id:30, name:'Jhones Kauê', short:'J.Kauê', num:50, pos:'MEI', foto:BASE+'JHONES-KAUE.jpg.webp' },
-  { id:31, name:'Robson', short:'Robson', num:9, pos:'ATA', foto:BASE+'ROBSON.jpg.webp' },
-  { id:32, name:'Vinícius Paiva', short:'V.Paiva', num:13, pos:'ATA', foto:BASE+'VINICIUS-PAIVA.jpg.webp' },
-  { id:33, name:'Hélio Borges', short:'H.Borges', num:18, pos:'ATA', foto:BASE+'HELIO-BORGES.jpg.webp' },
-  { id:34, name:'Jardiel', short:'Jardiel', num:19, pos:'ATA', foto:BASE+'JARDIEL.jpg.webp' },
-  { id:35, name:'Nicolas Careca', short:'N.Careca', num:21, pos:'ATA', foto:BASE+'NICOLAS-CARECA.jpg.webp' },
-  { id:36, name:'Titi Ortiz', short:'Titi Ortiz', num:15, pos:'ATA', foto:BASE+'TITI-ORTIZ.jpg.webp' },
-  { id:37, name:'Diego Mathias', short:'D.Mathias', num:41, pos:'ATA', foto:BASE+'DIEGO-MATHIAS.jpg.webp' },
-  { id:38, name:'Carlão', short:'Carlão', num:90, pos:'ATA', foto:BASE+'CARLAO.jpg.webp' },
-  { id:39, name:'Ronald Barcellos', short:'Ronald', num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
-];
+interface Props { jogoId?: number }
 
-// ==================== AS 6 FORMAÇÕES TÁTICAS ====================
-const FORMATIONS: Record<string, Slot[]> = {
-  '4-3-3': [
-    { id: 'gk',  x: 50, y: 88, pos: 'GOL', label: 'GOL' },
-    { id: 'rb',  x: 82, y: 68, pos: 'LAT', label: 'LD' },
-    { id: 'cb1', x: 62, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'cb2', x: 38, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'lb',  x: 18, y: 68, pos: 'LAT', label: 'LE' },
-    { id: 'cm1', x: 32, y: 52, pos: 'MEI', label: 'MC' },
-    { id: 'cm2', x: 50, y: 55, pos: 'VOL', label: 'VOL' },
-    { id: 'cm3', x: 68, y: 52, pos: 'MEI', label: 'MC' },
-    { id: 'rw',  x: 80, y: 22, pos: 'ATA', label: 'PD' },
-    { id: 'st',  x: 50, y: 15, pos: 'ATA', label: 'ATA' },
-    { id: 'lw',  x: 20, y: 22, pos: 'ATA', label: 'PE' },
-  ],
-  '4-4-2': [
-    { id: 'gk',  x: 50, y: 88, pos: 'GOL', label: 'GOL' },
-    { id: 'rb',  x: 82, y: 68, pos: 'LAT', label: 'LD' },
-    { id: 'cb1', x: 62, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'cb2', x: 38, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'lb',  x: 18, y: 68, pos: 'LAT', label: 'LE' },
-    { id: 'rm',  x: 80, y: 48, pos: 'MEI', label: 'MD' },
-    { id: 'cm1', x: 40, y: 52, pos: 'MEI', label: 'MC' },
-    { id: 'cm2', x: 60, y: 52, pos: 'MEI', label: 'MC' },
-    { id: 'lm',  x: 20, y: 48, pos: 'MEI', label: 'ME' },
-    { id: 'st1', x: 42, y: 18, pos: 'ATA', label: 'ATA' },
-    { id: 'st2', x: 58, y: 18, pos: 'ATA', label: 'ATA' },
-  ],
-  '4-2-3-1': [
-    { id: 'gk',  x: 50, y: 88, pos: 'GOL', label: 'GOL' },
-    { id: 'rb',  x: 82, y: 68, pos: 'LAT', label: 'LD' },
-    { id: 'cb1', x: 62, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'cb2', x: 38, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'lb',  x: 18, y: 68, pos: 'LAT', label: 'LE' },
-    { id: 'dm1', x: 38, y: 58, pos: 'VOL', label: 'VOL' },
-    { id: 'dm2', x: 62, y: 58, pos: 'VOL', label: 'VOL' },
-    { id: 'am',  x: 50, y: 40, pos: 'MEI', label: 'MEI' },
-    { id: 'rw',  x: 82, y: 28, pos: 'MEI', label: 'PD' },
-    { id: 'lw',  x: 18, y: 28, pos: 'MEI', label: 'PE' },
-    { id: 'st',  x: 50, y: 12, pos: 'ATA', label: 'ATA' },
-  ],
-  '3-5-2': [
-    { id: 'gk',  x: 50, y: 88, pos: 'GOL', label: 'GOL' },
-    { id: 'cb1', x: 50, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'cb2', x: 34, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'cb3', x: 66, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'rm',  x: 85, y: 50, pos: 'MEI', label: 'AD' },
-    { id: 'lm',  x: 15, y: 50, pos: 'MEI', label: 'AE' },
-    { id: 'cm1', x: 50, y: 60, pos: 'VOL', label: 'VOL' },
-    { id: 'cm2', x: 38, y: 52, pos: 'MEI', label: 'MC' },
-    { id: 'cm3', x: 62, y: 52, pos: 'MEI', label: 'MC' },
-    { id: 'st1', x: 42, y: 18, pos: 'ATA', label: 'ATA' },
-    { id: 'st2', x: 58, y: 18, pos: 'ATA', label: 'ATA' },
-  ],
-  '3-4-3': [
-    { id: 'gk',  x: 50, y: 88, pos: 'GOL', label: 'GOL' },
-    { id: 'cb1', x: 50, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'cb2', x: 34, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'cb3', x: 66, y: 74, pos: 'ZAG', label: 'ZAG' },
-    { id: 'rm',  x: 82, y: 50, pos: 'MEI', label: 'MD' },
-    { id: 'cm1', x: 42, y: 55, pos: 'VOL', label: 'VOL' },
-    { id: 'cm2', x: 58, y: 55, pos: 'VOL', label: 'VOL' },
-    { id: 'lm',  x: 18, y: 50, pos: 'MEI', label: 'ME' },
-    { id: 'rw',  x: 78, y: 22, pos: 'ATA', label: 'PD' },
-    { id: 'st',  x: 50, y: 15, pos: 'ATA', label: 'ATA' },
-    { id: 'lw',  x: 22, y: 22, pos: 'ATA', label: 'PE' },
-  ],
-  '5-3-2': [
-    { id: 'gk',  x: 50, y: 88, pos: 'GOL', label: 'GOL' },
-    { id: 'cb1', x: 50, y: 76, pos: 'ZAG', label: 'ZAG' },
-    { id: 'cb2', x: 35, y: 76, pos: 'ZAG', label: 'ZAG' },
-    { id: 'cb3', x: 65, y: 76, pos: 'ZAG', label: 'ZAG' },
-    { id: 'rb',  x: 85, y: 70, pos: 'LAT', label: 'LD' },
-    { id: 'lb',  x: 15, y: 70, pos: 'LAT', label: 'LE' },
-    { id: 'cm1', x: 38, y: 54, pos: 'MEI', label: 'MC' },
-    { id: 'cm2', x: 62, y: 54, pos: 'MEI', label: 'MC' },
-    { id: 'cm3', x: 50, y: 58, pos: 'VOL', label: 'VOL' },
-    { id: 'st1', x: 42, y: 18, pos: 'ATA', label: 'ATA' },
-    { id: 'st2', x: 58, y: 18, pos: 'ATA', label: 'ATA' },
-  ]
+// ── Estado único do jogo ──────────────────────────────────
+interface GameData {
+  formation:     string;
+  lineup:        Lineup;
+  bench:         Lineup;
+  captainId:     number | null;
+  heroId:        number | null;
+  scoreTigre:    number;
+  scoreAdv:      number;
+}
+
+const initialGameData: GameData = {
+  formation:  '4-2-3-1',
+  lineup:     {},
+  bench:      {},
+  captainId:  null,
+  heroId:     null,
+  scoreTigre: 0,
+  scoreAdv:   0,
 };
 
-// ==================== COMPONENTES VISUAIS ====================
+// ── Elenco ────────────────────────────────────────────────
+const PLAYERS: Player[] = [
+  { id:1,  name:'César Augusto',    short:'César',      num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp',     overall:82 },
+  { id:2,  name:'Jordi',            short:'Jordi',      num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp',             overall:79 },
+  { id:3,  name:'João Scapin',      short:'Scapin',     num:12, pos:'GOL', foto:BASE+'JOAO-SCAPIN.jpg.webp',       overall:71 },
+  { id:4,  name:'Lucas',            short:'Lucas',      num:1,  pos:'GOL', foto:BASE+'LUCAS-RIBEIRO.jpg.webp',     overall:69 },
+  { id:5,  name:'Jhilmar Lora',     short:'Lora',       num:24, pos:'LAT', foto:BASE+'LORA.jpg.webp',              overall:75 },
+  { id:6,  name:'Nilson Castrillón',short:'Castrillón', num:20, pos:'LAT', foto:BASE+'CASTRILLON.jpg.webp',        overall:74 },
+  { id:7,  name:'Sander',           short:'Sander',     num:5,  pos:'LAT', foto:BASE+'SANDER.jpg.webp',            overall:73 },
+  { id:8,  name:'Maykon Jesus',     short:'Maykon',     num:66, pos:'LAT', foto:BASE+'MAYKON-JESUS.jpg.webp',      overall:72 },
+  { id:9,  name:'Dantas',           short:'Dantas',     num:25, pos:'ZAG', foto:BASE+'DANTAAS.jpg.webp',           overall:81 },
+  { id:10, name:'Eduardo Brock',    short:'E.Brock',    num:14, pos:'ZAG', foto:BASE+'EDUARDO-BROCK.jpg.webp',     overall:80 },
+  { id:11, name:'Patrick',          short:'Patrick',    num:4,  pos:'ZAG', foto:BASE+'PATRICK.jpg.webp',           overall:79 },
+  { id:12, name:'Gabriel Bahia',    short:'G.Bahia',    num:26, pos:'ZAG', foto:BASE+'GABRIEL-BAHIA.jpg.webp',     overall:74 },
+  { id:13, name:'Carlinhos',        short:'Carlinhos',  num:3,  pos:'ZAG', foto:BASE+'CARLINHOS.jpg.webp',         overall:73 },
+  { id:14, name:'Kauan Alemão',     short:'Alemão',     num:21, pos:'ZAG', foto:BASE+'ALEMAO.jpg.webp',            overall:72 },
+  { id:15, name:'Renato Palm',      short:'R.Palm',     num:33, pos:'ZAG', foto:BASE+'RENATO-PALM.jpg.webp',       overall:71 },
+  { id:16, name:'Alexis Alvariño',  short:'Alvariño',   num:22, pos:'ZAG', foto:BASE+'IVAN-ALVARINO.jpg.webp',     overall:75 },
+  { id:17, name:'Luís Oyama',       short:'Oyama',      num:6,  pos:'VOL', foto:BASE+'LUIS-OYAMA.jpg.webp',        overall:81 },
+  { id:18, name:'Léo Naldi',        short:'L.Naldi',    num:18, pos:'VOL', foto:BASE+'LEO-NALDI.jpg.webp',         overall:77 },
+  { id:19, name:'Marlon',           short:'Marlon',     num:28, pos:'VOL', foto:BASE+'MARLON.jpg.webp',            overall:74 },
+  { id:20, name:'Luiz Gabriel',     short:'L.Gabriel',  num:23, pos:'VOL', foto:BASE+'LUIZ-GABRIEL.jpg.webp',      overall:72 },
+  { id:21, name:'Rômulo',           short:'Rômulo',     num:10, pos:'MEI', foto:FOTO_ROMULO,                       overall:92 },
+  { id:22, name:'Matheus Bianqui',  short:'Bianqui',    num:17, pos:'MEI', foto:BASE+'MATHEUS-BIANQUI.jpg.webp',   overall:78 },
+  { id:23, name:'Juninho',          short:'Juninho',    num:50, pos:'MEI', foto:BASE+'JUNINHO.jpg.webp',           overall:76 },
+  { id:24, name:'Tavinho',          short:'Tavinho',    num:15, pos:'MEI', foto:BASE+'TAVINHO.jpg.webp',           overall:79 },
+  { id:25, name:'Diego Galo',       short:'D.Galo',     num:19, pos:'MEI', foto:BASE+'DIEGO-GALO.jpg.webp',        overall:76 },
+  { id:26, name:'Christian Ortíz',  short:'C.Ortiz',    num:8,  pos:'MEI', foto:BASE+'TITI-ORTIZ.jpg.webp',        overall:77 },
+  { id:27, name:'Hector Bianchi',   short:'Hector',     num:35, pos:'MEI', foto:BASE+'HECTOR-BIACHI.jpg.webp',     overall:73 },
+  { id:28, name:'Carlão',           short:'Carlão',     num:9,  pos:'ATA', foto:FOTO_CARLAO,                       overall:87 },
+  { id:29, name:'Robson',           short:'Robson',     num:11, pos:'ATA', foto:BASE+'ROBSON.jpg.webp',            overall:84 },
+  { id:30, name:'Vinícius Paiva',   short:'V.Paiva',    num:16, pos:'ATA', foto:BASE+'VINICIUS-PAIVA.jpg.webp',    overall:78 },
+  { id:31, name:'Hélio Borges',     short:'H.Borges',   num:41, pos:'ATA', foto:BASE+'HELIO-BORGES.jpg.webp',      overall:75 },
+  { id:32, name:'Jardiel',          short:'Jardiel',    num:40, pos:'ATA', foto:BASE+'JARDIEL.jpg.webp',           overall:74 },
+  { id:33, name:'Nicolas Careca',   short:'N.Careca',   num:30, pos:'ATA', foto:BASE+'NICOLAS-CARECA.jpg.webp',    overall:72 },
+  { id:34, name:'Diego Mathias',    short:'D.Mathias',  num:27, pos:'ATA', foto:BASE+'DIEGO-MATHIAS.jpg.webp',     overall:71 },
+  { id:35, name:'Ronald Barcellos', short:'Ronald',     num:7,  pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp',  overall:79 },
+];
 
-function MarketCard({ player, onClick }: { player: Player; onClick: () => void }) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05, y: -5 }} whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      className="relative aspect-[3/4] bg-zinc-900 rounded-xl overflow-hidden border border-white/5 hover:border-yellow-500 cursor-pointer group shadow-2xl"
-    >
-      <img src={player.foto} className="absolute inset-0 w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500" alt={player.short} />
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/40 to-transparent h-1/2" />
-      <div className="absolute bottom-2 inset-x-0 text-center px-1">
-        <p className="text-[10px] font-black text-white uppercase tracking-tighter truncate">{player.short}</p>
-        <p className="text-yellow-500 text-[8px] font-bold tracking-widest">Nº {player.num}</p>
-      </div>
-      <div className="absolute top-1 left-1 bg-black/70 px-1.5 py-0.5 rounded-md border border-white/10 text-[7px] font-black text-white tracking-widest uppercase">
-        {player.pos}
-      </div>
-    </motion.div>
-  );
+// ── Formações com coordenadas calibradas para a imagem do estádio ──
+// y baixo = ataque (longe na imagem) | y alto = defesa (perto da câmera)
+const FORMATIONS: Record<string, Slot[]> = {
+  '4-2-3-1': [
+    { id:'gk',  x:50, y:88, pos:'GOL', label:'GOL' },
+    { id:'lb',  x:18, y:72, pos:'LAT', label:'LE'  },
+    { id:'cb1', x:38, y:75, pos:'ZAG', label:'ZAG' },
+    { id:'cb2', x:62, y:75, pos:'ZAG', label:'ZAG' },
+    { id:'rb',  x:82, y:72, pos:'LAT', label:'LD'  },
+    { id:'dm1', x:35, y:55, pos:'VOL', label:'VOL' },
+    { id:'dm2', x:65, y:55, pos:'VOL', label:'VOL' },
+    { id:'lw',  x:18, y:32, pos:'MEI', label:'PE'  },
+    { id:'am',  x:50, y:36, pos:'MEI', label:'MEI' },
+    { id:'rw',  x:82, y:32, pos:'MEI', label:'PD'  },
+    { id:'st',  x:50, y:14, pos:'ATA', label:'CA'  },
+  ],
+  '4-3-3': [
+    { id:'gk',  x:50, y:88, pos:'GOL', label:'GOL' },
+    { id:'lb',  x:18, y:72, pos:'LAT', label:'LE'  },
+    { id:'cb1', x:38, y:75, pos:'ZAG', label:'ZAG' },
+    { id:'cb2', x:62, y:75, pos:'ZAG', label:'ZAG' },
+    { id:'rb',  x:82, y:72, pos:'LAT', label:'LD'  },
+    { id:'cm1', x:30, y:52, pos:'VOL', label:'VOL' },
+    { id:'cm2', x:50, y:55, pos:'MEI', label:'MC'  },
+    { id:'cm3', x:70, y:52, pos:'MEI', label:'MC'  },
+    { id:'lw',  x:18, y:22, pos:'ATA', label:'PE'  },
+    { id:'st',  x:50, y:14, pos:'ATA', label:'CA'  },
+    { id:'rw',  x:82, y:22, pos:'ATA', label:'PD'  },
+  ],
+  '4-4-2': [
+    { id:'gk',  x:50, y:88, pos:'GOL', label:'GOL' },
+    { id:'lb',  x:18, y:72, pos:'LAT', label:'LE'  },
+    { id:'cb1', x:38, y:75, pos:'ZAG', label:'ZAG' },
+    { id:'cb2', x:62, y:75, pos:'ZAG', label:'ZAG' },
+    { id:'rb',  x:82, y:72, pos:'LAT', label:'LD'  },
+    { id:'lm',  x:18, y:50, pos:'MEI', label:'ME'  },
+    { id:'cm1', x:38, y:53, pos:'VOL', label:'VOL' },
+    { id:'cm2', x:62, y:53, pos:'VOL', label:'VOL' },
+    { id:'rm',  x:82, y:50, pos:'MEI', label:'MD'  },
+    { id:'st1', x:35, y:18, pos:'ATA', label:'ATA' },
+    { id:'st2', x:65, y:18, pos:'ATA', label:'ATA' },
+  ],
+};
+
+const POS_COLORS: Record<string, string> = {
+  GOL:'#F5C400', ZAG:'#22C55E', LAT:'#22C55E',
+  VOL:'#00F3FF', MEI:'#00F3FF', ATA:'#FF2D55',
+};
+
+// ── Mercado aberto até 90min antes do jogo ───────────────
+function mercadoAberto(dataHora?: string): boolean {
+  if (!dataHora) return true;
+  return new Date(dataHora).getTime() - 90 * 60_000 > Date.now();
 }
 
-function FieldCard({ player, label, isSelected, onClick, isCapitão = false, isHeroi = false }: { 
-  player: Player | null; label: string; isSelected: boolean; onClick: () => void; isCapitão?: boolean; isHeroi?: boolean;
+// ── Card FUT do jogador ──────────────────────────────────
+function FifaCard({
+  player, isCaptain, isHero, scale = 1, onClick,
+}: {
+  player: Player; isCaptain?: boolean; isHero?: boolean;
+  scale?: number; onClick?: () => void;
 }) {
+  const cor = isCaptain ? '#F5C400' : isHero ? '#FF2D55' : (POS_COLORS[player.pos] ?? '#888');
+  const W  = Math.round(54 * scale);
+  const H  = Math.round(W * 1.32);
+
   return (
-    <motion.div
-      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-      onClick={onClick}
-      className={`relative w-[62px] h-[85px] lg:w-[90px] lg:h-[120px] rounded-2xl overflow-hidden border-2 transition-all duration-300 shadow-2xl
-        ${isSelected ? 'border-yellow-500 shadow-[0_0_40px_#F5C400] z-50 scale-110' : 'border-white/20 bg-black/60 backdrop-blur-md'}`}
-    >
-      {player ? (
-        <>
-          <img src={player.foto} className="absolute inset-0 w-full h-full object-cover object-top" alt={player.short} />
-          {isCapitão && <div className="absolute top-1 left-1 bg-yellow-500 text-black text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg border border-black/20">C</div>}
-          {isHeroi && <div className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg border border-black/20">H</div>}
-          <div className="absolute bottom-0 inset-x-0 bg-black/80 py-1 text-center border-t border-white/10 backdrop-blur-sm">
-            <p className="text-white text-[9px] lg:text-[10px] font-black uppercase tracking-tighter truncate px-1">{player.short}</p>
-          </div>
-        </>
-      ) : (
-        <div className="h-full flex flex-col items-center justify-center text-yellow-500/30">
-          <span className="text-4xl font-light">+</span>
-          <span className="text-[8px] font-black text-white/50 uppercase tracking-widest">{label}</span>
+    <motion.button onClick={onClick}
+      whileTap={{ scale: 0.92 }}
+      whileHover={{ y: -2 }}
+      style={{ background:'none', border:'none', padding:0, position:'relative',
+        cursor: onClick ? 'pointer' : 'default' }}>
+      {/* Sombra projetada no chão */}
+      <div style={{
+        position:'absolute', bottom:-6, left:'50%',
+        width: W * 0.7, height: 6 * scale,
+        background:'radial-gradient(ellipse, rgba(0,0,0,0.7), transparent 70%)',
+        transform:'translateX(-50%)', filter:'blur(3px)', zIndex:-1,
+      }} />
+
+      {/* Frame do card */}
+      <div style={{
+        width: W, height: H,
+        borderRadius: 6 * scale,
+        overflow:'hidden',
+        border: `${2 * scale}px solid ${cor}`,
+        background:'linear-gradient(135deg,#1a1a1a,#000)',
+        boxShadow: `0 0 ${10 * scale}px ${cor}66, 0 ${4 * scale}px ${12 * scale}px rgba(0,0,0,0.8)`,
+      }}>
+        {/* Foto */}
+        <div style={{
+          width:'100%', height:'72%',
+          background:'#0d0d0d', position:'relative', overflow:'hidden',
+          display:'flex', alignItems:'center', justifyContent:'center',
+        }}>
+          {/* Overall */}
+          <div style={{
+            position:'absolute', top: 2 * scale, left: 3 * scale,
+            fontSize: 11 * scale, fontWeight:900, color:'#F5C400',
+            fontFamily:"'Barlow Condensed',sans-serif",
+            textShadow:'0 1px 2px #000, 0 0 4px rgba(0,0,0,0.8)',
+            zIndex:5,
+          }}>{player.overall}</div>
+
+          {/* Posição */}
+          <div style={{
+            position:'absolute', top: 2 * scale, right: 3 * scale,
+            fontSize: 7 * scale, fontWeight:900, color:'#fff',
+            fontFamily:"'Barlow Condensed',sans-serif",
+            textShadow:'0 1px 2px #000', zIndex:5,
+          }}>{player.pos}</div>
+
+          {/* Foto do jogador */}
+          <img src={player.foto} alt={player.short}
+            style={{ width:'100%', height:'100%', objectFit:'cover',
+              objectPosition:'center top', opacity:0.95 }}
+            onError={e => { (e.target as HTMLImageElement).style.opacity = '0'; }} />
+        </div>
+
+        {/* Nome (barra colorida) */}
+        <div style={{
+          height:'28%', background: cor,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          padding: `0 ${4 * scale}px`,
+        }}>
+          <span style={{
+            fontSize: 8 * scale, fontWeight:900,
+            color: cor === '#F5C400' ? '#000' : '#fff',
+            fontFamily:"'Barlow Condensed',sans-serif",
+            letterSpacing:'0.05em', textTransform:'uppercase',
+            whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+            maxWidth: W - 8 * scale,
+          }}>
+            {player.short}
+          </span>
+        </div>
+      </div>
+
+      {/* Badges Capitão/Herói */}
+      {(isCaptain || isHero) && (
+        <div style={{
+          position:'absolute', top: -6 * scale, right: -6 * scale,
+          width: 18 * scale, height: 18 * scale, borderRadius:'50%',
+          background: isCaptain ? '#F5C400' : '#FF2D55',
+          color: isCaptain ? '#000' : '#fff',
+          fontSize: 10 * scale, fontWeight:900,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          border:'2px solid #000', fontFamily:"'Barlow Condensed',sans-serif",
+          zIndex:10, boxShadow:`0 0 8px ${isCaptain ? '#F5C400' : '#FF2D55'}`,
+        }}>
+          {isCaptain ? 'C' : '★'}
         </div>
       )}
-    </motion.div>
+    </motion.button>
   );
 }
 
-// ==================== MAIN COMPONENT ====================
+// ── Slot vazio ────────────────────────────────────────────
+function EmptySlot({
+  label, scale = 1, active, onClick,
+}: { label: string; scale?: number; active?: boolean; onClick?: () => void }) {
+  const W = Math.round(54 * scale);
+  const H = Math.round(W * 1.32);
+  return (
+    <motion.button onClick={onClick}
+      whileTap={{ scale: 0.92 }}
+      animate={active ? {
+        boxShadow: [
+          '0 0 0 2px rgba(245,196,0,0.5), 0 0 12px rgba(245,196,0,0.3)',
+          '0 0 0 2px rgba(245,196,0,0.9), 0 0 24px rgba(245,196,0,0.6)',
+          '0 0 0 2px rgba(245,196,0,0.5), 0 0 12px rgba(245,196,0,0.3)',
+        ],
+      } : {}}
+      transition={active ? { duration: 1.5, repeat: Infinity } : {}}
+      style={{
+        width: W, height: H,
+        borderRadius: 6 * scale,
+        border: `${2 * scale}px dashed ${active ? 'rgba(245,196,0,0.7)' : 'rgba(255,255,255,0.25)'}`,
+        background:'rgba(0,0,0,0.55)', backdropFilter:'blur(3px)',
+        display:'flex', flexDirection:'column',
+        alignItems:'center', justifyContent:'center',
+        cursor:'pointer', padding:0,
+      }}>
+      <span style={{ fontSize: 18 * scale, color:'rgba(245,196,0,0.7)',
+        fontWeight:900, lineHeight:1, fontFamily:"'Barlow Condensed',sans-serif" }}>+</span>
+      <span style={{ fontSize: 8 * scale, fontWeight:900,
+        color: active ? '#F5C400' : 'rgba(255,255,255,0.5)',
+        letterSpacing:'0.1em', marginTop: 2 * scale,
+        fontFamily:"'Barlow Condensed',sans-serif" }}>{label}</span>
+    </motion.button>
+  );
+}
 
-// Nome alterado para bater com o que o seu page.tsx está importando (ou vice-versa)
-export default function EscalacaoFormacao({ jogoId }: ArenaProps) {
-  const [step, setStep] = useState<Step>('formation');
-  const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-3-3');
-  const [lineup, setLineup] = useState<Lineup>({});
-  const [reserves, setReserves] = useState<Lineup>({ r1: null, r2: null, r3: null, r4: null, r5: null });
-  const [capitãoId, setCapitãoId] = useState<string | null>(null);
-  const [heroiId, setHeroiId] = useState<string | null>(null);
-  const [activeSlot, setActiveSlot] = useState<string | null>(null);
-  const [filterPos, setFilterPos] = useState<string | null>(null);
+// ── Calcula escala do card baseado em y (perspectiva) ────
+// y=0 (topo/ataque, longe da câmera) → escala 0.78
+// y=100 (base/goleiro, perto da câmera) → escala 1.05
+function scalePorY(y: number): number {
+  return 0.78 + (y / 100) * 0.27;
+}
 
-  const slots = useMemo(() => FORMATIONS[formation], [formation]);
-  const filledCount = Object.values(lineup).filter(Boolean).length;
+// ── Componente Principal ──────────────────────────────────
+export default function EscalacaoFormacao({ jogoId }: Props) {
+  const [step,     setStep]     = useState<Step>('formation');
+  const [game,     setGame]     = useState<GameData>(initialGameData);
+  const [activeSlot, setActiveSlot] = useState<ActiveSlot>(null);
+  const [drawerPos,  setDrawerPos]  = useState<string | null>(null);
+  const [jogo,     setJogo]     = useState<Jogo | null>(null);
+  const [saving,   setSaving]   = useState(false);
 
-  const filteredPlayers = useMemo(() => 
-    filterPos ? PLAYERS.filter(p => p.pos === filterPos) : PLAYERS
-  , [filterPos]);
+  const slots = useMemo(() => FORMATIONS[game.formation] ?? FORMATIONS['4-2-3-1'], [game.formation]);
+  const fechado = !mercadoAberto(jogo?.data_hora);
 
-  const handleSelectPlayer = (player: Player) => {
-    if (!activeSlot) return;
-    if (activeSlot.startsWith('r')) {
-      setReserves(prev => ({ ...prev, [activeSlot]: player }));
-    } else {
-      setLineup(prev => ({ ...prev, [activeSlot]: player }));
+  // ── Busca jogo via REST ───────────────────────────────
+  useEffect(() => {
+    async function fetchJogo() {
+      const url = jogoId
+        ? `${SUPA_URL}/rest/v1/jogos?id=eq.${jogoId}&select=id,competicao,rodada,data_hora,local,transmissao,mandante:mandante_id(nome,escudo_url,sigla),visitante:visitante_id(nome,escudo_url,sigla)&limit=1`
+        : `${SUPA_URL}/rest/v1/jogos?ativo=eq.true&finalizado=eq.false&select=id,competicao,rodada,data_hora,local,transmissao,mandante:mandante_id(nome,escudo_url,sigla),visitante:visitante_id(nome,escudo_url,sigla)&order=data_hora.asc&limit=1`;
+      try {
+        const res = await fetch(url, {
+          headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` },
+          cache: 'no-store',
+        });
+        const data = await res.json();
+        if (data?.[0]) setJogo(data[0]);
+      } catch { /* mantém null */ }
     }
-    setActiveSlot(null);
-  };
+    fetchJogo();
+  }, [jogoId]);
+
+  // ── Adversário (Novo é visitante) ──────────────────────
+  const escudoAdv = jogo?.mandante?.escudo_url ?? null;
+  const nomeAdv   = jogo?.mandante?.nome ?? 'Adversário';
+  const lineupCount = Object.values(game.lineup).filter(Boolean).length;
+
+  // ── Pick player ───────────────────────────────────────
+  const handlePick = useCallback((player: Player) => {
+    if (activeSlot === 'captain_pick') {
+      setGame(g => ({ ...g, captainId: player.id }));
+      setActiveSlot(null); setDrawerPos(null);
+      return;
+    }
+    if (activeSlot === 'hero_pick') {
+      setGame(g => ({ ...g, heroId: player.id }));
+      setActiveSlot(null); setDrawerPos(null);
+      return;
+    }
+    if (!activeSlot) return;
+    setGame(g => ({ ...g, lineup: { ...g.lineup, [activeSlot]: player } }));
+    setActiveSlot(null); setDrawerPos(null);
+  }, [activeSlot]);
+
+  // ── Salvar escalação ──────────────────────────────────
+  const salvarEscalacao = useCallback(async () => {
+    setSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await fetch('/api/escalacao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            google_id:     session.user.id,
+            jogo_id:       jogo?.id,
+            formacao:      game.formation,
+            lineup:        game.lineup,
+            bench:         game.bench,
+            capitao_id:    game.captainId,
+            heroi_id:      game.heroId,
+            palpite_tigre: game.scoreTigre,
+            palpite_adv:   game.scoreAdv,
+          }),
+        });
+      }
+    } catch { /* segue para o reveal */ }
+    finally { setSaving(false); setStep('reveal'); }
+  }, [game, jogo]);
+
+  // ── Players filtrados pra o drawer ─────────────────────
+  const playersFiltered = useMemo(() => {
+    if (!activeSlot) return PLAYERS;
+    if (activeSlot === 'captain_pick' || activeSlot === 'hero_pick') {
+      return Object.values(game.lineup).filter(Boolean) as Player[];
+    }
+    if (drawerPos) return PLAYERS.filter(p => p.pos === drawerPos);
+    const slot = slots.find(s => s.id === activeSlot);
+    return slot ? PLAYERS.filter(p => p.pos === slot.pos) : PLAYERS;
+  }, [activeSlot, drawerPos, slots, game.lineup]);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-hidden font-sans selection:bg-yellow-500">
+    <div style={{
+      minHeight: '100svh', background: '#000', color: '#fff',
+      fontFamily: "'Barlow Condensed',Impact,sans-serif",
+      display: 'flex', flexDirection: 'column', position: 'relative',
+    }}>
+      <style>{`
+        @keyframes scan-led {0%{background-position:-200% center} 100%{background-position:200% center}}
+        @keyframes cta-pulse {0%,100%{box-shadow:0 0 16px rgba(245,196,0,0.4),0 0 32px rgba(245,196,0,0.2)} 50%{box-shadow:0 0 28px rgba(245,196,0,0.8),0 0 56px rgba(245,196,0,0.4)}}
+        .arena-scan{background:linear-gradient(90deg,transparent,#F5C400,#fff,#00F3FF,transparent);background-size:200%;animation:scan-led 3s linear infinite}
+      `}</style>
+
       <AnimatePresence mode="wait">
-        
+
+        {/* ═══ STEP 1 — FORMAÇÃO ════════════════════════════ */}
         {step === 'formation' && (
-          <motion.div key="f-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-6 bg-[radial-gradient(circle_at_center,_#111_0%,_#000_100%)]">
-            <img src={ESCUDO} className="w-24 mb-10" alt="Tigre" />
-            <h1 className="text-4xl lg:text-6xl font-black italic tracking-tighter mb-12 text-center uppercase">ESCOLHA A TÁTICA</h1>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-3xl">
+          <motion.div key="formation"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.96 }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', padding: '24px 20px',
+              background: 'radial-gradient(ellipse at top,#0a1929 0%,#000 70%)' }}>
+
+            <img src={ESCUDO} alt="Tigre"
+              style={{ width: 80, height: 80, marginBottom: 20,
+                filter: 'drop-shadow(0 0 16px rgba(245,196,0,0.5))' }} />
+
+            <div style={{ fontSize: 9, color: 'rgba(245,196,0,0.6)',
+              letterSpacing: '0.4em', fontWeight: 900, marginBottom: 6 }}>
+              🐯 ARENA TIGRE FC
+            </div>
+            <h1 style={{ fontSize: 28, fontWeight: 900, fontStyle: 'italic',
+              letterSpacing: '-0.02em', textTransform: 'uppercase',
+              marginBottom: 6, textAlign: 'center' }}>Escolha sua Tática</h1>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)',
+              letterSpacing: '0.3em', fontWeight: 700, marginBottom: 28, textAlign: 'center' }}>
+              A base do seu sucesso começa aqui
+            </p>
+
+            {jogo && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28,
+                background: 'rgba(245,196,0,0.06)', border: '1px solid rgba(245,196,0,0.15)',
+                borderRadius: 12, padding: '10px 16px' }}>
+                {escudoAdv && <img src={escudoAdv} alt={nomeAdv} style={{ width: 32, height: 32 }} />}
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: 9, color: 'rgba(245,196,0,0.5)',
+                    letterSpacing: '0.2em', fontWeight: 900 }}>PRÓXIMO JOGO</div>
+                  <div style={{ fontSize: 14, fontWeight: 900 }}>
+                    NOVO × {nomeAdv.toUpperCase()}
+                  </div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>
+                    {jogo.rodada} · {jogo.competicao}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {fechado && (
+              <div style={{ background: 'rgba(255,45,85,0.1)',
+                border: '1px solid rgba(255,45,85,0.3)', borderRadius: 10,
+                padding: '10px 16px', marginBottom: 20, fontSize: 12,
+                fontWeight: 900, color: '#FF2D55', letterSpacing: '0.1em' }}>
+                MERCADO FECHADO
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr',
+              gap: 10, width: '100%', maxWidth: 320 }}>
               {Object.keys(FORMATIONS).map(f => (
-                <button key={f} onClick={() => { setFormation(f); setStep('arena'); }}
-                  className="py-10 rounded-3xl font-black text-4xl border-2 border-white/5 bg-zinc-900/40 hover:border-yellow-500 hover:bg-yellow-500/10 transition-all italic">
+                <button key={f}
+                  onClick={() => { setGame(g => ({ ...g, formation: f })); setStep('picking'); }}
+                  disabled={fechado}
+                  style={{ background: 'rgba(255,255,255,0.04)',
+                    border: '2px solid rgba(255,255,255,0.1)', borderRadius: 16,
+                    padding: '20px 10px', fontFamily: "'Barlow Condensed',sans-serif",
+                    fontSize: 22, fontWeight: 900,
+                    color: fechado ? 'rgba(255,255,255,0.2)' : '#fff',
+                    cursor: fechado ? 'not-allowed' : 'pointer' }}>
                   {f}
                 </button>
               ))}
@@ -251,90 +471,524 @@ export default function EscalacaoFormacao({ jogoId }: ArenaProps) {
           </motion.div>
         )}
 
-        {step === 'arena' && (
-          <motion.div key="a-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-screen relative">
-            
+        {/* ═══ STEP 2 — PICKING (Mágico de Oz) ═══════════════ */}
+        {step === 'picking' && (
+          <motion.div key="picking"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column',
+              background: '#000' }}>
+
+            {/* HEADER */}
+            <div style={{ position: 'relative', padding: '14px 16px 10px',
+              background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
+              borderBottom: '1px solid rgba(245,196,0,0.2)', zIndex: 30 }}>
+              <div className="arena-scan" style={{ position: 'absolute',
+                top: 0, left: 0, right: 0, height: 2 }} />
+              <div style={{ display: 'flex', alignItems: 'center',
+                justifyContent: 'space-between', marginBottom: 8 }}>
+                <button onClick={() => setStep('formation')}
+                  style={{ background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8,
+                    padding: '6px 10px', fontSize: 9, fontWeight: 900,
+                    color: 'rgba(255,255,255,0.6)', letterSpacing: '0.15em',
+                    cursor: 'pointer', fontFamily: "'Barlow Condensed',sans-serif" }}>
+                  ← VOLTAR
+                </button>
+                <div style={{ fontSize: 10, fontWeight: 900, color: '#F5C400',
+                  letterSpacing: '0.2em', background: 'rgba(245,196,0,0.1)',
+                  border: '1px solid rgba(245,196,0,0.3)', borderRadius: 8,
+                  padding: '6px 12px' }}>
+                  {game.formation}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 14, fontWeight: 900,
+                  letterSpacing: '0.3em', color: '#F5C400',
+                  textShadow: '0 0 12px rgba(245,196,0,0.7)' }}>
+                  🐯 ARENA TIGRE FC
+                </div>
+                <div style={{ fontSize: 8, letterSpacing: '0.4em',
+                  color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginTop: 2 }}>
+                  — ESCALAÇÃO TITULAR · {lineupCount}/11 —
+                </div>
+              </div>
+            </div>
+
+            {/* STEPS BAR */}
+            <div style={{ display: 'flex', gap: 4, padding: '8px 16px',
+              justifyContent: 'center', background: 'rgba(0,0,0,0.8)' }}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} style={{ flex: 1, height: 3, borderRadius: 2,
+                  maxWidth: 60,
+                  background: i === 1 ? '#22C55E'
+                    : i === 2 ? '#F5C400'
+                    : 'rgba(255,255,255,0.08)',
+                  boxShadow: i === 2 ? '0 0 8px rgba(245,196,0,0.5)' : 'none' }} />
+              ))}
+            </div>
+
+            {/* CAMPO COM IMAGEM DE FUNDO + CARDS POR CIMA */}
+            <div style={{ position: 'relative', width: '100%',
+              aspectRatio: '1.27', overflow: 'hidden',
+              backgroundColor: '#0a1f0e',
+              backgroundImage: `url('${ARENA_BG}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center' }}>
+
+              {/* Overlay para escurecer levemente */}
+              <div style={{ position: 'absolute', inset: 0,
+                background: 'linear-gradient(180deg,rgba(0,0,0,0.15) 0%,rgba(0,0,0,0.05) 40%,rgba(0,0,0,0.3) 100%)',
+                pointerEvents: 'none' }} />
+
+              {/* Slots/cards posicionados sobre o campo */}
+              {slots.map(s => {
+                const scale = scalePorY(s.y);
+                const player = game.lineup[s.id];
+                return (
+                  <div key={s.id} style={{ position: 'absolute',
+                    left: `${s.x}%`, top: `${s.y}%`,
+                    transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+                    {player ? (
+                      <FifaCard
+                        player={player}
+                        scale={scale}
+                        isCaptain={player.id === game.captainId}
+                        isHero={player.id === game.heroId}
+                        onClick={() => { setActiveSlot(s.id); setDrawerPos(s.pos); }}
+                      />
+                    ) : (
+                      <EmptySlot
+                        label={s.label}
+                        scale={scale}
+                        active={activeSlot === s.id}
+                        onClick={() => { setActiveSlot(s.id); setDrawerPos(s.pos); }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* BOTÕES CAPITÃO/HERÓI/AVANÇAR */}
+            <div style={{ padding: '12px 14px 14px',
+              background: 'rgba(0,0,0,0.95)',
+              borderTop: '1px solid rgba(245,196,0,0.15)' }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                <button onClick={() => { setActiveSlot('captain_pick'); setDrawerPos(null); }}
+                  disabled={lineupCount === 0}
+                  style={{ flex: 1, padding: '10px', borderRadius: 8,
+                    border: '1px solid rgba(245,196,0,0.4)',
+                    background: game.captainId ? 'rgba(245,196,0,0.15)' : 'transparent',
+                    color: '#F5C400', fontFamily: "'Barlow Condensed',sans-serif",
+                    fontSize: 11, fontWeight: 900, letterSpacing: '0.15em',
+                    cursor: lineupCount === 0 ? 'not-allowed' : 'pointer',
+                    opacity: lineupCount === 0 ? 0.5 : 1 }}>
+                  C CAPITÃO {game.captainId ? '✓' : ''}
+                </button>
+                <button onClick={() => { setActiveSlot('hero_pick'); setDrawerPos(null); }}
+                  disabled={lineupCount === 0}
+                  style={{ flex: 1, padding: '10px', borderRadius: 8,
+                    border: '1px solid rgba(255,45,85,0.4)',
+                    background: game.heroId ? 'rgba(255,45,85,0.15)' : 'transparent',
+                    color: '#FF2D55', fontFamily: "'Barlow Condensed',sans-serif",
+                    fontSize: 11, fontWeight: 900, letterSpacing: '0.15em',
+                    cursor: lineupCount === 0 ? 'not-allowed' : 'pointer',
+                    opacity: lineupCount === 0 ? 0.5 : 1 }}>
+                  ★ HERÓI {game.heroId ? '✓' : ''}
+                </button>
+              </div>
+              <button onClick={() => setStep('score')}
+                disabled={lineupCount < 11}
+                style={{ width: '100%',
+                  background: lineupCount < 11 ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg,#F5C400,#D4A200)',
+                  border: 'none', borderRadius: 12,
+                  color: lineupCount < 11 ? 'rgba(255,255,255,0.3)' : '#000',
+                  fontFamily: "'Barlow Condensed',sans-serif", fontSize: 14, fontWeight: 900,
+                  letterSpacing: '0.2em', padding: '14px',
+                  cursor: lineupCount < 11 ? 'not-allowed' : 'pointer',
+                  animation: lineupCount === 11 ? 'cta-pulse 2s ease-in-out infinite' : 'none' }}>
+                {lineupCount < 11
+                  ? `ESCALE ${11 - lineupCount} JOGADOR${11 - lineupCount > 1 ? 'ES' : ''}`
+                  : 'DEFINIR PALPITE →'}
+              </button>
+            </div>
+
+            {/* DRAWER MERCADO */}
             <AnimatePresence>
               {activeSlot && (
-                <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30 }}
-                  className="fixed inset-y-0 right-0 w-full lg:w-[450px] bg-black/95 backdrop-blur-3xl border-l border-white/10 z-[100] flex flex-col">
-                  <div className="p-7 bg-zinc-950 border-b border-white/5 flex justify-between items-center">
-                    <h3 className="text-yellow-500 font-black italic text-3xl uppercase tracking-tighter">CONVOCAR</h3>
-                    <button onClick={() => setActiveSlot(null)} className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">✕</button>
-                  </div>
-                  
-                  <div className="flex gap-2 p-5 overflow-x-auto no-scrollbar bg-black/40">
-                    {['TODOS', 'GOL','ZAG','LAT','VOL','MEI','ATA'].map(pos => (
-                      <button key={pos} onClick={() => setFilterPos(pos === 'TODOS' ? null : pos)}
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black border ${filterPos === pos || (pos==='TODOS' && !filterPos) ? 'bg-yellow-500 text-black border-yellow-500' : 'bg-zinc-900/50 text-zinc-500 border-white/5'}`}>
-                        {pos}
-                      </button>
-                    ))}
+                <motion.div key="drawer"
+                  initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                  transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+                  style={{ position: 'fixed', left: 0, right: 0, bottom: 0,
+                    background: 'linear-gradient(180deg,#0a0a0a 0%,#000 100%)',
+                    borderTop: '2px solid #F5C400',
+                    borderRadius: '20px 20px 0 0', padding: '14px 14px 18px',
+                    zIndex: 100, maxHeight: '78svh',
+                    display: 'flex', flexDirection: 'column',
+                    boxShadow: '0 -10px 40px rgba(245,196,0,0.15)' }}>
+
+                  {/* Handle */}
+                  <div style={{ width: 40, height: 4,
+                    background: 'rgba(255,255,255,0.2)', borderRadius: 2,
+                    margin: '0 auto 12px' }} />
+
+                  {/* Header drawer */}
+                  <div style={{ display: 'flex', alignItems: 'center',
+                    justifyContent: 'space-between', marginBottom: 12,
+                    paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: '#F5C400',
+                        letterSpacing: '0.15em',
+                        textShadow: '0 0 8px rgba(245,196,0,0.4)' }}>
+                        {activeSlot === 'captain_pick' ? '🏆 ESCOLHA O CAPITÃO'
+                          : activeSlot === 'hero_pick'  ? '★ ESCOLHA O HERÓI'
+                          : `${drawerPos ?? 'MERCADO'} · SELECIONE`}
+                      </div>
+                      <div style={{ fontSize: 8, fontWeight: 700,
+                        color: 'rgba(255,255,255,0.4)',
+                        letterSpacing: '0.2em', marginTop: 2 }}>
+                        {playersFiltered.length} JOGADORES DISPONÍVEIS
+                      </div>
+                    </div>
+                    <button onClick={() => { setActiveSlot(null); setDrawerPos(null); }}
+                      style={{ background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
+                        width: 32, height: 32, color: 'rgba(255,255,255,0.5)',
+                        fontSize: 14, fontWeight: 900, cursor: 'pointer' }}>×</button>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-5 grid grid-cols-3 gap-4 pb-40">
-                    {filteredPlayers.map(p => (
-                      <MarketCard key={p.id} player={p} onClick={() => handleSelectPlayer(p)} />
+                  {/* Filtros de posição (só pra slot, não pra capitão/herói) */}
+                  {!['captain_pick', 'hero_pick'].includes(activeSlot) && (
+                    <div style={{ display: 'flex', gap: 4, marginBottom: 10,
+                      overflowX: 'auto', paddingBottom: 2 }}>
+                      {['GOL','LAT','ZAG','VOL','MEI','ATA'].map(p => (
+                        <button key={p}
+                          onClick={() => setDrawerPos(p)}
+                          style={{ flexShrink: 0, padding: '6px 12px',
+                            borderRadius: 6, fontSize: 10, fontWeight: 900,
+                            letterSpacing: '0.1em',
+                            background: drawerPos === p ? 'rgba(245,196,0,0.18)' : 'rgba(255,255,255,0.04)',
+                            border: drawerPos === p ? '1px solid #F5C400' : '1px solid rgba(255,255,255,0.08)',
+                            color: drawerPos === p ? '#F5C400' : 'rgba(255,255,255,0.5)',
+                            cursor: 'pointer',
+                            fontFamily: "'Barlow Condensed',sans-serif" }}>
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Grid de cards */}
+                  <div style={{ flex: 1, overflowY: 'auto',
+                    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8,
+                    paddingRight: 4 }}>
+                    {playersFiltered.map(p => (
+                      <button key={p.id} onClick={() => handlePick(p)}
+                        style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.04),rgba(0,0,0,0.6))',
+                          border: '1.5px solid rgba(245,196,0,0.15)',
+                          borderRadius: 8, padding: 6, cursor: 'pointer',
+                          textAlign: 'center', display: 'flex',
+                          flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <div style={{ width: '100%', aspectRatio: '1',
+                          background: '#0d0d0d', borderRadius: 6,
+                          overflow: 'hidden', position: 'relative',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ position: 'absolute', top: 2, left: 3,
+                            fontSize: 10, fontWeight: 900, color: '#F5C400',
+                            fontFamily: "'Barlow Condensed',sans-serif",
+                            textShadow: '0 1px 2px #000', zIndex: 5 }}>{p.overall}</span>
+                          <span style={{ position: 'absolute', top: 2, right: 3,
+                            fontSize: 7, fontWeight: 900, color: '#fff',
+                            fontFamily: "'Barlow Condensed',sans-serif",
+                            textShadow: '0 1px 2px #000', zIndex: 5 }}>{p.pos}</span>
+                          <img src={p.foto} alt={p.short}
+                            style={{ width: '100%', height: '100%',
+                              objectFit: 'cover', objectPosition: 'center top' }}
+                            onError={e => { (e.target as HTMLImageElement).style.opacity = '0.2'; }} />
+                        </div>
+                        <div style={{ fontSize: 9, fontWeight: 900, color: '#fff',
+                          fontFamily: "'Barlow Condensed',sans-serif",
+                          textTransform: 'uppercase', letterSpacing: '0.05em',
+                          whiteSpace: 'nowrap', overflow: 'hidden',
+                          textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                          {p.short}
+                        </div>
+                      </button>
                     ))}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
+          </motion.div>
+        )}
 
-            <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
-               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Arena" />
-               
-               <div className="relative w-full h-full max-w-[1400px] aspect-video">
-                  {slots.map((s) => (
-                    <div key={s.id} className="absolute" style={{ left: `${s.x}%`, top: `${s.y}%`, transform: 'translate(-50%, -50%)' }}>
-                      <FieldCard 
-                        player={lineup[s.id] || null} 
-                        label={s.label} 
-                        isSelected={activeSlot === s.id} 
-                        onClick={() => setActiveSlot(s.id)}
-                        isCapitão={capitãoId === s.id}
-                        isHeroi={heroiId === s.id}
-                      />
+        {/* ═══ STEP 3 — PALPITE ═════════════════════════════ */}
+        {step === 'score' && (
+          <motion.div key="score"
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column',
+              justifyContent: 'center', padding: '24px 20px',
+              background: 'radial-gradient(ellipse at center,#0a1929 0%,#000 70%)' }}>
+
+            <div style={{ textAlign: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.35em',
+                color: 'rgba(245,196,0,0.6)' }}>STEP 4 · PALPITE</span>
+            </div>
+            <h2 style={{ textAlign: 'center', fontSize: 28, fontWeight: 900,
+              fontStyle: 'italic', textTransform: 'uppercase',
+              letterSpacing: '-0.02em', marginBottom: 4 }}>
+              Crave o Resultado
+            </h2>
+            <p style={{ textAlign: 'center', fontSize: 10,
+              color: 'rgba(255,255,255,0.3)', letterSpacing: '0.15em',
+              marginBottom: 28 }}>
+              Placar exato → <span style={{ color: '#F5C400' }}>+15 pts</span> &nbsp;·&nbsp;
+              Vencedor certo → <span style={{ color: '#22C55E' }}>+5 pts</span>
+            </p>
+
+            <div style={{ background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24,
+              padding: '28px 16px', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center',
+                justifyContent: 'center', gap: 16 }}>
+                {/* Tigre */}
+                <div style={{ display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', gap: 12 }}>
+                  <img src={ESCUDO} alt="Tigre" style={{ width: 56, height: 56,
+                    filter: 'drop-shadow(0 0 10px rgba(245,196,0,0.4))' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={() => setGame(g => ({ ...g, scoreTigre: Math.max(0, g.scoreTigre - 1) }))}
+                      style={{ width: 28, height: 28, borderRadius: 8,
+                        background: 'rgba(255,255,255,0.08)', border: 'none',
+                        color: '#fff', fontSize: 18, cursor: 'pointer' }}>−</button>
+                    <div style={{ width: 64, height: 80,
+                      background: 'rgba(0,0,0,0.6)', border: '2px solid #F5C400',
+                      borderRadius: 16, display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontSize: 48, fontWeight: 900,
+                      color: '#F5C400', fontStyle: 'italic',
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      textShadow: '0 0 20px rgba(245,196,0,0.5)' }}>
+                      {game.scoreTigre}
                     </div>
-                  ))}
-               </div>
+                    <button onClick={() => setGame(g => ({ ...g, scoreTigre: g.scoreTigre + 1 }))}
+                      style={{ width: 28, height: 28, borderRadius: 8,
+                        background: 'rgba(245,196,0,0.15)', border: 'none',
+                        color: '#F5C400', fontSize: 18, cursor: 'pointer' }}>+</button>
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 900,
+                    color: 'rgba(245,196,0,0.6)', letterSpacing: '0.2em' }}>NOVO</span>
+                </div>
 
-               {/* BARRA INFERIOR COM RESERVAS E AÇÕES */}
-               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-5xl flex flex-col gap-4">
-                  
-                  {/* SLOTS DE RESERVAS (ESTILO CYBERPUNK) */}
-                  <div className="flex justify-center gap-3">
-                    {Object.keys(reserves).map((rid, idx) => (
-                      <div key={rid} onClick={() => setActiveSlot(rid)} className={`cursor-pointer w-14 h-14 rounded-xl border-2 transition-all flex items-center justify-center overflow-hidden ${activeSlot === rid ? 'border-yellow-500 scale-110' : 'border-white/10 bg-black/60'}`}>
-                        {reserves[rid] ? (
-                          <img src={reserves[rid]!.foto} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-white/20 text-xs font-bold">R{idx+1}</span>
-                        )}
+                <div style={{ fontSize: 24, fontWeight: 900, fontStyle: 'italic',
+                  color: 'rgba(255,255,255,0.2)' }}>×</div>
+
+                {/* Adversário */}
+                <div style={{ display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', gap: 12 }}>
+                  {escudoAdv
+                    ? <img src={escudoAdv} alt={nomeAdv} style={{ width: 56, height: 56 }} />
+                    : <div style={{ width: 56, height: 56,
+                        background: 'rgba(255,255,255,0.08)', borderRadius: 10 }} />
+                  }
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={() => setGame(g => ({ ...g, scoreAdv: Math.max(0, g.scoreAdv - 1) }))}
+                      style={{ width: 28, height: 28, borderRadius: 8,
+                        background: 'rgba(255,255,255,0.08)', border: 'none',
+                        color: '#fff', fontSize: 18, cursor: 'pointer' }}>−</button>
+                    <div style={{ width: 64, height: 80,
+                      background: 'rgba(0,0,0,0.6)',
+                      border: '2px solid rgba(255,255,255,0.2)',
+                      borderRadius: 16, display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontSize: 48, fontWeight: 900,
+                      color: 'rgba(255,255,255,0.6)', fontStyle: 'italic',
+                      fontFamily: "'Barlow Condensed',sans-serif" }}>
+                      {game.scoreAdv}
+                    </div>
+                    <button onClick={() => setGame(g => ({ ...g, scoreAdv: g.scoreAdv + 1 }))}
+                      style={{ width: 28, height: 28, borderRadius: 8,
+                        background: 'rgba(255,255,255,0.08)', border: 'none',
+                        color: '#fff', fontSize: 18, cursor: 'pointer' }}>+</button>
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 900,
+                    color: 'rgba(255,255,255,0.4)', letterSpacing: '0.2em' }}>
+                    {nomeAdv.toUpperCase().slice(0, 10)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={salvarEscalacao} disabled={saving}
+              style={{ width: '100%',
+                background: 'linear-gradient(135deg,#F5C400,#D4A200)',
+                border: 'none', borderRadius: 14, color: '#000',
+                fontFamily: "'Barlow Condensed',sans-serif", fontSize: 14,
+                fontWeight: 900, letterSpacing: '0.2em', padding: '15px',
+                cursor: saving ? 'wait' : 'pointer',
+                opacity: saving ? 0.7 : 1,
+                animation: saving ? 'none' : 'cta-pulse 2s ease-in-out infinite' }}>
+              {saving ? 'SALVANDO...' : 'CRAVAR PALPITE — VER MEU TIME →'}
+            </button>
+            <button onClick={() => setStep('picking')}
+              style={{ width: '100%', marginTop: 10, background: 'none',
+                border: 'none', color: 'rgba(255,255,255,0.25)',
+                fontFamily: "'Barlow Condensed',sans-serif", fontSize: 10,
+                fontWeight: 700, letterSpacing: '0.2em', cursor: 'pointer' }}>
+              ← Ajustar time
+            </button>
+          </motion.div>
+        )}
+
+        {/* ═══ STEP 4 — REVEAL (CARD COMPARTILHÁVEL) ═════════ */}
+        {step === 'reveal' && (
+          <motion.div key="reveal"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', overflowY: 'auto', padding: '0 0 24px',
+              background: 'radial-gradient(ellipse at top,#0a1929 0%,#000 70%)' }}>
+
+            <div style={{ width: '100%', textAlign: 'center',
+              padding: '16px 16px 12px', background: 'rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(12px)',
+              borderBottom: '1px solid rgba(245,196,0,0.12)' }}>
+              <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.35em',
+                color: '#22C55E', marginBottom: 4 }}>
+                ✓ TIME SALVO NO BANCO!
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 900, fontStyle: 'italic',
+                textTransform: 'uppercase', letterSpacing: '-0.02em', margin: 0 }}>
+                SALVE & DESAFIE
+              </h2>
+              <p style={{ fontSize: 13, margin: '2px 0 0',
+                color: 'rgba(255,255,255,0.5)' }}>
+                A GALERA 🐯
+              </p>
+            </div>
+
+            {/* Card final compartilhável: Arena + jogadores */}
+            <div style={{ width: '100%', maxWidth: 380, padding: '12px' }}>
+              <div style={{ background: '#0a0a0a',
+                border: '2px solid rgba(245,196,0,0.3)',
+                borderRadius: 16, overflow: 'hidden',
+                boxShadow: '0 0 40px rgba(245,196,0,0.15)' }}>
+
+                {/* Header do card */}
+                <div style={{ padding: '10px 14px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: 'rgba(0,0,0,0.6)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <img src={ESCUDO} alt="Tigre" style={{ width: 28, height: 28 }} />
+                    <div>
+                      <div style={{ fontSize: 8,
+                        color: 'rgba(245,196,0,0.6)',
+                        letterSpacing: '0.3em', fontWeight: 900 }}>
+                        🐯 ARENA TIGRE FC
                       </div>
-                    ))}
+                      <div style={{ fontSize: 13, fontWeight: 900,
+                        fontStyle: 'italic', color: '#fff', lineHeight: 1 }}>
+                        MEU TIME ESTÁ PRONTO!
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(245,196,0,0.1)',
+                    border: '1px solid rgba(245,196,0,0.3)',
+                    borderRadius: 6, padding: '4px 10px',
+                    fontSize: 11, fontWeight: 900, color: '#F5C400',
+                    letterSpacing: '0.15em' }}>
+                    {game.formation}
+                  </div>
+                </div>
+
+                {/* Campo final com a Arena */}
+                <div style={{ position: 'relative', width: '100%',
+                  aspectRatio: '1.27', overflow: 'hidden',
+                  backgroundImage: `url('${ARENA_BG}')`,
+                  backgroundSize: 'cover', backgroundPosition: 'center' }}>
+
+                  <div style={{ position: 'absolute', inset: 0,
+                    background: 'linear-gradient(180deg,rgba(0,0,0,0.15) 0%,rgba(0,0,0,0.05) 40%,rgba(0,0,0,0.3) 100%)',
+                    pointerEvents: 'none' }} />
+
+                  {slots.map((s, i) => {
+                    const player = game.lineup[s.id];
+                    if (!player) return null;
+                    const scale = scalePorY(s.y);
+                    return (
+                      <motion.div key={s.id}
+                        initial={{ opacity: 0, y: -20, scale: 0.5 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ delay: i * 0.08, type: 'spring', damping: 15 }}
+                        style={{ position: 'absolute',
+                          left: `${s.x}%`, top: `${s.y}%`,
+                          transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+                        <FifaCard player={player} scale={scale}
+                          isCaptain={player.id === game.captainId}
+                          isHero={player.id === game.heroId} />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
+                {/* Footer do card */}
+                <div style={{ background: '#080808', padding: '10px 14px 14px',
+                  borderTop: '1px solid rgba(245,196,0,0.15)' }}>
+                  <div style={{ display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 7, color: 'rgba(245,196,0,0.5)',
+                        letterSpacing: '0.2em', fontWeight: 900 }}>CAPITÃO</div>
+                      <div style={{ fontSize: 12, fontWeight: 900,
+                        color: '#F5C400', marginTop: 2 }}>
+                        {PLAYERS.find(p => p.id === game.captainId)?.short ?? '—'}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 7, color: 'rgba(255,45,85,0.5)',
+                        letterSpacing: '0.2em', fontWeight: 900 }}>HERÓI</div>
+                      <div style={{ fontSize: 12, fontWeight: 900,
+                        color: '#FF2D55', marginTop: 2 }}>
+                        {PLAYERS.find(p => p.id === game.heroId)?.short ?? '—'}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.3)',
+                        letterSpacing: '0.2em', fontWeight: 900 }}>PALPITE</div>
+                      <div style={{ fontSize: 12, fontWeight: 900,
+                        color: '#fff', marginTop: 2 }}>
+                        {game.scoreTigre}×{game.scoreAdv}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 p-5 rounded-[2.5rem] flex justify-between items-center shadow-2xl">
-                    <div className="flex items-center gap-4">
-                      <img src={ESCUDO} className="w-8" alt="Logo" />
-                      <div className="leading-tight">
-                        <p className="text-white text-xl font-black italic uppercase tracking-tighter">ARENA TIGRE</p>
-                        <p className="text-[9px] font-black text-yellow-500 uppercase tracking-widest">{filledCount}/11 TITULARES</p>
-                      </div>
-                    </div>
+                  <button style={{ width: '100%',
+                    background: 'linear-gradient(135deg,#F5C400,#D4A200)',
+                    border: 'none', borderRadius: 10, color: '#000',
+                    fontFamily: "'Barlow Condensed',sans-serif", fontSize: 13,
+                    fontWeight: 900, letterSpacing: '0.15em', padding: '14px',
+                    cursor: 'pointer',
+                    animation: 'cta-pulse 2s ease-in-out infinite' }}>
+                    📸 SALVAR STORY & COMPARTILHAR
+                  </button>
 
-                    <div className="flex gap-2">
-                      <button onClick={() => setStep('formation')} className="px-5 py-3 rounded-xl bg-white/5 text-[10px] font-black border border-white/5">TÁTICA</button>
-                      {filledCount === 11 && (
-                        <button className="bg-yellow-500 text-black px-8 py-3 rounded-xl font-black italic uppercase text-sm">PRÓXIMO →</button>
-                      )}
-                    </div>
+                  <div style={{ textAlign: 'center', fontSize: 8,
+                    color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em',
+                    marginTop: 8, fontWeight: 700 }}>
+                    onovorizontino.com.br/tigre-fc
                   </div>
-               </div>
+                </div>
+              </div>
+
+              <button onClick={() => { setStep('picking'); setGame(g => ({ ...g })); }}
+                style={{ width: '100%', marginTop: 16, background: 'none',
+                  border: 'none', color: 'rgba(255,255,255,0.4)',
+                  fontFamily: "'Barlow Condensed',sans-serif", fontSize: 11,
+                  fontWeight: 700, letterSpacing: '0.2em', cursor: 'pointer',
+                  padding: '8px' }}>
+                ← EDITAR ESCALAÇÃO
+              </button>
             </div>
           </motion.div>
         )}
+
       </AnimatePresence>
     </div>
   );
