@@ -1,37 +1,22 @@
 'use client';
 
-/**
- * ArenaTigreFC v5 — DRAG & DROP + GEOMETRIA AVANÇADA
- * - Drag do mercado → campo, campo → campo (swap), campo → reservas
- * - Click-to-assign bidirecional com glow cyan (origem) / amarelo (destino)
- * - Coordenadas custom persistidas por slot (top%, left%)
- * - Z-index dinâmico durante drag
- * - Geometria de assets: foto à esquerda no mercado, à direita no campo
- * - Criado por Felipe Makarios - Arena Tigre FC
- */
-
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 
-// ── Assets ────────────────────────────────────────────────
-const BASE       = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
-const ESCUDO     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+// ── Assets & Config ───────────────────────────────────────
+const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const STADIUM_BG = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
 
-// ── Tipos ─────────────────────────────────────────────────
 type Player = { id: number; name: string; short: string; num: number; pos: string; foto: string; };
-type SlotState = { player: Player | null; x: number; y: number };
+type SlotState = { player: Player | null; x: number; y: number; label: string };
 type SlotMap = Record<string, SlotState>;
-type Lineup = Record<string, Player | null>;
-type Step   = 'formation' | 'arena' | 'summary';
-interface Slot { id: string; x: number; y: number; label: string; pos: string; }
+type Step = 'formation' | 'arena' | 'summary';
 
-// Interface para as Props do Componente
 interface ArenaTigreFCProps {
   jogoId?: number;
 }
 
-// ── 39 Jogadores ──────────────────────────────────────────
+// ── Lista de Jogadores ────────────────────────────────────
 const PLAYERS: Player[] = [
   { id:1,  name:'César Augusto',    short:'César',      num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id:2,  name:'Jordi',            short:'Jordi',      num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
@@ -46,7 +31,7 @@ const PLAYERS: Player[] = [
   { id:11, name:'Eduardo Brock',    short:'E.Brock',    num:5,  pos:'ZAG', foto:BASE+'EDUARDO-BROCK.jpg.webp' },
   { id:12, name:'Patrick',          short:'Patrick',    num:4,  pos:'ZAG', foto:BASE+'PATRICK.jpg.webp' },
   { id:13, name:'Gabriel Bahia',    short:'G.Bahia',    num:14, pos:'ZAG', foto:BASE+'GABRIEL-BAHIA.jpg.webp' },
-  { id:14, name:'Carlinhos',         short:'Carlinhos',  num:25, pos:'ZAG', foto:BASE+'CARLINHOS.jpg.webp' },
+  { id:14, name:'Carlinhos',        short:'Carlinhos',  num:25, pos:'ZAG', foto:BASE+'CARLINHOS.jpg.webp' },
   { id:15, name:'Alemão',           short:'Alemão',     num:28, pos:'ZAG', foto:BASE+'ALEMAO.jpg.webp' },
   { id:16, name:'Renato Palm',      short:'R.Palm',     num:24, pos:'ZAG', foto:BASE+'RENATO-PALM.jpg.webp' },
   { id:17, name:'Alvariño',         short:'Alvariño',   num:35, pos:'ZAG', foto:BASE+'IVAN-ALVARINO.jpg.webp' },
@@ -74,222 +59,247 @@ const PLAYERS: Player[] = [
   { id:39, name:'Ronald Barcellos', short:'Ronald',     num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-const FORMATIONS: Record<string, Slot[]> = {
+const FORMATIONS = {
   '4-3-3': [
-    { id:'gk',  x:50, y:82, pos:'GOL', label:'GOL' },
-    { id:'rb',  x:80, y:68, pos:'LAT', label:'LD'  },
-    { id:'cb1', x:62, y:72, pos:'ZAG', label:'ZAG' },
-    { id:'cb2', x:38, y:72, pos:'ZAG', label:'ZAG' },
-    { id:'lb',  x:20, y:68, pos:'LAT', label:'LE'  },
-    { id:'cm1', x:32, y:50, pos:'MEI', label:'MC'  },
-    { id:'cm2', x:50, y:54, pos:'VOL', label:'VOL' },
-    { id:'cm3', x:68, y:50, pos:'MEI', label:'MC'  },
-    { id:'rw',  x:70, y:30, pos:'ATA', label:'PD'  },
-    { id:'st',  x:50, y:25, pos:'ATA', label:'CA'  },
-    { id:'lw',  x:30, y:30, pos:'ATA', label:'PE'  },
+    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:85, y:65, label:'LD' },
+    { id:'cb1', x:65, y:75, label:'ZAG' }, { id:'cb2', x:35, y:75, label:'ZAG' },
+    { id:'lb', x:15, y:65, label:'LE' }, { id:'cm1', x:50, y:55, label:'VOL' },
+    { id:'cm2', x:30, y:45, label:'MC' }, { id:'cm3', x:70, y:45, label:'MC' },
+    { id:'rw', x:80, y:25, label:'PD' }, { id:'st', x:50, y:15, label:'CA' },
+    { id:'lw', x:20, y:25, label:'PE' }
   ],
   '4-4-2': [
-    { id:'gk',  x:50, y:82, pos:'GOL', label:'GOL' },
-    { id:'rb',  x:80, y:68, pos:'LAT', label:'LD'  },
-    { id:'cb1', x:62, y:72, pos:'ZAG', label:'ZAG' },
-    { id:'cb2', x:38, y:72, pos:'ZAG', label:'ZAG' },
-    { id:'lb',  x:20, y:68, pos:'LAT', label:'LE'  },
-    { id:'rm',  x:75, y:48, pos:'MEI', label:'MD'  },
-    { id:'cm1', x:40, y:52, pos:'MEI', label:'MC'  },
-    { id:'cm2', x:60, y:52, pos:'MEI', label:'MC'  },
-    { id:'lm',  x:25, y:48, pos:'MEI', label:'ME'  },
-    { id:'st1', x:42, y:28, pos:'ATA', label:'ATA' },
-    { id:'st2', x:58, y:28, pos:'ATA', label:'ATA' },
+    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:85, y:65, label:'LD' },
+    { id:'cb1', x:65, y:75, label:'ZAG' }, { id:'cb2', x:35, y:75, label:'ZAG' },
+    { id:'lb', x:15, y:65, label:'LE' }, { id:'cm1', x:40, y:50, label:'MC' },
+    { id:'cm2', x:60, y:50, label:'MC' }, { id:'rm', x:80, y:45, label:'MD' },
+    { id:'lm', x:20, y:45, label:'ME' }, { id:'st1', x:40, y:20, label:'ATA' },
+    { id:'st2', x:60, y:20, label:'ATA' }
   ]
 };
 
-function scalePorY(y: number): number {
-  const min = 0.95, max = 1.45;
-  const norm = Math.max(0, Math.min(1, (y - 25) / (82 - 25)));
-  return min + norm * (max - min);
-}
-
-function MarketCard({ player, onClick, onDragStart, onDragEnd, isEscalado, isOriginSelected }: any) {
+// ── Componentes de UI ─────────────────────────────────────
+function MarketCard({ player, isEscalado, isOrigin, onClick, onDragStart, onDragEnd }: any) {
   return (
     <motion.div
-      drag
-      dragMomentum={false}
-      onDragStart={onDragStart}
-      onDragEnd={(_, info) => onDragEnd(info)}
+      drag dragMomentum={false} onDragStart={onDragStart} onDragEnd={(_, info) => onDragEnd(info)}
       onClick={onClick}
-      className={`relative h-[88px] rounded-xl overflow-hidden border-2 cursor-grab active:cursor-grabbing flex items-stretch transition-all ${
-        isOriginSelected ? 'border-cyan-400 bg-cyan-500/10 shadow-[0_0_20px_cyan]' : 
-        isEscalado ? 'border-yellow-500/60 bg-yellow-500/10' : 'border-white/10 bg-zinc-900/60'
+      className={`relative h-20 rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing flex items-stretch transition-all ${
+        isOrigin ? 'border-cyan-400 shadow-[0_0_15px_cyan]' : 
+        isEscalado ? 'border-yellow-500/50 opacity-50' : 'border-white/10 bg-zinc-900/80'
       }`}
     >
-      <div className="relative w-[88px] flex-shrink-0 bg-black">
-        <img src={player.foto} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '50% 12%' }} />
+      <div className="w-16 bg-black flex-shrink-0">
+        <img src={player.foto} className="w-full h-full object-cover" style={{ objectPosition: '50% 15%' }} />
       </div>
-      <div className="flex-1 px-3 py-2 flex flex-col justify-between">
-        <div>
-          <p className="text-[12px] font-black text-white uppercase truncate leading-tight">{player.short}</p>
-          <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">{player.pos}</p>
-        </div>
-        <span className="text-yellow-500 text-[14px] font-black italic">{player.num}</span>
+      <div className="flex-1 p-2 flex flex-col justify-center">
+        <p className="text-[11px] font-black uppercase truncate">{player.short}</p>
+        <p className="text-[9px] text-yellow-500 font-bold">{player.pos} • {player.num}</p>
       </div>
     </motion.div>
   );
 }
 
-function FieldCard({ player, label, isSelected, isOriginSelected, onClick, onDragStart, onDragEnd, scale, draggable }: any) {
-  const W = Math.round(92 * scale);
-  const H = Math.round(124 * scale);
-
+function FieldCard({ slotId, player, label, isSelected, isOrigin, scale, onClick, onDragStart, onDragEnd, fieldRef }: any) {
+  const size = 85 * scale;
   return (
     <motion.div
-      drag={draggable}
-      dragMomentum={false}
-      onDragStart={onDragStart}
-      onDragEnd={(_, info) => onDragEnd(info)}
+      drag dragMomentum={false} dragConstraints={fieldRef}
+      onDragStart={onDragStart} onDragEnd={(_, info) => onDragEnd(info)}
       onClick={onClick}
-      style={{ width: W, height: H, zIndex: isSelected ? 9999 : 'auto' }}
-      className={`relative rounded-xl overflow-hidden border-2 transition-all flex flex-col items-center justify-center ${
-        isOriginSelected ? 'border-cyan-400 shadow-[0_0_25px_cyan]' :
-        isSelected ? 'border-yellow-500 shadow-[0_0_25px_rgba(245,196,0,0.8)]' :
-        player ? 'border-white/30' : 'border-yellow-500/40 border-dashed bg-black/50'
+      style={{ width: size, height: size * 1.3, zIndex: isSelected ? 100 : 10 }}
+      className={`relative rounded-xl overflow-hidden border-2 transition-all flex flex-col items-center justify-center cursor-move ${
+        isOrigin ? 'border-cyan-400 shadow-[0_0_20px_cyan]' :
+        isSelected ? 'border-yellow-400 shadow-[0_0_20px_yellow]' :
+        player ? 'border-white/40 bg-black/40' : 'border-dashed border-white/20 bg-black/20'
       }`}
     >
       {player ? (
         <>
-          <img src={player.foto} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '70% 10%' }} />
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black via-black/80 to-transparent" />
-          <div className="absolute bottom-0 w-full p-1 bg-black/90 text-center border-t border-white/10">
-            <p className="text-[10px] font-black text-white uppercase">{player.short}</p>
-            <p className="text-[8px] text-yellow-500 font-bold">{player.pos} · {player.num}</p>
+          <img src={player.foto} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '50% 15%' }} />
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
+          <div className="absolute bottom-0 w-full p-1 bg-black/60 text-center">
+            <p className="text-[9px] font-black text-white uppercase">{player.short}</p>
           </div>
         </>
       ) : (
-        <span className="text-yellow-500/50 text-[10px] font-black">{label}</span>
+        <span className="text-[10px] font-black text-white/30">{label}</span>
       )}
     </motion.div>
   );
 }
 
-// Componente Exportado com suporte a Props (jogoId)
+// ── Componente Principal ──────────────────────────────────
 export default function ArenaTigreFC({ jogoId }: ArenaTigreFCProps) {
   const [step, setStep] = useState<Step>('formation');
   const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-3-3');
   const [slotMap, setSlotMap] = useState<SlotMap>({});
+  const [bench, setBench] = useState<(Player | null)[]>(Array(7).fill(null));
+  
+  const [origin, setOrigin] = useState<{ type: 'market' | 'field' | 'bench', id: any, player: Player } | null>(null);
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
-  const [originPlayer, setOriginPlayer] = useState<Player | null>(null);
-  const [originSlot, setOriginSlot] = useState<string | null>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
 
+  // Iniciar Formação
   useEffect(() => {
     const initial: SlotMap = {};
     FORMATIONS[formation].forEach(s => {
-      initial[s.id] = { player: null, x: s.x, y: s.y };
+      initial[s.id] = { player: null, x: s.x, y: s.y, label: s.label };
     });
     setSlotMap(initial);
   }, [formation]);
 
-  const assignPlayer = (player: Player, targetId: string, fromId: string | null) => {
-    const prevTargetPlayer = slotMap[targetId]?.player;
-    setSlotMap(prev => ({
-      ...prev,
-      [targetId]: { ...prev[targetId], player }
-    }));
-    if (fromId) {
-      setSlotMap(prev => ({
-        ...prev,
-        [fromId]: { ...prev[fromId], player: prevTargetPlayer }
-      }));
-    }
+  const updatePos = (id: string, px: number, py: number) => {
+    const rect = fieldRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = ((px - rect.left) / rect.width) * 100;
+    const y = ((py - rect.top) / rect.height) * 100;
+    setSlotMap(prev => ({ ...prev, [id]: { ...prev[id], x, y } }));
   };
 
-  const findSlotAtPoint = (px: number, py: number) => {
-    const fieldRect = fieldRef.current?.getBoundingClientRect();
-    if (!fieldRect) return null;
-    const relX = ((px - fieldRect.left) / fieldRect.width) * 100;
-    const relY = ((py - fieldRect.top) / fieldRect.height) * 100;
+  const handleDrop = (point: { x: number, y: number }) => {
+    if (!origin) return;
     
-    let closest = null;
-    for (const [id, st] of Object.entries(slotMap)) {
-      const d = Math.sqrt(Math.pow(st.x - relX, 2) + Math.pow(st.y - relY, 2));
-      if (d < 10) closest = id;
+    // 1. Verificar se caiu em um slot pré-existente (Snap)
+    const rect = fieldRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const rx = ((point.x - rect.left) / rect.width) * 100;
+    const ry = ((point.y - rect.top) / rect.height) * 100;
+
+    let targetSlot = Object.keys(slotMap).find(id => {
+      const s = slotMap[id];
+      return Math.sqrt(Math.pow(s.x - rx, 2) + Math.pow(s.y - ry, 2)) < 8;
+    });
+
+    if (targetSlot) {
+      const targetPlayer = slotMap[targetSlot].player;
+      setSlotMap(prev => ({ ...prev, [targetSlot!]: { ...prev[targetSlot!], player: origin.player } }));
+      
+      if (origin.type === 'field') {
+        setSlotMap(prev => ({ ...prev, [origin.id]: { ...prev[origin.id], player: targetPlayer } }));
+      } else if (origin.type === 'bench') {
+        const newBench = [...bench];
+        newBench[origin.id] = targetPlayer;
+        setBench(newBench);
+      }
+    } else {
+      // 2. Movimentação Livre no Campo
+      if (origin.type === 'field') {
+        updatePos(origin.id, point.x, point.y);
+      }
     }
-    return closest;
+    setOrigin(null);
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans overflow-hidden">
-      {step === 'formation' ? (
-        <div className="h-screen flex flex-col items-center justify-center bg-zinc-950">
-          <h1 className="text-5xl font-black italic mb-10 text-yellow-500">ARENA TIGRE FC</h1>
-          <div className="grid grid-cols-2 gap-4">
+    <div className="min-h-screen bg-zinc-950 text-white font-sans overflow-hidden flex flex-col">
+      
+      {step === 'formation' && (
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <h1 className="text-4xl font-black italic text-yellow-500 mb-2">ARENA TIGRE FC</h1>
+          <p className="text-zinc-500 mb-10 font-bold uppercase tracking-widest text-xs">Selecione sua base tática</p>
+          <div className="grid grid-cols-2 gap-6 w-full max-w-md">
             {Object.keys(FORMATIONS).map(f => (
-              <button key={f} onClick={() => {setFormation(f); setStep('arena')}} className="p-10 border-2 border-white/10 rounded-2xl text-3xl font-black hover:border-yellow-500">{f}</button>
+              <button key={f} onClick={() => { setFormation(f as any); setStep('arena'); }}
+                className="aspect-square border-2 border-white/5 bg-zinc-900 rounded-3xl flex items-center justify-center text-4xl font-black hover:border-yellow-500 transition-all active:scale-95"
+              >
+                {f}
+              </button>
             ))}
           </div>
         </div>
-      ) : (
-        <div className="flex h-screen">
-          <div className="w-80 h-full overflow-y-auto bg-zinc-900/50 p-4 space-y-2 border-r border-white/10">
-            <p className="text-[10px] font-black text-yellow-500 tracking-widest mb-4">MERCADO DE ATLETAS</p>
-            {PLAYERS.map(p => (
-              <MarketCard 
-                key={p.id} 
-                player={p} 
-                isOriginSelected={originPlayer?.id === p.id && !originSlot}
-                isEscalado={Object.values(slotMap).some(s => s.player?.id === p.id)}
-                onClick={() => {
-                  if(activeSlot) { assignPlayer(p, activeSlot, null); setActiveSlot(null); }
-                  else { setOriginPlayer(p); setOriginSlot(null); }
-                }}
-                onDragStart={() => { setOriginPlayer(p); setOriginSlot(null); }}
-                onDragEnd={(info: PanInfo) => {
-                  const target = findSlotAtPoint(info.point.x, info.point.y);
-                  if(target) assignPlayer(p, target, null);
-                  setOriginPlayer(null);
-                }}
-              />
-            ))}
+      )}
+
+      {step === 'arena' && (
+        <div className="flex-1 flex overflow-hidden">
+          {/* Mercado (Esquerda) */}
+          <div className="w-72 border-r border-white/5 bg-black/40 p-4 overflow-y-auto space-y-2">
+            <p className="text-[10px] font-black text-zinc-500 tracking-widest uppercase mb-4">Elenco Disponível</p>
+            {PLAYERS.map(p => {
+              const isEscalado = Object.values(slotMap).some(s => s.player?.id === p.id) || bench.some(b => b?.id === p.id);
+              return (
+                <MarketCard key={p.id} player={p} isEscalado={isEscalado} isOrigin={origin?.player.id === p.id}
+                  onClick={() => {
+                    if (activeSlot) {
+                      setSlotMap(prev => ({ ...prev, [activeSlot]: { ...prev[activeSlot], player: p } }));
+                      setActiveSlot(null);
+                    } else {
+                      setOrigin({ type: 'market', id: p.id, player: p });
+                    }
+                  }}
+                  onDragStart={() => setOrigin({ type: 'market', id: p.id, player: p })}
+                  onDragEnd={(pt: any) => handleDrop(pt)}
+                />
+              );
+            })}
           </div>
 
-          <div ref={fieldRef} className="flex-1 relative bg-zinc-900 overflow-hidden">
-            <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-60" />
-            {Object.entries(slotMap).map(([id, st]) => (
-              <div key={id} className="absolute" style={{ left: `${st.x}%`, top: `${st.y}%`, transform: 'translate(-50%, -50%)', zIndex: activeSlot === id ? 50 : 10 }}>
-                <FieldCard 
-                  player={st.player} 
-                  label={id.toUpperCase()} 
-                  scale={scalePorY(st.y)}
-                  isSelected={activeSlot === id}
-                  isOriginSelected={originSlot === id}
-                  draggable={!!st.player}
-                  onClick={() => {
-                    if(originPlayer) { assignPlayer(originPlayer, id, originSlot); setOriginPlayer(null); setOriginSlot(null); }
-                    else if(st.player) { setOriginPlayer(st.player); setOriginSlot(id); }
-                    else { setActiveSlot(id); }
-                  }}
-                  onDragStart={() => { if(st.player) { setOriginPlayer(st.player); setOriginSlot(id); } }}
-                  onDragEnd={(info: PanInfo) => {
-                    const target = findSlotAtPoint(info.point.x, info.point.y);
-                    if(target && target !== id && originPlayer) assignPlayer(originPlayer, target, id);
-                    else {
-                      const rect = fieldRef.current?.getBoundingClientRect();
-                      if(rect) {
-                        const nx = ((info.point.x - rect.left) / rect.width) * 100;
-                        const ny = ((info.point.y - rect.top) / rect.height) * 100;
-                        setSlotMap(prev => ({ ...prev, [id]: { ...prev[id], x: nx, y: ny } }));
+          {/* Campo Central */}
+          <div className="flex-1 relative flex flex-col">
+            <div ref={fieldRef} className="flex-1 relative overflow-hidden bg-zinc-900">
+              <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+              
+              {Object.entries(slotMap).map(([id, s]) => (
+                <div key={id} className="absolute" style={{ left: `${s.x}%`, top: `${s.y}%`, transform: 'translate(-50%, -50%)' }}>
+                  <FieldCard slotId={id} player={s.player} label={s.label} scale={0.8 + (s.y/200)}
+                    isSelected={activeSlot === id} isOrigin={origin?.type === 'field' && origin.id === id}
+                    fieldRef={fieldRef}
+                    onClick={() => s.player ? setOrigin({ type: 'field', id, player: s.player }) : setActiveSlot(id)}
+                    onDragStart={() => s.player && setOrigin({ type: 'field', id, player: s.player })}
+                    onDragEnd={(pt: any) => handleDrop(pt)}
+                  />
+                </div>
+              ))}
+
+              <button onClick={() => setStep('summary')} 
+                className="absolute top-6 right-6 px-8 py-3 bg-yellow-500 text-black font-black italic rounded-full shadow-xl hover:scale-105 transition-transform"
+              >
+                FINALIZAR ESCALAÇÃO →
+              </button>
+            </div>
+
+            {/* Banco de Reservas (Rodapé do Campo) */}
+            <div className="h-40 bg-black/80 border-t border-yellow-500/20 p-4">
+              <p className="text-[10px] font-black text-yellow-500 mb-3 tracking-[0.2em] uppercase">Banco de Reservas (7)</p>
+              <div className="flex gap-3 h-20">
+                {bench.map((p, i) => (
+                  <div key={i} className={`flex-1 border-2 border-dashed rounded-lg flex items-center justify-center transition-all ${p ? 'border-white/40' : 'border-white/10 bg-white/5'}`}
+                    onClick={() => {
+                      if (origin) {
+                        const newBench = [...bench];
+                        newBench[i] = origin.player;
+                        setBench(newBench);
+                        if (origin.type === 'field') setSlotMap(prev => ({ ...prev, [origin.id]: { ...prev[origin.id], player: null } }));
+                        setOrigin(null);
                       }
-                    }
-                    setOriginPlayer(null); setOriginSlot(null);
-                  }}
-                />
+                    }}
+                  >
+                    {p ? (
+                      <div className="relative w-full h-full">
+                        <img src={p.foto} className="w-full h-full object-cover rounded-lg" style={{ objectPosition: '50% 10%' }} />
+                        <div className="absolute bottom-0 w-full text-center bg-black/60 text-[8px] font-bold py-0.5">{p.short}</div>
+                      </div>
+                    ) : <span className="text-[10px] text-white/20 font-black">R{i+1}</span>}
+                  </div>
+                ))}
               </div>
-            ))}
-            
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center bg-black/80 p-4 rounded-xl border border-yellow-500/20 backdrop-blur-md">
-              <p className="text-yellow-500 text-[10px] font-black tracking-widest uppercase">Técnico: Enderson Moreira</p>
-              <p className="text-white text-[8px] font-bold mt-1 opacity-40">ARENA TIGRE FC • Criado por Felipe Makarios</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {step === 'summary' && (
+        <div className="flex-1 flex flex-col items-center justify-center p-10 bg-zinc-950">
+          <div className="bg-zinc-900 border border-white/10 p-8 rounded-3xl max-w-sm w-full text-center space-y-6">
+            <h2 className="text-2xl font-black italic text-yellow-500 uppercase">Time Escalado!</h2>
+            <div className="space-y-1 text-left bg-black/40 p-4 rounded-xl border border-white/5">
+               <p className="text-[10px] text-zinc-500 font-bold uppercase">Titulares</p>
+               {Object.values(slotMap).map(s => s.player && <p key={s.player.id} className="text-sm font-bold"> {s.player.num} • {s.player.name}</p>)}
+            </div>
+            <button onClick={() => setStep('arena')} className="w-full py-4 text-zinc-400 font-bold hover:text-white transition-colors">Voltar e Editar</button>
+            <button onClick={() => window.location.reload()} className="w-full py-4 bg-yellow-500 text-black font-black italic rounded-xl">NOVA ESCALAÇÃO</button>
+          </div>
+          <p className="mt-8 text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Criado por Felipe Makarios • Arena Tigre FC</p>
         </div>
       )}
     </div>
