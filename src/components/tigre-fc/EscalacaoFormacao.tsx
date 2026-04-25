@@ -26,7 +26,6 @@ interface Slot {
   label: string;
 }
 
-// Props do componente (OBRIGATÓRIO para evitar erro no build)
 interface EscalacaoFormacaoProps {
   jogoId?: number;
 }
@@ -161,47 +160,68 @@ const POS_COLORS: Record<string, string> = {
   VOL: '#BF5FFF', MEI: '#22C55E', ATA: '#FF2D55'
 };
 
-// ==================== CARD FIFA ====================
-function FifaPlayerCard({ 
-  player, 
-  isSelected, 
-  onClick 
-}: { 
+// ==================== CARD MERCADO (Foto Esquerda - Perfil) ====================
+function MarketCard({ player, onClick }: { player: Player; onClick: () => void }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.08, y: -6 }}
+      whileTap={{ scale: 0.93 }}
+      onClick={onClick}
+      className="relative aspect-[3/4] bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 hover:border-[#F5C400] cursor-pointer shadow-xl group"
+    >
+      <img 
+        src={player.foto} 
+        alt={player.short}
+        className="w-[200%] h-full object-cover transition-all duration-700 group-hover:scale-110"
+        style={{ objectPosition: '22% center' }} // Perfil esquerdo
+      />
+      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent h-20" />
+      <div className="absolute bottom-3 left-3 right-3 text-center">
+        <p className="font-black text-white text-sm tracking-wide">{player.short}</p>
+        <p className="text-[#F5C400] text-xs font-mono">{player.pos} • #{player.num}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+// ==================== CARD CAMPO (Foto Direita - Comemoração) ====================
+function FieldCard({ player, isSelected, onClick }: { 
   player: Player | null; 
   isSelected: boolean; 
   onClick: () => void;
 }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.12, y: -6 }}
+      whileHover={{ scale: 1.18 }}
       whileTap={{ scale: 0.9 }}
       onClick={onClick}
-      className={`relative w-16 h-20 rounded-2xl overflow-hidden border-2 shadow-xl transition-all cursor-pointer
-        ${isSelected 
-          ? 'border-[#F5C400] scale-110 shadow-[0_0_30px_#F5C40080]' 
-          : 'border-white/20 hover:border-white/50'
-        }`}
+      className={`relative w-[82px] h-[112px] rounded-3xl overflow-hidden border-4 shadow-2xl cursor-pointer transition-all
+        ${isSelected ? 'border-[#F5C400] scale-110 shadow-[0_0_40px_#F5C400]' : 'border-white/30 hover:border-white/60'}`}
     >
       {player ? (
-        <>
-          <img src={player.foto} alt={player.short} className="w-full h-full object-cover" />
-          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent h-10" />
-          <div className="absolute bottom-1 left-1 right-1 text-center">
-            <p className="text-[10px] font-black text-white tracking-widest drop-shadow">{player.short}</p>
-          </div>
-        </>
+        <img 
+          src={player.foto} 
+          alt={player.short}
+          className="absolute inset-0 w-[190%] h-full object-cover"
+          style={{ objectPosition: '78% center' }} // Comemoração direita
+        />
       ) : (
-        <div className="flex h-full items-center justify-center text-4xl text-white/30 font-light">+</div>
+        <div className="h-full flex items-center justify-center bg-black/70 text-5xl text-white/40 font-light">+</div>
+      )}
+      {player && (
+        <div className="absolute bottom-2 left-2 right-2 text-center">
+          <p className="text-white text-xs font-black drop-shadow">{player.short}</p>
+        </div>
       )}
     </motion.div>
   );
 }
 
-// ==================== COMPONENTE PRINCIPAL ====================
 export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const [step, setStep] = useState<Step>('tutorial');
   const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-2-3-1');
   const [lineup, setLineup] = useState<Lineup>({});
+  const [bench, setBench] = useState<Player[]>([]); // 5 reservas
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [filterPos, setFilterPos] = useState<string | null>(null);
   const [score, setScore] = useState({ tigre: 2, adv: 1 });
@@ -213,44 +233,72 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     return targetPos ? PLAYERS.filter(p => p.pos === targetPos) : PLAYERS;
   }, [filterPos, activeSlot, slots]);
 
+  const filledSlots = Object.values(lineup).filter(Boolean).length;
+
   const handleSelectPlayer = (player: Player) => {
     if (!activeSlot) return;
+
+    // Se o slot já tem jogador, move para o banco (se tiver espaço)
+    if (lineup[activeSlot]) {
+      if (bench.length < 5) {
+        setBench(prev => [...prev, lineup[activeSlot]!]);
+      }
+    }
+
     setLineup(prev => ({ ...prev, [activeSlot]: player }));
     setActiveSlot(null);
     setFilterPos(null);
   };
 
-  const filledSlots = Object.values(lineup).filter(Boolean).length;
+  const triggerExplosion = () => {
+    const colors = ['#F5C400', '#00F3FF', '#FF2D55', '#22C55E'];
+    for (let i = 0; i < 12; i++) {
+      setTimeout(() => {
+        const flash = document.createElement('div');
+        flash.style.position = 'fixed';
+        flash.style.inset = '0';
+        flash.style.background = colors[Math.floor(Math.random() * colors.length)];
+        flash.style.opacity = String(0.12 + Math.random() * 0.15);
+        flash.style.pointerEvents = 'none';
+        flash.style.zIndex = '9999';
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 220);
+      }, i * 60);
+    }
+  };
+
+  const handleFinish = () => {
+    if (filledSlots < 11 || bench.length < 5) {
+      alert(`Complete os 11 titulares + 5 reservas! (${filledSlots}/11 + ${bench.length}/5)`);
+      return;
+    }
+    triggerExplosion();
+    setTimeout(() => setStep('summary'), 900);
+  };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#050505] text-white overflow-hidden">
       <AnimatePresence mode="wait">
 
         {/* TUTORIAL */}
         {step === 'tutorial' && (
-          <motion.div
-            key="tutorial"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-black to-zinc-950"
-          >
-            <img src={ESCUDO} className="w-28 mx-auto drop-shadow-2xl mb-10" alt="Tigre" />
-            <h1 className="text-5xl font-black italic tracking-tighter mb-4 text-[#F5C400]">TIGRE FC</h1>
-            <p className="text-2xl font-light mb-12 max-w-xs">Monte seu time como um técnico de verdade!</p>
-
+          <motion.div key="tutorial" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-black to-zinc-950">
+            <img src={ESCUDO} className="w-32 mb-12 drop-shadow-2xl" alt="Tigre" />
+            <h1 className="text-6xl font-black italic text-[#F5C400] tracking-tighter mb-4">TIGRE FC</h1>
+            <p className="text-2xl mb-12 max-w-xs">Monte seu time como um técnico de verdade!</p>
             <div className="max-w-md bg-zinc-900/70 p-6 rounded-2xl border border-white/10 text-left text-sm mb-10">
               1. Escolha a formação<br />
               2. Clique nos espaços do campo<br />
-              3. Escolha os jogadores no mercado<br />
-              4. Dê seu palpite e salve!
+              3. Escolha jogadores no mercado<br />
+              4. Adicione 5 reservas<br />
+              5. Dê seu palpite e compartilhe!
             </div>
-
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setStep('formation')}
-              className="bg-[#F5C400] text-black font-black text-xl px-14 py-5 rounded-2xl hover:bg-yellow-400 transition-all active:scale-95"
+              className="bg-[#F5C400] text-black font-black text-xl px-16 py-6 rounded-2xl hover:bg-yellow-400 transition-all active:scale-95"
             >
               COMEÇAR A MONTAR O TIME ⚽
             </motion.button>
@@ -259,28 +307,18 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
         {/* FORMAÇÃO */}
         {step === 'formation' && (
-          <motion.div 
-            key="formation" 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black"
-          >
-            <img src={ESCUDO} className="w-24 mb-8" alt="Tigre" />
-            <h1 className="text-4xl font-black italic tracking-[-1px] mb-2">Escolha sua Formação</h1>
-            <p className="text-zinc-400 mb-10">Qual estilo de jogo você quer hoje?</p>
-
-            <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-              {Object.keys(FORMATIONS).map((f) => (
+          <motion.div key="formation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black">
+            <img src={ESCUDO} className="w-28 mb-10" alt="Tigre" />
+            <h1 className="text-5xl font-black italic tracking-tighter mb-6">Escolha sua Formação</h1>
+            <div className="grid grid-cols-2 gap-6 w-full max-w-2xl">
+              {Object.keys(FORMATIONS).map(f => (
                 <motion.button
                   key={f}
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.94 }}
-                  onClick={() => { 
-                    setFormation(f as keyof typeof FORMATIONS); 
-                    setStep('arena'); 
-                  }}
-                  className="py-8 border-2 border-white/10 hover:border-[#F5C400] rounded-3xl font-black text-2xl transition-all hover:bg-white/5"
+                  onClick={() => { setFormation(f as keyof typeof FORMATIONS); setStep('arena'); }}
+                  className="py-10 border-2 border-white/10 hover:border-[#F5C400] rounded-3xl font-black text-3xl transition-all hover:bg-white/5"
                 >
                   {f}
                 </motion.button>
@@ -289,33 +327,34 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </motion.div>
         )}
 
-        {/* ARENA MODE */}
+        {/* ARENA MODE - CAMPO + MERCADO + BANCO */}
         {step === 'arena' && (
           <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
-            {/* CAMPO 3D */}
-            <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-emerald-950 to-black p-4 relative">
-              <div style={{ perspective: '1100px' }} className="relative w-full max-w-[460px]">
-                <motion.div
-                  initial={{ rotateX: 18 }}
-                  animate={{ rotateX: 12 }}
-                  className="relative aspect-[10/13] bg-[#0a2a18] rounded-[44px] border-8 border-white/10 shadow-2xl overflow-hidden"
+            {/* CAMPO 3D - Foto Direita (Comemoração) */}
+            <div className="flex-1 flex items-center justify-center bg-[#0a1f14] p-6 relative">
+              <div style={{ perspective: '1400px' }} className="relative w-full max-w-[520px]">
+                <motion.div 
+                  initial={{ rotateX: 20 }}
+                  animate={{ rotateX: 13 }}
+                  className="relative aspect-[10/13] bg-emerald-950 rounded-[50px] border-[14px] border-white/10 shadow-2xl overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,#0f3a22_0,#0f3a22_18px,#0a2a18_18px,#0a2a18_36px)]" />
-                  <div className="absolute top-1/2 w-full h-px bg-white/30" />
+                  <div className="absolute inset-0 bg-[radial-gradient(#1a3c2a_1px,transparent_1px)] bg-[length:24px_24px]" />
+                  <div className="absolute inset-0 border border-white/20" />
+                  <div className="absolute top-1/2 left-0 right-0 h-px bg-white/40" />
 
                   <AnimatePresence mode="popLayout">
                     {slots.map((slot) => (
                       <motion.div
                         key={`${formation}-${slot.id}`}
-                        layoutId={`player-${slot.id}`}
-                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                        layoutId={`field-${slot.id}`}
+                        className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
                         style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-                        onClick={() => { setActiveSlot(slot.id); setFilterPos(null); }}
+                        onClick={() => setActiveSlot(slot.id)}
                       >
-                        <FifaPlayerCard
+                        <FieldCard 
                           player={lineup[slot.id] || null}
                           isSelected={activeSlot === slot.id}
-                          onClick={() => { setActiveSlot(slot.id); setFilterPos(null); }}
+                          onClick={() => setActiveSlot(slot.id)}
                         />
                       </motion.div>
                     ))}
@@ -324,15 +363,10 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
               </div>
             </div>
 
-            {/* MERCADO */}
-            <div className="w-full lg:w-[440px] bg-zinc-950 border-l border-white/10 flex flex-col">
+            {/* MERCADO + BANCO */}
+            <div className="w-full lg:w-[480px] bg-zinc-950 border-l border-white/10 flex flex-col">
               <div className="p-6 border-b border-white/10">
-                <h2 className="text-[#F5C400] font-black text-2xl italic">MERCADO TIGRE</h2>
-                <p className="text-sm text-zinc-400 mt-1">
-                  {activeSlot 
-                    ? `Escolhendo para: ${slots.find(s => s.id === activeSlot)?.label}` 
-                    : 'Toque em um espaço vazio no campo'}
-                </p>
+                <h2 className="text-[#F5C400] font-black text-2xl">MERCADO TIGRE</h2>
               </div>
 
               <div className="flex gap-2 p-4 overflow-x-auto bg-black border-b border-white/10">
@@ -349,84 +383,84 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                 ))}
               </div>
 
-              <div className="flex-1 p-4 overflow-y-auto grid grid-cols-4 gap-3">
+              {/* Grid Mercado - Foto Esquerda */}
+              <div className="flex-1 p-5 overflow-y-auto grid grid-cols-3 gap-4">
                 <AnimatePresence>
-                  {filteredPlayers.map((player) => (
-                    <motion.div
-                      key={player.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.85 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.85 }}
-                      whileTap={{ scale: 0.88 }}
-                      onClick={() => handleSelectPlayer(player)}
-                      className="aspect-[3/4] bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 hover:border-[#F5C400]/60 cursor-pointer active:scale-95 transition-all"
-                    >
-                      <img src={player.foto} className="w-full h-full object-cover" alt={player.short} />
-                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 p-2">
-                        <p className="text-[10px] font-black text-center text-white truncate">{player.short}</p>
-                      </div>
-                    </motion.div>
+                  {filteredPlayers.map(player => (
+                    <MarketCard key={player.id} player={player} onClick={() => handleSelectPlayer(player)} />
                   ))}
                 </AnimatePresence>
               </div>
 
-              <div className="p-6 border-t border-white/10 bg-black">
+              {/* Banco de Reservas */}
+              <div className="p-5 border-t border-white/10 bg-black">
+                <p className="text-xs uppercase tracking-widest text-zinc-400 mb-3">Banco de Reservas ({bench.length}/5)</p>
+                <div className="flex gap-3 overflow-x-auto pb-4">
+                  {bench.map((player, i) => (
+                    <motion.div key={i} whileHover={{ scale: 1.1 }} className="w-16 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-white/40">
+                      <img src={player.foto} className="w-full h-full object-cover" alt={player.short} />
+                    </motion.div>
+                  ))}
+                  {Array(5 - bench.length).fill(0).map((_, i) => (
+                    <div key={i} className="w-16 h-20 flex-shrink-0 rounded-xl border border-dashed border-white/30 flex items-center justify-center text-white/30 text-2xl">
+                      +
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-6 bg-black border-t border-white/10">
                 <button
-                  onClick={() => setStep('summary')}
-                  disabled={filledSlots < 11}
-                  className={`w-full py-5 rounded-2xl font-black text-lg uppercase tracking-widest transition-all ${
-                    filledSlots >= 11 
+                  onClick={handleFinish}
+                  disabled={filledSlots < 11 || bench.length < 5}
+                  className={`w-full py-6 rounded-2xl font-black text-xl tracking-widest transition-all ${
+                    filledSlots >= 11 && bench.length >= 5 
                       ? 'bg-[#F5C400] text-black hover:bg-yellow-400' 
                       : 'bg-zinc-800 text-white/40 cursor-not-allowed'
                   }`}
                 >
-                  {filledSlots >= 11 ? 'FINALIZAR ESCALAÇÃO ⚡' : `${11 - filledSlots} vagas em aberto`}
+                  {filledSlots >= 11 && bench.length >= 5 ? 'FINALIZAR TIME E IR PARA O PALPITE' : `Faltam ${11-filledSlots} titulares + ${5-bench.length} reservas`}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* SUMMARY + PALPITE */}
+        {/* SUMMARY + PALPITE MELHORADO */}
         {step === 'summary' && (
-          <motion.div
-            key="summary"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-6 text-center"
-          >
-            <h2 className="text-4xl font-black italic text-[#F5C400] mb-10">Seu Palpite Final</h2>
+          <motion.div key="summary" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-black to-zinc-950">
+            <h2 className="text-5xl font-black italic text-[#F5C400] mb-12">Seu Palpite Final</h2>
             
-            <div className="flex items-center gap-10 mb-12">
+            <div className="flex items-center gap-16 mb-16">
               <div className="flex flex-col items-center">
-                <img src={ESCUDO} className="w-20 mb-4" alt="Tigre" />
+                <img src={ESCUDO} className="w-24 mb-6" alt="Tigre" />
                 <input
                   type="number"
                   value={score.tigre}
                   onChange={(e) => setScore({ ...score, tigre: Number(e.target.value) })}
-                  className="w-28 h-28 bg-zinc-900 border-4 border-[#F5C400] rounded-3xl text-center text-6xl font-black focus:outline-none"
+                  className="w-32 h-32 bg-zinc-900 border-4 border-[#F5C400] rounded-3xl text-center text-7xl font-black focus:outline-none"
                 />
               </div>
-              <span className="text-5xl font-light text-white/30">×</span>
+              <span className="text-6xl font-light text-white/30">×</span>
               <div className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full bg-zinc-800 mb-4 flex items-center justify-center text-xs font-bold">ADV</div>
+                <div className="w-24 h-24 rounded-full bg-zinc-800 mb-6 flex items-center justify-center text-sm font-bold">ADV</div>
                 <input
                   type="number"
                   value={score.adv}
                   onChange={(e) => setScore({ ...score, adv: Number(e.target.value) })}
-                  className="w-28 h-28 bg-zinc-900 border-4 border-white/20 rounded-3xl text-center text-6xl font-black focus:outline-none"
+                  className="w-32 h-32 bg-zinc-900 border-4 border-white/30 rounded-3xl text-center text-7xl font-black focus:outline-none"
                 />
               </div>
             </div>
 
-            <button className="bg-white text-black px-16 py-6 rounded-3xl font-black text-xl hover:bg-yellow-400 transition-all active:scale-95">
+            <button className="bg-white text-black px-20 py-7 rounded-3xl font-black text-2xl hover:bg-yellow-400 transition-all active:scale-95">
               SALVAR E COMPARTILHAR TIME
             </button>
 
             <button 
               onClick={() => setStep('arena')}
-              className="mt-8 text-white/50 hover:text-white font-medium transition-colors"
+              className="mt-10 text-white/60 hover:text-white transition-colors"
             >
               ← Voltar e editar o time
             </button>
