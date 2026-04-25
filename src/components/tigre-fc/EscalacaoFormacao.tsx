@@ -3,34 +3,18 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// --- ASSETS ---
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const ESCUDO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
 
-type Player = {
-  id: number;
-  name: string;
-  short: string;
-  num: number;
-  pos: string;
-  foto: string;
-};
-
+// --- TYPES ---
+type Player = { id: number; name: string; short: string; num: number; pos: string; foto: string; };
 type Lineup = Record<string, Player | null>;
 type Step = 'tutorial' | 'formation' | 'arena' | 'summary';
+interface Slot { id: string; x: number; y: number; pos: string; label: string; }
+interface EscalacaoFormacaoProps { jogoId?: number; }
 
-interface Slot {
-  id: string;
-  x: number;
-  y: number;
-  pos: string;
-  label: string;
-}
-
-interface EscalacaoFormacaoProps {
-  jogoId?: number;
-}
-
-// ==================== 39 JOGADORES ====================
+// ==================== LISTA DE JOGADORES (39) ====================
 const PLAYERS: Player[] = [
   { id:1, name:'César Augusto', short:'César', num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id:2, name:'Jordi', short:'Jordi', num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
@@ -73,185 +57,151 @@ const PLAYERS: Player[] = [
   { id:39, name:'Ronald Barcellos', short:'Ronald', num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-// ==================== FORMAÇÕES ====================
 const FORMATIONS: Record<string, Slot[]> = {
   '4-2-3-1': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
-    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
-    { id: 'dm1', x: 35, y: 53, pos: 'VOL', label: 'DM' },
-    { id: 'dm2', x: 65, y: 53, pos: 'VOL', label: 'DM' },
-    { id: 'am', x: 50, y: 37, pos: 'MEI', label: 'AM' },
-    { id: 'rw', x: 78, y: 22, pos: 'MEI', label: 'RW' },
-    { id: 'lw', x: 22, y: 22, pos: 'MEI', label: 'LW' },
-    { id: 'st', x: 50, y: 10, pos: 'ATA', label: 'ST' },
+    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GOL' },
+    { id: 'rb', x: 85, y: 72, pos: 'LAT', label: 'LD' },
+    { id: 'cb1', x: 62, y: 78, pos: 'ZAG', label: 'ZAG' },
+    { id: 'cb2', x: 38, y: 78, pos: 'ZAG', label: 'ZAG' },
+    { id: 'lb', x: 15, y: 72, pos: 'LAT', label: 'LE' },
+    { id: 'dm1', x: 35, y: 58, pos: 'VOL', label: 'VOL' },
+    { id: 'dm2', x: 65, y: 58, pos: 'VOL', label: 'VOL' },
+    { id: 'am', x: 50, y: 40, pos: 'MEI', label: 'MEI' },
+    { id: 'rw', x: 82, y: 20, pos: 'MEI', label: 'PD' },
+    { id: 'lw', x: 18, y: 20, pos: 'MEI', label: 'PE' },
+    { id: 'st', x: 50, y: 10, pos: 'ATA', label: 'ATA' },
   ],
   '4-3-3': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
-    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
-    { id: 'cm1', x: 30, y: 52, pos: 'MEI', label: 'CM' },
-    { id: 'cm2', x: 50, y: 52, pos: 'VOL', label: 'CM' },
-    { id: 'cm3', x: 70, y: 52, pos: 'MEI', label: 'CM' },
-    { id: 'rw', x: 78, y: 22, pos: 'ATA', label: 'RW' },
-    { id: 'st', x: 50, y: 12, pos: 'ATA', label: 'ST' },
-    { id: 'lw', x: 22, y: 22, pos: 'ATA', label: 'LW' },
+    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GOL' },
+    { id: 'rb', x: 85, y: 72, pos: 'LAT', label: 'LD' },
+    { id: 'cb1', x: 62, y: 78, pos: 'ZAG', label: 'ZAG' },
+    { id: 'cb2', x: 38, y: 78, pos: 'ZAG', label: 'ZAG' },
+    { id: 'lb', x: 15, y: 72, pos: 'LAT', label: 'LE' },
+    { id: 'cm1', x: 30, y: 55, pos: 'MEI', label: 'MC' },
+    { id: 'cm2', x: 50, y: 58, pos: 'VOL', label: 'VOL' },
+    { id: 'cm3', x: 70, y: 55, pos: 'MEI', label: 'MC' },
+    { id: 'rw', x: 82, y: 20, pos: 'ATA', label: 'PD' },
+    { id: 'st', x: 50, y: 12, pos: 'ATA', label: 'ATA' },
+    { id: 'lw', x: 18, y: 20, pos: 'ATA', label: 'PE' },
   ],
-  // Adicione as outras formações se quiser, mas mantive as principais para não ficar muito pesado
 };
 
-// ==================== CARD MERCADO (Foto Esquerda) ====================
+const POS_COLORS: Record<string, string> = { GOL: '#F5C400', ZAG: '#00F3FF', LAT: '#4FC3F7', VOL: '#BF5FFF', MEI: '#22C55E', ATA: '#FF2D55' };
+
+// ==================== MARKET CARD (Zelo e Respiro) ====================
 function MarketCard({ player, onClick }: { player: Player; onClick: () => void }) {
+  const posColor = POS_COLORS[player.pos] || '#fff';
   return (
     <motion.div
-      whileHover={{ scale: 1.08, y: -6 }}
-      whileTap={{ scale: 0.93 }}
+      whileHover={{ scale: 1.06, y: -8 }}
+      whileTap={{ scale: 0.94 }}
       onClick={onClick}
-      className="relative aspect-[3/4] bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 hover:border-[#F5C400] cursor-pointer shadow-xl group"
+      className="relative aspect-[3/4] bg-zinc-900 rounded-3xl overflow-hidden border border-white/5 hover:border-[#F5C400]/50 cursor-pointer shadow-2xl group transition-all duration-300"
     >
       <img 
         src={player.foto} 
         alt={player.short}
-        className="w-[200%] h-full object-cover transition-all duration-700 group-hover:scale-110"
-        style={{ objectPosition: '22% center' }}
+        className="absolute inset-0 w-full h-full object-cover scale-110 group-hover:scale-115 transition-transform duration-500"
+        style={{ objectPosition: 'center 15%' }}
       />
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent h-20" />
-      <div className="absolute bottom-3 left-3 right-3">
-        <p className="font-black text-white text-sm">{player.short}</p>
-        <p className="text-[#F5C400] text-xs font-mono">{player.pos} • #{player.num}</p>
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+      
+      <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10 flex items-center gap-1.5">
+        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: posColor }} />
+        <p className="text-[10px] font-black uppercase text-white tracking-widest">{player.pos}</p>
+      </div>
+
+      <div className="absolute bottom-4 left-4 right-4">
+        <p className="text-sm font-black text-white uppercase tracking-tight leading-tight truncate">{player.short}</p>
+        <p className="text-xs font-bold text-zinc-400 mt-0.5">#{player.num} • {player.name.split(' ').slice(1).join(' ')}</p>
       </div>
     </motion.div>
   );
 }
 
-// ==================== CARD CAMPO (Foto Direita) ====================
-function FieldCard({ player, isSelected, onClick }: { 
+// ==================== FIELD CARD (Perspectiva e Glow) ====================
+function FieldCard({ player, isSelected, onClick, label }: { 
   player: Player | null; 
   isSelected: boolean; 
   onClick: () => void;
+  label: string;
 }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.18 }}
+      whileHover={{ scale: 1.15 }}
       whileTap={{ scale: 0.9 }}
       onClick={onClick}
-      className={`relative w-[82px] h-[112px] rounded-3xl overflow-hidden border-4 shadow-2xl cursor-pointer transition-all
-        ${isSelected ? 'border-[#F5C400] scale-110 shadow-[0_0_40px_#F5C400]' : 'border-white/30 hover:border-white/60'}`}
+      className={`relative w-[70px] h-[95px] rounded-2xl overflow-hidden border-2 transition-all duration-300 cursor-pointer shadow-xl
+        ${isSelected ? 'border-[#F5C400] shadow-[0_0_30px_rgba(245,196,0,0.6)]' : 'border-white/20 bg-black/50 backdrop-blur-sm'}`}
     >
       {player ? (
         <img 
           src={player.foto} 
           alt={player.short}
-          className="absolute inset-0 w-[190%] h-full object-cover"
-          style={{ objectPosition: '78% center' }}
+          className="absolute inset-0 w-full h-full object-cover scale-125"
+          style={{ objectPosition: 'center 15%' }}
         />
       ) : (
-        <div className="h-full flex items-center justify-center bg-black/70 text-5xl text-white/40 font-light">+</div>
+        <div className="h-full flex flex-col items-center justify-center gap-1 text-white/40">
+          <span className="text-3xl font-thin">+</span>
+          <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+        </div>
       )}
       {player && (
-        <div className="absolute bottom-1.5 left-2 right-2 text-center">
-          <p className="text-white text-xs font-black drop-shadow">{player.short}</p>
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black to-transparent pt-3 pb-1 text-center">
+          <p className="text-white text-[9px] font-black uppercase tracking-tighter drop-shadow-md truncate px-1">{player.short}</p>
         </div>
       )}
     </motion.div>
   );
 }
 
-export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
-  const [step, setStep] = useState<Step>('tutorial');
-  const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-2-3-1');
+// ==================== COMPONENTE PRINCIPAL ====================
+export default function EscalacaoFormacao() {
+  const [step, setStep] = useState<Step>('formation');
+  const [formation, setFormation] = useState<string>('4-2-3-1');
   const [lineup, setLineup] = useState<Lineup>({});
   const [bench, setBench] = useState<Player[]>([]);
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [filterPos, setFilterPos] = useState<string | null>(null);
-  const [score, setScore] = useState({ tigre: 2, adv: 1 });
 
-  const slots = useMemo(() => FORMATIONS[formation], [formation]);
+  const slots = useMemo(() => FORMATIONS[formation] || FORMATIONS['4-2-3-1'], [formation]);
 
   const filteredPlayers = useMemo(() => {
-    const targetPos = filterPos || (activeSlot ? slots.find(s => s.id === activeSlot)?.pos : null);
-    return targetPos ? PLAYERS.filter(p => p.pos === targetPos) : PLAYERS;
-  }, [filterPos, activeSlot, slots]);
+    if (filterPos) return PLAYERS.filter(p => p.pos === filterPos);
+    return PLAYERS;
+  }, [filterPos]);
 
   const filledSlots = Object.values(lineup).filter(Boolean).length;
 
   const handleSelectPlayer = (player: Player) => {
     if (!activeSlot) return;
-    if (lineup[activeSlot] && bench.length < 5) {
-      setBench(prev => [...prev, lineup[activeSlot]!]);
-    }
     setLineup(prev => ({ ...prev, [activeSlot]: player }));
     setActiveSlot(null);
-    setFilterPos(null);
-  };
-
-  const triggerExplosion = () => {
-    const colors = ['#F5C400', '#00F3FF', '#FF2D55', '#22C55E'];
-    for (let i = 0; i < 12; i++) {
-      setTimeout(() => {
-        const flash = document.createElement('div');
-        flash.style.position = 'fixed';
-        flash.style.inset = '0';
-        flash.style.background = colors[Math.floor(Math.random() * colors.length)];
-        flash.style.opacity = String(0.12 + Math.random() * 0.15);
-        flash.style.pointerEvents = 'none';
-        flash.style.zIndex = '9999';
-        document.body.appendChild(flash);
-        setTimeout(() => flash.remove(), 220);
-      }, i * 60);
-    }
-  };
-
-  const handleFinish = () => {
-    if (filledSlots < 11 || bench.length < 5) {
-      alert(`Complete os 11 titulares + 5 reservas! (${filledSlots}/11 + ${bench.length}/5)`);
-      return;
-    }
-    triggerExplosion();
-    setTimeout(() => setStep('summary'), 900);
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-hidden">
+    <div className="min-h-screen bg-[#050505] text-white overflow-hidden font-sans">
       <AnimatePresence mode="wait">
 
-        {/* TUTORIAL */}
         {step === 'tutorial' && (
-          <motion.div key="tutorial" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-black to-zinc-950">
-            <img src={ESCUDO} className="w-32 mb-12 drop-shadow-2xl" alt="Tigre" />
-            <h1 className="text-6xl font-black italic text-[#F5C400] tracking-tighter">TIGRE FC</h1>
-            <p className="text-2xl mt-4 mb-12">Monte seu time como um técnico de verdade!</p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setStep('formation')}
-              className="bg-[#F5C400] text-black font-black text-xl px-16 py-6 rounded-2xl hover:bg-yellow-400 transition-all active:scale-95"
-            >
-              COMEÇAR A MONTAR O TIME ⚽
-            </motion.button>
+          <motion.div key="tut" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} className="h-screen flex flex-col items-center justify-center p-10 bg-[radial-gradient(circle_at_center,_#1a1a1a_0%,_#000_100%)]">
+            <img src={ESCUDO} className="w-28 h-28 mb-10 drop-shadow-[0_0_20px_rgba(245,196,0,0.3)]" alt="Tigre" />
+            <h1 className="text-5xl font-black italic text-white tracking-tighter mb-4">TIGRE <span className="text-[#F5C400]">FC</span></h1>
+            <p className="text-xl text-zinc-400 mb-12 max-w-sm text-center font-bold">Monte sua escalação ideal e defina o placar do próximo jogo.</p>
+            <button onClick={() => setStep('formation')} className="bg-[#F5C400] text-black px-16 py-6 rounded-3xl font-black text-xl shadow-[0_10px_40px_rgba(245,196,0,0.4)] active:scale-95 transition-all">
+              INICIAR ESCALAÇÃO ⚽
+            </button>
           </motion.div>
         )}
 
-        {/* FORMAÇÃO */}
         {step === 'formation' && (
-          <motion.div key="formation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black">
-            <img src={ESCUDO} className="w-28 mb-10" alt="Tigre" />
-            <h1 className="text-5xl font-black italic tracking-tighter mb-6">Escolha sua Formação</h1>
-            <div className="grid grid-cols-2 gap-6 w-full max-w-2xl">
+          <motion.div key="form" initial={{ opacity:0 }} animate={{ opacity:1 }} className="h-screen flex flex-col items-center justify-center p-6 bg-black">
+            <img src={ESCUDO} className="w-16 h-16 mb-8 opacity-40" alt="Tigre" />
+            <h2 className="text-3xl font-black uppercase italic mb-10 text-zinc-500 tracking-tight">Escolha a Tática</h2>
+            <div className="grid grid-cols-2 gap-5 w-full max-w-xl">
               {Object.keys(FORMATIONS).map(f => (
-                <motion.button
-                  key={f}
-                  whileHover={{ scale: 1.06 }}
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => { setFormation(f as keyof typeof FORMATIONS); setStep('arena'); }}
-                  className="py-10 border-2 border-white/10 hover:border-[#F5C400] rounded-3xl font-black text-3xl transition-all hover:bg-white/5"
-                >
+                <motion.button key={f} whileHover={{scale: 1.05}} whileTap={{scale: 0.95}} onClick={() => {setFormation(f); setStep('arena');}} className="py-10 bg-zinc-950 border-2 border-zinc-800 hover:border-yellow-500 rounded-3xl font-black text-4xl transition-all shadow-xl">
                   {f}
                 </motion.button>
               ))}
@@ -259,164 +209,86 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </motion.div>
         )}
 
-        {/* ARENA MODE - CAMPO REALISTA */}
         {step === 'arena' && (
-          <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
-            {/* CAMPO COM PERSPECTIVA REALISTA */}
-            <div className="flex-1 flex items-center justify-center bg-[#0a1f14] p-6 relative">
-              <div style={{ perspective: '1800px' }} className="relative w-full max-w-[560px]">
+          <motion.div key="arena" initial={{ opacity:0 }} animate={{ opacity:1 }} className="flex flex-col lg:flex-row h-screen overflow-hidden bg-[#020503]">
+            
+            {/* --- CAMPO 3D REALISTA (Engine de Perspectiva) --- */}
+            <div className="flex-1 relative flex items-center justify-center p-6 overflow-hidden">
+              {/* Luzes de Fundo (Stadium Glow) */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,#144a2c,transparent)] opacity-60" />
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/5 to-transparent blur-3xl pointer-events-none" />
+
+              <div style={{ perspective: '2000px' }} className="relative w-full max-w-[540px]">
                 <motion.div 
-                  initial={{ rotateX: 24 }}
-                  animate={{ rotateX: 15 }}
-                  className="relative aspect-[10/13] bg-emerald-950 rounded-[60px] border-[18px] border-white/10 shadow-[0_120px_240px_rgba(0,0,0,0.95)] overflow-hidden"
+                  initial={{ rotateX: 30, y: 100 }}
+                  animate={{ rotateX: 20, y: 0 }} // Ângulo de Perspectiva Realista
+                  transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                  className="relative aspect-[10/14] bg-[#0a2618] rounded-[60px] border-[14px] border-white/5 shadow-[0_100px_180px_rgba(0,0,0,0.9)] overflow-hidden"
                 >
-                  {/* Gramado vibrante */}
-                  <div className="absolute inset-0 bg-[radial-gradient(#1f4a32_1px,transparent_1px)] bg-[length:26px_26px]" />
-
-                  {/* Linhas completas do campo */}
-                  <div className="absolute inset-0 border-[3px] border-white/70" />
-                  <div className="absolute top-1/2 left-0 right-0 h-[3px] bg-white/80" />
-                  <div className="absolute left-1/2 top-0 bottom-0 w-[3px] bg-white/80" />
-
+                  {/* Gramado e Linhas Oficiais */}
+                  <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_50px,rgba(0,0,0,0.1)_50px,rgba(0,0,0,0.1)_100px)]" />
+                  <div className="absolute inset-0 border-4 border-white/20 m-6 rounded-[45px]" />
+                  <div className="absolute top-1/2 left-6 right-6 h-[2px] bg-white/30" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 border-2 border-white/30 rounded-full" />
+                  
                   {/* Grande Área */}
-                  <div className="absolute top-[22%] left-[15%] right-[15%] h-[18%] border-2 border-white/70" />
-                  <div className="absolute bottom-[22%] left-[15%] right-[15%] h-[18%] border-2 border-white/70" />
+                  <div className="absolute top-6 left-[20%] right-[20%] h-[18%] border-2 border-white/30 rounded-b-xl" />
+                  <div className="absolute bottom-6 left-[20%] right-[20%] h-[18%] border-2 border-white/30 rounded-t-xl" />
 
                   {/* Pequena Área */}
-                  <div className="absolute top-[30%] left-[28%] right-[28%] h-[10%] border-2 border-white/70" />
-                  <div className="absolute bottom-[30%] left-[28%] right-[28%] h-[10%] border-2 border-white/70" />
-
-                  {/* Círculo Central */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border-2 border-white/70 rounded-full" />
+                  <div className="absolute top-6 left-[35%] right-[35%] h-[8%] border-2 border-white/30 rounded-b-lg" />
+                  <div className="absolute bottom-6 left-[35%] right-[35%] h-[8%] border-2 border-white/30 rounded-t-lg" />
 
                   {/* Escanteios */}
-                  <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-white/70 rounded-tl-xl" />
-                  <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-white/70 rounded-tr-xl" />
-                  <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-white/70 rounded-bl-xl" />
-                  <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-white/70 rounded-br-xl" />
+                  <div className="absolute top-7 left-7 w-6 h-6 border-l-2 border-t-2 border-white/30 rounded-tl-full" />
+                  <div className="absolute top-7 right-7 w-6 h-6 border-r-2 border-t-2 border-white/30 rounded-tr-full" />
+                  <div className="absolute bottom-7 left-7 w-6 h-6 border-l-2 border-b-2 border-white/30 rounded-bl-full" />
+                  <div className="absolute bottom-7 right-7 w-6 h-6 border-r-2 border-b-2 border-white/30 rounded-br-full" />
 
-                  {/* Slots com foto direita */}
-                  <AnimatePresence mode="popLayout">
-                    {slots.map((slot) => (
-                      <motion.div
-                        key={`${formation}-${slot.id}`}
-                        layoutId={`field-${slot.id}`}
-                        className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
-                        style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-                        onClick={() => setActiveSlot(slot.id)}
-                      >
-                        <FieldCard 
-                          player={lineup[slot.id] || null}
-                          isSelected={activeSlot === slot.id}
-                          onClick={() => setActiveSlot(slot.id)}
-                        />
+                  {/* Slots de Jogadores flutuando */}
+                  {slots.map((s) => (
+                    <div key={s.id} className="absolute -translate-x-1/2 -translate-y-1/2 z-10" style={{ left: `${s.x}%`, top: `${s.y}%`, transformStyle: 'preserve-3d' }}>
+                      <motion.div animate={activeSlot === s.id ? { y: [0, -10, 0] } : {}} transition={{ repeat: Infinity, duration: 1.5 }}>
+                        <FieldCard player={lineup[s.id] || null} label={s.label} isSelected={activeSlot === s.id} onClick={() => setActiveSlot(s.id)} />
                       </motion.div>
-                    ))}
-                  </AnimatePresence>
+                    </div>
+                  ))}
                 </motion.div>
               </div>
             </div>
 
-            {/* MERCADO */}
-            <div className="w-full lg:w-[480px] bg-zinc-950 border-l border-white/10 flex flex-col">
-              <div className="p-6 border-b border-white/10">
-                <h2 className="text-[#F5C400] font-black text-2xl">MERCADO TIGRE</h2>
+            {/* --- MERCADO LATERAL (Ousado e com Respiro) --- */}
+            <div className="w-full lg:w-[460px] bg-black/80 border-l border-white/5 flex flex-col z-20 backdrop-blur-3xl shadow-[-20px_0_60px_rgba(0,0,0,0.6)]">
+              <div className="p-7 border-b border-white/5 bg-zinc-950/40">
+                <h3 className="text-[#F5C400] font-black italic text-2xl uppercase tracking-tighter leading-none">Convocação</h3>
+                <p className="text-[11px] text-zinc-500 font-bold uppercase mt-1.5 tracking-widest">Selecione para o slot {slots.find(s => s.id === activeSlot)?.label}</p>
               </div>
 
-              <div className="flex gap-2 p-4 overflow-x-auto bg-black border-b border-white/10">
+              {/* Filtros */}
+              <div className="flex gap-1.5 p-3.5 overflow-x-auto no-scrollbar bg-black border-b border-white/5">
                 {['GOL','LAT','ZAG','VOL','MEI','ATA'].map(pos => (
-                  <button
-                    key={pos}
-                    onClick={() => setFilterPos(filterPos === pos ? null : pos)}
-                    className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                      filterPos === pos ? 'bg-[#F5C400] text-black' : 'bg-zinc-900 hover:bg-zinc-800'
-                    }`}
-                  >
+                  <button key={pos} onClick={() => setFilterPos(filterPos === pos ? null : pos)} className={`px-5 py-2.5 rounded-full text-xs font-black transition-all ${filterPos === pos ? 'bg-yellow-500 text-black' : 'bg-zinc-900 text-zinc-400'}`}>
                     {pos}
                   </button>
                 ))}
               </div>
 
-              <div className="flex-1 p-5 overflow-y-auto grid grid-cols-3 gap-4">
+              {/* Grid de Jogadores - 3 Colunas para ter Respiro */}
+              <div className="flex-1 overflow-y-auto p-5 grid grid-cols-3 gap-4 pb-28 content-start">
                 <AnimatePresence>
-                  {filteredPlayers.map(player => (
-                    <MarketCard key={player.id} player={player} onClick={() => handleSelectPlayer(player)} />
+                  {filteredPlayers.map(p => (
+                    <MarketCard key={p.id} player={p} onClick={() => handleSelectPlayer(p)} />
                   ))}
                 </AnimatePresence>
               </div>
 
-              {/* Banco de Reservas */}
-              <div className="p-5 border-t border-white/10 bg-black">
-                <p className="text-xs uppercase tracking-widest text-zinc-400 mb-3">Banco de Reservas ({bench.length}/5)</p>
-                <div className="flex gap-3 overflow-x-auto pb-4">
-                  {bench.map((player, i) => (
-                    <motion.div key={i} whileHover={{ scale: 1.1 }} className="w-16 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-white/40">
-                      <img src={player.foto} className="w-full h-full object-cover" alt={player.short} />
-                    </motion.div>
-                  ))}
-                  {Array(5 - bench.length).fill(0).map((_, i) => (
-                    <div key={i} className="w-16 h-20 flex-shrink-0 rounded-xl border border-dashed border-white/30 flex items-center justify-center text-white/30 text-2xl">
-                      +
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-6 bg-black border-t border-white/10">
-                <button
-                  onClick={handleFinish}
-                  disabled={filledSlots < 11 || bench.length < 5}
-                  className={`w-full py-6 rounded-2xl font-black text-xl tracking-widest transition-all ${
-                    filledSlots >= 11 && bench.length >= 5 
-                      ? 'bg-[#F5C400] text-black hover:bg-yellow-400' 
-                      : 'bg-zinc-800 text-white/40 cursor-not-allowed'
-                  }`}
-                >
-                  {filledSlots >= 11 && bench.length >= 5 ? 'FINALIZAR TIME E IR PARA O PALPITE' : `Faltam ${11-filledSlots} titulares + ${5-bench.length} reservas`}
+              <div className="p-6 border-t border-white/5 bg-zinc-950/60 absolute bottom-0 inset-x-0 lg:relative lg:inset-auto">
+                <button onClick={() => setStep('summary')} className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase italic tracking-tighter hover:bg-yellow-500 transition-colors shadow-[0_10px_30px_rgba(255,255,255,0.1)] active:scale-95">
+                  Confirmar Time →
                 </button>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* SUMMARY */}
-        {step === 'summary' && (
-          <motion.div key="summary" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-black to-zinc-950">
-            <h2 className="text-5xl font-black italic text-[#F5C400] mb-12">Seu Palpite Final</h2>
-            
-            <div className="flex items-center gap-16 mb-16">
-              <div className="flex flex-col items-center">
-                <img src={ESCUDO} className="w-24 mb-6" alt="Tigre" />
-                <input
-                  type="number"
-                  value={score.tigre}
-                  onChange={(e) => setScore({ ...score, tigre: Number(e.target.value) })}
-                  className="w-32 h-32 bg-zinc-900 border-4 border-[#F5C400] rounded-3xl text-center text-7xl font-black focus:outline-none"
-                />
-              </div>
-              <span className="text-6xl font-light text-white/30">×</span>
-              <div className="flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full bg-zinc-800 mb-6 flex items-center justify-center text-sm font-bold">ADV</div>
-                <input
-                  type="number"
-                  value={score.adv}
-                  onChange={(e) => setScore({ ...score, adv: Number(e.target.value) })}
-                  className="w-32 h-32 bg-zinc-900 border-4 border-white/30 rounded-3xl text-center text-7xl font-black focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <button className="bg-white text-black px-20 py-7 rounded-3xl font-black text-2xl hover:bg-yellow-400 transition-all active:scale-95">
-              SALVAR E COMPARTILHAR TIME
-            </button>
-
-            <button 
-              onClick={() => setStep('arena')}
-              className="mt-10 text-white/60 hover:text-white transition-colors"
-            >
-              ← Voltar e editar o time
-            </button>
           </motion.div>
         )}
 
