@@ -1,32 +1,22 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase'; // Ajuste conforme seu path
 
+// ─── ASSETS & CONFIG ────────────────────────────────────────────────────────
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const ESCUDO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+const CAMPO_BG = 'bg-[repeating-linear-gradient(45deg,#0f3a22_0,#0f3a22_20px,#0a2a18_20px,#0a2a18_40px)]';
 
-type Player = {
-  id: number;
-  name: string;
-  short: string;
-  num: number;
-  pos: string;
-  foto: string;
-};
-
+// ─── TYPES ──────────────────────────────────────────────────────────────────
+type Player = { id: number; name: string; short: string; num: number; pos: string; foto: string };
 type Lineup = Record<string, Player | null>;
-type Step = 'formation' | 'picking' | 'score' | 'reveal';
+type Step = 'formation' | 'arena' | 'summary';
 
-interface Slot {
-  id: string;
-  x: number;
-  y: number;
-  pos: string;
-  label: string;
-}
+interface Slot { id: string; x: number; y: number; pos: string; label: string }
 
-// ==================== 39 JOGADORES ====================
+// ─── DATA (39 JOGADORES) ───────────────────────────────────────────────────
 const PLAYERS: Player[] = [
   { id:1, name:'César Augusto', short:'César', num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
   { id:2, name:'Jordi', short:'Jordi', num:93, pos:'GOL', foto:BASE+'JORDI.jpg.webp' },
@@ -65,11 +55,10 @@ const PLAYERS: Player[] = [
   { id:35, name:'Nicolas Careca', short:'N.Careca', num:21, pos:'ATA', foto:BASE+'NICOLAS-CARECA.jpg.webp' },
   { id:36, name:'Titi Ortiz', short:'T.Ortiz', num:15, pos:'ATA', foto:BASE+'TITI-ORTIZ.jpg.webp' },
   { id:37, name:'Diego Mathias', short:'D.Mathias', num:41, pos:'ATA', foto:BASE+'DIEGO-MATHIAS.jpg.webp' },
-  { id:38, name:'Carlão', short:'Carlão', num:90, pos:'ATA', foto:FOTO_CARLAO },
+  { id:38, name:'Carlão', short:'Carlão', num:90, pos:'ATA', foto: BASE+'CARLAO.jpg.webp' }, // Corrigido path
   { id:39, name:'Ronald Barcellos', short:'Ronald', num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-// ==================== 6 FORMAÇÕES ====================
 const FORMATIONS: Record<string, Slot[]> = {
   '4-2-3-1': [
     { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
@@ -96,253 +85,165 @@ const FORMATIONS: Record<string, Slot[]> = {
     { id: 'rw', x: 78, y: 22, pos: 'ATA', label: 'RW' },
     { id: 'st', x: 50, y: 12, pos: 'ATA', label: 'ST' },
     { id: 'lw', x: 22, y: 22, pos: 'ATA', label: 'LW' },
-  ],
-  '4-4-2': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
-    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
-    { id: 'rm', x: 78, y: 50, pos: 'MEI', label: 'RM' },
-    { id: 'cm1', x: 62, y: 50, pos: 'VOL', label: 'CM' },
-    { id: 'cm2', x: 38, y: 50, pos: 'VOL', label: 'CM' },
-    { id: 'lm', x: 22, y: 50, pos: 'MEI', label: 'LM' },
-    { id: 'st1', x: 38, y: 15, pos: 'ATA', label: 'ST' },
-    { id: 'st2', x: 62, y: 15, pos: 'ATA', label: 'ST' },
-  ],
-  '3-5-2': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'cb1', x: 35, y: 72, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 50, y: 75, pos: 'ZAG', label: 'CB' },
-    { id: 'cb3', x: 65, y: 72, pos: 'ZAG', label: 'CB' },
-    { id: 'lwb', x: 15, y: 52, pos: 'LAT', label: 'LWB' },
-    { id: 'cm1', x: 30, y: 48, pos: 'MEI', label: 'CM' },
-    { id: 'cm2', x: 50, y: 45, pos: 'VOL', label: 'CM' },
-    { id: 'cm3', x: 70, y: 48, pos: 'MEI', label: 'CM' },
-    { id: 'rwb', x: 85, y: 52, pos: 'LAT', label: 'RWB' },
-    { id: 'st1', x: 38, y: 15, pos: 'ATA', label: 'ST' },
-    { id: 'st2', x: 62, y: 15, pos: 'ATA', label: 'ST' },
-  ],
-  '5-3-2': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'lb', x: 15, y: 68, pos: 'LAT', label: 'LB' },
-    { id: 'cb1', x: 30, y: 72, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 50, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'cb3', x: 70, y: 72, pos: 'ZAG', label: 'CB' },
-    { id: 'rb', x: 85, y: 68, pos: 'LAT', label: 'RB' },
-    { id: 'cm1', x: 35, y: 48, pos: 'MEI', label: 'CM' },
-    { id: 'cm2', x: 50, y: 45, pos: 'VOL', label: 'CM' },
-    { id: 'cm3', x: 65, y: 48, pos: 'MEI', label: 'CM' },
-    { id: 'st1', x: 38, y: 15, pos: 'ATA', label: 'ST' },
-    { id: 'st2', x: 62, y: 15, pos: 'ATA', label: 'ST' },
-  ],
-  '4-1-4-1': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
-    { id: 'rb', x: 82, y: 68, pos: 'LAT', label: 'RB' },
-    { id: 'cb1', x: 62, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'cb2', x: 38, y: 73, pos: 'ZAG', label: 'CB' },
-    { id: 'lb', x: 18, y: 68, pos: 'LAT', label: 'LB' },
-    { id: 'dm', x: 50, y: 58, pos: 'VOL', label: 'DM' },
-    { id: 'lm', x: 22, y: 42, pos: 'MEI', label: 'LM' },
-    { id: 'cm', x: 40, y: 40, pos: 'MEI', label: 'CM' },
-    { id: 'am', x: 60, y: 38, pos: 'MEI', label: 'AM' },
-    { id: 'rm', x: 78, y: 42, pos: 'MEI', label: 'RM' },
-    { id: 'st', x: 50, y: 12, pos: 'ATA', label: 'ST' },
-  ],
+  ]
 };
 
-const POS_COLORS: Record<string, string> = {
-  GOL: '#F5C400', ZAG: '#00F3FF', LAT: '#4FC3F7',
-  VOL: '#BF5FFF', MEI: '#22C55E', ATA: '#FF2D55',
-};
+const POS_COLORS: Record<string, string> = { GOL: '#F5C400', ZAG: '#00F3FF', LAT: '#4FC3F7', VOL: '#BF5FFF', MEI: '#22C55E', ATA: '#FF2D55' };
 
-// ==================== CARD DO JOGADOR (FIFA Style) ====================
-function FifaPlayerCard({ player, isSelected = false }: { player: Player | null; isSelected?: boolean }) {
-  if (!player) {
-    return (
-      <div className="w-16 h-20 rounded-xl border-2 border-dashed border-white/30 flex items-center justify-center bg-black/40">
-        <span className="text-3xl text-white/30">+</span>
-      </div>
-    );
-  }
+// ─── COMPONENTS ─────────────────────────────────────────────────────────────
 
-  const color = POS_COLORS[player.pos] || '#888';
-
+function FifaPlayerCard({ player, isSelected, onClick }: { player: Player | null, isSelected: boolean, onClick: () => void }) {
+  const color = player ? POS_COLORS[player.pos] : '#ffffff33';
   return (
-    <motion.div
-      whileHover={{ scale: 1.08, y: -6 }}
-      whileTap={{ scale: 0.95 }}
-      className={`relative w-16 h-20 rounded-xl overflow-hidden border-2 shadow-2xl transition-all duration-300 ${isSelected ? 'border-[#F5C400] scale-110 shadow-[0_0_25px_#F5C400]' : 'border-white/10'}`}
-      style={{ borderColor: isSelected ? '#F5C400' : color }}
+    <motion.div 
+      whileHover={{ scale: 1.05 }} 
+      onClick={onClick}
+      className={`relative w-16 h-20 rounded-xl cursor-pointer border-2 transition-all duration-300 ${isSelected ? 'scale-110 shadow-[0_0_20px_#F5C400]' : 'shadow-xl'}`}
+      style={{ borderColor: isSelected ? '#F5C400' : color, backgroundColor: '#00000088' }}
     >
-      <img src={player.foto} alt={player.short} className="w-full h-full object-cover" />
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent h-10" />
-      <div className="absolute bottom-1 left-1 right-1 text-center">
-        <div className="text-[10px] font-black text-white tracking-widest drop-shadow">{player.short}</div>
-      </div>
+      {player ? (
+        <>
+          <img src={player.foto} className="w-full h-full object-cover rounded-lg" alt={player.short} />
+          <div className="absolute bottom-0 w-full bg-black/80 py-0.5">
+            <p className="text-[9px] font-black text-center uppercase tracking-tighter">{player.short}</p>
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center justify-center h-full text-white/20 text-2xl font-thin">+</div>
+      )}
     </motion.div>
   );
 }
 
-// ==================== COMPONENTE PRINCIPAL ====================
-export default function EscalacaoFormacao() {
+export default function EscalacaoPremium() {
   const [step, setStep] = useState<Step>('formation');
   const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-2-3-1');
   const [lineup, setLineup] = useState<Lineup>({});
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [filterPos, setFilterPos] = useState<string | null>(null);
+  const [score, setScore] = useState({ tigre: 0, adv: 0 });
 
   const slots = useMemo(() => FORMATIONS[formation], [formation]);
 
   const filteredPlayers = useMemo(() => {
-    const targetPos = filterPos || (activeSlot ? slots.find(s => s.id === activeSlot)?.pos : null);
-    return targetPos ? PLAYERS.filter(p => p.pos === targetPos) : PLAYERS;
+    const slot = slots.find(s => s.id === activeSlot);
+    const pos = filterPos || slot?.pos;
+    return pos ? PLAYERS.filter(p => p.pos === pos) : PLAYERS;
   }, [filterPos, activeSlot, slots]);
 
-  const handleSelectPlayer = (player: Player) => {
-    if (!activeSlot) return;
-    setLineup(prev => ({ ...prev, [activeSlot]: player }));
-    setActiveSlot(null);
+  const handleSelect = (p: Player) => {
+    if (activeSlot) {
+      setLineup(prev => ({ ...prev, [activeSlot]: p }));
+      setActiveSlot(null);
+      setFilterPos(null);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-hidden">
+    <div className="min-h-screen bg-[#050505] text-white selection:bg-yellow-500">
       <AnimatePresence mode="wait">
-
-        {/* STEP 1: SELETOR DE FORMAÇÃO */}
+        
+        {/* STEP 1: FORMAÇÃO */}
         {step === 'formation' && (
-          <motion.div
-            key="formation"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black"
-          >
-            <img src={ESCUDO} alt="Tigre" className="w-28 h-28 mb-10 drop-shadow-2xl" />
-            <h1 className="text-5xl font-black tracking-[-2px] text-center mb-3">ESCOLHA SUA TÁTICA</h1>
-            <p className="text-zinc-400 text-center max-w-xs mb-12">A base do seu sucesso começa aqui</p>
-
-            <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-              {Object.keys(FORMATIONS).map((f) => (
-                <motion.button
-                  key={f}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setFormation(f as keyof typeof FORMATIONS);
-                    setStep('picking');
-                  }}
-                  className={`py-8 rounded-2xl font-black text-2xl tracking-tighter border-2 transition-all
-                    ${formation === f 
-                      ? 'border-[#F5C400] bg-gradient-to-b from-[#1a1200] to-black shadow-[0_0_40px_rgba(245,196,0,0.5)]' 
-                      : 'border-white/10 hover:border-white/30 bg-zinc-950/80'}`}
-                >
+          <motion.div key="f" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-screen flex flex-col items-center justify-center gap-8">
+            <img src={ESCUDO} className="w-24 drop-shadow-[0_0_20px_rgba(245,196,0,0.3)]" alt="Logo" />
+            <h1 className="text-4xl font-black italic uppercase tracking-tighter">Escolha a Tática</h1>
+            <div className="flex gap-4">
+              {Object.keys(FORMATIONS).map(f => (
+                <button key={f} onClick={() => { setFormation(f); setStep('arena'); }} 
+                  className="px-10 py-6 border-2 border-white/10 rounded-2xl hover:border-yellow-500 font-bold text-2xl transition-all">
                   {f}
-                </motion.button>
+                </button>
               ))}
             </div>
           </motion.div>
         )}
 
-        {/* STEP 2: ARENA MODE - CAMPO + MERCADO */}
-        {step === 'picking' && (
-          <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
+        {/* STEP 2: ARENA MODE (O CORAÇÃO DO APP) */}
+        {step === 'arena' && (
+          <motion.div key="a" initial={{ x: 100 }} animate={{ x: 0 }} className="flex flex-col lg:flex-row h-screen">
             
-            {/* CAMPO 3D (Esquerda) */}
-            <div className="flex-1 relative flex items-center justify-center bg-gradient-to-b from-emerald-950 to-black p-6 lg:p-12">
-              <div className="relative w-full max-w-[460px]" style={{ perspective: '1200px' }}>
-                <motion.div
-                  initial={{ rotateX: 22 }}
-                  animate={{ rotateX: 15 }}
-                  className="relative w-full aspect-[10/13] bg-[#0a2a18] rounded-[40px] border-[8px] border-white/10 shadow-[0_60px_120px_rgba(0,0,0,0.9)] overflow-hidden"
-                  style={{ transformStyle: 'preserve-3d' }}
-                >
-                  {/* Gramado */}
-                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,#0f3a22_0,#0f3a22_14px,#0a2a18_14px,#0a2a18_28px)]" />
-
-                  {/* Linhas do campo */}
-                  <div className="absolute inset-0 border-2 border-white/20" />
-                  <div className="absolute top-1/2 left-0 right-0 h-px bg-white/30" />
-
-                  {/* Jogadores no campo */}
-                  <AnimatePresence mode="popLayout">
-                    {slots.map((slot, index) => {
-                      const player = lineup[slot.id];
-                      return (
-                        <motion.div
-                          key={`${formation}-${slot.id}`}
-                          layoutId={`player-${slot.id}`}
-                          initial={{ scale: 0.7, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: "spring", stiffness: 200, damping: 25, delay: index * 0.03 }}
-                          className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
-                          style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-                          onClick={() => {
-                            setActiveSlot(slot.id);
-                            setFilterPos(null);
-                          }}
-                        >
-                          <FifaPlayerCard player={player} isSelected={activeSlot === slot.id} />
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                </motion.div>
+            {/* CAMPO 3D */}
+            <div className="flex-1 relative flex items-center justify-center p-4 bg-gradient-to-b from-emerald-950/20 to-black">
+              <div className="relative w-full max-w-md aspect-[10/13] border-[6px] border-white/10 rounded-[40px] overflow-hidden shadow-2xl" 
+                   style={{ perspective: '1000px', transform: 'rotateX(10deg)' }}>
+                <div className={`absolute inset-0 ${CAMPO_BG}`} />
+                <div className="absolute top-1/2 w-full h-px bg-white/20" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white/20 rounded-full" />
+                
+                {slots.map((s) => (
+                  <div key={s.id} className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-700"
+                       style={{ left: `${s.x}%`, top: `${s.y}%` }}>
+                    <FifaPlayerCard 
+                      player={lineup[s.id] || null} 
+                      isSelected={activeSlot === s.id}
+                      onClick={() => { setActiveSlot(s.id); setFilterPos(null); }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* MERCADO PERSISTENTE (Direita) */}
-            <div className="w-full lg:w-[460px] bg-zinc-950 border-l border-white/5 flex flex-col shadow-[-30px_0_60px_rgba(0,0,0,0.8)]">
-              <div className="p-6 border-b border-zinc-800">
-                <h2 className="text-2xl font-black text-[#F5C400]">MERCADO DE JOGADORES</h2>
-                <p className="text-sm text-zinc-400 mt-1">
-                  {activeSlot 
-                    ? `Posição: ${slots.find(s => s.id === activeSlot)?.pos}` 
-                    : 'Clique em um slot para filtrar'}
-                </p>
+            {/* MERCADO PERSISTENTE */}
+            <div className="w-full lg:w-[420px] bg-zinc-950 border-l border-white/10 flex flex-col">
+              <div className="p-6 border-b border-white/5">
+                <h2 className="text-yellow-500 font-black text-xl italic uppercase">Mercado Tigre</h2>
+                <div className="flex gap-2 mt-4 overflow-x-auto pb-2 no-scrollbar">
+                  {['GOL','ZAG','LAT','VOL','MEI','ATA'].map(p => (
+                    <button key={p} onClick={() => setFilterPos(p)} 
+                      className={`px-4 py-1.5 rounded-full text-[10px] font-black transition-all ${filterPos === p ? 'bg-yellow-500 text-black' : 'bg-white/5 hover:bg-white/10'}`}>
+                      {p}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Filtros */}
-              <div className="flex gap-1 p-3 bg-black border-b border-zinc-800 overflow-x-auto">
-                {['GOL','LAT','ZAG','VOL','MEI','ATA'].map(pos => (
-                  <button
-                    key={pos}
-                    onClick={() => setFilterPos(filterPos === pos ? null : pos)}
-                    className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                      filterPos === pos ? 'bg-[#F5C400] text-black' : 'bg-zinc-900 hover:bg-zinc-800'
-                    }`}
-                  >
-                    {pos}
-                  </button>
-                ))}
-              </div>
-
-              {/* Grid 4x4 */}
-              <div className="flex-1 overflow-y-auto p-4 grid grid-cols-4 gap-3">
+              <div className="flex-1 overflow-y-auto p-4 grid grid-cols-4 gap-3 content-start">
                 <AnimatePresence mode="popLayout">
-                  {filteredPlayers.map((player) => (
-                    <motion.div
-                      key={player.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.92 }}
-                      onClick={() => handleSelectPlayer(player)}
-                      className="relative aspect-[3/4] bg-zinc-900 rounded-xl overflow-hidden border border-white/10 hover:border-[#F5C400]/60 cursor-pointer shadow-md"
-                    >
-                      <img src={player.foto} className="w-full h-full object-cover" alt={player.name} />
-                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent h-12" />
-                      <div className="absolute bottom-2 left-2 right-2 text-center">
-                        <div className="text-[10px] font-black text-white tracking-widest">{player.short}</div>
+                  {filteredPlayers.map(p => (
+                    <motion.div key={p.id} layout initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} 
+                      whileTap={{ scale: 0.9 }} onClick={() => handleSelect(p)}
+                      className="relative aspect-[3/4] rounded-lg overflow-hidden border border-white/5 group cursor-pointer">
+                      <img src={p.foto} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+                      <div className="absolute bottom-0 w-full bg-black/90 p-1">
+                        <p className="text-[8px] text-center font-bold truncate">{p.short}</p>
                       </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
+
+              <div className="p-6 bg-black border-t border-white/10">
+                 <button onClick={() => setStep('summary')} className="w-full bg-yellow-500 text-black py-4 rounded-xl font-black uppercase italic tracking-tighter hover:bg-yellow-400 transition-colors">
+                   Finalizar Escalação
+                 </button>
+              </div>
             </div>
-          </div>
+          </motion.div>
+        )}
+
+        {/* STEP 3: PLACAR & RESUMO */}
+        {step === 'summary' && (
+          <motion.div key="s" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="h-screen flex flex-col items-center justify-center p-6 text-center">
+            <h2 className="text-5xl font-black mb-8 italic uppercase text-yellow-500">Qual o seu palpite?</h2>
+            <div className="flex items-center gap-8 mb-12">
+              <div className="flex flex-col items-center">
+                <img src={ESCUDO} className="w-20 mb-4" />
+                <input type="number" value={score.tigre} onChange={e => setScore({...score, tigre: Number(e.target.value)})} 
+                       className="w-24 h-24 bg-white/5 border-2 border-yellow-500 rounded-3xl text-center text-5xl font-black focus:outline-none" />
+              </div>
+              <span className="text-4xl font-black text-white/20 mt-10">VS</span>
+              <div className="flex flex-col items-center">
+                <div className="w-20 h-20 bg-zinc-800 rounded-full mb-4 flex items-center justify-center text-xs">ADV</div>
+                <input type="number" value={score.adv} onChange={e => setScore({...score, adv: Number(e.target.value)})} 
+                       className="w-24 h-24 bg-white/5 border-2 border-white/10 rounded-3xl text-center text-5xl font-black focus:outline-none" />
+              </div>
+            </div>
+            <button className="bg-white text-black px-12 py-5 rounded-2xl font-black uppercase italic text-xl hover:scale-105 transition-all">
+              Salvar e Compartilhar
+            </button>
+            <button onClick={() => setStep('arena')} className="mt-6 text-white/40 font-bold hover:text-white transition-colors">Voltar ao campo</button>
+          </motion.div>
         )}
 
       </AnimatePresence>
