@@ -232,7 +232,10 @@ const FieldSlot = React.memo(function FieldSlot({
 // ══════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════════════════
-export default function EscalacaoFormacao() {
+interface EscalacaoFormacaoProps {
+  jogoId?: number;
+}
+export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps = {}) {
   const [step, setStep] = useState<Step>('formation');
   const [formation, setFormation] = useState('4-3-3');
   const [slotMap, setSlotMap] = useState<SlotMap>({});
