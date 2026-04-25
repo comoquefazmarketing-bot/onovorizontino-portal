@@ -12,7 +12,6 @@ const STADIUM_BG   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object
 interface Player { id: number; name: string; short: string; num: number; pos: string; foto: string; }
 type SlotMap = Record<string, { player: Player | null; x: number; y: number }>;
 
-// Resolvendo o erro de build: Definindo as Props que o componente recebe do Next.js
 interface EscalacaoProps {
   jogoId?: number | string;
 }
@@ -59,6 +58,13 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [pendingPlayer, setPendingPlayer] = useState<Player | null>(null);
 
+  // Função para tratar URLs com caracteres especiais (Ex: Ñ, Í, espaços)
+  const getValidPhotoUrl = (fotoPath: string) => {
+    if (!fotoPath) return ESCUDO;
+    const encodedPath = encodeURIComponent(fotoPath).replace(/%2F/g, '/');
+    return `${BASE_STORAGE}${encodedPath}`;
+  };
+
   const formationConfigs: Record<string, any> = {
     '4-3-3': { 'gk':{x:50,y:85}, 'lb':{x:15,y:62}, 'cb1':{x:38,y:70}, 'cb2':{x:62,y:70}, 'rb':{x:85,y:62}, 'm1':{x:50,y:48}, 'm2':{x:30,y:42}, 'm3':{x:70,y:42}, 'st':{x:50,y:15}, 'lw':{x:22,y:22}, 'rw':{x:78,y:22} },
     '4-4-2': { 'gk':{x:50,y:85}, 'lb':{x:15,y:62}, 'cb1':{x:38,y:70}, 'cb2':{x:62,y:70}, 'rb':{x:85,y:62}, 'm1':{x:35,y:45}, 'm2':{x:65,y:45}, 'm3':{x:15,y:38}, 'm4':{x:85,y:38}, 'st1':{x:40,y:18}, 'st2':{x:60,y:18} },
@@ -99,7 +105,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
         
         {step === 'formation' && (
           <motion.div key="f" className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950">
-            <h1 className="text-3xl font-black italic mb-10 text-yellow-500 uppercase tracking-tighter">Escolha a Tática</h1>
+            <h1 className="text-3xl font-black italic mb-10 text-yellow-500 uppercase tracking-tighter text-center">Escolha a Tática</h1>
             <div className="grid grid-cols-2 gap-4 w-full max-w-md">
               {Object.keys(formationConfigs).map(f => (
                 <button key={f} onClick={() => {setFormation(f); setStep('arena');}} className="py-6 bg-zinc-900 border-2 border-white/5 rounded-2xl active:scale-95 transition-all font-black text-2xl italic hover:border-yellow-500">
@@ -112,7 +118,6 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
 
         {step === 'arena' && (
           <motion.div key="a" className="flex-1 flex flex-col md:flex-row relative overflow-hidden h-full">
-            {/* Lista de Jogadores - Altura fixa no mobile para não atrapalhar o campo */}
             <div className="h-[30%] md:h-full md:w-80 z-[110] bg-black/60 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10">
               <MarketList 
                 players={PLAYERS_DATA} 
@@ -121,9 +126,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
               />
             </div>
 
-            {/* Campo Arena Tigre */}
             <div className="flex-1 relative bg-zinc-900 overflow-hidden">
-              {/* Background mais claro e iluminado */}
               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-90 pointer-events-none scale-105" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
               
@@ -133,30 +136,31 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
                     key={id} 
                     drag 
                     dragMomentum={false}
-                    dragElastic={0} // Movimento livre (free)
+                    dragElastic={0}
                     onClick={() => handleSlotClick(id)}
                     style={{ 
                       left: `${state.x}%`, 
                       top: `${state.y}%`, 
                       position: 'absolute', 
                       transform: 'translate(-50%, -50%)',
-                      // SOMBRAS CRUZADAS: Simulando refletores dos dois lados
                       filter: 'drop-shadow(15px 15px 12px rgba(0,0,0,0.6)) drop-shadow(-15px 15px 12px rgba(0,0,0,0.4))'
                     }}
                     className={`w-16 h-22 md:w-24 md:h-32 border-2 rounded-xl flex items-center justify-center overflow-hidden z-50 cursor-grab active:cursor-grabbing transition-all ${
-                      activeSlot === id || pendingPlayer ? 'border-yellow-500 bg-yellow-500/30 scale-110 shadow-[0_0_40px_rgba(234,179,8,0.7)]' : 'border-white/30 bg-black/80 shadow-2xl'
+                      activeSlot === id || pendingPlayer ? 'border-yellow-500 bg-yellow-500/30 scale-110 shadow-[0_0_40px_rgba(234,179,8,0.7)]' : 'border-white/30 bg-black/80'
                     }`}
                   >
                     {state.player ? (
-                      <div className="relative w-full h-full pointer-events-none">
+                      <div className="relative w-full h-full pointer-events-none bg-zinc-800">
                         <img 
-                          src={`${BASE_STORAGE}${state.player.foto}`}
+                          src={getValidPhotoUrl(state.player.foto)}
                           className="w-full h-full object-cover"
-                          style={{ objectPosition: '90% center' }} 
-                          onError={(e) => { (e.target as HTMLImageElement).src = ESCUDO; }}
+                          style={{ objectPosition: 'center 15%' }} 
+                          onError={(e) => { 
+                             const target = e.target as HTMLImageElement;
+                             if(target.src !== ESCUDO) target.src = ESCUDO;
+                          }}
                         />
-                        {/* PLACAR DE NOME - MÁXIMA LEGIBILIDADE (FONTE PRETA EM FUNDO AMARELO) */}
-                        <div className="absolute bottom-0 w-full bg-yellow-500 py-1 md:py-1.5 shadow-[0_-5px_20px_rgba(0,0,0,0.8)]">
+                        <div className="absolute bottom-0 w-full bg-yellow-500 py-1 shadow-[0_-5px_20px_rgba(0,0,0,0.8)]">
                           <span className="text-[9px] md:text-[12px] font-black uppercase text-black leading-none block text-center tracking-tighter">
                             {state.player.short}
                           </span>
@@ -172,7 +176,6 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
                 ))}
               </div>
 
-              {/* Botões de Ação */}
               <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-4 z-[120] px-6">
                 <button onClick={() => setStep('formation')} className="flex-1 max-w-[140px] py-4 bg-zinc-900/90 border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-md active:scale-95 transition-all">ALTERAR TÁTICA</button>
                 <button onClick={() => setStep('final')} className="flex-1 max-w-[200px] py-4 bg-yellow-500 text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(234,179,8,0.4)] active:scale-95 transition-all">FINALIZAR TIME</button>
