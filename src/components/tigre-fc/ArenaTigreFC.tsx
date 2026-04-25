@@ -15,7 +15,7 @@ import FinalCardReveal from './FinalCardReveal';
 import TigreFCShare from './TigreFCShare';
 
 // --- TIPAGEM E DADOS ---
-import { PLAYERS } from '@/data/players'; 
+
 import { FORMATIONS } from '@/config/formations';
 
 export default function ArenaTigreFC() {
