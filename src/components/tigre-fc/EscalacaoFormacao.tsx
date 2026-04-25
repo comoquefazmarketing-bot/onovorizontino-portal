@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase'; // Ajuste conforme seu caminho de config
 
 // --- COMPONENTES ---
+// --- COMPONENTES ---
 import { MarketList } from './MarketList';
-import { SoccerField } from './SoccerField';
-import { Bench } from './Bench';
-import CapitaoEHeroi from './CapitaoEHeroi'; // Nome limpo para evitar erros de build
+import SoccerField from './SoccerField';       // REMOVIDO AS CHAVES
+import Bench from './Bench';             // REMOVIDO AS CHAVES
+import CapitaoEHeroi from './CapitaoEHeroi';
 import Palpite from './Palpite';
-import FinalCardReveal from './FinalCardReveal'; // Nome limpo para evitar erros de build
+import FinalCardReveal from './FinalCardReveal';
 
 // --- CONFIGURAÇÕES TÉCNICAS ---
 interface EscalacaoFormacaoProps {
