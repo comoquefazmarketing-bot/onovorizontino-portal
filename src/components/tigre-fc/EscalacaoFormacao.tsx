@@ -26,6 +26,11 @@ type Lineup = Record<string, Player | null>;
 type Step   = 'formation' | 'arena' | 'summary';
 interface Slot { id: string; x: number; y: number; label: string; pos: string; }
 
+// Interface para as Props do Componente
+interface ArenaTigreFCProps {
+  jogoId?: number;
+}
+
 // ── 39 Jogadores ──────────────────────────────────────────
 const PLAYERS: Player[] = [
   { id:1,  name:'César Augusto',    short:'César',      num:31, pos:'GOL', foto:BASE+'CESAR-AUGUSTO.jpg.webp' },
@@ -104,7 +109,6 @@ function scalePorY(y: number): number {
   return min + norm * (max - min);
 }
 
-// ── Componente MarketCard (Foto à Esquerda) ────────────────
 function MarketCard({ player, onClick, onDragStart, onDragEnd, isEscalado, isOriginSelected }: any) {
   return (
     <motion.div
@@ -132,7 +136,6 @@ function MarketCard({ player, onClick, onDragStart, onDragEnd, isEscalado, isOri
   );
 }
 
-// ── Componente FieldCard (Foto à Direita) ───────────────────
 function FieldCard({ player, label, isSelected, isOriginSelected, onClick, onDragStart, onDragEnd, scale, draggable }: any) {
   const W = Math.round(92 * scale);
   const H = Math.round(124 * scale);
@@ -167,7 +170,8 @@ function FieldCard({ player, label, isSelected, isOriginSelected, onClick, onDra
   );
 }
 
-export default function ArenaTigreFC() {
+// Componente Exportado com suporte a Props (jogoId)
+export default function ArenaTigreFC({ jogoId }: ArenaTigreFCProps) {
   const [step, setStep] = useState<Step>('formation');
   const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-3-3');
   const [slotMap, setSlotMap] = useState<SlotMap>({});
@@ -225,7 +229,6 @@ export default function ArenaTigreFC() {
         </div>
       ) : (
         <div className="flex h-screen">
-          {/* Mercado - Lado Esquerdo */}
           <div className="w-80 h-full overflow-y-auto bg-zinc-900/50 p-4 space-y-2 border-r border-white/10">
             <p className="text-[10px] font-black text-yellow-500 tracking-widest mb-4">MERCADO DE ATLETAS</p>
             {PLAYERS.map(p => (
@@ -248,7 +251,6 @@ export default function ArenaTigreFC() {
             ))}
           </div>
 
-          {/* Campo - Central */}
           <div ref={fieldRef} className="flex-1 relative bg-zinc-900 overflow-hidden">
             <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-60" />
             {Object.entries(slotMap).map(([id, st]) => (
@@ -283,7 +285,6 @@ export default function ArenaTigreFC() {
               </div>
             ))}
             
-            {/* Créditos Rodapé Técnico */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center bg-black/80 p-4 rounded-xl border border-yellow-500/20 backdrop-blur-md">
               <p className="text-yellow-500 text-[10px] font-black tracking-widest uppercase">Técnico: Enderson Moreira</p>
               <p className="text-white text-[8px] font-bold mt-1 opacity-40">ARENA TIGRE FC • Criado por Felipe Makarios</p>
