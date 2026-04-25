@@ -3,18 +3,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 
-// ── Assets & Config ───────────────────────────────────────
+// ── Assets ────────────────────────────────────────────────
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const STADIUM_BG = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
 
+// ── Tipagem ───────────────────────────────────────────────
 type Player = { id: number; name: string; short: string; num: number; pos: string; foto: string; };
 type SlotState = { player: Player | null; x: number; y: number; label: string };
 type SlotMap = Record<string, SlotState>;
 type Step = 'formation' | 'arena' | 'summary';
 
-interface ArenaTigreFCProps {
-  jogoId?: number;
-}
+interface ArenaTigreFCProps { jogoId?: number; }
 
 // ── Lista de Jogadores ────────────────────────────────────
 const PLAYERS: Player[] = [
@@ -61,24 +60,56 @@ const PLAYERS: Player[] = [
 
 const FORMATIONS = {
   '4-3-3': [
-    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:85, y:65, label:'LD' },
-    { id:'cb1', x:65, y:75, label:'ZAG' }, { id:'cb2', x:35, y:75, label:'ZAG' },
-    { id:'lb', x:15, y:65, label:'LE' }, { id:'cm1', x:50, y:55, label:'VOL' },
-    { id:'cm2', x:30, y:45, label:'MC' }, { id:'cm3', x:70, y:45, label:'MC' },
-    { id:'rw', x:80, y:25, label:'PD' }, { id:'st', x:50, y:15, label:'CA' },
-    { id:'lw', x:20, y:25, label:'PE' }
+    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:82, y:65, label:'LD' },
+    { id:'cb1', x:62, y:75, label:'ZAG' }, { id:'cb2', x:38, y:75, label:'ZAG' },
+    { id:'lb', x:18, y:65, label:'LE' }, { id:'cm1', x:50, y:58, label:'VOL' },
+    { id:'cm2', x:32, y:45, label:'MC' }, { id:'cm3', x:68, y:45, label:'MC' },
+    { id:'rw', x:78, y:22, label:'PD' }, { id:'st', x:50, y:15, label:'CA' },
+    { id:'lw', x:22, y:22, label:'PE' }
   ],
   '4-4-2': [
-    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:85, y:65, label:'LD' },
-    { id:'cb1', x:65, y:75, label:'ZAG' }, { id:'cb2', x:35, y:75, label:'ZAG' },
-    { id:'lb', x:15, y:65, label:'LE' }, { id:'cm1', x:40, y:50, label:'MC' },
-    { id:'cm2', x:60, y:50, label:'MC' }, { id:'rm', x:80, y:45, label:'MD' },
-    { id:'lm', x:20, y:45, label:'ME' }, { id:'st1', x:40, y:20, label:'ATA' },
+    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:82, y:65, label:'LD' },
+    { id:'cb1', x:62, y:75, label:'ZAG' }, { id:'cb2', x:38, y:75, label:'ZAG' },
+    { id:'lb', x:18, y:65, label:'LE' }, { id:'cm1', x:40, y:52, label:'MC' },
+    { id:'cm2', x:60, y:52, label:'MC' }, { id:'rm', x:80, y:42, label:'MD' },
+    { id:'lm', x:20, y:42, label:'ME' }, { id:'st1', x:40, y:20, label:'ATA' },
     { id:'st2', x:60, y:20, label:'ATA' }
+  ],
+  '3-5-2': [
+    { id:'gk', x:50, y:85, label:'GOL' }, { id:'cb1', x:50, y:75, label:'ZAG' },
+    { id:'cb2', x:70, y:70, label:'ZAG' }, { id:'cb3', x:30, y:70, label:'ZAG' },
+    { id:'rm', x:85, y:45, label:'ALA' }, { id:'lm', x:15, y:45, label:'ALA' },
+    { id:'dm', x:50, y:55, label:'VOL' }, { id:'cm1', x:35, y:42, label:'MC' },
+    { id:'cm2', x:65, y:42, label:'MC' }, { id:'st1', x:40, y:20, label:'ATA' },
+    { id:'st2', x:60, y:20, label:'ATA' }
+  ],
+  '4-2-3-1': [
+    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:82, y:65, label:'LD' },
+    { id:'cb1', x:62, y:75, label:'ZAG' }, { id:'cb2', x:38, y:75, label:'ZAG' },
+    { id:'lb', x:18, y:65, label:'LE' }, { id:'dm1', x:40, y:58, label:'VOL' },
+    { id:'dm2', x:60, y:58, label:'VOL' }, { id:'am', x:50, y:40, label:'MEI' },
+    { id:'rw', x:80, y:30, label:'PD' }, { id:'lw', x:20, y:30, label:'PE' },
+    { id:'st', x:50, y:15, label:'CA' }
+  ],
+  '5-3-2': [
+    { id:'gk', x:50, y:85, label:'GOL' }, { id:'rb', x:85, y:60, label:'LD' },
+    { id:'lb', x:15, y:60, label:'LE' }, { id:'cb1', x:50, y:75, label:'ZAG' },
+    { id:'cb2', x:68, y:72, label:'ZAG' }, { id:'cb3', x:32, y:72, label:'ZAG' },
+    { id:'cm1', x:50, y:50, label:'MC' }, { id:'cm2', x:30, y:45, label:'MC' },
+    { id:'cm3', x:70, y:45, label:'MC' }, { id:'st1', x:42, y:20, label:'ATA' },
+    { id:'st2', x:58, y:20, label:'ATA' }
+  ],
+  '3-4-3': [
+    { id:'gk', x:50, y:85, label:'GOL' }, { id:'cb1', x:50, y:75, label:'ZAG' },
+    { id:'cb2', x:70, y:70, label:'ZAG' }, { id:'cb3', x:30, y:70, label:'ZAG' },
+    { id:'cm1', x:42, y:50, label:'MC' }, { id:'cm2', x:58, y:50, label:'MC' },
+    { id:'rm', x:85, y:45, label:'MD' }, { id:'lm', x:15, y:45, label:'ME' },
+    { id:'rw', x:75, y:22, label:'PD' }, { id:'st', x:50, y:15, label:'CA' },
+    { id:'lw', x:25, y:22, label:'PE' }
   ]
 };
 
-// ── Componentes de UI ─────────────────────────────────────
+// ── Mercado & Cards ───────────────────────────────────────
 function MarketCard({ player, isEscalado, isOrigin, onClick, onDragStart, onDragEnd }: any) {
   return (
     <motion.div
@@ -86,7 +117,7 @@ function MarketCard({ player, isEscalado, isOrigin, onClick, onDragStart, onDrag
       onClick={onClick}
       className={`relative h-20 rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing flex items-stretch transition-all ${
         isOrigin ? 'border-cyan-400 shadow-[0_0_15px_cyan]' : 
-        isEscalado ? 'border-yellow-500/50 opacity-50' : 'border-white/10 bg-zinc-900/80'
+        isEscalado ? 'border-yellow-500/50 opacity-40' : 'border-white/10 bg-zinc-900/80'
       }`}
     >
       <div className="w-16 bg-black flex-shrink-0">
@@ -100,8 +131,8 @@ function MarketCard({ player, isEscalado, isOrigin, onClick, onDragStart, onDrag
   );
 }
 
-function FieldCard({ slotId, player, label, isSelected, isOrigin, scale, onClick, onDragStart, onDragEnd, fieldRef }: any) {
-  const size = 85 * scale;
+function FieldCard({ player, label, isSelected, scale, onClick, onDragStart, onDragEnd, fieldRef }: any) {
+  const size = 78 * scale;
   return (
     <motion.div
       drag dragMomentum={false} dragConstraints={fieldRef}
@@ -109,7 +140,6 @@ function FieldCard({ slotId, player, label, isSelected, isOrigin, scale, onClick
       onClick={onClick}
       style={{ width: size, height: size * 1.3, zIndex: isSelected ? 100 : 10 }}
       className={`relative rounded-xl overflow-hidden border-2 transition-all flex flex-col items-center justify-center cursor-move ${
-        isOrigin ? 'border-cyan-400 shadow-[0_0_20px_cyan]' :
         isSelected ? 'border-yellow-400 shadow-[0_0_20px_yellow]' :
         player ? 'border-white/40 bg-black/40' : 'border-dashed border-white/20 bg-black/20'
       }`}
@@ -117,9 +147,10 @@ function FieldCard({ slotId, player, label, isSelected, isOrigin, scale, onClick
       {player ? (
         <>
           <img src={player.foto} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '50% 15%' }} />
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
-          <div className="absolute bottom-0 w-full p-1 bg-black/60 text-center">
-            <p className="text-[9px] font-black text-white uppercase">{player.short}</p>
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/40 to-transparent" />
+          <div className="absolute bottom-0 w-full p-1 text-center">
+            <p className="text-[9px] font-black text-white uppercase truncate">{player.short}</p>
+            <p className="text-[7px] text-yellow-500 font-black">{player.pos}</p>
           </div>
         </>
       ) : (
@@ -129,18 +160,15 @@ function FieldCard({ slotId, player, label, isSelected, isOrigin, scale, onClick
   );
 }
 
-// ── Componente Principal ──────────────────────────────────
 export default function ArenaTigreFC({ jogoId }: ArenaTigreFCProps) {
   const [step, setStep] = useState<Step>('formation');
   const [formation, setFormation] = useState<keyof typeof FORMATIONS>('4-3-3');
   const [slotMap, setSlotMap] = useState<SlotMap>({});
   const [bench, setBench] = useState<(Player | null)[]>(Array(7).fill(null));
-  
-  const [origin, setOrigin] = useState<{ type: 'market' | 'field' | 'bench', id: any, player: Player } | null>(null);
+  const [origin, setOrigin] = useState<any>(null);
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
 
-  // Iniciar Formação
   useEffect(() => {
     const initial: SlotMap = {};
     FORMATIONS[formation].forEach(s => {
@@ -149,137 +177,104 @@ export default function ArenaTigreFC({ jogoId }: ArenaTigreFCProps) {
     setSlotMap(initial);
   }, [formation]);
 
-  const updatePos = (id: string, px: number, py: number) => {
-    const rect = fieldRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = ((px - rect.left) / rect.width) * 100;
-    const y = ((py - rect.top) / rect.height) * 100;
-    setSlotMap(prev => ({ ...prev, [id]: { ...prev[id], x, y } }));
+  const handleResetPos = () => {
+    const defaultCoords = FORMATIONS[formation];
+    setSlotMap(prev => {
+      const newMap = { ...prev };
+      defaultCoords.forEach(d => {
+        if (newMap[d.id]) {
+          newMap[d.id].x = d.x;
+          newMap[d.id].y = d.y;
+        }
+      });
+      return newMap;
+    });
   };
 
   const handleDrop = (point: { x: number, y: number }) => {
-    if (!origin) return;
-    
-    // 1. Verificar se caiu em um slot pré-existente (Snap)
-    const rect = fieldRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    if (!origin || !fieldRef.current) return;
+    const rect = fieldRef.current.getBoundingClientRect();
     const rx = ((point.x - rect.left) / rect.width) * 100;
     const ry = ((point.y - rect.top) / rect.height) * 100;
 
-    let targetSlot = Object.keys(slotMap).find(id => {
+    const targetSlot = Object.keys(slotMap).find(id => {
       const s = slotMap[id];
       return Math.sqrt(Math.pow(s.x - rx, 2) + Math.pow(s.y - ry, 2)) < 8;
     });
 
     if (targetSlot) {
       const targetPlayer = slotMap[targetSlot].player;
-      setSlotMap(prev => ({ ...prev, [targetSlot!]: { ...prev[targetSlot!], player: origin.player } }));
-      
-      if (origin.type === 'field') {
-        setSlotMap(prev => ({ ...prev, [origin.id]: { ...prev[origin.id], player: targetPlayer } }));
-      } else if (origin.type === 'bench') {
-        const newBench = [...bench];
-        newBench[origin.id] = targetPlayer;
-        setBench(newBench);
-      }
-    } else {
-      // 2. Movimentação Livre no Campo
-      if (origin.type === 'field') {
-        updatePos(origin.id, point.x, point.y);
-      }
+      setSlotMap(prev => ({ ...prev, [targetSlot]: { ...prev[targetSlot], player: origin.player } }));
+      if (origin.type === 'field') setSlotMap(prev => ({ ...prev, [origin.id]: { ...prev[origin.id], player: targetPlayer } }));
+      else if (origin.type === 'bench') { const nb = [...bench]; nb[origin.id] = targetPlayer; setBench(nb); }
+    } else if (origin.type === 'field') {
+      setSlotMap(prev => ({ ...prev, [origin.id]: { ...prev[origin.id], x: rx, y: ry } }));
     }
     setOrigin(null);
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white font-sans overflow-hidden flex flex-col">
-      
-      {step === 'formation' && (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <h1 className="text-4xl font-black italic text-yellow-500 mb-2">ARENA TIGRE FC</h1>
-          <p className="text-zinc-500 mb-10 font-bold uppercase tracking-widest text-xs">Selecione sua base tática</p>
-          <div className="grid grid-cols-2 gap-6 w-full max-w-md">
+    <div className="h-screen bg-black text-white font-sans overflow-hidden flex flex-col">
+      {step === 'formation' ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950">
+          <h1 className="text-4xl font-black italic text-yellow-500 mb-8">ARENA TIGRE FC</h1>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl">
             {Object.keys(FORMATIONS).map(f => (
               <button key={f} onClick={() => { setFormation(f as any); setStep('arena'); }}
-                className="aspect-square border-2 border-white/5 bg-zinc-900 rounded-3xl flex items-center justify-center text-4xl font-black hover:border-yellow-500 transition-all active:scale-95"
+                className="p-6 border-2 border-white/5 bg-zinc-900 rounded-2xl text-2xl font-black hover:border-yellow-500 active:scale-95 transition-all"
               >
                 {f}
               </button>
             ))}
           </div>
         </div>
-      )}
-
-      {step === 'arena' && (
+      ) : (
         <div className="flex-1 flex overflow-hidden">
-          {/* Mercado (Esquerda) */}
-          <div className="w-72 border-r border-white/5 bg-black/40 p-4 overflow-y-auto space-y-2">
-            <p className="text-[10px] font-black text-zinc-500 tracking-widest uppercase mb-4">Elenco Disponível</p>
-            {PLAYERS.map(p => {
-              const isEscalado = Object.values(slotMap).some(s => s.player?.id === p.id) || bench.some(b => b?.id === p.id);
-              return (
-                <MarketCard key={p.id} player={p} isEscalado={isEscalado} isOrigin={origin?.player.id === p.id}
-                  onClick={() => {
-                    if (activeSlot) {
-                      setSlotMap(prev => ({ ...prev, [activeSlot]: { ...prev[activeSlot], player: p } }));
-                      setActiveSlot(null);
-                    } else {
-                      setOrigin({ type: 'market', id: p.id, player: p });
-                    }
-                  }}
-                  onDragStart={() => setOrigin({ type: 'market', id: p.id, player: p })}
-                  onDragEnd={(pt: any) => handleDrop(pt)}
-                />
-              );
-            })}
+          <div className="w-72 border-r border-white/5 bg-zinc-900/50 p-4 overflow-y-auto space-y-2">
+            <p className="text-[10px] font-black text-zinc-500 tracking-widest uppercase mb-4">Elenco</p>
+            {PLAYERS.map(p => (
+              <MarketCard key={p.id} player={p} 
+                isEscalado={Object.values(slotMap).some(s => s.player?.id === p.id) || bench.some(b => b?.id === p.id)}
+                isOrigin={origin?.player.id === p.id}
+                onClick={() => activeSlot ? (setSlotMap(prev => ({...prev, [activeSlot]: {...prev[activeSlot], player: p}})), setActiveSlot(null)) : setOrigin({type:'market', player:p})}
+                onDragStart={() => setOrigin({type:'market', player:p})}
+                onDragEnd={(pt:any) => handleDrop(pt)}
+              />
+            ))}
           </div>
 
-          {/* Campo Central */}
-          <div className="flex-1 relative flex flex-col">
-            <div ref={fieldRef} className="flex-1 relative overflow-hidden bg-zinc-900">
-              <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+          <div className="flex-1 flex flex-col relative bg-zinc-950">
+            <div ref={fieldRef} className="flex-1 relative m-4 border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+              <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-60" />
               
+              {/* Botões Flutuantes */}
+              <div className="absolute top-4 right-4 flex gap-2 z-[100]">
+                <button onClick={handleResetPos} title="Reorganizar Formação" className="p-3 bg-black/60 border border-white/10 rounded-full hover:bg-yellow-500 hover:text-black transition-all">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                </button>
+                <button onClick={() => setStep('summary')} className="px-6 py-2 bg-yellow-500 text-black font-black italic rounded-full shadow-lg">FINALIZAR →</button>
+              </div>
+
               {Object.entries(slotMap).map(([id, s]) => (
                 <div key={id} className="absolute" style={{ left: `${s.x}%`, top: `${s.y}%`, transform: 'translate(-50%, -50%)' }}>
-                  <FieldCard slotId={id} player={s.player} label={s.label} scale={0.8 + (s.y/200)}
-                    isSelected={activeSlot === id} isOrigin={origin?.type === 'field' && origin.id === id}
+                  <FieldCard player={s.player} label={s.label} scale={0.75 + (s.y/250)} isSelected={activeSlot === id}
                     fieldRef={fieldRef}
-                    onClick={() => s.player ? setOrigin({ type: 'field', id, player: s.player }) : setActiveSlot(id)}
-                    onDragStart={() => s.player && setOrigin({ type: 'field', id, player: s.player })}
-                    onDragEnd={(pt: any) => handleDrop(pt)}
+                    onClick={() => s.player ? setOrigin({type:'field', id, player:s.player}) : setActiveSlot(id)}
+                    onDragStart={() => s.player && setOrigin({type:'field', id, player:s.player})}
+                    onDragEnd={(pt:any) => handleDrop(pt)}
                   />
                 </div>
               ))}
-
-              <button onClick={() => setStep('summary')} 
-                className="absolute top-6 right-6 px-8 py-3 bg-yellow-500 text-black font-black italic rounded-full shadow-xl hover:scale-105 transition-transform"
-              >
-                FINALIZAR ESCALAÇÃO →
-              </button>
             </div>
 
-            {/* Banco de Reservas (Rodapé do Campo) */}
-            <div className="h-40 bg-black/80 border-t border-yellow-500/20 p-4">
-              <p className="text-[10px] font-black text-yellow-500 mb-3 tracking-[0.2em] uppercase">Banco de Reservas (7)</p>
-              <div className="flex gap-3 h-20">
+            {/* Banco de Reservas */}
+            <div className="h-32 bg-black/80 p-4 border-t border-white/5">
+              <div className="flex gap-2 h-full">
                 {bench.map((p, i) => (
-                  <div key={i} className={`flex-1 border-2 border-dashed rounded-lg flex items-center justify-center transition-all ${p ? 'border-white/40' : 'border-white/10 bg-white/5'}`}
-                    onClick={() => {
-                      if (origin) {
-                        const newBench = [...bench];
-                        newBench[i] = origin.player;
-                        setBench(newBench);
-                        if (origin.type === 'field') setSlotMap(prev => ({ ...prev, [origin.id]: { ...prev[origin.id], player: null } }));
-                        setOrigin(null);
-                      }
-                    }}
+                  <div key={i} onClick={() => origin && (setBench(prev => {const nb=[...prev]; nb[i]=origin.player; return nb;}), setOrigin(null))}
+                    className="flex-1 border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center relative overflow-hidden bg-white/5"
                   >
-                    {p ? (
-                      <div className="relative w-full h-full">
-                        <img src={p.foto} className="w-full h-full object-cover rounded-lg" style={{ objectPosition: '50% 10%' }} />
-                        <div className="absolute bottom-0 w-full text-center bg-black/60 text-[8px] font-bold py-0.5">{p.short}</div>
-                      </div>
-                    ) : <span className="text-[10px] text-white/20 font-black">R{i+1}</span>}
+                    {p ? <img src={p.foto} className="w-full h-full object-cover" style={{objectPosition:'50% 10%'}} /> : <span className="text-[10px] font-black text-white/20">R{i+1}</span>}
                   </div>
                 ))}
               </div>
@@ -289,17 +284,16 @@ export default function ArenaTigreFC({ jogoId }: ArenaTigreFCProps) {
       )}
 
       {step === 'summary' && (
-        <div className="flex-1 flex flex-col items-center justify-center p-10 bg-zinc-950">
-          <div className="bg-zinc-900 border border-white/10 p-8 rounded-3xl max-w-sm w-full text-center space-y-6">
-            <h2 className="text-2xl font-black italic text-yellow-500 uppercase">Time Escalado!</h2>
-            <div className="space-y-1 text-left bg-black/40 p-4 rounded-xl border border-white/5">
-               <p className="text-[10px] text-zinc-500 font-bold uppercase">Titulares</p>
-               {Object.values(slotMap).map(s => s.player && <p key={s.player.id} className="text-sm font-bold"> {s.player.num} • {s.player.name}</p>)}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950">
+          <div className="bg-zinc-900 p-8 rounded-3xl border border-white/10 w-full max-w-md text-center">
+            <h2 className="text-2xl font-black italic text-yellow-500 mb-6 uppercase">Escalação Pronta</h2>
+            <div className="bg-black/50 p-4 rounded-xl border border-white/5 text-left mb-6 space-y-1">
+              {Object.values(slotMap).map(s => s.player && <p key={s.player.id} className="text-xs font-bold uppercase"><span className="text-yellow-500">{s.player.num}</span> • {s.player.name}</p>)}
             </div>
-            <button onClick={() => setStep('arena')} className="w-full py-4 text-zinc-400 font-bold hover:text-white transition-colors">Voltar e Editar</button>
-            <button onClick={() => window.location.reload()} className="w-full py-4 bg-yellow-500 text-black font-black italic rounded-xl">NOVA ESCALAÇÃO</button>
+            <button onClick={() => setStep('arena')} className="w-full py-4 text-zinc-500 font-bold hover:text-white mb-2">VOLTAR E AJUSTAR</button>
+            <button onClick={() => window.location.reload()} className="w-full py-4 bg-yellow-500 text-black font-black italic rounded-xl">RECOMEÇAR</button>
           </div>
-          <p className="mt-8 text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Criado por Felipe Makarios • Arena Tigre FC</p>
+          <p className="mt-8 text-[9px] text-zinc-600 font-black tracking-[0.3em] uppercase">Criado por Felipe Makarios • Arena Tigre FC</p>
         </div>
       )}
     </div>
