@@ -1,6 +1,17 @@
 'use client';
+
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Player } from '@/types/futebol';
+
+// Definindo a interface localmente para evitar erro de módulo não encontrado no build
+interface Player {
+  id: number;
+  name: string;
+  short: string;
+  num: number;
+  pos: string;
+  foto: string;
+}
 
 interface FieldCardProps {
   player: Player | null;
@@ -8,14 +19,26 @@ interface FieldCardProps {
   scale: number;
   isSelected: boolean;
   isOrigin: boolean;
-  fieldRef: React.RefObject<HTMLDivElement>;
+  fieldRef: React.RefObject<HTMLDivElement | null>; // Ajuste fino na tipagem do Ref
   onClick: () => void;
   onDragStart: () => void;
-  onDragEnd: (info: any) => void;
+  onDragEnd: (point: { x: number; y: number }) => void; // Tipagem mais precisa para o info
 }
 
-export function FieldCard({ player, label, scale, isSelected, isOrigin, fieldRef, onClick, onDragStart, onDragEnd }: FieldCardProps) {
+export function FieldCard({ 
+  player, 
+  label, 
+  scale, 
+  isSelected, 
+  isOrigin, 
+  fieldRef, 
+  onClick, 
+  onDragStart, 
+  onDragEnd 
+}: FieldCardProps) {
+  
   const size = 78 * scale;
+
   return (
     <motion.div
       drag
@@ -24,7 +47,11 @@ export function FieldCard({ player, label, scale, isSelected, isOrigin, fieldRef
       onDragStart={onDragStart}
       onDragEnd={(_, info) => onDragEnd(info.point)}
       onClick={onClick}
-      style={{ width: size, height: size * 1.3, zIndex: isSelected || isOrigin ? 100 : 10 }}
+      style={{ 
+        width: size, 
+        height: size * 1.3, 
+        zIndex: isSelected || isOrigin ? 100 : 10 
+      }}
       className={`relative rounded-xl overflow-hidden border-2 transition-all flex flex-col items-center justify-center cursor-move ${
         isOrigin ? 'border-cyan-400 shadow-[0_0_20px_cyan]' :
         isSelected ? 'border-yellow-400 shadow-[0_0_20px_yellow]' :
@@ -33,7 +60,12 @@ export function FieldCard({ player, label, scale, isSelected, isOrigin, fieldRef
     >
       {player ? (
         <>
-          <img src={player.foto} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '50% 15%' }} />
+          <img 
+            src={player.foto} 
+            className="absolute inset-0 w-full h-full object-cover" 
+            style={{ objectPosition: '50% 15%' }} 
+            alt={player.name}
+          />
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/40 to-transparent" />
           <div className="absolute bottom-0 w-full p-1 text-center">
             <p className="text-[9px] font-black text-white uppercase truncate">{player.short}</p>
@@ -41,7 +73,9 @@ export function FieldCard({ player, label, scale, isSelected, isOrigin, fieldRef
           </div>
         </>
       ) : (
-        <span className="text-[10px] font-black text-white/20 uppercase tracking-tighter">{label}</span>
+        <span className="text-[10px] font-black text-white/20 uppercase tracking-tighter">
+          {label}
+        </span>
       )}
     </motion.div>
   );
