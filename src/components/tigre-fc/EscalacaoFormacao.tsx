@@ -306,5 +306,138 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps = {
         )}
 
         {step === 'arena' && (
-          <motion.div key="arena" initial={{ opacity: 0 }} ani
-(Content truncated due to size limit. Use line ranges to read remaining content)
+          <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="flex min-h-screen overflow-hidden">
+            
+            {/* 🛒 ABA DESLIZANTE DO MERCADO (MOBILE GAVETA, DESKTOP LATERAL) */}
+            <AnimatePresence>
+              {activeSlot && (
+                <motion.div 
+                  initial={{ x: 500, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: 500, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 100, damping: 15 }}
+                  className="fixed lg:relative inset-y-0 right-0 w-full lg:w-[480px] bg-black border-l border-white/5 flex flex-col z-[100] backdrop-blur-xl shadow-[-30px_0_70px_rgba(0,0,0,0.8)] overflow-hidden"
+                >
+                  <div className="p-7 border-b border-white/5 bg-zinc-950 flex justify-between items-center sticky top-0">
+                    <div className="leading-tight">
+                      <h3 className="text-[#F5C400] font-black italic text-3xl uppercase tracking-tighter">CONVOCAÇÃO TIGRE</h3>
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase mt-1.5 tracking-widest">Selecione para o slot {slots.find(s => s.id === activeSlot)?.label}</p>
+                    </div>
+                    <button onClick={() => setActiveSlot(null)} className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-800 text-white/40 hover:text-white transition-colors">✕</button>
+                  </div>
+
+                  {/* Filtros de Posição (Visual IDENTICO ao print) */}
+                  <div className="flex gap-2 p-4 overflow-x-auto bg-black/50 border-b border-white/10 no-scrollbar">
+                    {['TODOS', 'GOL','LAT','ZAG','VOL','MEI','ATA'].map(pos => (
+                      <button key={pos} onClick={() => setFilterPos(pos === 'TODOS' ? null : pos)} className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${filterPos === pos ? 'bg-yellow-500 text-black' : pos === 'TODOS' && !filterPos ? 'bg-yellow-500 text-black' : 'bg-zinc-900 text-zinc-400'}`}>
+                        {pos}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Grid de Jogadores (Sem Amontoado, com Zelo) */}
+                  <div className="flex-1 overflow-y-auto p-5 grid grid-cols-2 md:grid-cols-3 gap-5 content-start pb-32">
+                    <AnimatePresence>
+                      {filteredPlayers.map(p => (
+                        <MarketCard key={p.id} player={p} onClick={() => handleSelectPlayer(p)} />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* --- ESTÁDIO E CAMPO (PERSPECTIVA 3D PROFUNDA IGUAL À REFERÊNCIA) --- */}
+            <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+               {/* Background Estádio e Neon Campo */}
+               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover grayscale-[0.3] scale-105" alt="Arena" />
+               <div className="absolute inset-0 bg-black/30" />
+               {/* Neon TIGRE FC no gramado (Visual identico à referência) */}
+               <div className="absolute bottom-16 left-1/2 -translate-x-1/2 text-[180px] font-black italic tracking-tighter uppercase text-yellow-500/10 blur-[2px] z-0 select-none">TIGRE FC</div>
+               
+               {/* Seletor de Tática (Oculto no print, mas útil aqui) */}
+               <div className="absolute top-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-50 bg-black/70 backdrop-blur-xl p-1.5 rounded-full border border-white/10">
+                   {['4-3-3', '4-4-2', '4-2-3-1', '3-5-2', '3-4-3', '5-3-2'].map(f => (
+                       <button key={f} onClick={() => setFormation(f as keyof typeof FORMATIONS)} className={`px-4 py-1.5 rounded-full text-[10px] font-black whitespace-nowrap transition-all ${formation === f ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'text-white/40 hover:text-white'}`}>
+                           {f}
+                       </button>
+                   ))}
+               </div>
+
+               {/* CONTAINER DO CAMPO COM PERSPECTIVA ATIVA (O pulo do gato) */}
+               <div className="relative w-full h-full" style={{ perspective: '2500px' }}>
+                  {/* Inclinação do Gramado (rotateX) */}
+                  <motion.div 
+                    layout
+                    initial={{ rotateX: 30, y: 150 }}
+                    animate={{ rotateX: 22, y: 0 }} // Ângulo IDENTICO ao print de referência
+                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    className="relative inset-0 w-full h-full z-10"
+                    style={{ transformOrigin: 'center center' }}
+                  >
+                    {/* Efeito Neon Pulsante nas linhas do campo (Central, Grande Área) */}
+                    <div className="absolute inset-0 pointer-events-none z-0">
+                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 border-4 border-yellow-500/20 rounded-full blur-[3px]" />
+                    </div>
+
+                    {/* Cards posicionados em perspectiva */}
+                    <AnimatePresence>
+                      {slots.map((s, i) => {
+                        const player = lineup[s.id];
+                        // Cálculo de escala baseado na profundidade (Y)
+                        // No fundo (perto do gol) são menores (scale: 0.6), na base são maiores (scale: 1.2)
+                        const scaleBase = (s.y / 100) * 0.9 + 0.35; 
+
+                        return (
+                          <motion.div
+                            key={s.id}
+                            initial={{ opacity: 0, z: -100, rotateX: 90 }} // "Nascendo" da grama
+                            animate={{ opacity: 1, z: 0, rotateX: 0 }} // Em pé na grama
+                            transition={{ delay: i * 0.05 }}
+                            className="absolute z-10"
+                            style={{ 
+                              left: `${s.x}%`, 
+                              top: `${s.y}%`, 
+                              transform: 'translate(-50%, -50%)',
+                              transformStyle: 'preserve-3d'
+                            }}
+                          >
+                             <motion.div
+                                animate={activeSlot === s.id ? { y: [0, -10, 0] } : { y: 0 }} // Efeito visual de glow pulsante
+                                transition={{ repeat: Infinity, duration: 2 }}
+                             >
+                                <FieldCard player={player} slotPos={s.pos} label={s.label} isSelected={activeSlot === s.id} onClick={() => setActiveSlot(s.id)} />
+                             </motion.div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </motion.div>
+               </div>
+
+               {/* Botão Finalizar (Floating identico à imagem) */}
+               <motion.div layout 
+                 className={`absolute bottom-6 p-4 rounded-3xl bg-black/60 backdrop-blur-xl border-2 transition-all duration-700 z-40 
+                   ${filledSlots === 11 ? 'right-6 border-yellow-500 bg-yellow-500/10' : 'left-1/2 -translate-x-1/2 border-white/10'}`}
+               >
+                 <div className="flex items-center gap-6">
+                   <div className="leading-tight">
+                     <p className={`text-4xl font-black italic tracking-tighter uppercase ${filledSlots === 11 ? 'text-white' : 'text-zinc-600'}`}>TIGRE FC</p>
+                     <p className={`text-xs font-black uppercase tracking-widest mt-1 ${filledSlots === 11 ? 'text-yellow-500 animate-pulse' : 'text-zinc-700'}`}>Escalados: {filledSlots}/11</p>
+                   </div>
+                   {filledSlots === 11 && (
+                      <button onClick={finalize} className="bg-yellow-500 text-black px-10 py-5 rounded-2xl font-black italic tracking-tighter text-xl hover:scale-105 transition-all shadow-[0_10px_30px_rgba(245,196,0,0.3)]">
+                        FINALIZAR ESCALAÇÃO →
+                      </button>
+                   )}
+                 </div>
+               </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+    </div>
+  );
+}
