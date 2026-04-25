@@ -73,7 +73,7 @@ const PLAYERS: Player[] = [
   { id:39, name:'Ronald Barcellos', short:'Ronald', num:23, pos:'ATA', foto:BASE+'RONALD-BARCELLOS.jpg.webp' },
 ];
 
-// ==================== 6 FORMAÇÕES ====================
+// ==================== FORMAÇÕES ====================
 const FORMATIONS: Record<string, Slot[]> = {
   '4-2-3-1': [
     { id: 'gk', x: 50, y: 88, pos: 'GOL', label: 'GK' },
@@ -179,7 +179,7 @@ function MarketCard({ player, onClick }: { player: Player; onClick: () => void }
   );
 }
 
-// ==================== CARD CAMPO (Foto Direita + Campo Realista) ====================
+// ==================== CARD CAMPO (Foto Direita) ====================
 function FieldCard({ player, isSelected, onClick }: { 
   player: Player | null; 
   isSelected: boolean; 
@@ -310,26 +310,43 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </motion.div>
         )}
 
-        {/* ARENA MODE - CAMPO MELHORADO */}
+        {/* ARENA MODE - CAMPO REALISTA COM LINHAS COMPLETAS */}
         {step === 'arena' && (
           <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
-            {/* CAMPO */}
+            {/* CAMPO REALISTA COM PERSPECTIVA */}
             <div className="flex-1 flex items-center justify-center bg-[#0a1f14] p-6 relative">
-              <div style={{ perspective: '1600px' }} className="relative w-full max-w-[540px]">
+              <div style={{ perspective: '1800px' }} className="relative w-full max-w-[560px]">
                 <motion.div 
-                  initial={{ rotateX: 22 }}
-                  animate={{ rotateX: 14 }}
-                  className="relative aspect-[10/13] bg-emerald-950 rounded-[56px] border-[16px] border-white/10 shadow-[0_100px_200px_rgba(0,0,0,0.9)] overflow-hidden"
+                  initial={{ rotateX: 24 }}
+                  animate={{ rotateX: 16 }}
+                  className="relative aspect-[10/13] bg-emerald-950 rounded-[60px] border-[18px] border-white/10 shadow-[0_120px_240px_rgba(0,0,0,0.95)] overflow-hidden"
                 >
-                  {/* Gramado realista */}
-                  <div className="absolute inset-0 bg-[radial-gradient(#1f4a32_0.8px,transparent_1px)] bg-[length:28px_28px]" />
-                  <div className="absolute inset-0 bg-[linear-gradient(transparent_40%,rgba(255,255,255,0.08)_50%,transparent_60%)]" />
+                  {/* Gramado vibrante */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#1f4a32_1px,transparent_1px)] bg-[length:26px_26px]" />
 
-                  {/* Linhas do campo */}
-                  <div className="absolute inset-0 border-2 border-white/40" />
-                  <div className="absolute top-1/2 left-0 right-0 h-[3px] bg-white/70" />
-                  <div className="absolute left-1/2 top-0 bottom-0 w-[3px] bg-white/70" />
+                  {/* Linhas completas do campo */}
+                  <div className="absolute inset-0 border-[3px] border-white/60" />
+                  <div className="absolute top-1/2 left-0 right-0 h-[3px] bg-white/80" />
+                  <div className="absolute left-1/2 top-0 bottom-0 w-[3px] bg-white/80" />
 
+                  {/* Grande Área */}
+                  <div className="absolute top-[22%] left-[15%] right-[15%] h-[18%] border-2 border-white/70" />
+                  <div className="absolute bottom-[22%] left-[15%] right-[15%] h-[18%] border-2 border-white/70" />
+
+                  {/* Pequena Área */}
+                  <div className="absolute top-[30%] left-[28%] right-[28%] h-[10%] border-2 border-white/70" />
+                  <div className="absolute bottom-[30%] left-[28%] right-[28%] h-[10%] border-2 border-white/70" />
+
+                  {/* Círculo Central */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border-2 border-white/70 rounded-full" />
+
+                  {/* Escanteios (cantos) */}
+                  <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-white/70 rounded-tl-xl" />
+                  <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-white/70 rounded-tr-xl" />
+                  <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-white/70 rounded-bl-xl" />
+                  <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-white/70 rounded-br-xl" />
+
+                  {/* Slots com foto direita (comemoração) */}
                   <AnimatePresence mode="popLayout">
                     {slots.map((slot) => (
                       <motion.div
@@ -351,7 +368,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
               </div>
             </div>
 
-            {/* MERCADO + BANCO */}
+            {/* MERCADO */}
             <div className="w-full lg:w-[480px] bg-zinc-950 border-l border-white/10 flex flex-col">
               <div className="p-6 border-b border-white/10">
                 <h2 className="text-[#F5C400] font-black text-2xl">MERCADO TIGRE</h2>
@@ -413,7 +430,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </div>
         )}
 
-        {/* SUMMARY + PALPITE */}
+        {/* SUMMARY */}
         {step === 'summary' && (
           <motion.div key="summary" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
             className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-black to-zinc-950">
