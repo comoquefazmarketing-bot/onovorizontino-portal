@@ -13,52 +13,59 @@ import CapitaoEHeroi from './CapitaoEHeroi';
 import Palpite from './Palpite';
 import FinalCardReveal from './FinalCardReveal';
 
+// --- DEFINIÇÃO DE TIPOS LOCAL (BLINDAGEM CONTRA ERRO DE BUILD) ---
+interface Player {
+  id: number;
+  name: string;
+  short: string;
+  num: number;
+  pos: string;
+  foto: string;
+}
+
 // --- CONFIGURAÇÕES TÉCNICAS ---
 const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 
-const PLAYERS = [
-  { id: 1, name: "Jordi", short: "JORDI", num: 1, pos: "GOL", foto: BASE + "JORDI.png" },
-  { id: 2, name: "Airton", short: "AIRTON", num: 12, pos: "GOL", foto: BASE + "AIRTON.png" },
-  { id: 3, name: "Lucas Pereira", short: "L. PEREIRA", num: 26, pos: "GOL", foto: BASE + "LUCAS%20PEREIRA.png" },
-  { id: 4, name: "Rodrigo Soares", short: "R. SOARES", num: 2, pos: "LD", foto: BASE + "RODRIGO%20SOARES.png" },
-  { id: 5, name: "Raul Prata", short: "R. PRATA", num: 13, pos: "LD", foto: BASE + "RAUL%20PRATA.png" },
-  { id: 6, name: "Igor Formiga", short: "I. FORMIGA", num: 22, pos: "LD", foto: BASE + "IGOR%20FORMIGA.png" },
-  { id: 7, name: "Rafael Donato", short: "DONATO", num: 3, pos: "ZAG", foto: BASE + "RAFAEL%20DONATO.png" },
-  { id: 8, name: "César Martins", short: "C. MARTINS", num: 4, pos: "ZAG", foto: BASE + "CESAR%20MARTINS.png" },
-  { id: 9, name: "Luisão", short: "LUISÃO", num: 14, pos: "ZAG", foto: BASE + "LUISÃO.png" },
-  { id: 10, name: "Renato Palm", short: "R. PALM", num: 15, pos: "ZAG", foto: BASE + "RENATO%20PALM.png" },
-  { id: 11, name: "Guilherme Matos", short: "G. MATOS", num: 21, pos: "ZAG", foto: BASE + "GUILHERME%20MATOS.png" },
-  { id: 12, name: "Léo Baiano", short: "LÉO BAIANO", num: 30, pos: "ZAG", foto: BASE + "LEO%20BAIANO.png" },
-  { id: 13, name: "Reinaldo", short: "REINALDO", num: 6, pos: "LE", foto: BASE + "REINALDO.png" },
-  { id: 14, name: "Danilo Belão", short: "D. BELÃO", num: 16, pos: "LE", foto: BASE + "DANILO%20BELAO.png" },
-  { id: 15, name: "Willian Farias", short: "W. FARIAS", num: 5, pos: "VOL", foto: BASE + "WILLIAN%20FARIAS.png" },
-  { id: 16, name: "Geovane", short: "GEOVANE", num: 8, pos: "VOL", foto: BASE + "GEOVANE.png" },
-  { id: 17, name: "Eduardo", short: "EDUARDO", num: 17, pos: "VOL", foto: BASE + "EDUARDO.png" },
-  { id: 18, name: "Dudu", short: "DUDU", num: 25, pos: "VOL", foto: BASE + "DUDU.png" },
-  { id: 19, name: "Marlon", short: "MARLON", num: 10, pos: "MC", foto: BASE + "MARLON.png" },
-  { id: 20, name: "Rômulo", short: "RÔMULO", num: 20, pos: "MC", foto: BASE + "ROMULO.png" },
-  { id: 21, name: "Lucas Cardoso", short: "L. CARDOSO", num: 27, pos: "MC", foto: BASE + "LUCAS%20CARDOSO.png" },
-  { id: 22, name: "Chico", short: "CHICO", num: 28, pos: "MC", foto: BASE + "CHICO.png" },
-  { id: 23, name: "Diego Torres", short: "D. TORRES", num: 31, pos: "MC", foto: BASE + "DIEGO%20TORRES.png" },
-  { id: 24, name: "Waguininho", short: "WAGUININHO", num: 7, pos: "ATA", foto: BASE + "WAGUININHO.png" },
-  { id: 25, name: "Neto Pessoa", short: "N. PESSOA", num: 9, pos: "ATA", foto: BASE + "NETO%20PESSOA.png" },
-  { id: 26, name: "Fabrício Daniel", short: "F. DANIEL", num: 11, pos: "ATA", foto: BASE + "FABRICIO%20DANIEL.png" },
-  { id: 27, name: "Rodolfo", short: "RODOLFO", num: 18, pos: "ATA", foto: BASE + "RODOLFO.png" },
-  { id: 28, name: "Paulo Vitor", short: "P. VITOR", num: 19, pos: "ATA", foto: BASE + "PAULO%20VITOR.png" },
-  { id: 29, name: "Jenison", short: "JENISON", num: 23, pos: "ATA", foto: BASE + "JENISON.png" },
-  { id: 30, name: "Lucca", short: "LUCCA", num: 29, pos: "ATA", foto: BASE + "LUCCA.png" },
-  { id: 31, name: "Vitinho", short: "VITINHO", num: 32, pos: "ATA", foto: BASE + "VITINHO.png" },
-  { id: 32, name: "Weverton", short: "WEVERTON", num: 33, pos: "ATA", foto: BASE + "WEVERTON.png" },
-  { id: 33, name: "Baggio", short: "BAGGIO", num: 34, pos: "ATA", foto: BASE + "BAGGIO.png" },
-  { id: 34, name: "Oscar Ruiz", short: "O. RUIZ", num: 35, pos: "ATA", foto: BASE + "OSCAR%20RUIZ.png" },
-  { id: 35, name: "Tavares", short: "TAVARES", num: 36, pos: "ATA", foto: BASE + "TAVARES.png" },
-  { id: 36, name: "Léo Tocantins", short: "L. TOCANTINS", num: 37, pos: "ATA", foto: BASE + "LEO%20TOCANTINS.png" },
-  { id: 37, name: "Cauê", short: "CAUÊ", num: 38, pos: "ATA", foto: BASE + "CAUE.png" },
-  { id: 38, name: "Felipe Rodrigues", short: "F. RODRIGUES", num: 39, pos: "ATA", foto: BASE + "FELIPE%20RODRIGUES.png" },
-  { id: 39, name: "Adriano", short: "ADRIANO", num: 40, pos: "ATA", foto: BASE + "ADRIANO.png" }
+// LISTA ATUALIZADA COM BASE NO SEU SQL DO SUPABASE (APENAS ATIVOS)
+const PLAYERS: Player[] = [
+  // GOLEIROS
+  { id: 23, name: "Jordi", short: "JORDI", num: 93, pos: "GOL", foto: BASE + "JORDI.png" },
+  { id: 22, name: "João Scapin", short: "SCAPIN", num: 12, pos: "GOL", foto: BASE + "AIRTON.png" },
+  { id: 62, name: "Lucas", short: "LUCAS", num: 1, pos: "GOL", foto: BASE + "LUCAS%20PEREIRA.png" },
+  { id: 1, name: "César", short: "CÉSAR", num: 31, pos: "GOL", foto: BASE + "JORDI.png" },
+
+  // DEFENSORES (ZAG / LAT)
+  { id: 34, name: "Eduardo Brock", short: "BROCK", num: 14, pos: "ZAG", foto: BASE + "RENATO%20PALM.png" },
+  { id: 38, name: "Renato Palm", short: "R. PALM", num: 33, pos: "ZAG", foto: BASE + "RENATO%20PALM.png" },
+  { id: 6, name: "Carlinhos", short: "CARLINHOS", num: 3, pos: "ZAG", foto: BASE + "CESAR%20MARTINS.png" },
+  { id: 8, name: "Patrick", short: "PATRICK", num: 4, pos: "ZAG", foto: BASE + "LUISÃO.png" },
+  { id: 3, name: "Dantas", short: "DANTAS", num: 25, pos: "ZAG", foto: BASE + "RAFAEL%20DONATO.png" },
+  { id: 75, name: "Jhilmar Lora", short: "LORA", num: 24, pos: "LD", foto: BASE + "RODRIGO%20SOARES.png" },
+  { id: 27, name: "Nilson Castrillón", short: "CASTRILLÓN", num: 20, pos: "LD", foto: BASE + "RAUL%20PRATA.png" },
+  { id: 9, name: "Sander", short: "SANDER", num: 5, pos: "LE", foto: BASE + "REINALDO.png" },
+  { id: 28, name: "Maykon Jesus", short: "MAYKON", num: 66, pos: "LE", foto: BASE + "DANILO%20BELAO.png" },
+
+  // MEIO-CAMPISTAS
+  { id: 10, name: "Rômulo", short: "RÔMULO", num: 10, pos: "MC", foto: BASE + "ROMULO.png" },
+  { id: 12, name: "Juninho", short: "JUNINHO", num: 50, pos: "MC", foto: BASE + "MARLON.png" },
+  { id: 41, name: "Luís Oyama", short: "OYAMA", num: 6, pos: "VOL", foto: BASE + "WILLIAN%20FARIAS.png" },
+  { id: 40, name: "Léo Naldi", short: "NALDI", num: 18, pos: "VOL", foto: BASE + "GEOVANE.png" },
+  { id: 47, name: "Matheus Bianqui", short: "BIANQUI", num: 17, pos: "MC", foto: BASE + "DIEGO%20TORRES.png" },
+  { id: 86, name: "Christian Ortíz", short: "ORTÍZ", num: 8, pos: "MC", foto: BASE + "CHICO.png" },
+  { id: 13, name: "Diego Galo", short: "D. GALO", num: 19, pos: "MC", foto: BASE + "LUCAS%20CARDOSO.png" },
+  { id: 17, name: "Tavinho", short: "TAVINHO", num: 15, pos: "MC", foto: BASE + "CHICO.png" },
+
+  // ATACANTES
+  { id: 15, name: "Robson", short: "ROBSON", num: 11, pos: "ATA", foto: BASE + "WAGUININHO.png" },
+  { id: 50, name: "Carlão", short: "CARLÃO", num: 9, pos: "ATA", foto: BASE + "NETO%20PESSOA.png" },
+  { id: 52, name: "Hélio Borges", short: "H. BORGES", num: 41, pos: "ATA", foto: BASE + "FABRICIO%20DANIEL.png" },
+  { id: 53, name: "Jardiel", short: "JARDIEL", num: 40, pos: "ATA", foto: BASE + "RODOLFO.png" },
+  { id: 57, name: "Ronald Barcellos", short: "RONALD", num: 7, pos: "ATA", foto: BASE + "PAULO%20VITOR.png" },
+  { id: 59, name: "Vinícius Paiva", short: "V. PAIVA", num: 16, pos: "ATA", foto: BASE + "JENISON.png" },
+  { id: 51, name: "Diego Mathias", short: "D. MATHIAS", num: 27, pos: "ATA", foto: BASE + "LUCCA.png" },
+  { id: 55, name: "Nicolas Careca", short: "CARECA", num: 30, pos: "ATA", foto: BASE + "ADRIANO.png" }
 ];
 
-// Interface para aceitar o jogoId enviado pela Page [jogoId]/page.tsx
 interface EscalacaoProps {
   jogoId?: number;
 }
@@ -66,15 +73,15 @@ interface EscalacaoProps {
 export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
   const [step, setStep] = useState<'formation' | 'arena' | 'special' | 'prediction' | 'reveal'>('formation');
   const [formation, setFormation] = useState<string>('4-3-3');
-  const [lineup, setLineup] = useState<any>({});
-  const [bench, setBench] = useState<any[]>(Array(7).fill(null));
+  const [lineup, setLineup] = useState<Record<string, Player | null>>({});
+  const [bench, setBench] = useState<(Player | null)[]>(Array(7).fill(null));
   const [captainId, setCaptainId] = useState<number | null>(null);
   const [heroId, setHeroId] = useState<number | null>(null);
   const [score, setScore] = useState({ tigre: 0, adv: 0 });
 
   const isEscalado = (id: number) => {
-    const noCampo = Object.values(lineup).some((p: any) => p?.id === id);
-    const noBanco = bench.some((p: any) => p?.id === id);
+    const noCampo = Object.values(lineup).some((p) => p?.id === id);
+    const noBanco = bench.some((p) => p?.id === id);
     return noCampo || noBanco;
   };
 
@@ -82,7 +89,6 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
     <div className="h-screen bg-black text-white overflow-hidden flex flex-col">
       <AnimatePresence mode="wait">
         
-        {/* ETAPA 1: SELEÇÃO DE TÁTICA */}
         {step === 'formation' && (
           <motion.div key="form" exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center p-6">
             <h1 className="text-4xl font-black italic text-yellow-500 mb-8 uppercase tracking-tighter">Escolha a Tática</h1>
@@ -100,7 +106,6 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
           </motion.div>
         )}
 
-        {/* ETAPA 2: CAMPO DE ESCALAÇÃO */}
         {step === 'arena' && (
           <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex overflow-hidden">
             <MarketList 
@@ -108,7 +113,9 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
               isEscalado={isEscalado}
               onSelect={(p) => {
                 if (!isEscalado(p.id)) {
-                  setLineup((prev: any) => ({ ...prev, [p.pos.toLowerCase()]: p }));
+                  // Lógica simples de preenchimento por posição
+                  const posKey = p.pos.toLowerCase();
+                  setLineup((prev) => ({ ...prev, [posKey]: p }));
                 }
               }}
               onDragStart={() => {}}
@@ -117,6 +124,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
             <div className="flex-1 flex flex-col relative bg-zinc-950">
               <SoccerField formation={formation} lineup={lineup} setLineup={setLineup} />
               <Bench players={bench} setBench={setBench} />
+              
               <button 
                 onClick={() => setStep('special')} 
                 className="absolute bottom-10 right-10 px-10 py-4 bg-yellow-500 text-black font-black rounded-full shadow-2xl uppercase italic hover:scale-105 active:scale-95 transition-transform"
@@ -127,7 +135,6 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
           </motion.div>
         )}
 
-        {/* ETAPA 3: CAPITÃO E HERÓI (COM BYPASS DE TIPAGEM) */}
         {step === 'special' && (
           <motion.div key="special" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {React.createElement(CapitaoEHeroi as any, {
@@ -135,12 +142,14 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
               onConfirm: () => setStep('prediction'),
               captainName: PLAYERS.find(p => p.id === captainId)?.short || "Selecionar",
               heroName: PLAYERS.find(p => p.id === heroId)?.short || "Selecionar",
-              onSelect: () => {}
+              onSelect: (type: 'captain' | 'hero', id: number) => {
+                if (type === 'captain') setCaptainId(id);
+                if (type === 'hero') setHeroId(id);
+              }
             })}
           </motion.div>
         )}
 
-        {/* ETAPA 4: PLACAR / PALPITE */}
         {step === 'prediction' && (
           <motion.div key="pred" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Palpite 
@@ -154,7 +163,6 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
           </motion.div>
         )}
 
-        {/* ETAPA 5: CARD FINAL (COM BYPASS DE TIPAGEM) */}
         {step === 'reveal' && (
           <motion.div key="reveal" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {React.createElement(FinalCardReveal as any, {
