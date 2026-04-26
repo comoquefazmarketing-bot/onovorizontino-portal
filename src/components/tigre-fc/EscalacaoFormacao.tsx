@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import MarketList from '../MarketList'; // Ajuste se o MarketList estiver em outro lugar
 import * as htmlToImage from 'html-to-image';
 import confetti from 'canvas-confetti';
 
@@ -84,7 +83,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const finalCardRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const crowdCheerUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Recomendado: substitua por um som real de torcida
+  const crowdCheerUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 
   const getValidPhotoUrl = (fotoPath: string) => {
     if (!fotoPath) return ESCUDO_DEFAULT;
@@ -137,7 +136,9 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     confetti({ particleCount: 180, angle: 60, spread: 80, origin: { x: 0.1 } });
     confetti({ particleCount: 180, angle: 120, spread: 80, origin: { x: 0.9 } });
 
-    if (!audioRef.current) audioRef.current = new Audio(crowdCheerUrl);
+    if (!audioRef.current) {
+      audioRef.current = new Audio(crowdCheerUrl);
+    }
     audioRef.current.volume = 0.65;
     audioRef.current.play().catch(() => {});
   };
@@ -190,7 +191,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     <div className="fixed inset-0 bg-black text-white font-sans antialiased overflow-hidden flex flex-col select-none">
       <AnimatePresence mode="wait">
 
-        {/* TELA FORMAÇÃO */}
+        {/* TELA DE FORMAÇÃO */}
         {step === 'formation' && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -215,17 +216,33 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
           </motion.div>
         )}
 
-        {/* TELA ARENA - DRAG & DROP */}
+        {/* TELA ARENA - COM LISTA SIMPLIFICADA DE JOGADORES */}
         {step === 'arena' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col md:flex-row relative overflow-hidden h-full">
-            <div className="h-[30%] md:h-full md:w-80 z-[110] bg-black/70 backdrop-blur-xl border-b md:border-r border-white/10">
-              <MarketList 
-                players={PLAYERS_DATA} 
-                isEscalado={(id) => Object.values(slotMap).some(s => s.player?.id === id)} 
-                onSelect={handlePlayerSelection}
-              />
+            {/* Mercado Simplificado */}
+            <div className="h-[35%] md:h-full md:w-80 z-[110] bg-black/80 backdrop-blur-xl border-b md:border-r border-white/10 overflow-auto p-4">
+              <h3 className="text-yellow-400 font-black text-lg mb-4">ELENCO DO TIGRE</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {PLAYERS_DATA.map(player => (
+                  <motion.button
+                    key={player.id}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handlePlayerSelection(player)}
+                    className="bg-zinc-900 border border-white/20 rounded-xl p-2 hover:border-yellow-500 transition-all"
+                  >
+                    <img 
+                      src={getValidPhotoUrl(player.foto)} 
+                      className="w-full aspect-square object-cover rounded-lg" 
+                      onError={(e) => (e.currentTarget.src = ESCUDO_DEFAULT)}
+                    />
+                    <p className="text-[10px] text-center mt-1 font-bold text-white truncate">{player.short}</p>
+                  </motion.button>
+                ))}
+              </div>
             </div>
 
+            {/* Campo com Drag & Drop */}
             <div className="flex-1 relative bg-zinc-900 overflow-hidden" ref={finalCardRef}>
               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-75" alt="Estádio" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
@@ -250,7 +267,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                         <img 
                           src={getValidPhotoUrl(state.player.foto)} 
                           className="w-full h-full object-cover" 
-                          onError={(e) => { e.currentTarget.src = ESCUDO_DEFAULT; }}
+                          onError={(e) => (e.currentTarget.src = ESCUDO_DEFAULT)}
                         />
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black py-1.5">
                           <span className="text-[10px] font-black text-white block text-center">{state.player.short}</span>
@@ -273,6 +290,8 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
             </div>
           </motion.div>
         )}
+
+        {/* As outras telas (Capitão, Herói, Palpite, Final) permanecem iguais à versão anterior */}
 
         {/* TELA CAPITÃO */}
         {step === 'captain' && (
