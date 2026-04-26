@@ -1,115 +1,164 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { createBrowserClient } from '@supabase/ssr';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+// Importação do componente que estava faltando:
+import TigreFCPerfilPublico from './TigreFCPerfilPublico';
 
-const ESCUDO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-const PATA   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
-
-type Player = { id: number; short: string; pos: string; foto: string; num: number };
-type Slot   = { id: string; x: number; y: number; pos: string };
-type Perfil = {
-  id: string; display_name: string; apelido?: string | null;
-  avatar_url?: string | null; xp?: number; nivel?: string;
-  pontos_total?: number; streak?: number; bio?: string | null;
-};
-type EscalacaoData = {
-  formacao: string; lineup_json: Record<string, Player | null>;
-  capitan_id?: number | null; heroi_id?: number | null; updated_at?: string;
+// ── Design tokens ────────────────────────────────────────────────
+const C = {
+  gold:    '#F5C400', 
+  cyan:    '#00F3FF',
+  red:     '#FF2D55', 
+  purple:  '#BF5FFF',
 };
 
-const FORMATIONS: Record<string, Slot[]> = {
-  '4-2-3-1': [
-    { id: 'gk', x: 50, y: 88, pos: 'GOL' },
-    { id: 'rb', x: 82, y: 68, pos: 'LAT' }, { id: 'cb1', x: 62, y: 75, pos: 'ZAG' },
-    { id: 'cb2', x: 38, y: 75, pos: 'ZAG' }, { id: 'lb', x: 18, y: 68, pos: 'LAT' },
-    { id: 'dm1', x: 35, y: 57, pos: 'MEI' }, { id: 'dm2', x: 65, y: 57, pos: 'MEI' },
-    { id: 'am1', x: 50, y: 38, pos: 'MEI' }, { id: 'rw', x: 80, y: 27, pos: 'ATA' },
-    { id: 'lw', x: 20, y: 27, pos: 'ATA' }, { id: 'st', x: 50, y: 13, pos: 'ATA' },
-  ],
-  '4-3-3': [
-    { id: 'gk', x: 50, y: 85, pos: 'GOL' },
-    { id: 'rb', x: 82, y: 65, pos: 'LAT' }, { id: 'cb1', x: 62, y: 72, pos: 'ZAG' },
-    { id: 'cb2', x: 38, y: 72, pos: 'ZAG' }, { id: 'lb', x: 18, y: 65, pos: 'LAT' },
-    { id: 'm1', x: 50, y: 50, pos: 'MEI' }, { id: 'm2', x: 75, y: 42, pos: 'MEI' },
-    { id: 'm3', x: 25, y: 42, pos: 'MEI' }, { id: 'st', x: 50, y: 13, pos: 'ATA' },
-    { id: 'rw', x: 80, y: 20, pos: 'ATA' }, { id: 'lw', x: 20, y: 20, pos: 'ATA' },
-  ],
-};
+interface Time { nome: string; escudo_url: string | null; sigla?: string | null }
+interface Jogo {
+  id: number; competicao: string; rodada: string;
+  data_hora: string; local: string | null; transmissao: string | null;
+  mandante: Time; visitante: Time;
+}
+interface RankUser { id?: string; apelido?: string | null; nome?: string | null; pontos: number }
+interface Stats {
+  capitao?:       { nome: string; pts: number };
+  heroi?:         { nome: string; pts: number };
+  maisEscalado?:  { nome: string; pct: number };
+  ranking?:       RankUser[];
+  participantes?: number;
+}
 
-const NIVEL_CORES: Record<string, string> = {
-  Novato: '#71717A', Torcedor: '#3B82F6', Fiel: '#F5C400', Fanático: '#EF4444', Lenda: '#9333EA',
-};
-const POS_CORES: Record<string, string> = {
-  GOL: '#F5C400', ZAG: '#3B82F6', LAT: '#06B6D4', MEI: '#22C55E', ATA: '#EF4444',
-};
+const FALLBACK = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
-function CampoVisual({ formacao, lineup, captainId }: { formacao: string; lineup: Record<string, Player | null>; captainId?: number | null; }) {
-  const slots = FORMATIONS[formacao] ?? FORMATIONS['4-2-3-1'];
+function Countdown({ dataHora }: { dataHora: string }) {
+  const [t, setT] = useState({ h:'00', m:'00', s:'00', crit:false });
+  useEffect(() => {
+    const calc = () => {
+      const diff = new Date(dataHora).getTime() - 90 * 60_000 - Date.now();
+      if (diff <= 0) { setT({ h:'00', m:'00', s:'00', crit:true }); return; }
+      const h = Math.floor(diff / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1_000);
+      setT({ h:String(h).padStart(2,'0'), m:String(m).padStart(2,'0'), s:String(s).padStart(2,'0'), crit:h===0&&m<5 });
+    };
+    calc(); const id = setInterval(calc, 1000); return () => clearInterval(id);
+  }, [dataHora]);
+
+  const block = (val: string, lbl: string, red = false) => (
+    <div style={{ background:'#111', border:`2px solid ${red ? C.red : '#333'}`, borderRadius:12, padding:'10px 12px', textAlign:'center', minWidth:70 }}>
+      <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:54, fontWeight:900, lineHeight:1, display:'block', color: red ? C.red : '#fff' }}>
+        {val}
+      </span>
+      <span style={{ fontSize:9, fontWeight:900, letterSpacing:'0.2em', color: red ? C.red : 'rgba(255,255,255,0.5)', marginTop:4, display:'block' }}>{lbl}</span>
+    </div>
+  );
+
   return (
-    <div className="relative w-full aspect-[7/10] rounded-2xl overflow-hidden border border-yellow-500/10 bg-zinc-950">
-      <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/green-dust.png')]" />
-      {slots.map(slot => {
-        const player = lineup[slot.id] ?? null;
-        const isCap = player?.id === captainId;
-        return (
-          <div key={slot.id} className="absolute flex flex-col items-center gap-1" style={{ left: `${slot.x}%`, top: `${slot.y}%`, transform: 'translate(-50%, -50%)' }}>
-            {player ? (
-              <div className="relative">
-                {isCap && <span className="absolute -top-1 -right-1 bg-yellow-500 text-black text-[8px] font-black px-1 rounded-sm z-10">C</span>}
-                <div className="w-9 h-9 rounded-full border-2 overflow-hidden bg-black" style={{ borderColor: POS_CORES[player.pos] }}>
-                  <img src={player.foto} className="w-full h-full object-cover" alt="" />
-                </div>
-                <div className="bg-black/80 text-[8px] font-bold px-1 rounded mt-0.5 text-center truncate w-10">{player.short}</div>
-              </div>
-            ) : (
-              <div className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-[8px] text-white/20">{slot.pos[0]}</div>
-            )}
-          </div>
-        );
-      })}
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:24 }}>
+      {block(t.h,'HORAS')}
+      <span style={{ fontSize:40, fontWeight:900, color:'#333' }}>:</span>
+      {block(t.m,'MIN')}
+      <span style={{ fontSize:40, fontWeight:900, color:'#333' }}>:</span>
+      {block(t.s,'SEG', t.crit)}
     </div>
   );
 }
 
-export default function TigreFCPerfilPublico({ targetUsuarioId, viewerUsuarioId, onClose }: { targetUsuarioId: string; viewerUsuarioId?: string | null; onClose: () => void; }) {
-  const [perfil, setPerfil] = useState<Perfil | null>(null);
-  const [escalacao, setEscalacao] = useState<EscalacaoData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const shareRef = useRef<HTMLDivElement>(null);
-  const [supabase] = useState(() => createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!));
+function Escudo({ src, alt, novo }: { src: string | null; alt: string; novo?: boolean }) {
+  const [imgSrc, setImgSrc] = useState(src || FALLBACK);
+  return (
+    <div style={{ width:90, height:90, background:'#0d0d0d', borderRadius:22, display:'flex', alignItems:'center', justifyContent:'center', border: novo ? `3px solid ${C.gold}` : '1px solid rgba(255,255,255,0.2)' }}>
+      <img src={imgSrc} alt={alt} onError={() => setImgSrc(FALLBACK)} style={{ width:65, height:65, objectFit:'contain' }} />
+    </div>
+  );
+}
+
+function StatCard({ lbl, val, sub, color, border }: { lbl: string; val: string; sub?: string; color: string; border: string; }) {
+  return (
+    <div style={{ background:'rgba(255,255,255,0.06)', border:`1px solid ${border}`, borderRadius:12, padding:'12px' }}>
+      <div style={{ fontSize:10, fontWeight:900, color, marginBottom:6 }}>{lbl}</div>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:28, fontWeight:900, fontStyle:'italic', color: '#fff' }}>{val}</div>
+      {sub && <div style={{ fontSize:11, marginTop:5, color:'rgba(255,255,255,0.7)', fontWeight:700 }}>{sub}</div>}
+    </div>
+  );
+}
+
+export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false }: { jogo: Jogo; stats?: Stats; mercadoFechado?: boolean }) {
+  const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
+  const [meuId, setMeuId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
-      const { data: u } = await supabase.from('tigre_fc_usuarios').select('*').eq('id', targetUsuarioId).maybeSingle();
-      if (u) setPerfil(u);
-      const { data: esc } = await supabase.from('tigre_fc_escalacoes').select('*').eq('usuario_id', targetUsuarioId).order('updated_at', { ascending: false }).limit(1).maybeSingle();
-      if (esc) setEscalacao(esc as any);
-      setLoading(false);
-    }
-    load();
-  }, [targetUsuarioId]);
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) setMeuId(data.user.id);
+    });
+  }, []);
+
+  const ranking = stats.ranking || [];
 
   return (
-    <motion.div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4" onClick={onClose}>
-      <motion.div ref={shareRef} className="bg-zinc-900 w-full max-w-sm rounded-[32px] border border-white/10 p-6 space-y-6" onClick={e => e.stopPropagation()}>
-         {loading ? <p className="text-center italic text-zinc-500">Carregando Arena...</p> : (
-           <>
-            <div className="flex items-center gap-4">
-               <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-yellow-500">
-                  <img src={perfil?.avatar_url || PATA} className="w-full h-full object-cover" />
-               </div>
-               <div>
-                  <h2 className="text-2xl font-black italic uppercase text-white">{perfil?.apelido || perfil?.display_name}</h2>
-                  <p className="text-yellow-500 font-bold text-xs uppercase tracking-widest">{perfil?.nivel || 'Novato'}</p>
-               </div>
+    <div style={{ fontFamily:"'Barlow Condensed', sans-serif", background:'#000', borderRadius:24, overflow:'hidden', border:'1px solid #333', maxWidth:460, width:'95%', margin:'0 auto', padding:'24px 20px' }}>
+      
+      {/* HEADER */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+        <span style={{ fontSize:12, fontWeight:900, color:C.cyan }}>{mercadoFechado ? 'MERCADO FECHADO' : 'MERCADO ABERTO'}</span>
+        <span style={{ fontSize:14, fontWeight:900, color:C.gold }}>{jogo.competicao.toUpperCase()}</span>
+      </div>
+
+      {!mercadoFechado && <Countdown dataHora={jogo.data_hora} />}
+
+      {/* TIMES */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+        <div style={{ flex:1, textAlign:'center' }}>
+          <Escudo src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} />
+          <p style={{ color:'#fff', fontWeight:900, fontSize:12, marginTop:8 }}>{jogo.mandante.nome}</p>
+        </div>
+        <div style={{ fontStyle:'italic', fontWeight:900, fontSize:24, color:'rgba(255,255,255,0.2)' }}>VS</div>
+        <div style={{ flex:1, textAlign:'center' }}>
+          <Escudo src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} novo />
+          <p style={{ color:C.gold, fontWeight:900, fontSize:12, marginTop:8 }}>{jogo.visitante.nome}</p>
+        </div>
+      </div>
+
+      {/* BOTÃO AÇÃO */}
+      {!mercadoFechado && (
+        <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{ display:'block', background:C.gold, color:'#000', textAlign:'center', padding:18, borderRadius:16, fontWeight:900, textDecoration:'none', marginBottom:20 }}>
+          CONVOCAR TITULARES →
+        </Link>
+      )}
+
+      {/* STATS */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
+        <StatCard lbl="CAPITÃO" val={stats.capitao?.pts.toFixed(1) || '0.0'} sub={stats.capitao?.nome || '—'} color={C.gold} border="rgba(245,196,0,0.2)" />
+        <StatCard lbl="HERÓI" val={stats.heroi?.pts.toFixed(1) || '0.0'} sub={stats.heroi?.nome || '—'} color={C.red} border="rgba(255,45,85,0.2)" />
+      </div>
+
+      {/* RANKING COM ACESSO AO PERFIL */}
+      <div style={{ background:'#0a0a0a', border:`2px solid ${C.purple}`, borderRadius:16, padding:16 }}>
+        <p style={{ fontSize:12, fontWeight:900, color:C.purple, marginBottom:12 }}>RANKING TOP JOGADORES</p>
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          {ranking.map((r, i) => (
+            <div 
+              key={i} 
+              onClick={() => r.id && setPerfilAberto(r.id)}
+              style={{ display:'flex', alignItems:'center', gap:10, padding:10, background:'#111', borderRadius:10, cursor:'pointer' }}
+            >
+              <span style={{ fontWeight:900, color:C.gold }}>{i+1}º</span>
+              <span style={{ flex:1, color:'#fff', fontWeight:700 }}>{r.apelido || r.nome}</span>
+              <span style={{ color:C.purple, fontWeight:900 }}>{r.pontos} pts</span>
             </div>
-            <CampoVisual formacao={escalacao?.formacao || '4-2-3-1'} lineup={escalacao?.lineup_json || {}} captainId={escalacao?.capitan_id} />
-            <button onClick={onClose} className="w-full py-4 bg-white/5 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-colors">Fechar Perfil</button>
-           </>
-         )}
-      </motion.div>
-    </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* MODAL DE PERFIL PÚBLICO */}
+      {perfilAberto && (
+        <TigreFCPerfilPublico 
+          targetUsuarioId={perfilAberto} 
+          viewerUsuarioId={meuId} 
+          onClose={() => setPerfilAberto(null)} 
+        />
+      )}
+    </div>
   );
 }
