@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import MarketList from './MarketList';
+import MarketList from '../MarketList'; // Ajuste se o MarketList estiver em outro lugar
 import * as htmlToImage from 'html-to-image';
 import confetti from 'canvas-confetti';
 
@@ -84,7 +84,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const finalCardRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const crowdCheerUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Substitua por um som real de torcida depois
+  const crowdCheerUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Recomendado: substitua por um som real de torcida
 
   const getValidPhotoUrl = (fotoPath: string) => {
     if (!fotoPath) return ESCUDO_DEFAULT;
@@ -134,12 +134,10 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
   const triggerCelebration = () => {
     confetti({ particleCount: 250, spread: 100, origin: { y: 0.6 } });
-    confetti({ particleCount: 180, angle: 60, spread: 80, origin: { x: 0.1, y: 0.7 } });
-    confetti({ particleCount: 180, angle: 120, spread: 80, origin: { x: 0.9, y: 0.7 } });
+    confetti({ particleCount: 180, angle: 60, spread: 80, origin: { x: 0.1 } });
+    confetti({ particleCount: 180, angle: 120, spread: 80, origin: { x: 0.9 } });
 
-    if (!audioRef.current) {
-      audioRef.current = new Audio(crowdCheerUrl);
-    }
+    if (!audioRef.current) audioRef.current = new Audio(crowdCheerUrl);
     audioRef.current.volume = 0.65;
     audioRef.current.play().catch(() => {});
   };
@@ -147,7 +145,6 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const generateFinalImage = async () => {
     if (!finalCardRef.current) return;
     setIsGenerating(true);
-
     try {
       const dataUrl = await htmlToImage.toPng(finalCardRef.current, {
         cacheBust: true,
@@ -155,7 +152,6 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
         pixelRatio: 3,
         backgroundColor: '#0a0a0a',
       });
-
       setFinalImageUri(dataUrl);
       setStep('final');
       triggerCelebration();
@@ -182,7 +178,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
   const shareInstagram = () => {
     downloadImage();
-    alert("📸 Imagem salva com sucesso!\n\nPoste nos Stories ou Feed com o sticker de Link apontando para o Arena Tigre FC. Vamos viralizar! 🐯🔥");
+    alert("📸 Imagem salva! Poste nos Stories com sticker de Link. Vamos viralizar o Tigrão! 🐯🔥");
   };
 
   const shareX = () => {
@@ -194,7 +190,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     <div className="fixed inset-0 bg-black text-white font-sans antialiased overflow-hidden flex flex-col select-none">
       <AnimatePresence mode="wait">
 
-        {/* TELA DE ESCOLHA DE FORMAÇÃO */}
+        {/* TELA FORMAÇÃO */}
         {step === 'formation' && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -221,12 +217,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
         {/* TELA ARENA - DRAG & DROP */}
         {step === 'arena' && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col md:flex-row relative overflow-hidden h-full"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col md:flex-row relative overflow-hidden h-full">
             <div className="h-[30%] md:h-full md:w-80 z-[110] bg-black/70 backdrop-blur-xl border-b md:border-r border-white/10">
               <MarketList 
                 players={PLAYERS_DATA} 
@@ -249,12 +240,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                     dragConstraints={finalCardRef}
                     whileDrag={{ scale: 1.3, zIndex: 200 }}
                     onClick={() => handleSlotClick(id)}
-                    style={{ 
-                      left: `${state.x}%`, 
-                      top: `${state.y}%`, 
-                      position: 'absolute', 
-                      transform: 'translate(-50%, -50%)' 
-                    }}
+                    style={{ left: `${state.x}%`, top: `${state.y}%`, position: 'absolute', transform: 'translate(-50%, -50%)' }}
                     className={`w-16 h-24 md:w-20 md:h-32 border-2 rounded-2xl flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing transition-all shadow-2xl ${
                       activeSlot === id ? 'border-yellow-400 bg-yellow-500/20 scale-110 shadow-[0_0_30px_#facc15]' : 'border-white/30 bg-black/70'
                     }`}
@@ -264,18 +250,16 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                         <img 
                           src={getValidPhotoUrl(state.player.foto)} 
                           className="w-full h-full object-cover" 
-                          onError={(e) => (e.currentTarget.src = ESCUDO_DEFAULT)}
+                          onError={(e) => { e.currentTarget.src = ESCUDO_DEFAULT; }}
                         />
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent py-1.5">
-                          <span className="text-[10px] font-black text-white block text-center tracking-wider">
-                            {state.player.short}
-                          </span>
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black py-1.5">
+                          <span className="text-[10px] font-black text-white block text-center">{state.player.short}</span>
                         </div>
                       </div>
                     ) : (
                       <div className="text-center opacity-40">
                         <span className="text-3xl">+</span>
-                        <div className="text-[10px] uppercase mt-1">{id}</div>
+                        <div className="text-[10px] uppercase mt-1">{id.toUpperCase()}</div>
                       </div>
                     )}
                   </motion.div>
@@ -283,8 +267,8 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
               </div>
 
               <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-4 z-50 px-6">
-                <button onClick={() => setStep('formation')} className="flex-1 max-w-[140px] py-4 bg-zinc-900 border border-white/30 rounded-2xl text-sm font-black">TÁTICA</button>
-                <button onClick={() => setStep('captain')} className="flex-1 max-w-[200px] py-4 bg-yellow-500 text-black font-black rounded-2xl text-sm tracking-widest">ESCOLHER CAPITÃO</button>
+                <button onClick={() => setStep('formation')} className="flex-1 max-w-[140px] py-4 bg-zinc-900 border border-white/30 rounded-2xl text-sm font-black">← TÁTICA</button>
+                <button onClick={() => setStep('captain')} className="flex-1 max-w-[200px] py-4 bg-yellow-500 text-black font-black rounded-2xl text-sm">ESCOLHER CAPITÃO →</button>
               </div>
             </div>
           </motion.div>
@@ -292,7 +276,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
         {/* TELA CAPITÃO */}
         {step === 'captain' && (
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black">
             <div className="text-center mb-10">
               <div className="inline-block px-8 py-2 bg-yellow-500/10 border border-yellow-400 rounded-full text-yellow-400 text-sm font-black tracking-widest mb-4">CAPITÃO</div>
               <h1 className="text-4xl font-black italic text-yellow-400 tracking-tighter">ESCOLHA O LÍDER DO TIGRE</h1>
@@ -307,9 +291,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                   className={`relative p-4 rounded-3xl border-4 transition-all overflow-hidden ${captainId === p.id ? 'border-yellow-400 shadow-[0_0_50px_#facc15] scale-110' : 'border-white/20 hover:border-white/40'}`}
                 >
                   <img src={getValidPhotoUrl(p.foto)} className="w-28 h-36 object-cover rounded-2xl" alt={p.short} />
-                  {captainId === p.id && (
-                    <div className="absolute -top-3 -right-3 w-11 h-11 bg-yellow-400 rounded-full flex items-center justify-center font-black text-black text-3xl shadow-[0_0_25px_#facc15]">C</div>
-                  )}
+                  {captainId === p.id && <div className="absolute -top-3 -right-3 w-11 h-11 bg-yellow-400 rounded-full flex items-center justify-center font-black text-black text-3xl shadow-[0_0_25px_#facc15]">C</div>}
                   <p className="text-center mt-4 font-bold text-lg tracking-wide">{p.short}</p>
                 </motion.button>
               ))}
@@ -319,7 +301,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
         {/* TELA HERÓI */}
         {step === 'hero' && (
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black">
             <div className="text-center mb-10">
               <div className="inline-block px-8 py-2 bg-cyan-400/10 border border-cyan-400 rounded-full text-cyan-400 text-sm font-black tracking-widest mb-4">HERÓI DA PARTIDA</div>
               <h1 className="text-4xl font-black italic text-cyan-400 tracking-tighter">QUEM VAI DECIDIR O JOGO?</h1>
@@ -334,9 +316,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                   className={`relative p-4 rounded-3xl border-4 transition-all overflow-hidden ${heroId === p.id ? 'border-cyan-400 shadow-[0_0_50px_#22d3ee] scale-110' : 'border-white/20 hover:border-white/40'}`}
                 >
                   <img src={getValidPhotoUrl(p.foto)} className="w-28 h-36 object-cover rounded-2xl" alt={p.short} />
-                  {heroId === p.id && (
-                    <div className="absolute -top-3 -right-3 w-11 h-11 bg-cyan-400 rounded-full flex items-center justify-center font-black text-black text-3xl shadow-[0_0_25px_#22d3ee]">H</div>
-                  )}
+                  {heroId === p.id && <div className="absolute -top-3 -right-3 w-11 h-11 bg-cyan-400 rounded-full flex items-center justify-center font-black text-black text-3xl shadow-[0_0_25px_#22d3ee]">H</div>}
                   <p className="text-center mt-4 font-bold text-lg tracking-wide">{p.short}</p>
                 </motion.button>
               ))}
@@ -346,7 +326,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
         {/* TELA PALPITE */}
         {step === 'palpite' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center p-8 bg-zinc-950">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center p-8 bg-zinc-950">
             <h1 className="text-4xl font-black mb-3">SEU PALPITE</h1>
             <p className="text-zinc-400 mb-12">Avaí × Novorizontino • Série B 2026</p>
 
@@ -355,10 +335,22 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                 <img src="https://logodownload.org/wp-content/uploads/2017/02/avai-fc-logo-escudo.png" className="w-24 h-24 mb-4" alt="Avaí" />
                 <div>Avaí</div>
               </div>
-              <div className="flex gap-8">
-                <input type="number" min="0" value={palpiteMandante} onChange={e => setPalpiteMandante(Math.max(0, parseInt(e.target.value) || 0))} className="w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400" />
-                <span className="text-6xl text-yellow-400 self-center">×</span>
-                <input type="number" min="0" value={palpiteVisitante} onChange={e => setPalpiteVisitante(Math.max(0, parseInt(e.target.value) || 0))} className="w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400" />
+              <div className="flex gap-8 items-center">
+                <input 
+                  type="number" 
+                  min="0" 
+                  value={palpiteMandante} 
+                  onChange={e => setPalpiteMandante(Math.max(0, parseInt(e.target.value) || 0))} 
+                  className="w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-6xl" 
+                />
+                <span className="text-6xl text-yellow-400">×</span>
+                <input 
+                  type="number" 
+                  min="0" 
+                  value={palpiteVisitante} 
+                  onChange={e => setPalpiteVisitante(Math.max(0, parseInt(e.target.value) || 0))} 
+                  className="w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-6xl" 
+                />
               </div>
               <div className="flex flex-col items-center">
                 <img src={ESCUDO_DEFAULT} className="w-24 h-24 mb-4" alt="Novorizontino" />
@@ -371,7 +363,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
               whileTap={{ scale: 0.95 }}
               onClick={generateFinalImage}
               disabled={isGenerating}
-              className="mt-16 px-20 py-7 bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-black text-2xl rounded-3xl shadow-[0_0_50px_#fbbf24] hover:shadow-[0_0_70px_#fbbf24]"
+              className="mt-16 px-20 py-7 bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-black text-2xl rounded-3xl shadow-[0_0_50px_#fbbf24]"
             >
               {isGenerating ? "GERANDO ARTE ÉPICA..." : "GERAR MINHA ARTE FC26"}
             </motion.button>
@@ -385,7 +377,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black" />
 
-              <div className="absolute inset-0">
+              <div className="absolute inset-0 pointer-events-none">
                 {Object.entries(slotMap).map(([id, state]) => state.player && (
                   <motion.div
                     key={id}
@@ -402,20 +394,20 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                 ))}
               </div>
 
-              <div className="absolute top-6 left-6 right-6 flex justify-between">
+              <div className="absolute top-6 left-6 right-6 flex justify-between text-sm">
                 <div>
-                  <div className="text-yellow-400 text-xs tracking-[3px] font-black">ARENA TIGRE FC</div>
+                  <div className="text-yellow-400 tracking-[3px] font-black text-xs">ARENA TIGRE FC</div>
                   <div className="text-3xl font-black italic">MINHA ESCALAÇÃO</div>
                 </div>
-                <div className="text-right text-sm">
+                <div className="text-right">
                   {formation}<br />
                   <span className="text-xs text-zinc-400">03/05/2026</span>
                 </div>
               </div>
 
-              <div className="absolute top-32 left-1/2 -translate-x-1/2 bg-black/90 px-10 py-3 rounded-3xl border border-yellow-400/50 text-center">
+              <div className="absolute top-[140px] left-1/2 -translate-x-1/2 bg-black/90 px-10 py-4 rounded-3xl border border-yellow-400/50 text-center">
                 <div className="text-6xl font-black text-yellow-400">{palpiteMandante} × {palpiteVisitante}</div>
-                <div className="text-sm text-zinc-400 -mt-1">SEU PALPITE</div>
+                <div className="text-sm text-zinc-400">SEU PALPITE</div>
               </div>
 
               <div className="absolute bottom-28 left-6 right-6 text-center">
@@ -426,21 +418,22 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
               </div>
 
               <div className="absolute bottom-8 left-6 right-6 text-center text-xs text-zinc-500">
-                Capitão: {selectedPlayers.find(p => p.id === captainId)?.short} • Herói: {selectedPlayers.find(p => p.id === heroId)?.short}<br />
+                Capitão: {selectedPlayers.find(p => p.id === captainId)?.short} • 
+                Herói: {selectedPlayers.find(p => p.id === heroId)?.short}<br />
                 Técnico: Enderson Moreira • Arena Tigre FC
               </div>
             </div>
 
             <div className="mt-10 w-full max-w-[380px] space-y-4 px-4">
-              <button onClick={downloadImage} className="w-full py-6 bg-yellow-400 hover:bg-yellow-300 text-black font-black rounded-3xl text-lg">💾 SALVAR IMAGEM</button>
+              <button onClick={downloadImage} className="w-full py-6 bg-yellow-400 hover:bg-yellow-300 text-black font-black rounded-3xl text-lg active:scale-[0.98]">💾 SALVAR IMAGEM</button>
               <div className="grid grid-cols-3 gap-4">
-                <button onClick={shareWhatsApp} className="py-6 bg-[#25D366] font-black rounded-3xl">WhatsApp</button>
-                <button onClick={shareInstagram} className="py-6 bg-gradient-to-r from-pink-500 to-purple-600 font-black rounded-3xl">Instagram</button>
-                <button onClick={shareX} className="py-6 bg-black border border-white/40 font-black rounded-3xl">𝕏</button>
+                <button onClick={shareWhatsApp} className="py-6 bg-[#25D366] font-black rounded-3xl active:scale-[0.98]">WhatsApp</button>
+                <button onClick={shareInstagram} className="py-6 bg-gradient-to-r from-pink-500 to-purple-600 font-black rounded-3xl active:scale-[0.98]">Instagram</button>
+                <button onClick={shareX} className="py-6 bg-black border border-white/40 font-black rounded-3xl active:scale-[0.98]">𝕏</button>
               </div>
             </div>
 
-            <button onClick={() => window.location.reload()} className="mt-8 text-zinc-500 hover:text-white">REINICIAR ESCALAÇÃO</button>
+            <button onClick={() => window.location.reload()} className="mt-8 text-zinc-500 hover:text-white text-sm">REINICIAR ESCALAÇÃO</button>
           </div>
         )}
 
