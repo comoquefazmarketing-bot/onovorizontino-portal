@@ -5,15 +5,7 @@ interface Props {
 }
 
 export default function EscalacaoPage({ params }: Props) {
-  const jogoId = parseInt(params.jogoId);
-
-  if (isNaN(jogoId)) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        Jogo inválido
-      </main>
-    );
-  }
+  const jogoId = params.jogoId;
 
   return (
     <main className="min-h-screen bg-black overflow-hidden">
