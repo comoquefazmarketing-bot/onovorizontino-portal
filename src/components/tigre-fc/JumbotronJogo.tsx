@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import TigreFCPerfilPublico from './TigreFCPerfilPublico';
 
-// ── Design tokens ────────────────
+// ── Design Tokens (Modernizados) ────────────────
 const C = {
   gold: '#F5C400',
   cyan: '#00F3FF',
   red: '#FF2D55',
   purple: '#BF5FFF',
+  darkBg: '#0a0a0a',
+  glass: 'rgba(255, 255, 255, 0.03)'
 };
 
 interface Time {
@@ -41,71 +43,15 @@ interface Stats {
   heroi?: { nome: string; pts: number };
   ranking?: RankUser[];
   participantes?: number;
-  [key: string]: any;
 }
 
-// Interface que estava faltando:
 interface Props {
   jogo: Jogo;
   stats?: Stats;
   mercadoFechado?: boolean;
 }
 
-interface UltimaRodada {
-  capitao: { nome: string; pts: number } | null;
-  heroi: { nome: string; pts: number } | null;
-  ranking: RankUser[];
-  participantes: number;
-}
-
 const FALLBACK = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
-
-async function fetchUltimaRodada(): Promise<UltimaRodada> {
-  const { data: jogos } = await supabase
-    .from('jogos')
-    .select('id')
-    .eq('finalizado', true)
-    .order('data_hora', { ascending: false })
-    .limit(1);
-
-  const jogoId = jogos?.[0]?.id;
-  if (!jogoId) return { capitao: null, heroi: null, ranking: [], participantes: 0 };
-
-  const { data: pontuacoes } = await supabase
-    .from('pontuacoes_atletas')
-    .select('atleta_id, pontos_ganhos')
-    .eq('jogo_id', jogoId)
-    .order('pontos_ganhos', { ascending: false });
-
-  const atletaIds = pontuacoes?.map(p => p.atleta_id) ?? [];
-  const { data: atletas } = atletaIds.length > 0
-    ? await supabase.from('tigre_fc_atletas').select('id, nome').in('id', atletaIds)
-    : { data: [] };
-
-  const nomeById: Record<number, string> = {};
-  (atletas ?? []).forEach(a => { nomeById[a.id] = a.nome; });
-
-  const topPontuacao = pontuacoes?.[0];
-  const capitao = topPontuacao
-    ? { nome: nomeById[topPontuacao.atleta_id] ?? 'Desconhecido', pts: Number(topPontuacao.pontos_ganhos) }
-    : null;
-
-  const { data: rankData } = await supabase
-    .from('view_ranking_geral')
-    .select('apelido, pontos_total')
-    .limit(5);
-
-  const { count } = await supabase
-    .from('tigre_fc_escalacoes')
-    .select('*', { count: 'exact', head: true });
-
-  return {
-    capitao,
-    heroi: null,
-    ranking: (rankData ?? []).map(r => ({ apelido: r.apelido, pontos: r.pontos_total })),
-    participantes: count ?? 0
-  };
-}
 
 function Countdown({ dataHora }: { dataHora: string }) {
   const [t, setT] = useState({ h: '00', m: '00', s: '00', crit: false });
@@ -124,7 +70,7 @@ function Countdown({ dataHora }: { dataHora: string }) {
         h: String(h).padStart(2, '0'),
         m: String(m).padStart(2, '0'),
         s: String(s).padStart(2, '0'),
-        crit: h === 0 && m < 5
+        crit: h === 0 && m < 15
       });
     };
     calc();
@@ -132,162 +78,147 @@ function Countdown({ dataHora }: { dataHora: string }) {
     return () => clearInterval(id);
   }, [dataHora]);
 
-  const block = (val: string, lbl: string, red = false) => (
-    <div style={{ background: '#111', border: `2px solid ${red ? C.red : '#333'}`, borderRadius: 12, padding: '10px 12px', textAlign: 'center', minWidth: 70 }}>
-      <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 54, fontWeight: 900, lineHeight: 1, display: 'block', color: red ? C.red : '#fff' }}>{val}</span>
-      <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.2em', color: red ? C.red : 'rgba(255,255,255,0.5)', marginTop: 4, display: 'block' }}>{lbl}</span>
-    </div>
-  );
-
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 24 }}>
-      {block(t.h, 'HORAS')}
-      <span style={{ fontSize: 40, fontWeight: 900, color: '#333' }}>:</span>
-      {block(t.m, 'MIN')}
-      <span style={{ fontSize: 40, fontWeight: 900, color: '#333' }}>:</span>
-      {block(t.s, 'SEG', t.crit)}
-    </div>
-  );
-}
-
-function Escudo({ src, alt, novo }: { src: string | null; alt: string; novo?: boolean }) {
-  const [imgSrc, setImgSrc] = useState(src || FALLBACK);
-  useEffect(() => { setImgSrc(src || FALLBACK); }, [src]);
-  return (
-    <div style={{
-      width: 90, height: 90, background: '#0d0d0d', borderRadius: 22, flexShrink: 0,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-      border: novo ? `3px solid ${C.gold}` : '1px solid rgba(255,255,255,0.2)',
-      boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-    }}>
-      <img src={imgSrc} alt={alt} onError={() => setImgSrc(FALLBACK)} style={{ width: 65, height: 65, objectFit: 'contain' }} />
-    </div>
-  );
-}
-
-function DestaqueAtleta({ titulo, nome, pts, cor }: { titulo: string, nome: string, pts: number, cor: string }) {
-  return (
-    <div style={{ flex: 1, textAlign: 'center', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: 14, border: `1px solid ${cor}33` }}>
-      <div style={{ fontSize: 10, fontWeight: 900, color: cor, letterSpacing: '0.1em', marginBottom: 4 }}>{titulo}</div>
-      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>
-        {nome.toUpperCase()}
-      </div>
-      <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>
-        {pts.toFixed(1)} <small style={{ fontSize: 10, opacity: 0.5 }}>PTS</small>
-      </div>
+    <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
+      {[ {v: t.h, l: 'HORAS'}, {v: t.m, l: 'MIN'}, {v: t.s, l: 'SEG'} ].map((item, i) => (
+        <div key={i} style={{ 
+          background: '#111', 
+          padding: '12px 15px', 
+          borderRadius: 12, 
+          border: i === 2 && t.crit ? `1px solid ${C.red}` : '1px solid #222',
+          minWidth: 75,
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: 38, fontWeight: 900, color: i === 2 && t.crit ? C.red : '#fff', lineHeight: 1 }}>{item.v}</div>
+          <div style={{ fontSize: 9, fontWeight: 900, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{item.l}</div>
+        </div>
+      ))}
     </div>
   );
 }
 
 export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false }: Props) {
-  const [ultima, setUltima] = useState<UltimaRodada>({ capitao: null, heroi: null, ranking: [], participantes: 0 });
-  const [loading, setLoading] = useState(true);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
   const [meuId, setMeuId] = useState<string>('');
 
   useEffect(() => {
-    fetchUltimaRodada().then(data => {
-      setUltima(data);
-      setLoading(false);
-    });
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user?.id) setMeuId(session.user.id);
     });
   }, []);
 
-  const ranking = (stats.ranking?.length ?? 0) > 0 ? stats.ranking! : ultima.ranking;
-  const participantes = stats.participantes ?? ultima.participantes;
-  const capitao = stats.capitao ?? ultima.capitao;
-  const heroi = stats.heroi ?? ultima.heroi;
+  const ranking = stats.ranking || [];
+  const participantes = stats.participantes || 0;
+  const capitao = stats.capitao || { nome: '---', pts: 0 };
+  const heroi = stats.heroi || { nome: '---', pts: 0 };
 
   return (
-    <>
-      <div style={{
-        fontFamily: "'Barlow Condensed', sans-serif",
-        background: '#000',
-        borderRadius: 24,
-        overflow: 'hidden',
-        position: 'relative',
-        border: '1px solid #333',
-        maxWidth: 460,
-        width: '95%',
-        margin: '0 auto 20px auto',
-        boxShadow: '0 20px 80px rgba(0,0,0,0.9)'
-      }}>
-        <style>{`
-          @keyframes scan { 0%{background-position:-200% center} 100%{background-position:200% center} }
-          @keyframes pulse-gold { 0%,100%{transform: scale(1)} 50%{transform: scale(1.02)} }
-        `}</style>
+    <div style={{
+      fontFamily: "'Barlow Condensed', sans-serif",
+      maxWidth: 460,
+      width: '95%',
+      margin: '0 auto 20px auto',
+      background: 'linear-gradient(180deg, #0f0f0f 0%, #000 100%)',
+      borderRadius: 32,
+      border: '1px solid #222',
+      padding: '24px',
+      boxShadow: '0 40px 100px rgba(0,0,0,0.8)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Top Detail Line */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${C.cyan}, transparent)`, opacity: 0.4 }} />
 
-        <div style={{ height: 3, background: `linear-gradient(90deg,transparent,${C.gold},#fff,${C.cyan},transparent)`, backgroundSize: '200%', animation: 'scan 3s linear infinite' }} />
+      {/* Header Info */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: mercadoFechado ? C.red : C.cyan, boxShadow: `0 0 10px ${mercadoFechado ? C.red : C.cyan}` }} />
+          <span style={{ fontSize: 11, fontWeight: 900, color: mercadoFechado ? C.red : C.cyan, letterSpacing: '0.15em' }}>
+            {mercadoFechado ? 'MERCADO FECHADO' : 'MERCADO ABERTO'}
+          </span>
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 900, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em' }}>
+          {jogo.competicao.toUpperCase()}
+        </span>
+      </div>
 
-        <div style={{ position: 'relative', zIndex: 1, padding: '24px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: mercadoFechado ? C.red : C.cyan }} />
-              <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.2em', color: mercadoFechado ? C.red : C.cyan }}>
-                {mercadoFechado ? 'MERCADO FECHADO' : 'MERCADO ABERTO'}
-              </span>
-            </div>
-            <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '0.2em', color: C.gold }}>
-              {jogo.competicao.toUpperCase()}
-            </span>
+      {!mercadoFechado && <Countdown dataHora={jogo.data_hora} />}
+
+      {/* Matchup Section */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 30 }}>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <img src={jogo.mandante.escudo_url || FALLBACK} style={{ width: 75, height: 75, objectFit: 'contain', marginBottom: 10 }} alt="Mandante" />
+          <div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{jogo.mandante.nome.toUpperCase()}</div>
+        </div>
+        
+        <div style={{ padding: '0 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'rgba(255,255,255,0.1)', fontStyle: 'italic' }}>VS</div>
+          <div style={{ fontSize: 13, fontWeight: 900, color: C.gold, marginTop: 5 }}>
+            {new Date(jogo.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
           </div>
+        </div>
 
-          {!mercadoFechado && <Countdown dataHora={jogo.data_hora} />}
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <img src={jogo.visitante.escudo_url || FALLBACK} style={{ width: 75, height: 75, objectFit: 'contain', marginBottom: 10 }} alt="Visitante" />
+          <div style={{ fontSize: 14, fontWeight: 900, color: C.gold }}>{jogo.visitante.nome.toUpperCase()}</div>
+        </div>
+      </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 10 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, flex: 1 }}>
-              <Escudo src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} />
-              <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', textAlign: 'center', lineHeight: 1.1 }}>{jogo.mandante.nome.toUpperCase()}</span>
+      {/* Elite Highlight Cards (FIFA Style) */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 25 }}>
+        {[
+          { label: 'CAPITÃO', data: capitao, color: C.gold },
+          { label: 'HERÓI', data: heroi, color: C.red }
+        ].map((item, idx) => (
+          <div key={idx} style={{ 
+            flex: 1, background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: 20, border: `1px solid ${item.color}33`,
+            textAlign: 'center', backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{ fontSize: 9, fontWeight: 900, color: item.color, letterSpacing: '0.15em', marginBottom: 6 }}>{item.label}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {item.data.nome.toUpperCase()}
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              <span style={{ fontSize: 24, fontWeight: 900, fontStyle: 'italic', color: 'rgba(255,255,255,0.15)' }}>VS</span>
-              <span style={{ fontSize: 14, fontWeight: 900, color: C.gold, textAlign: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px 8px', borderRadius: 8 }}>
-                {new Date(jogo.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, flex: 1 }}>
-              <Escudo src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} novo />
-              <span style={{ fontSize: 13, fontWeight: 900, color: C.gold, textAlign: 'center', lineHeight: 1.1 }}>{jogo.visitante.nome.toUpperCase()}</span>
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginTop: 2 }}>
+              {Number(item.data.pts).toFixed(1)} <small style={{ fontSize: 10, opacity: 0.5 }}>PTS</small>
             </div>
           </div>
+        ))}
+      </div>
 
-          <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-            <DestaqueAtleta titulo="CAPITÃO" nome={capitao?.nome || '—'} pts={capitao?.pts || 0} cor={C.gold} />
-            <DestaqueAtleta titulo="HERÓI" nome={heroi?.nome || '—'} pts={heroi?.pts || 0} cor={C.red} />
-          </div>
+      {/* Main Action Button */}
+      <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{ textDecoration: 'none' }}>
+        <div style={{
+          background: mercadoFechado ? '#1a1a1a' : `linear-gradient(90deg, ${C.gold}, #FFE57E)`,
+          padding: '20px', borderRadius: 20, textAlign: 'center',
+          color: '#000', fontSize: 17, fontWeight: 900, letterSpacing: '0.05em',
+          boxShadow: mercadoFechado ? 'none' : `0 15px 30px ${C.gold}33`,
+          opacity: mercadoFechado ? 0.5 : 1,
+          transition: 'transform 0.2s ease'
+        }}>
+          {mercadoFechado ? 'MERCADO ENCERRADO' : 'CONVOCAR TITULARES →'}
+        </div>
+      </Link>
 
-          {mercadoFechado ? (
-            <div style={{ width: '100%', background: '#111', border: '1px solid #222', borderRadius: 16, color: 'rgba(255,255,255,0.4)', fontSize: 16, fontWeight: 900, padding: 22, textAlign: 'center' }}>
-              🔒 MERCADO FECHADO
-            </div>
-          ) : (
-            <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%',
-              background: C.gold, borderRadius: 16, color: '#000', fontSize: 18, fontWeight: 900, letterSpacing: '0.1em', padding: 22,
-              textDecoration: 'none', textAlign: 'center', animation: 'pulse-gold 2s ease-in-out infinite'
+      {/* Ranking Footer */}
+      <div style={{ marginTop: 25, paddingTop: 20, borderTop: '1px solid #222' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15 }}>
+          <span style={{ fontSize: 12, fontWeight: 900, color: C.purple, letterSpacing: '0.1em' }}>GLOBAL RANKING</span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 800 }}>{participantes} JOGANDO</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {ranking.slice(0, 5).map((r, i) => (
+            <div key={i} onClick={() => setPerfilAberto(r.apelido || r.nome || '')} style={{ 
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
+              background: i === 0 ? 'rgba(245, 196, 0, 0.05)' : 'transparent',
+              padding: i === 0 ? '8px 12px' : '0 12px',
+              borderRadius: 10
             }}>
-              CONVOCAR TITULARES →
-            </Link>
-          )}
-
-          <div style={{ marginTop: 24, background: 'rgba(191,95,255,0.05)', borderRadius: 16, padding: '16px', border: `1px solid ${C.purple}22` }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 11, fontWeight: 900, color: C.purple, letterSpacing: '0.1em' }}>TOP 5 GERAL</span>
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{participantes} JOGANDO</span>
+              <span style={{ fontSize: 14, color: i === 0 ? C.gold : '#fff', fontWeight: i === 0 ? 900 : 500 }}>
+                {i + 1}º {r.apelido || r.nome || 'Torcedor'}
+              </span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: C.purple }}>{r.pontos} <small style={{ fontSize: 10 }}>PTS</small></span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {ranking.slice(0, 5).map((r, i) => (
-                <div key={i} onClick={() => setPerfilAberto(r.apelido || r.nome || '')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                  <span style={{ fontSize: 14, color: i === 0 ? C.gold : '#fff', fontWeight: i === 0 ? 800 : 500 }}>{i + 1}º {r.apelido || r.nome || 'Torcedor'}</span>
-                  <span style={{ fontSize: 14, fontWeight: 900, color: C.purple }}>{r.pontos} <small style={{ fontSize: 9 }}>PTS</small></span>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -298,6 +229,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           onClose={() => setPerfilAberto(null)}
         />
       )}
-    </>
+    </div>
   );
 }
