@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import * as htmlToImage from 'html-to-image';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
@@ -11,7 +11,8 @@ const BASE_STORAGE   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/obje
 const STADIUM_BG     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
 const ESCUDO_DEFAULT = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
 
-const TABLE = 'tigre_fc_escalacoes';
+const TABLE          = 'tigre_fc_escalacoes';
+const PROFILE_TABLE  = 'tigre_fc_usuarios';
 const SHARE_BASE_URL = 'https://www.onovorizontino.com.br/tigre-fc/escalar';
 
 interface Player {
@@ -29,11 +30,8 @@ type Step      = 'loading' | 'formation' | 'arena' | 'captain' | 'hero' | 'palpi
 
 interface EscalacaoFormacaoProps {
   jogoId?: number | string;
-  /** Nome do mandante exibido no palpite e nos compartilhamentos */
   mandante?: string;
-  /** Logo do mandante (URL absoluta) */
   mandanteLogo?: string;
-  /** Rodada para o card final (ex: "RODADA 12") */
   rodada?: string | number;
 }
 
@@ -80,6 +78,126 @@ const formationConfigs: Record<string, Record<string, SlotCoord>> = {
   '5-3-2':   { gk:{x:50,y:85}, lb:{x:12,y:52}, cb1:{x:30,y:70}, cb2:{x:50,y:73}, cb3:{x:70,y:70}, rb:{x:88,y:52}, m1:{x:50,y:48}, m2:{x:30,y:40}, m3:{x:70,y:40}, st1:{x:42,y:18}, st2:{x:58,y:18} },
 };
 
+const SLOT_W_MOBILE = 56;
+const SLOT_H_MOBILE = 80;
+const SLOT_W_DESKTOP = 76;
+const SLOT_H_DESKTOP = 112;
+
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+// =============================================================================
+// SUB-COMPONENTE: DraggableSlot
+// Cada slot tem seus próprios motion values pra suportar drag livre
+// =============================================================================
+
+interface DraggableSlotProps {
+  slotId: string;
+  state: { player: Player | null; x: number; y: number };
+  arenaRef: React.RefObject<HTMLDivElement | null>;
+  isActive: boolean;
+  hasPending: boolean;
+  isDesktop: boolean;
+  onDragSettled: (slotId: string, newX: number, newY: number) => void;
+  onClick: (slotId: string) => void;
+  getValidPhotoUrl: (foto: string) => string;
+}
+
+function DraggableSlot({
+  slotId, state, arenaRef, isActive, hasPending, isDesktop, onDragSettled, onClick, getValidPhotoUrl,
+}: DraggableSlotProps) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const draggedRef = useRef(false);
+
+  const w = isDesktop ? SLOT_W_DESKTOP : SLOT_W_MOBILE;
+  const h = isDesktop ? SLOT_H_DESKTOP : SLOT_H_MOBILE;
+
+  return (
+    <motion.div
+      drag
+      dragMomentum={false}
+      dragElastic={0.05}
+      dragConstraints={arenaRef}
+      whileDrag={{ scale: 1.25, zIndex: 200 }}
+      onDragStart={() => { draggedRef.current = false; }}
+      onDrag={(_, info) => {
+        if (Math.abs(info.offset.x) > 4 || Math.abs(info.offset.y) > 4) {
+          draggedRef.current = true;
+        }
+      }}
+      onDragEnd={(_, info) => {
+        const arenaEl = arenaRef.current;
+        if (!arenaEl) return;
+        const rect = arenaEl.getBoundingClientRect();
+        // Posição absoluta do centro do slot na arena → percentual
+        const newX = ((info.point.x - rect.left) / rect.width) * 100;
+        const newY = ((info.point.y - rect.top) / rect.height) * 100;
+        // Margem mínima pra não sair da arena
+        const xPct = clamp(newX, 5, 95);
+        const yPct = clamp(newY, 5, 95);
+        // Reseta motion values e atualiza o estado externo
+        x.set(0);
+        y.set(0);
+        onDragSettled(slotId, xPct, yPct);
+      }}
+      onClick={() => {
+        // Se moveu durante o drag, ignora o click
+        if (draggedRef.current) {
+          draggedRef.current = false;
+          return;
+        }
+        onClick(slotId);
+      }}
+      style={{
+        x, y,
+        position: 'absolute',
+        left: `${state.x}%`,
+        top: `${state.y}%`,
+        width: w,
+        height: h,
+        marginLeft: -w / 2,
+        marginTop: -h / 2,
+      }}
+      className={`border-2 rounded-2xl flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing transition-colors shadow-2xl ${
+        isActive
+          ? 'border-yellow-400 bg-yellow-500/20 shadow-[0_0_30px_#facc15]'
+          : hasPending
+            ? 'border-cyan-400/60 bg-cyan-500/10'
+            : 'border-white/30 bg-black/70'
+      }`}
+    >
+      {state.player ? (
+        <div className="relative w-full h-full pointer-events-none">
+          <img
+            src={getValidPhotoUrl(state.player.foto)}
+            alt={state.player.short}
+            className="w-full h-full object-cover"
+            draggable={false}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
+          />
+          <div className="absolute top-0.5 left-0.5 bg-yellow-400 text-black text-[8px] font-black px-1 rounded">
+            {state.player.num}
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black py-1">
+            <span className="text-[9px] font-black text-white block text-center leading-tight">
+              {state.player.short}
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center opacity-40 pointer-events-none">
+          <span className="text-2xl">+</span>
+          <div className="text-[9px] uppercase mt-0.5">{slotId}</div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// =============================================================================
+// COMPONENTE PRINCIPAL
+// =============================================================================
+
 export default function EscalacaoFormacao({
   jogoId,
   mandante = 'Avaí',
@@ -100,9 +218,12 @@ export default function EscalacaoFormacao({
   const [finalImageUri, setFinalImageUri]     = useState<string | null>(null);
   const [isGenerating, setIsGenerating]       = useState(false);
 
-  const [userId, setUserId]       = useState<string | null>(null);
-  const [userName, setUserName]   = useState<string>('TORCEDOR');
-  const [hadSaved, setHadSaved]   = useState(false);
+  const [userId, setUserId]         = useState<string | null>(null);
+  const [userName, setUserName]     = useState<string>('TORCEDOR');
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [hadSaved, setHadSaved]     = useState(false);
+
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const finalCardRef = useRef<HTMLDivElement>(null);
   const arenaRef     = useRef<HTMLDivElement>(null);
@@ -111,6 +232,14 @@ export default function EscalacaoFormacao({
     if (!fotoPath) return ESCUDO_DEFAULT;
     const filename = fotoPath.split('/').pop() || fotoPath;
     return `${BASE_STORAGE}${encodeURIComponent(filename)}`;
+  }, []);
+
+  // Detecta breakpoint
+  useEffect(() => {
+    const update = () => setIsDesktop(window.innerWidth >= 768);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, []);
 
   // ---------------------- LOAD INICIAL ----------------------
@@ -132,13 +261,41 @@ export default function EscalacaoFormacao({
 
         if (!cancelled && user) {
           setUserId(user.id);
-          const meta: any = user.user_metadata || {};
-          setUserName(
-            (meta.nome || meta.name || meta.full_name || user.email?.split('@')[0] || 'TORCEDOR')
-              .toString()
-              .toUpperCase()
-              .slice(0, 18)
-          );
+
+          // Tenta buscar o profile na tigre_fc_usuarios
+          let profile: { apelido?: string | null; nome?: string | null; avatar_url?: string | null } | null = null;
+
+          const { data: byId } = await supabase
+            .from(PROFILE_TABLE)
+            .select('apelido, nome, avatar_url')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (byId) {
+            profile = byId;
+          } else if (user.email) {
+            const { data: byEmail } = await supabase
+              .from(PROFILE_TABLE)
+              .select('apelido, nome, avatar_url')
+              .eq('email', user.email)
+              .maybeSingle();
+            if (byEmail) profile = byEmail;
+          }
+
+          if (!cancelled) {
+            const meta = (user.user_metadata || {}) as Record<string, unknown>;
+            const fallbackName =
+              (meta.nome as string) ||
+              (meta.name as string) ||
+              (meta.full_name as string) ||
+              user.email?.split('@')[0] ||
+              'TORCEDOR';
+
+            setUserName(
+              (profile?.apelido || profile?.nome || fallbackName).toString().toUpperCase().slice(0, 20)
+            );
+            setUserAvatar(profile?.avatar_url || (meta.avatar_url as string) || null);
+          }
         }
 
         if (!user || !jogoId) {
@@ -164,16 +321,25 @@ export default function EscalacaoFormacao({
           return;
         }
 
-        // Hidrata os states com a escalação salva
         const formacao = data.formacao || '4-3-3';
         const coords   = formationConfigs[formacao] ?? formationConfigs['4-3-3'];
         const restored: SlotMap = {};
-        const slotsJson = (data.slots ?? {}) as Record<string, number | null>;
+        const slotsJson = (data.slots ?? {}) as Record<string, number | { id: number; x?: number; y?: number } | null>;
 
         Object.entries(coords).forEach(([slotId, c]) => {
-          const pid    = slotsJson[slotId] ?? null;
+          const raw = slotsJson[slotId];
+          let pid: number | null = null;
+          let savedX = c.x;
+          let savedY = c.y;
+          if (typeof raw === 'number') {
+            pid = raw;
+          } else if (raw && typeof raw === 'object') {
+            pid = raw.id ?? null;
+            if (typeof raw.x === 'number') savedX = raw.x;
+            if (typeof raw.y === 'number') savedY = raw.y;
+          }
           const player = pid != null ? PLAYERS_DATA.find(p => p.id === pid) ?? null : null;
-          restored[slotId] = { player, x: c.x, y: c.y };
+          restored[slotId] = { player, x: savedX, y: savedY };
         });
 
         setFormation(formacao);
@@ -197,7 +363,6 @@ export default function EscalacaoFormacao({
     return () => { cancelled = true; };
   }, [jogoId]);
 
-  // Reinicializa slots ao trocar formação (mas preservando players já escolhidos por posição quando possível)
   const handleChangeFormation = (novaFormacao: string) => {
     const coords = formationConfigs[novaFormacao];
     const playersAtuais = Object.values(slotMap).map(s => s.player).filter((p): p is Player => p !== null);
@@ -205,12 +370,9 @@ export default function EscalacaoFormacao({
     Object.entries(coords).forEach(([id, c]) => {
       novo[id] = { player: null, x: c.x, y: c.y };
     });
-    // Tenta realocar: pega cada slot da nova formação e atribui um player que já estava escalado, em ordem
     const queue = [...playersAtuais];
     Object.keys(novo).forEach(slotId => {
-      if (queue.length > 0) {
-        novo[slotId].player = queue.shift()!;
-      }
+      if (queue.length > 0) novo[slotId].player = queue.shift()!;
     });
     setFormation(novaFormacao);
     setSlotMap(novo);
@@ -219,7 +381,6 @@ export default function EscalacaoFormacao({
 
   // ---------------------- HANDLERS ----------------------
   const handlePlayerSelection = (player: Player) => {
-    // Se já está escalado, remove
     const slotComEle = Object.entries(slotMap).find(([, s]) => s.player?.id === player.id);
     if (slotComEle) {
       setSlotMap(prev => ({ ...prev, [slotComEle[0]]: { ...prev[slotComEle[0]], player: null } }));
@@ -242,6 +403,13 @@ export default function EscalacaoFormacao({
     }
   };
 
+  const handleSlotDragSettled = useCallback((slotId: string, newX: number, newY: number) => {
+    setSlotMap(prev => {
+      if (!prev[slotId]) return prev;
+      return { ...prev, [slotId]: { ...prev[slotId], x: newX, y: newY } };
+    });
+  }, []);
+
   const selectedPlayers = Object.values(slotMap)
     .map(s => s.player)
     .filter((p): p is Player => p !== null);
@@ -262,9 +430,10 @@ export default function EscalacaoFormacao({
     if (!userId)  return { ok: false, reason: 'sem-login' };
     if (!jogoId)  return { ok: false, reason: 'sem-jogo'  };
 
-    const slots: Record<string, number | null> = {};
+    // Salva como objeto { id, x, y } pra preservar a posição customizada do drag
+    const slots: Record<string, { id: number; x: number; y: number } | null> = {};
     Object.entries(slotMap).forEach(([slotId, state]) => {
-      slots[slotId] = state.player?.id ?? null;
+      slots[slotId] = state.player ? { id: state.player.id, x: state.x, y: state.y } : null;
     });
 
     const payload = {
@@ -295,7 +464,6 @@ export default function EscalacaoFormacao({
   const generateFinalImage = async () => {
     setStep('saving');
 
-    // 1) Salva primeiro
     const saveRes = await saveEscalacao();
     if (!saveRes.ok && saveRes.reason === 'sem-login') {
       alert('Você precisa estar logado pra salvar sua escalação no ranking. Mas vou gerar a arte do mesmo jeito!');
@@ -303,13 +471,10 @@ export default function EscalacaoFormacao({
       console.warn('Erro salvando, continuando mesmo assim:', saveRes.reason);
     }
 
-    // 2) Espera o DOM montar a tela final pra gerar a imagem
     setIsGenerating(true);
-    // pequeno delay pra render
     await new Promise(r => setTimeout(r, 100));
 
     if (!finalCardRef.current) {
-      // se ainda não montou, força a tela final pra montar
       setStep('final');
       await new Promise(r => setTimeout(r, 250));
     }
@@ -338,11 +503,10 @@ export default function EscalacaoFormacao({
     }
   };
 
-  // Já tem escalação salva → vai direto pra tela final
   const verEscalacaoSalva = async () => {
     setStep('saving');
     setIsGenerating(true);
-    await new Promise(r => setTimeout(r, 250)); // aguarda mount
+    await new Promise(r => setTimeout(r, 250));
     setStep('final');
     await new Promise(r => setTimeout(r, 250));
     if (finalCardRef.current) {
@@ -387,15 +551,12 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
     a.click();
   };
 
-  // Web Share API com arquivo (iOS/Android modernos abrem sheet nativo)
   const shareNative = async () => {
     if (!finalImageUri) return;
     const text = buildShareText();
-
     try {
       const blob = await (await fetch(finalImageUri)).blob();
       const file = new File([blob], `escalacao-tigre-fc-${formation}.png`, { type: 'image/png' });
-
       if (typeof navigator !== 'undefined' && (navigator as any).canShare?.({ files: [file] })) {
         await (navigator as any).share({
           files: [file],
@@ -404,8 +565,6 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
         });
         return;
       }
-
-      // Fallback: baixa imagem e abre WhatsApp Web com texto
       downloadImage();
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     } catch (e) {
@@ -418,17 +577,12 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
   };
 
   const shareWhatsApp = async () => {
-    // Mobile: tenta share API (vai com imagem); Desktop: link com texto
     if (finalImageUri && typeof navigator !== 'undefined' && (navigator as any).canShare) {
       try {
         const blob = await (await fetch(finalImageUri)).blob();
         const file = new File([blob], `escalacao-tigre-fc-${formation}.png`, { type: 'image/png' });
         if ((navigator as any).canShare({ files: [file] })) {
-          await (navigator as any).share({
-            files: [file],
-            text: buildShareText(),
-            title: 'Arena Tigre FC',
-          });
+          await (navigator as any).share({ files: [file], text: buildShareText(), title: 'Arena Tigre FC' });
           return;
         }
       } catch (e) {
@@ -437,23 +591,17 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
         console.error(e);
       }
     }
-    // Fallback
     downloadImage();
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(buildShareText())}`, '_blank');
   };
 
   const shareInstagram = async () => {
-    // No iOS, share com arquivo abre o sheet e o user escolhe IG → vai pro Story
     if (finalImageUri && typeof navigator !== 'undefined' && (navigator as any).canShare) {
       try {
         const blob = await (await fetch(finalImageUri)).blob();
         const file = new File([blob], `escalacao-tigre-fc-${formation}.png`, { type: 'image/png' });
         if ((navigator as any).canShare({ files: [file] })) {
-          await (navigator as any).share({
-            files: [file],
-            title: 'Arena Tigre FC',
-            text: 'Duvido você escalar melhor! 🐯',
-          });
+          await (navigator as any).share({ files: [file], title: 'Arena Tigre FC', text: 'Duvido você escalar melhor! 🐯' });
           return;
         }
       } catch (e) {
@@ -462,7 +610,6 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
         console.error(e);
       }
     }
-    // Fallback desktop / browser sem share
     downloadImage();
     alert('📸 Imagem salva! Abre o Instagram, vai em Stories e adiciona a imagem que acabou de baixar. Cola o link nos stickers!');
   };
@@ -472,17 +619,14 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  // ---------------------- VOLTAR PARA PAGE ----------------------
-  const finalizarEVoltar = () => {
-    router.push('/tigre-fc');
-  };
+  const finalizarEVoltar = () => router.push('/tigre-fc');
 
   // ---------------------- RENDER ----------------------
   return (
     <div className="fixed inset-0 bg-black text-white font-sans antialiased overflow-hidden flex flex-col select-none">
       <AnimatePresence mode="wait">
 
-        {/* TELA DE LOADING INICIAL */}
+        {/* TELA DE LOADING */}
         {step === 'loading' && (
           <motion.div
             key="loading"
@@ -556,135 +700,120 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
           </motion.div>
         )}
 
-        {/* TELA ARENA */}
+        {/* TELA ARENA — Mercado fixo à esquerda + Campo */}
         {step === 'arena' && (
           <motion.div
             key="arena"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col md:flex-row relative overflow-hidden h-full"
+            className="flex-1 flex relative overflow-hidden h-full"
           >
-            {/* Mercado */}
-            <div className="h-[35%] md:h-full md:w-80 z-[110] bg-black/85 backdrop-blur-xl border-b md:border-r border-white/10 overflow-auto p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-yellow-400 font-black text-lg tracking-wide">ELENCO</h3>
-                <div className="text-xs text-zinc-400">
+            {/* MERCADO — sempre à esquerda em pé, grid 3 colunas */}
+            <div className="h-full w-[150px] sm:w-[180px] md:w-[280px] flex-shrink-0 z-[110] bg-black/85 backdrop-blur-xl border-r border-white/10 overflow-y-auto p-2 md:p-3">
+              <div className="flex items-center justify-between mb-2 sticky top-0 bg-black/90 backdrop-blur-md z-10 py-1.5 -mx-2 md:-mx-3 px-2 md:px-3 border-b border-white/10">
+                <h3 className="text-yellow-400 font-black text-[11px] md:text-sm tracking-wider">ELENCO</h3>
+                <div className="text-[10px] md:text-xs text-zinc-400">
                   <span className="text-yellow-400 font-bold">{selectedPlayers.length}</span>/11
                 </div>
               </div>
 
               {hadSaved && (
-                <div className="mb-3 px-3 py-2 bg-cyan-500/10 border border-cyan-400/40 rounded-xl text-[10px] text-cyan-300 font-bold tracking-wide">
-                  ✓ ESCALAÇÃO RECUPERADA — EDITE E SALVE NOVAMENTE
+                <div className="mb-2 px-2 py-1.5 bg-cyan-500/10 border border-cyan-400/40 rounded-lg text-[8px] md:text-[10px] text-cyan-300 font-bold tracking-wide">
+                  ✓ ESCALAÇÃO RECUPERADA
                 </div>
               )}
 
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-3 gap-1 md:gap-1.5">
                 {PLAYERS_DATA.map(player => {
                   const escalado = playerEscalado(player.id);
                   return (
                     <motion.button
                       key={player.id}
                       whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileTap={{ scale: 0.92 }}
                       onClick={() => handlePlayerSelection(player)}
-                      className={`relative bg-zinc-900 border rounded-xl p-1.5 transition-all ${
+                      className={`relative bg-zinc-900 border rounded-md md:rounded-lg p-0.5 md:p-1 transition-all ${
                         escalado
-                          ? 'border-yellow-400 ring-2 ring-yellow-400/40'
+                          ? 'border-yellow-400 ring-1 ring-yellow-400/40'
                           : pendingPlayer?.id === player.id
-                            ? 'border-cyan-400 ring-2 ring-cyan-400/40'
-                            : 'border-white/20 hover:border-yellow-500'
+                            ? 'border-cyan-400 ring-1 ring-cyan-400/40'
+                            : 'border-white/15 hover:border-yellow-500'
                       }`}
                     >
                       <img
                         src={getValidPhotoUrl(player.foto)}
                         alt={player.short}
-                        className={`w-full aspect-square object-cover rounded-lg ${escalado ? 'opacity-50' : ''}`}
+                        className={`w-full aspect-square object-cover rounded ${escalado ? 'opacity-50' : ''}`}
                         onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
                       />
                       {escalado && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
-                          <span className="text-yellow-400 text-2xl font-black drop-shadow-lg">✓</span>
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
+                          <span className="text-yellow-400 text-lg md:text-xl font-black drop-shadow-lg">✓</span>
                         </div>
                       )}
-                      <div className="absolute top-1 left-1 bg-black/70 text-yellow-400 text-[8px] font-black px-1 rounded">
+                      <div className="absolute top-0.5 left-0.5 bg-black/70 text-yellow-400 text-[7px] md:text-[8px] font-black px-0.5 md:px-1 rounded">
                         {player.pos}
                       </div>
-                      <p className="text-[10px] text-center mt-1 font-bold text-white truncate">{player.short}</p>
+                      <p className="text-[8px] md:text-[10px] text-center mt-0.5 font-bold text-white truncate leading-tight">
+                        {player.short}
+                      </p>
                     </motion.button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Campo */}
+            {/* CAMPO */}
             <div className="flex-1 relative bg-zinc-900 overflow-hidden" ref={arenaRef}>
               <img src={STADIUM_BG} alt="Estádio" className="absolute inset-0 w-full h-full object-cover opacity-75" />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 pointer-events-none" />
 
-              {/* Header info */}
-              <div className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between">
-                <div className="px-3 py-1.5 bg-black/70 backdrop-blur rounded-full border border-yellow-400/30">
-                  <span className="text-yellow-400 text-[10px] font-black tracking-widest">FORMAÇÃO {formation}</span>
+              {/* Header */}
+              <div className="absolute top-2 left-2 right-2 z-30 flex items-center justify-between gap-2">
+                <div className="px-2.5 py-1 bg-black/70 backdrop-blur rounded-full border border-yellow-400/30">
+                  <span className="text-yellow-400 text-[9px] md:text-[10px] font-black tracking-widest">
+                    FORMAÇÃO {formation}
+                  </span>
                 </div>
-                <button
-                  onClick={() => setStep('formation')}
-                  className="px-3 py-1.5 bg-black/70 backdrop-blur rounded-full border border-white/20 text-[10px] font-black tracking-wider text-white hover:border-yellow-400/50"
-                >
-                  TROCAR
-                </button>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => setStep('formation')}
+                    className="px-2.5 py-1 bg-black/70 backdrop-blur rounded-full border border-white/20 text-[9px] md:text-[10px] font-black tracking-wider text-white hover:border-yellow-400/50"
+                  >
+                    TROCAR
+                  </button>
+                  <div className="hidden sm:block px-2.5 py-1 bg-cyan-500/10 backdrop-blur rounded-full border border-cyan-400/30">
+                    <span className="text-cyan-300 text-[9px] md:text-[10px] font-black tracking-wider">
+                      ✋ ARRASTE OS JOGADORES
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div className="relative w-full h-full">
+              {/* Slots — drag livre */}
+              <div className="absolute inset-0">
                 {Object.entries(slotMap).map(([id, state]) => (
-                  <motion.div
+                  <DraggableSlot
                     key={id}
-                    drag
-                    dragMomentum={false}
-                    dragElastic={0.1}
-                    dragConstraints={arenaRef}
-                    whileDrag={{ scale: 1.3, zIndex: 200 }}
-                    onClick={() => handleSlotClick(id)}
-                    style={{ left: `${state.x}%`, top: `${state.y}%`, position: 'absolute', transform: 'translate(-50%, -50%)' }}
-                    className={`w-16 h-24 md:w-20 md:h-32 border-2 rounded-2xl flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing transition-all shadow-2xl ${
-                      activeSlot === id
-                        ? 'border-yellow-400 bg-yellow-500/20 scale-110 shadow-[0_0_30px_#facc15]'
-                        : pendingPlayer
-                          ? 'border-cyan-400/60 bg-cyan-500/10'
-                          : 'border-white/30 bg-black/70'
-                    }`}
-                  >
-                    {state.player ? (
-                      <div className="relative w-full h-full">
-                        <img
-                          src={getValidPhotoUrl(state.player.foto)}
-                          alt={state.player.short}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
-                        />
-                        <div className="absolute top-0.5 left-0.5 bg-yellow-400 text-black text-[8px] font-black px-1 rounded">
-                          {state.player.num}
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black py-1.5">
-                          <span className="text-[10px] font-black text-white block text-center">{state.player.short}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center opacity-40">
-                        <span className="text-3xl">+</span>
-                        <div className="text-[10px] uppercase mt-1">{id}</div>
-                      </div>
-                    )}
-                  </motion.div>
+                    slotId={id}
+                    state={state}
+                    arenaRef={arenaRef}
+                    isActive={activeSlot === id}
+                    hasPending={!!pendingPlayer}
+                    isDesktop={isDesktop}
+                    onDragSettled={handleSlotDragSettled}
+                    onClick={handleSlotClick}
+                    getValidPhotoUrl={getValidPhotoUrl}
+                  />
                 ))}
               </div>
 
-              {/* CTA bottom */}
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 z-50 px-4">
+              {/* Bottom CTA */}
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 z-50 px-3">
                 <button
                   onClick={finalizarEVoltar}
-                  className="px-5 py-3.5 bg-zinc-900/90 border border-white/20 rounded-2xl text-xs font-black tracking-wider"
+                  className="px-4 py-3 bg-zinc-900/90 border border-white/20 rounded-2xl text-[10px] md:text-xs font-black tracking-wider"
                 >
                   ← SAIR
                 </button>
@@ -697,7 +826,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                     setStep('captain');
                   }}
                   disabled={selectedPlayers.length < 11}
-                  className={`flex-1 max-w-[260px] py-3.5 rounded-2xl text-sm font-black tracking-wider transition-all ${
+                  className={`flex-1 max-w-[260px] py-3 rounded-2xl text-[11px] md:text-sm font-black tracking-wider transition-all ${
                     selectedPlayers.length >= 11
                       ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-[0_0_30px_rgba(250,204,21,0.5)] active:scale-95'
                       : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
@@ -898,7 +1027,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
           </motion.div>
         )}
 
-        {/* TELA FINAL — Card Instagramável */}
+        {/* TELA FINAL */}
         {step === 'final' && (
           <motion.div
             key="final"
@@ -911,17 +1040,14 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
               ✓ ESCALAÇÃO SALVA NO RANKING
             </div>
 
-            {/* CARD COMPARTILHÁVEL — 9:16 */}
+            {/* CARD 9:16 */}
             <div
               ref={finalCardRef}
               className="relative w-full max-w-[380px] bg-zinc-950 rounded-3xl overflow-hidden border-4 border-yellow-400/40 shadow-[0_0_60px_rgba(250,204,21,0.3)]"
               style={{ aspectRatio: '9/16' }}
             >
-              {/* BG */}
               <img src={STADIUM_BG} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black" />
-
-              {/* Pattern overlay */}
               <div
                 className="absolute inset-0 opacity-10"
                 style={{
@@ -931,10 +1057,21 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
 
               {/* HEADER */}
               <div className="absolute top-4 left-4 right-4 flex items-start justify-between z-10">
-                <div>
-                  <div className="text-yellow-400 tracking-[3px] font-black text-[10px]">ARENA TIGRE FC</div>
-                  <div className="text-2xl font-black italic leading-tight">MINHA ESCALAÇÃO</div>
-                  <div className="text-cyan-400 font-black text-xs mt-0.5">@{userName}</div>
+                <div className="flex items-start gap-2">
+                  {userAvatar && (
+                    <img
+                      src={userAvatar}
+                      alt={userName}
+                      crossOrigin="anonymous"
+                      className="w-10 h-10 rounded-full border-2 border-yellow-400 object-cover"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
+                  <div>
+                    <div className="text-yellow-400 tracking-[3px] font-black text-[10px]">ARENA TIGRE FC</div>
+                    <div className="text-2xl font-black italic leading-tight">MINHA ESCALAÇÃO</div>
+                    <div className="text-cyan-400 font-black text-xs mt-0.5">@{userName}</div>
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="bg-yellow-400 text-black px-2.5 py-1 rounded-md text-[11px] font-black tracking-wider">
@@ -949,7 +1086,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 </div>
               </div>
 
-              {/* PLACAR / PALPITE */}
+              {/* PLACAR */}
               <div className="absolute top-[120px] left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur px-6 py-2.5 rounded-2xl border border-yellow-400/40 text-center z-10">
                 <div className="flex items-center gap-3">
                   <img src={mandanteLogo} alt="" className="w-7 h-7 object-contain" />
@@ -961,12 +1098,17 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 <div className="text-[9px] text-zinc-400 tracking-widest mt-0.5">SEU PALPITE</div>
               </div>
 
-              {/* CAMPO COM JOGADORES */}
+              {/* JOGADORES — usa as posições customizadas do drag */}
               <div className="absolute inset-0 pointer-events-none">
                 {Object.entries(slotMap).map(([id, state]) => state.player && (
                   <div
                     key={id}
-                    style={{ left: `${state.x}%`, top: `${state.y * 0.78 + 10}%`, position: 'absolute', transform: 'translate(-50%, -50%)' }}
+                    style={{
+                      left: `${state.x}%`,
+                      top: `${state.y * 0.78 + 10}%`,
+                      position: 'absolute',
+                      transform: 'translate(-50%, -50%)',
+                    }}
                     className="w-12 h-16 rounded-xl overflow-hidden border-2 border-white/70 shadow-[0_4px_15px_rgba(0,0,0,0.6)]"
                   >
                     <img
@@ -976,7 +1118,9 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                       crossOrigin="anonymous"
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 py-0.5">
-                      <span className="text-[7px] font-black text-white block text-center leading-none">{state.player.short}</span>
+                      <span className="text-[7px] font-black text-white block text-center leading-none">
+                        {state.player.short}
+                      </span>
                     </div>
                     {(state.player.id === captainId || state.player.id === heroId) && (
                       <div
@@ -991,7 +1135,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 ))}
               </div>
 
-              {/* CTA DESAFIO */}
+              {/* CTA */}
               <div className="absolute bottom-[88px] left-4 right-4 text-center z-10">
                 <div className="text-3xl font-black italic text-white leading-[0.95] drop-shadow-[0_4px_15px_rgba(0,0,0,0.9)]">
                   DUVIDO VOCÊ<br />
@@ -1012,7 +1156,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
               </div>
             </div>
 
-            {/* BOTÕES DE AÇÃO */}
+            {/* AÇÕES */}
             <div className="mt-6 w-full max-w-[380px] space-y-3 px-2">
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -1075,16 +1219,16 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
 
       </AnimatePresence>
 
-      {/* SE TEM ESCALAÇÃO SALVA E ESTÁ NA ARENA, OFERECE PULAR PRO FINAL */}
+      {/* Atalho fixo: ver arte final quando já tem escalação salva */}
       {hadSaved && step === 'arena' && (
         <motion.button
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
           onClick={verEscalacaoSalva}
-          className="fixed top-4 right-4 z-[200] bg-cyan-400 text-black px-4 py-2 rounded-full font-black text-[10px] tracking-widest shadow-[0_0_25px_rgba(34,211,238,0.5)] active:scale-95"
+          className="fixed top-3 right-3 z-[200] bg-cyan-400 text-black px-3 py-2 rounded-full font-black text-[10px] tracking-widest shadow-[0_0_25px_rgba(34,211,238,0.5)] active:scale-95"
         >
-          📸 VER ARTE FINAL
+          📸 VER ARTE
         </motion.button>
       )}
     </div>
