@@ -58,11 +58,12 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [pendingPlayer, setPendingPlayer] = useState<Player | null>(null);
 
-  // ── Lógica para lidar com acentos e espaços nas fotos ──
+  // ── Lógica de URL com encode total para garantir que acentos/espaços funcionem ──
   const getValidPhotoUrl = (fotoPath: string) => {
     if (!fotoPath) return ESCUDO;
-    const encodedPath = encodeURIComponent(fotoPath).replace(/%2F/g, '/');
-    return `${BASE_STORAGE}${encodedPath}`;
+    const parts = fotoPath.split('/');
+    const encodedParts = parts.map(part => encodeURIComponent(part));
+    return `${BASE_STORAGE}${encodedParts.join('/')}`;
   };
 
   const formationConfigs: Record<string, any> = {
@@ -154,8 +155,8 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
                         <img 
                           src={getValidPhotoUrl(state.player.foto)}
                           className="w-full h-full object-cover"
-                          // CENTRALIZAÇÃO DO JOGADOR NO TOPO
-                          style={{ objectPosition: 'center top' }} 
+                          // ALINHAMENTO 95% À DIREITA PARA FOCAR NO ROSTO DA FOTO DUPLA
+                          style={{ objectPosition: '95% center' }} 
                           onError={(e) => { 
                              const target = e.target as HTMLImageElement;
                              if(target.src !== ESCUDO) target.src = ESCUDO;
