@@ -1,5 +1,5 @@
-// src/app/tigre-fc/escalar/[jogoId]/page.tsx
-import EscalacaoFormacao from '@/components/EscalacaoFormacao'; // ajuste o caminho se necessário
+import EscalacaoFormacao from '../../../../components/EscalacaoFormacao'; 
+// ou o caminho relativo correto até o arquivo EscalacaoFormacao.tsx
 
 interface Props {
   params: { jogoId: string };
@@ -8,12 +8,8 @@ interface Props {
 export default function EscalacaoPage({ params }: Props) {
   const jogoId = parseInt(params.jogoId);
 
-  if (isNaN(jogoId)) {
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Jogo inválido</div>;
-  }
-
   return (
-    <main className="min-h-screen bg-black">
+    <main className="min-h-screen bg-black overflow-hidden">
       <EscalacaoFormacao jogoId={jogoId} />
     </main>
   );
