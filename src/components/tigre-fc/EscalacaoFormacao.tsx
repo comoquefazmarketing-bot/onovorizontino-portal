@@ -58,10 +58,9 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [pendingPlayer, setPendingPlayer] = useState<Player | null>(null);
 
-  // ── FUNÇÃO DE TRATAMENTO DE URL (ACENTOS E ESPAÇOS) ──
+  // ── Lógica para lidar com acentos e espaços nas fotos ──
   const getValidPhotoUrl = (fotoPath: string) => {
     if (!fotoPath) return ESCUDO;
-    // encodeURIComponent transforma acentos e espaços em códigos aceitos pela URL
     const encodedPath = encodeURIComponent(fotoPath).replace(/%2F/g, '/');
     return `${BASE_STORAGE}${encodedPath}`;
   };
@@ -129,6 +128,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
 
             <div className="flex-1 relative bg-zinc-900 overflow-hidden">
               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-90 pointer-events-none scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
               
               <div className="relative w-full h-full">
                 {Object.entries(slotMap).map(([id, state]) => (
@@ -154,9 +154,12 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
                         <img 
                           src={getValidPhotoUrl(state.player.foto)}
                           className="w-full h-full object-cover"
-                          // ALINHAMENTO À DIREITA E TOPO PARA MELHOR ENQUADRAMENTO
-                          style={{ objectPosition: 'right top' }} 
-                          onError={(e) => { (e.target as HTMLImageElement).src = ESCUDO; }}
+                          // CENTRALIZAÇÃO DO JOGADOR NO TOPO
+                          style={{ objectPosition: 'center top' }} 
+                          onError={(e) => { 
+                             const target = e.target as HTMLImageElement;
+                             if(target.src !== ESCUDO) target.src = ESCUDO;
+                          }}
                         />
                         <div className="absolute bottom-0 w-full bg-yellow-500 py-1 shadow-[0_-5px_15px_rgba(0,0,0,0.7)]">
                           <span className="text-[9px] md:text-[12px] font-black uppercase text-black leading-none block text-center tracking-tighter">
