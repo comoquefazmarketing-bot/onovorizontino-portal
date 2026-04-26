@@ -1,15 +1,15 @@
-import EscalacaoFormacao from '@/components/tigre-fc/EscalacaoFormacao';
+import TigreFCEscalar from '@/components/tigre-fc/TigreFCEscalar';
 
 interface Props {
-  params: { jogoId: string };
+  params: Promise<{ jogoId: string }>;
 }
 
-export default function EscalacaoPage({ params }: Props) {
-  const jogoId = params.jogoId;
+export default async function EscalacaoPage({ params }: Props) {
+  const { jogoId } = await params;
 
   return (
     <main className="min-h-screen bg-black overflow-hidden">
-      <EscalacaoFormacao jogoId={jogoId} />
+      <TigreFCEscalar jogoId={jogoId} />
     </main>
   );
 }
