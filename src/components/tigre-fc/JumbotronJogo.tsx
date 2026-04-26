@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import TigreFCPerfilPublico from './TigreFCPerfilPublico';   // Import correto (mesma pasta)
+import TigreFCPerfilPublico from './TigreFCPerfilPublico';
+import DestaquesFifa from './DestaquesFifa'; // Certifique-se de que o arquivo existe na mesma pasta
 
 // ── Design tokens ────────────────
 const C = {
@@ -39,82 +40,14 @@ interface RankUser {
 interface Stats {
   capitao?: { nome: string; pts: number };
   heroi?: { nome: string; pts: number };
-  maisEscalado?: { nome: string; pct: number };
   ranking?: RankUser[];
   participantes?: number;
-  posicao?: number;
-  golsSofridos?: number;
-  mediaSofaTime?: number;
-  mediaSofa?: number;
-  mvp?: { nome: string; media: number };
-  meusPontos?: number;
 }
 
 interface Props {
   jogo: Jogo;
   stats?: Stats;
   mercadoFechado?: boolean;
-}
-
-interface UltimaRodada {
-  capitao: { nome: string; pts: number } | null;
-  heroi: { nome: string; pts: number } | null;
-  maisEscalado: { nome: string; pct: number } | null;
-  ranking: RankUser[];
-  participantes: number;
-}
-
-async function fetchUltimaRodada(): Promise<UltimaRodada> {
-  const { data: jogos } = await supabase
-    .from('jogos')
-    .select('id')
-    .eq('finalizado', true)
-    .order('data_hora', { ascending: false })
-    .limit(1);
-
-  const jogoId = jogos?.[0]?.id;
-  if (!jogoId) return { capitao: null, heroi: null, maisEscalado: null, ranking: [], participantes: 0 };
-
-  const { data: pontuacoes } = await supabase
-    .from('pontuacoes_atletas')
-    .select('atleta_id, pontos_ganhos')
-    .eq('jogo_id', jogoId)
-    .order('pontos_ganhos', { ascending: false });
-
-  const atletaIds = pontuacoes?.map(p => p.atleta_id) ?? [];
-  const { data: atletas } = atletaIds.length > 0
-    ? await supabase.from('tigre_fc_atletas').select('id, nome').in('id', atletaIds)
-    : { data: [] };
-
-  const nomeById: Record<number, string> = {};
-  (atletas ?? []).forEach(a => { nomeById[a.id] = a.nome; });
-
-  const topPontuacao = pontuacoes?.[0];
-  const capitao = topPontuacao
-    ? { nome: nomeById[topPontuacao.atleta_id] ?? 'Desconhecido', pts: Number(topPontuacao.pontos_ganhos) }
-    : null;
-
-  const { data: rankData } = await supabase
-    .from('view_ranking_geral')
-    .select('apelido, pontos_total')
-    .limit(5);
-
-  const ranking: RankUser[] = (rankData ?? []).map(r => ({
-    apelido: r.apelido,
-    pontos: r.pontos_total
-  }));
-
-  const { count } = await supabase
-    .from('tigre_fc_escalacoes')
-    .select('*', { count: 'exact', head: true });
-
-  return {
-    capitao,
-    heroi: null,
-    maisEscalado: null,
-    ranking,
-    participantes: count ?? 0
-  };
 }
 
 const FALLBACK = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
@@ -139,310 +72,150 @@ function Countdown({ dataHora }: { dataHora: string }) {
         crit: h === 0 && m < 5
       });
     };
-
     calc();
     const id = setInterval(calc, 1000);
     return () => clearInterval(id);
   }, [dataHora]);
 
   const block = (val: string, lbl: string, red = false) => (
-    <div style={{
-      background: '#111',
-      border: `2px solid ${red ? C.red : '#333'}`,
-      borderRadius: 12,
-      padding: '10px 12px',
-      textAlign: 'center',
-      minWidth: 70
-    }}>
-      <span style={{
-        fontFamily: "'Barlow Condensed',sans-serif",
-        fontSize: 54,
-        fontWeight: 900,
-        lineHeight: 1,
-        display: 'block',
-        color: red ? C.red : '#fff'
-      }}>
-        {val}
-      </span>
-      <span style={{
-        fontSize: 9,
-        fontWeight: 900,
-        letterSpacing: '0.2em',
-        color: red ? C.red : 'rgba(255,255,255,0.5)',
-        marginTop: 4,
-        display: 'block'
-      }}>
-        {lbl}
-      </span>
+    <div className="bg-[#111] border-2 rounded-xl p-2.5 text-center min-w-[70px]" style={{ borderColor: red ? C.red : '#333' }}>
+      <span className="block text-5xl font-black italic leading-none" style={{ color: red ? C.red : '#fff', fontFamily: "'Barlow Condensed',sans-serif" }}>{val}</span>
+      <span className="block text-[9px] font-black tracking-widest mt-1 opacity-50 uppercase">{lbl}</span>
     </div>
   );
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 24 }}>
+    <div className="flex items-center justify-center gap-1.5 mb-6">
       {block(t.h, 'HORAS')}
-      <span style={{ fontSize: 40, fontWeight: 900, color: '#333' }}>:</span>
+      <span className="text-4xl font-black text-zinc-800">:</span>
       {block(t.m, 'MIN')}
-      <span style={{ fontSize: 40, fontWeight: 900, color: '#333' }}>:</span>
+      <span className="text-4xl font-black text-zinc-800">:</span>
       {block(t.s, 'SEG', t.crit)}
     </div>
   );
 }
 
-function Escudo({ src, alt, novo }: { src: string | null; alt: string; novo?: boolean }) {
+function Escudo({ src, alt, destaque }: { src: string | null; alt: string; destaque?: boolean }) {
   const [imgSrc, setImgSrc] = useState(src || FALLBACK);
-
-  useEffect(() => {
-    setImgSrc(src || FALLBACK);
-  }, [src]);
-
   return (
-    <div style={{
-      width: 90,
-      height: 90,
-      background: '#0d0d0d',
-      borderRadius: 22,
-      flexShrink: 0,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-      border: novo ? `3px solid ${C.gold}` : '1px solid rgba(255,255,255,0.2)',
-      boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-    }}>
-      <img
-        src={imgSrc}
-        alt={alt}
-        onError={() => setImgSrc(FALLBACK)}
-        style={{ width: 65, height: 65, objectFit: 'contain' }}
-      />
+    <div className={`w-[90px] h-[90px] bg-[#0d0d0d] rounded-3xl flex items-center justify-center overflow-hidden border shadow-2xl transition-transform hover:scale-105 ${destaque ? 'border-[#F5C400] border-2' : 'border-white/10'}`}>
+      <img src={imgSrc} alt={alt} onError={() => setImgSrc(FALLBACK)} className="w-[65px] h-[65px] object-contain" />
     </div>
   );
 }
 
-function StatCard({ lbl, val, sub, color, border }: {
-  lbl: string;
-  val: string;
-  sub?: string;
-  color: string;
-  border: string;
-}) {
-  return (
-    <div style={{
-      background: 'rgba(255,255,255,0.06)',
-      border: `1px solid ${border}`,
-      borderRadius: 12,
-      padding: '12px'
-    }}>
-      <div style={{
-        fontSize: 10,
-        fontWeight: 900,
-        letterSpacing: '0.1em',
-        color,
-        marginBottom: 6,
-        opacity: 0.9
-      }}>
-        {lbl}
-      </div>
-      <div style={{
-        fontFamily: "'Barlow Condensed',sans-serif",
-        fontSize: 28,
-        fontWeight: 900,
-        fontStyle: 'italic',
-        lineHeight: 1,
-        color: '#fff'
-      }}>
-        {val}
-      </div>
-      {sub && <div style={{ fontSize: 11, marginTop: 5, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>{sub}</div>}
-    </div>
-  );
-}
-
-// ========================
-//  COMPONENTE PRINCIPAL
-// ========================
 export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false }: Props) {
-  const [ultima, setUltima] = useState<UltimaRodada>({
-    capitao: null,
-    heroi: null,
-    maisEscalado: null,
-    ranking: [],
-    participantes: 0,
-  });
-
-  const [loadingUltima, setLoadingUltima] = useState(true);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
   const [meuId, setMeuId] = useState<string>('');
 
   useEffect(() => {
-    fetchUltimaRodada().then(data => {
-      setUltima(data);
-      setLoadingUltima(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) setMeuId(session.user.id);
     });
   }, []);
 
-  // Carregar ID do usuário logado
-  useEffect(() => {
-    const getUserId = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        setMeuId(session.user.id);
-      }
-    };
-    getUserId();
-  }, []);
-
-  const capitao = stats.capitao ?? ultima.capitao;
-  const heroi = stats.heroi ?? ultima.heroi;
-  const maisEscalado = stats.maisEscalado ?? ultima.maisEscalado ?? { nome: '—', pct: 0 };
-  const ranking = (stats.ranking?.length ?? 0) > 0 ? stats.ranking! : ultima.ranking;
-  const participantes = stats.participantes ?? ultima.participantes;
-
   return (
-    <>
-      <div style={{
-        fontFamily: "'Barlow Condensed', sans-serif",
-        background: '#000',
-        borderRadius: 24,
-        overflow: 'hidden',
-        position: 'relative',
-        border: '1px solid #333',
-        maxWidth: 460,
-        width: '95%',
-        margin: '0 auto',
-        boxShadow: '0 20px 80px rgba(0,0,0,0.9)'
-      }}>
-        <style>{`
-          @keyframes scan { 0%{background-position:-200% center} 100%{background-position:200% center} }
-          @keyframes pulse-gold { 0%,100%{transform: scale(1)} 50%{transform: scale(1.02)} }
-        `}</style>
+    <div className="w-full max-w-[480px] mx-auto space-y-6">
+      {/* CARD PRINCIPAL DO JOGO */}
+      <div className="bg-black rounded-[32px] overflow-hidden relative border border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.8)]">
+        
+        {/* Barra Estilizada de Scanline */}
+        <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#00F3FF] to-transparent opacity-50 animate-pulse" />
 
-        <div style={{ height: 3, background: `linear-gradient(90deg,transparent,${C.gold},#fff,${C.cyan},transparent)`, backgroundSize: '200%', animation: 'scan 3s linear infinite' }} />
-
-        <div style={{ position: 'relative', zIndex: 1, padding: '24px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: C.cyan }} />
-              <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.2em', color: C.cyan }}>
+        <div className="p-6 relative z-10">
+          {/* Header Status */}
+          <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full animate-pulse ${mercadoFechado ? 'bg-red-500' : 'bg-[#00F3FF]'}`} />
+              <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: mercadoFechado ? C.red : C.cyan }}>
                 {mercadoFechado ? 'MERCADO FECHADO' : 'MERCADO ABERTO'}
               </span>
             </div>
-            <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '0.2em', color: C.gold }}>
+            <span className="text-xs font-black tracking-widest text-[#F5C400] italic">
               {jogo.competicao.toUpperCase()}
             </span>
           </div>
 
           {!mercadoFechado && <Countdown dataHora={jogo.data_hora} />}
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 10 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, flex: 1 }}>
+          {/* Confronto */}
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col items-center gap-3 flex-1">
               <Escudo src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} />
-              <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', textAlign: 'center', lineHeight: 1.1 }}>
-                {jogo.mandante.nome.toUpperCase()}
-              </span>
+              <span className="text-xs font-black text-white text-center leading-tight">{jogo.mandante.nome.toUpperCase()}</span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              <span style={{ fontSize: 24, fontWeight: 900, fontStyle: 'italic', color: 'rgba(255,255,255,0.15)' }}>VS</span>
-              <span style={{ fontSize: 14, fontWeight: 900, color: C.gold, textAlign: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px 8px', borderRadius: 8 }}>
-                {new Date(jogo.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} - {new Date(jogo.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-2xl font-black italic text-white/10">VS</span>
+              <div className="bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                <span className="text-[10px] font-bold text-[#F5C400]">
+                  {new Date(jogo.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {new Date(jogo.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, flex: 1 }}>
-              <Escudo src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} novo />
-              <span style={{ fontSize: 13, fontWeight: 900, color: C.gold, textAlign: 'center', lineHeight: 1.1 }}>
-                {jogo.visitante.nome.toUpperCase()}
-              </span>
+            <div className="flex flex-col items-center gap-3 flex-1">
+              <Escudo src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} destaque />
+              <span className="text-xs font-black text-[#F5C400] text-center leading-tight">{jogo.visitante.nome.toUpperCase()}</span>
             </div>
           </div>
 
+          {/* Local e Transmissão */}
           {(jogo.local || jogo.transmissao) && (
-            <div style={{ background: '#111', border: '1px solid #222', borderRadius: 14, padding: '12px', marginBottom: 16 }}>
+            <div className="bg-zinc-900/50 rounded-2xl p-4 space-y-2 border border-white/5 mb-6">
               {jogo.local && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontSize: 14 }}>📍</span>
-                  <span style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}>{jogo.local}</span>
+                <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-zinc-400">
+                  <span className="opacity-100">📍</span> {jogo.local}
                 </div>
               )}
               {jogo.transmissao && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 14 }}>📺</span>
-                  <span style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}>{jogo.transmissao}</span>
+                <div className="flex items-center justify-center gap-2 text-[11px] font-black text-white">
+                  <span className="text-lg">📺</span> {jogo.transmissao}
                 </div>
               )}
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: C.purple, borderRadius: 12, padding: '14px', marginBottom: 16 }}>
-            <span style={{ fontSize: 18 }}>🎯</span>
-            <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '0.1em', color: '#fff' }}>
-              PLACAR EXATO = +15 XP
-            </span>
-          </div>
-
+          {/* Botão de Convocação */}
           {mercadoFechado ? (
-            <div style={{ width: '100%', background: '#111', border: '1px solid #222', borderRadius: 16, color: 'rgba(255,255,255,0.4)', fontSize: 16, fontWeight: 900, padding: 22, textAlign: 'center' }}>
-              🔒 MERCADO FECHADO
+            <div className="w-full bg-zinc-900 rounded-2xl p-5 text-center text-zinc-500 font-black tracking-widest border border-white/5">
+              🔒 ESCALAÇÕES BLOQUEADAS
             </div>
           ) : (
-            <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%',
-              background: C.gold, borderRadius: 16, color: '#000',
-              fontSize: 18, fontWeight: 900, letterSpacing: '0.1em', padding: 22,
-              textDecoration: 'none', textAlign: 'center',
-              animation: 'pulse-gold 2s ease-in-out infinite'
-            }}>
-              CONVOCAR TITULARES →
+            <Link href={`/tigre-fc/escalar/${jogo.id}`} className="block w-full bg-[#F5C400] hover:bg-white text-black rounded-2xl p-5 text-center font-black tracking-tighter text-lg transition-all active:scale-95 shadow-[0_10px_30px_rgba(245,196,0,0.3)]">
+              CONVOCAR ELITE →
             </Link>
           )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 20 }}>
-            <StatCard
-              lbl="CAPITÃO"
-              val={loadingUltima ? '...' : capitao ? capitao.pts.toFixed(1) : '—'}
-              sub={capitao ? capitao.nome : '—'}
-              color={C.gold}
-              border="rgba(245,196,0,0.3)"
-            />
-            <StatCard
-              lbl="HERÓI"
-              val={loadingUltima ? '...' : heroi ? heroi.pts.toFixed(1) : '—'}
-              sub={heroi ? heroi.nome : '—'}
-              color={C.red}
-              border="rgba(255,45,85,0.3)"
-            />
-          </div>
-
-          <div style={{ marginTop: 16, background: '#0a0a0a', border: `2px solid ${C.purple}`, borderRadius: 16, padding: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 12, fontWeight: 900, color: C.purple }}>RANKING TOP 5</span>
-              <span style={{ fontSize: 11, color: C.cyan, fontWeight: 800 }}>{participantes} JOGANDO</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {ranking.slice(0, 5).map((r, i) => (
-                <div
-                  key={i}
-                  onClick={() => setPerfilAberto(r.apelido || r.nome || '')} // Clique para abrir perfil
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '10px',
-                    borderRadius: 10,
-                    background: i === 0 ? 'rgba(191,95,255,0.2)' : '#111',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <span style={{ fontSize: 14, fontWeight: 900, color: i === 0 ? C.gold : '#555', minWidth: 25 }}>{i + 1}º</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', flex: 1 }}>{r.apelido || r.nome || 'Torcedor'}</span>
-                  <span style={{ fontSize: 14, fontWeight: 900, color: C.purple }}>{r.pontos} pts</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
+
+      {/* SEÇÃO DE DESTAQUES (FIFA STYLE) */}
+      <DestaquesFifa />
+
+      {/* RANKING MINI */}
+      {stats.ranking && (
+        <div className="bg-zinc-900/30 rounded-3xl p-6 border border-white/5">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-[10px] font-black text-[#BF5FFF] tracking-[0.3em] uppercase">Global Ranking</h3>
+            <span className="text-[9px] font-bold text-zinc-500 uppercase">{stats.participantes} Escalações</span>
+          </div>
+          <div className="space-y-2">
+            {stats.ranking.slice(0, 3).map((r, i) => (
+              <button 
+                key={i}
+                onClick={() => setPerfilAberto(r.apelido || r.nome || '')}
+                className="w-full flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5 hover:border-[#BF5FFF]/50 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs font-black ${i === 0 ? 'text-[#F5C400]' : 'text-zinc-600'}`}>{i + 1}º</span>
+                  <span className="text-xs font-bold text-white italic">{r.apelido || r.nome}</span>
+                </div>
+                <span className="text-xs font-black text-[#BF5FFF]">{r.pontos} <small className="text-[8px] opacity-50">PTS</small></span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE PERFIL */}
       {perfilAberto && (
@@ -452,6 +225,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           onClose={() => setPerfilAberto(null)}
         />
       )}
-    </>
+    </div>
   );
 }
