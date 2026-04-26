@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, use } from 'react';
-import Link from 'next/link';
 import { supabase as sb } from '@/lib/supabase';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat          from '@/components/tigre-fc/TigreFCChat';
-import DestaquesFifa         from '@/components/tigre-fc/DestaquesFifa';
+import DestaquesFifa        from '@/components/tigre-fc/DestaquesFifa';
 import JumbotronJogo        from '@/components/tigre-fc/JumbotronJogo';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
@@ -36,15 +35,22 @@ interface UsuarioRanking {
   pontos_total: number;
 }
 
+interface MVPData {
+  nome: string;
+  media: number;
+}
+
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
   use(params);
 
-  const [mounted, setMounted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [jogo, setJogo] = useState<Jogo | null>(null);
-  const [ranking, setRanking] = useState<UsuarioRanking[]>([]);
-  const [meuId, setMeuId] = useState<string | null>(null);
-  const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
+  const [mounted, setMounted]               = useState(false);
+  const [isLoading, setIsLoading]           = useState(true);
+  const [jogo, setJogo]                     = useState<Jogo | null>(null);
+  const [ranking, setRanking]               = useState<UsuarioRanking[]>([]);
+  const [meuId, setMeuId]                   = useState<string | null>(null);
+  const [minhaPosicao, setMinhaPosicao]     = useState<number | null>(null);
+  const [mvp, setMvp]                       = useState<MVPData | null>(null);
+  const [perfilAberto, setPerfilAberto]     = useState<string | null>(null);
   const [mercadoFechado, setMercadoFechado] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -59,24 +65,71 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     async function init() {
       setIsLoading(true);
       try {
+        // ── Sessão do usuário ────────────────────────────
         const { data: { session } } = await sb.auth.getSession();
+        let meuUsuarioId: string | null = null;
         if (session?.user?.id) {
-          const { data: u } = await sb.from('tigre_fc_usuarios').select('id').eq('google_id', session.user.id).maybeSingle();
-          if (u) setMeuId(u.id);
+          const { data: u } = await sb
+            .from('tigre_fc_usuarios')
+            .select('id')
+            .eq('google_id', session.user.id)
+            .maybeSingle();
+          if (u) {
+            meuUsuarioId = u.id;
+            setMeuId(u.id);
+          }
         }
 
-        const [resJogo, resRank] = await Promise.all([
-          fetch('/api/proximo-jogo', { cache: 'no-store' }).then(r => r.json()).catch(() => null),
-          sb
-            .from('tigre_fc_usuarios')
+        // ── Dados em paralelo ────────────────────────────
+        const [resJogo, resRank, resMVP] = await Promise.all([
+          // Próximo jogo
+          fetch('/api/proximo-jogo', { cache: 'no-store' })
+            .then(r => r.json())
+            .catch(() => null),
+
+          // Ranking global (10 primeiros)
+          sb.from('tigre_fc_usuarios')
             .select('id, nome, apelido, avatar_url, pontos_total')
             .not('pontos_total', 'is', null)
             .order('pontos_total', { ascending: false })
             .limit(10),
+
+          // MVP — atleta com maior média (com fallback se a tabela não existir ainda)
+          sb.from('pontuacoes_atletas')
+            .select('atleta_nome, media_sofascore')
+            .order('media_sofascore', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+            .then(r => r)
+            .then(r => r, () => ({ data: null, error: null })),
         ]);
 
         if (resJogo?.jogos?.[0]) setJogo(resJogo.jogos[0] as Jogo);
-        if (resRank.data) setRanking(resRank.data as UsuarioRanking[]);
+        if (resRank.data)        setRanking(resRank.data as UsuarioRanking[]);
+
+        // MVP dinâmico
+        if (resMVP && 'data' in resMVP && resMVP.data) {
+          setMvp({
+            nome: (resMVP.data as { atleta_nome: string }).atleta_nome,
+            media: (resMVP.data as { media_sofascore: number }).media_sofascore,
+          });
+        }
+
+        // ── Posição do usuário no ranking ────────────────
+        if (meuUsuarioId) {
+          const { data: meuPerfil } = await sb
+            .from('tigre_fc_usuarios')
+            .select('pontos_total')
+            .eq('id', meuUsuarioId)
+            .maybeSingle();
+          if (meuPerfil?.pontos_total !== null && meuPerfil?.pontos_total !== undefined) {
+            const { count } = await sb
+              .from('tigre_fc_usuarios')
+              .select('id', { count: 'exact', head: true })
+              .gt('pontos_total', meuPerfil.pontos_total);
+            setMinhaPosicao((count ?? 0) + 1);
+          }
+        }
       } catch (e) {
         console.error('[TigreFCPage] Erro:', e);
       } finally {
@@ -85,7 +138,10 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     }
 
     init();
-    const channel = sb.channel('tigre-fc-live').on('postgres_changes', { event: '*', schema: 'public', table: 'jogos' }, () => init()).subscribe();
+    const channel = sb
+      .channel('tigre-fc-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jogos' }, () => init())
+      .subscribe();
     return () => { sb.removeChannel(channel); };
   }, [mounted]);
 
@@ -93,32 +149,36 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   return (
     <main className="min-h-screen bg-[#050505] text-white pb-40 font-sans overflow-x-hidden">
-      
+
       {/* ESPAÇAMENTO PARA O TOPO */}
       <div ref={topRef} tabIndex={-1} className="pt-2 outline-none" />
 
-      {/* ── NOVO HEADER BROADCAST NEON (SCAN FULL WIDTH) ── */}
+      {/* ── HEADER BROADCAST NEON ── */}
       <header className="relative pt-12 pb-24 text-center overflow-hidden bg-black border-b border-white/5">
-        {/* Camada de Scan Neon que preenche o todo o espaço do header */}
         <div className="absolute inset-0 opacity-10 led-scan-bar pointer-events-none z-0" style={{
           backgroundImage: 'linear-gradient(90deg, transparent, #BF5FFF, #00F3FF, transparent)',
           backgroundSize: '300% 100%'
         }} />
-        
+
         <div className="relative z-10 max-w-4xl mx-auto px-4">
           <div className="relative inline-block mb-4">
             <div className="absolute inset-0 bg-cyan-400 blur-[50px] opacity-30 rounded-full scale-125 animate-pulse" />
-            <img src={PATA_LOGO} className="w-16 h-auto mx-auto relative z-10 drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)]" alt="Tigre FC Logo" />
+            <img
+              src={PATA_LOGO}
+              className="w-16 h-auto mx-auto relative z-10 drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)]"
+              alt="Tigre FC Logo"
+            />
           </div>
-          
-          {/* TÍTULO COM GLOW CIANO NEON */}
+
           <h1 className="text-6xl font-black text-white italic uppercase leading-[0.85] tracking-tighter mb-4 led-cyan">
             TIGRE <span className="text-[#F5C400]">FC</span>
           </h1>
-          
+
           <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-black/40 rounded-full shadow-lg border border-white/10">
             <div className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-pulse" />
-            <p className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.4em]">Broadcast Station</p>
+            <p className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.4em]">
+              Broadcast Station
+            </p>
             <div className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-pulse" />
           </div>
         </div>
@@ -126,57 +186,83 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-20 space-y-12">
 
-        {/* ── NOVO JUMBOTRON MODULAR (HIEARQUIA REVISADA) ── */}
+        {/* ── JUMBOTRON ── */}
         {jogo ? (
           <section className="mb-10">
-            <JumbotronJogo 
-              jogo={jogo} 
+            <JumbotronJogo
+              jogo={jogo}
               mercadoFechado={mercadoFechado}
               stats={{
-                ranking: ranking.map(u => ({ apelido: u.apelido || u.nome || 'Jogador', pontos: u.pontos_total })),
+                ranking: ranking.map(u => ({
+                  apelido: u.apelido || u.nome || 'Jogador',
+                  pontos:  u.pontos_total ?? 0,
+                })),
                 participantes: ranking.length,
-                posicao: 4, 
-                mediaSofa: 7.2,
-                golsSofridos: 5,
-                mvp: { nome: 'Sander', media: 7.60 }
+                posicao:       minhaPosicao ?? undefined,
+                mediaSofa:     mvp?.media ?? 0,
+                golsSofridos:  0,
+                mvp:           mvp ?? { nome: '—', media: 0 },
               }}
             />
           </section>
         ) : !isLoading && (
           <div className="mb-10 p-8 bg-zinc-900/30 rounded-3xl text-center border border-white/5">
-            <p className="text-zinc-500 font-black uppercase text-[10px] tracking-widest">Aguardando Próxima Partida</p>
+            <p className="text-zinc-500 font-black uppercase text-[10px] tracking-widest">
+              Aguardando Próxima Partida
+            </p>
           </div>
         )}
 
-        {/* RESTANTE DA PÁGINA (CHATS, RANKING, ETC) */}
+        {/* ── GRID: CHAT + DESTAQUES + RANKING ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-          
-          {/* CHAT VESTIÁRIO (Ocupando mais espaço) */}
+
+          {/* CHAT VESTIÁRIO */}
           <section className="h-[600px] rounded-[40px] border border-white/5 overflow-hidden bg-black/40 relative">
             <TigreFCChat usuarioId={meuId} />
           </section>
-          
+
           <div className="space-y-8">
             <DestaquesFifa />
-            
+
             {/* RANKING ELITE EM LUZ ROXA */}
             <section>
               <div className="flex justify-between items-end mb-6 px-4">
                 <div>
-                  <h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-500 mb-1">Global Ranking</h2>
-                  <p className="text-xl font-black uppercase italic tracking-tighter text-white">Elite Top Performance</p>
+                  <h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-500 mb-1">
+                    Global Ranking
+                  </h2>
+                  <p className="text-xl font-black uppercase italic tracking-tighter text-white">
+                    Elite Top Performance
+                  </p>
                 </div>
               </div>
               <div className="space-y-3">
                 {ranking.slice(0, 5).map((u, i) => (
-                  <div key={u.id} className={`flex items-center p-4 rounded-3xl border ${i === 0 ? 'bg-gradient-to-r from-[#F5C400] to-[#D4A200] border-none text-black' : 'bg-zinc-900/40 border-white/5'}`}>
+                  <div
+                    key={u.id}
+                    onClick={() => setPerfilAberto(u.id)}
+                    className={`flex items-center p-4 rounded-3xl border cursor-pointer transition-all hover:scale-[1.01] ${
+                      i === 0
+                        ? 'bg-gradient-to-r from-[#F5C400] to-[#D4A200] border-none text-black'
+                        : 'bg-zinc-900/40 border-white/5 hover:border-white/15'
+                    }`}
+                  >
                     <span className="w-8 text-center font-black italic opacity-50">{i + 1}</span>
                     <div className="flex-1">
-                      <p className="font-black uppercase italic text-sm truncate">{u.apelido || u.nome}</p>
+                      <p className="font-black uppercase italic text-sm truncate">
+                        {u.apelido || u.nome}
+                      </p>
                     </div>
-                    <p className="font-black text-xl leading-none">{u.pontos_total || 0}</p>
+                    <p className="font-black text-xl leading-none">{u.pontos_total ?? 0}</p>
                   </div>
                 ))}
+                {ranking.length === 0 && !isLoading && (
+                  <div className="p-6 rounded-3xl border border-white/5 bg-zinc-900/30 text-center">
+                    <p className="text-zinc-500 font-black uppercase text-[10px] tracking-widest">
+                      Ranking ainda vazio — seja o primeiro a pontuar
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
           </div>
@@ -186,23 +272,26 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       {/* MODAL PERFIL */}
       {perfilAberto && (
-        <TigreFCPerfilPublico targetUsuarioId={perfilAberto} viewerUsuarioId={meuId} onClose={() => setPerfilAberto(null)} />
+        <TigreFCPerfilPublico
+          targetUsuarioId={perfilAberto}
+          viewerUsuarioId={meuId}
+          onClose={() => setPerfilAberto(null)}
+        />
       )}
 
-      {/* ESTILOS GLOBAIS FORÇADOS PARA MUDANÇA */}
+      {/* ESTILOS GLOBAIS */}
       <style jsx global>{`
         ::-webkit-scrollbar { width: 0px; }
         body { background-color: #050505; color: white; font-family: 'Barlow Condensed', sans-serif !important; }
-        
-        /* Força os tokens neon se não estiverem no global.css */
+
         .led-cyan { color: #00F3FF !important; text-shadow: 0 0 10px rgba(0,243,255,0.7) !important; }
-        
+
         .led-scan-bar {
           animation: led-scan-header 5s linear infinite;
         }
         @keyframes led-scan-header {
-          0% { background-position: -300% 0; }
-          100% { background-position: 300% 0; }
+          0%   { background-position: -300% 0; }
+          100% { background-position:  300% 0; }
         }
       `}</style>
     </main>
