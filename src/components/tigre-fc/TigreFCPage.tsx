@@ -55,11 +55,10 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     <main className="min-h-screen bg-[#050505] text-white pb-20 overflow-x-hidden" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
       <style jsx global>{` 
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700;1,900&display=swap'); 
-        .shadow-text { text-shadow: 0px 4px 12px rgba(0,0,0,1), 0px 2px 4px rgba(0,0,0,0.8); }
+        .shadow-text { text-shadow: 0px 4px 12px rgba(0,0,0,1); }
         .bg-glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
       `}</style>
 
-      {/* HEADER - Ajustado para visibilidade */}
       <div className="relative pt-20 pb-28 text-center">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(245,196,0,0.08)_0%,transparent_70%)]" />
         <div className="relative z-10">
@@ -77,25 +76,16 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-10 space-y-10">
         
-        {/* JUMBOTRON - Dados atualizados conforme solicitado */}
         {jogo && (
           <JumbotronJogo 
             jogo={jogo} 
             mercadoFechado={mercadoFechado} 
             stats={{
               ranking: ranking.map(u => ({ nome: u.nome, apelido: u.apelido, pontos: u.pontos_total ?? 0 })),
-              // Atualização Rodada: Heroi Dantas e Capitao Cesar
-              capitao: { 
-                nome: 'CÉSAR', 
-                pts: 6.9, 
-                foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CESAR%20FUNDO%20TRANSPARENTE.png' 
-              }, 
-              heroi: { 
-                nome: 'DANTAS', 
-                pts: 7.1, 
-                foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/DANTAS%20FUNDO%20TRANSPARENTE.png' 
-              },
-              posicao: 9, // Atualizado para 9º lugar
+              // Removido o campo 'foto' temporariamente para o TS não dar erro de compilação
+              capitao: { nome: 'CÉSAR', pts: 6.9 }, 
+              heroi: { nome: 'DANTAS', pts: 7.1 },
+              posicao: 9, 
               golsSofridos: 6, 
               mediaSofaTime: 6.95, 
               mvp: { nome: 'Dantas', media: 7.1 }, 
@@ -104,11 +94,9 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           />
         )}
 
-        {/* WIDGET SOFASCORE - Escalação Real */}
         <section className="space-y-4">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-xl font-black italic uppercase text-yellow-500 tracking-tight">Quadro Tático (SofaScore)</h3>
-            <span className="text-[10px] bg-yellow-500 text-black px-2 py-0.5 rounded font-bold animate-pulse">AO VIVO</span>
+            <h3 className="text-xl font-black italic uppercase text-yellow-500 tracking-tight shadow-text">Quadro Tático (SofaScore)</h3>
           </div>
           <div className="rounded-[32px] overflow-hidden border border-white/10 bg-black shadow-2xl">
             <iframe 
@@ -121,7 +109,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
         </section>
 
-        {/* LEADERBOARD - Limpo e Legível */}
         <section>
           <h3 className="text-2xl font-black italic uppercase mb-6 shadow-text">Classificação Geral</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -146,7 +133,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           </div>
         </section>
 
-        {/* VESTIÁRIO */}
         <section>
           <h3 className="text-3xl font-black italic uppercase text-white text-center mb-6 shadow-text">Vestiário</h3>
           <div className="rounded-[40px] border border-white/10 overflow-hidden bg-black/60 backdrop-blur-xl">
