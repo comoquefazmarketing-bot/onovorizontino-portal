@@ -10,7 +10,6 @@ const C = {
   cyan:    '#00F3FF',
   red:     '#FF2D55', 
   purple:  '#BF5FFF',
-  // Glows mais suaves para não "borrar" o texto
   gGold:   '0 2px 4px rgba(0,0,0,0.5)',
   gCyan:   '0 2px 4px rgba(0,0,0,0.5)',
   gRed:    '0 2px 4px rgba(0,0,0,0.5)',
@@ -197,13 +196,11 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
         @keyframes pulse-gold { 0%,100%{transform: scale(1)} 50%{transform: scale(1.02)} }
       `}</style>
 
-      {/* Linha de Scan - Mais visível */}
       <div style={{ height:3, background:`linear-gradient(90deg,transparent,${C.gold},#fff,${C.cyan},transparent)`,
         backgroundSize:'200%', animation:'scan 3s linear infinite' }} />
 
       <div style={{ position:'relative', zIndex:1, padding:'24px 20px' }}>
 
-        {/* TOP BAR - Maior e sem brilho que atrapalha */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
           marginBottom:20, paddingBottom:12, borderBottom:'1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -217,10 +214,8 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           </span>
         </div>
 
-        {/* COUNTDOWN */}
         {!mercadoFechado && <Countdown dataHora={jogo.data_hora} />}
 
-        {/* ESCUDOS - Aumentados */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, gap:10 }}>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10, flex:1 }}>
             <Escudo src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} />
@@ -230,7 +225,8 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, flexShrink:0 }}>
-            <span style={{ fontSize:24, fontWeight:900, italic: 'true', color:'rgba(255,255,255,0.15)' }}>VS</span>
+            {/* CORREÇÃO AQUI: fontStyle ao invés de italic */}
+            <span style={{ fontSize:24, fontWeight:900, fontStyle: 'italic', color:'rgba(255,255,255,0.15)' }}>VS</span>
             <span style={{ fontSize:14, fontWeight:900, color:C.gold, textAlign:'center', background:'rgba(0,0,0,0.4)', padding:'4px 8px', borderRadius:8 }}>
               {new Date(jogo.data_hora).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} - {new Date(jogo.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
             </span>
@@ -244,7 +240,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           </div>
         </div>
 
-        {/* ESTÁDIO + TV - Mais contraste */}
         {(jogo.local || jogo.transmissao) && (
           <div style={{ background:'#111', border:'1px solid #222', borderRadius:14, padding:'12px', marginBottom:16 }}>
             {jogo.local && (
@@ -262,7 +257,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           </div>
         )}
 
-        {/* XP BADGE - Maior */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10,
           background: C.purple, borderRadius:12, padding:'14px', marginBottom:16 }}>
           <span style={{ fontSize:18 }}>🎯</span>
@@ -271,7 +265,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           </span>
         </div>
 
-        {/* CTA - Botão maior */}
         {mercadoFechado ? (
           <div style={{ width:'100%', background:'#111', border:'1px solid #222', borderRadius:16,
             color:'rgba(255,255,255,0.4)', fontSize:16, fontWeight:900, padding:22, textAlign:'center' }}>
@@ -288,7 +281,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           </Link>
         )}
 
-        {/* STATS 2×2 - Textos maiores */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:20 }}>
           <StatCard
             lbl="CAPITÃO"
@@ -304,7 +296,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           />
         </div>
 
-        {/* RANKING - Contraste total */}
         <div style={{ marginTop:16, background:'#0a0a0a', border:`2px solid ${C.purple}`, borderRadius:16, padding:'16px' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
             <span style={{ fontSize:12, fontWeight:900, color:C.purple }}>RANKING TOP 5</span>
