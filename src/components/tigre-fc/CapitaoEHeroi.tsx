@@ -1,110 +1,74 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
-interface Props {
-  onSelect: (type: 'CAPTAIN' | 'HERO') => void;
-  captainName?: string;
-  heroName?: string;
-  captainFoto?: string;
-  heroFoto?: string;
-  captainScore?: number;
-  heroScore?: number;
-}
-
-export default function CapitaoEHeroi({
-  onSelect,
-  captainName = "César",
-  heroName = "Dantas",
-  captainFoto = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CESAR%20FUNDO%20TRANSPARENTE.png",
-  heroFoto = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/DANTAS%20FUNDO%20TRANSPARENTE.png",
-  captainScore = 6.9,
-  heroScore = 7.1,
-}: Props) {
+export default function CapitaoEHeroi() {
   
-  const [hasEntered, setHasEntered] = useState(false);
-
   useEffect(() => {
     const t = setTimeout(() => {
-      setHasEntered(true);
       confetti({
         particleCount: 100,
-        spread: 80,
+        spread: 70,
         origin: { y: 0.6 },
-        colors: ['#F5C400', '#00F3FF', '#BF5FFF', '#ffffff'],
+        colors: ['#F5C400', '#00F3FF', '#ffffff'],
       });
-    }, 400);
-
+    }, 300);
     return () => clearTimeout(t);
   }, []);
 
   return (
-    <div className="relative w-full flex flex-col items-center py-6">
-      <div className="text-center mb-6">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-yellow-500 mb-1">
-          ÚLTIMA RODADA — DESTAQUES
-        </p>
-        <h2 className="text-2xl font-black italic text-white">Capitão & Herói</h2>
-      </div>
-
-      <div className="flex items-center gap-8 w-full justify-center">
+    <div className="flex flex-col items-center gap-8 p-6 bg-black/40 rounded-[32px] border border-white/5 backdrop-blur-sm">
+      <div className="flex items-center justify-center gap-6 w-full">
         
-        {/* ==================== CAPITÃO ==================== */}
-        <motion.button
-          onClick={() => onSelect('CAPTAIN')}
-          className="group relative flex flex-col items-center gap-3 outline-none"
-          whileTap={{ scale: 0.92 }}
-          whileHover={{ y: -4 }}
-        >
-          <div className="relative w-32 h-44 rounded-3xl overflow-hidden border-4 border-yellow-500 shadow-[0_0_30px_rgba(245,196,0,0.5)]">
+        {/* CAPITÃO - DANTAS (O maior pontuador com x2) */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative w-28 h-36 rounded-2xl overflow-hidden border-2 border-yellow-500 shadow-[0_0_20px_rgba(245,196,0,0.4)]">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent z-10" />
             <img 
-              src={captainFoto} 
-              className="w-full h-full object-cover" 
-              alt={captainName}
+              src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/DANTAS%20FUNDO%20TRANSPARENTE.png" 
+              className="w-full h-full object-cover relative z-0" 
+              alt="Dantas" 
             />
-            <div className="absolute top-3 right-3 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-black text-xs font-black shadow-md">
-              C
+            <div className="absolute bottom-2 left-0 right-0 z-20 flex flex-col items-center">
+              <span className="bg-yellow-500 text-black text-[9px] font-black px-2 py-0.5 rounded-full mb-1">
+                © CAPITÃO
+              </span>
+              <span className="text-white text-[12px] font-black italic">14.2 PTS</span>
             </div>
           </div>
+          <span className="text-[11px] font-black italic uppercase tracking-widest text-yellow-500">Dantas</span>
+        </div>
 
-          <div className="text-center">
-            <p className="font-black text-lg text-yellow-400 tracking-tight">{captainName}</p>
-            <p className="text-xs text-yellow-500/80 font-mono">{captainScore.toFixed(1)} • Capitão</p>
-          </div>
-        </motion.button>
+        <div className="text-zinc-800 font-black italic text-xl">VS</div>
 
-        <div className="text-4xl font-black text-zinc-700 italic -mt-8">VS</div>
-
-        {/* ==================== HERÓI ==================== */}
-        <motion.button
-          onClick={() => onSelect('HERO')}
-          className="group relative flex flex-col items-center gap-3 outline-none"
-          whileTap={{ scale: 0.92 }}
-          whileHover={{ y: -4 }}
-        >
-          <div className="relative w-32 h-44 rounded-3xl overflow-hidden border-4 border-cyan-400 shadow-[0_0_30px_rgba(0,243,255,0.5)]">
+        {/* HERÓI - CÉSAR (Bônus de +5) */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative w-28 h-36 rounded-2xl overflow-hidden border-2 border-cyan-400 shadow-[0_0_20px_rgba(0,243,255,0.4)]">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent z-10" />
             <img 
-              src={heroFoto} 
-              className="w-full h-full object-cover" 
-              alt={heroName}
+              src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/CESAR%20FUNDO%20TRANSPARENTE.png" 
+              className="w-full h-full object-cover relative z-0" 
+              alt="César" 
             />
-            <div className="absolute top-3 right-3 w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center text-black text-xs font-black shadow-md">
-              H
+            <div className="absolute bottom-2 left-0 right-0 z-20 flex flex-col items-center">
+              <span className="bg-cyan-400 text-black text-[9px] font-black px-2 py-0.5 rounded-full mb-1">
+                ⭐ HERÓI
+              </span>
+              <span className="text-white text-[12px] font-black italic">11.9 PTS</span>
             </div>
           </div>
-
-          <div className="text-center">
-            <p className="font-black text-lg text-cyan-400 tracking-tight">{heroName}</p>
-            <p className="text-xs text-cyan-400/80 font-mono">{heroScore.toFixed(1)} • Herói</p>
-          </div>
-        </motion.button>
+          <span className="text-[11px] font-black italic uppercase tracking-widest text-cyan-400">César</span>
+        </div>
       </div>
 
-      <p className="mt-8 text-[10px] text-zinc-500 font-mono tracking-widest">
-        CLIQUE PARA TROCAR
-      </p>
+      <div className="text-center space-y-1">
+        <p className="text-[10px] text-white font-black uppercase italic tracking-wider">Regra Atualizada</p>
+        <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em]">
+          Capitão (Rating × 2) | Herói (Rating + 5)
+        </p>
+      </div>
     </div>
   );
 }
