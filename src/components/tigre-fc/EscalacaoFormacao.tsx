@@ -58,9 +58,10 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [pendingPlayer, setPendingPlayer] = useState<Player | null>(null);
 
-  // ── Sanitização de URL para Acentos e Espaços ──
+  // ── FUNÇÃO DE TRATAMENTO DE URL (ACENTOS E ESPAÇOS) ──
   const getValidPhotoUrl = (fotoPath: string) => {
     if (!fotoPath) return ESCUDO;
+    // encodeURIComponent transforma acentos e espaços em códigos aceitos pela URL
     const encodedPath = encodeURIComponent(fotoPath).replace(/%2F/g, '/');
     return `${BASE_STORAGE}${encodedPath}`;
   };
@@ -104,13 +105,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
       <AnimatePresence mode="wait">
         
         {step === 'formation' && (
-          <motion.div 
-            key="f" 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950"
-          >
+          <motion.div key="f" className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950">
             <h1 className="text-3xl font-black italic mb-10 text-yellow-500 uppercase tracking-tighter text-center">Escolha a Tática</h1>
             <div className="grid grid-cols-2 gap-4 w-full max-w-md">
               {Object.keys(formationConfigs).map(f => (
@@ -123,14 +118,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
         )}
 
         {step === 'arena' && (
-          <motion.div 
-            key="a" 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col md:flex-row relative overflow-hidden h-full"
-          >
-            {/* Lista Lateral */}
+          <motion.div key="a" className="flex-1 flex flex-col md:flex-row relative overflow-hidden h-full">
             <div className="h-[30%] md:h-full md:w-80 z-[110] bg-black/60 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10">
               <MarketList 
                 players={PLAYERS_DATA} 
@@ -139,10 +127,8 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
               />
             </div>
 
-            {/* Campo Arena */}
             <div className="flex-1 relative bg-zinc-900 overflow-hidden">
               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-90 pointer-events-none scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
               
               <div className="relative w-full h-full">
                 {Object.entries(slotMap).map(([id, state]) => (
@@ -157,7 +143,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
                       top: `${state.y}%`, 
                       position: 'absolute', 
                       transform: 'translate(-50%, -50%)',
-                      filter: 'drop-shadow(15px 15px 12px rgba(0,0,0,0.6)) drop-shadow(-15px 15px 12px rgba(0,0,0,0.4))'
+                      filter: 'drop-shadow(15px 15px 12px rgba(0,0,0,0.6))'
                     }}
                     className={`w-16 h-22 md:w-24 md:h-32 border-2 rounded-xl flex items-center justify-center overflow-hidden z-50 cursor-grab active:cursor-grabbing transition-all ${
                       activeSlot === id || pendingPlayer ? 'border-yellow-500 bg-yellow-500/30 scale-110 shadow-[0_0_40px_rgba(234,179,8,0.7)]' : 'border-white/30 bg-black/80'
@@ -168,13 +154,11 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
                         <img 
                           src={getValidPhotoUrl(state.player.foto)}
                           className="w-full h-full object-cover"
-                          style={{ objectPosition: 'center 15%' }} 
-                          onError={(e) => { 
-                             const target = e.target as HTMLImageElement;
-                             if(target.src !== ESCUDO) target.src = ESCUDO;
-                          }}
+                          // ALINHAMENTO À DIREITA E TOPO PARA MELHOR ENQUADRAMENTO
+                          style={{ objectPosition: 'right top' }} 
+                          onError={(e) => { (e.target as HTMLImageElement).src = ESCUDO; }}
                         />
-                        <div className="absolute bottom-0 w-full bg-yellow-500 py-1 md:py-1.5 shadow-[0_-5px_20px_rgba(0,0,0,0.8)]">
+                        <div className="absolute bottom-0 w-full bg-yellow-500 py-1 shadow-[0_-5px_15px_rgba(0,0,0,0.7)]">
                           <span className="text-[9px] md:text-[12px] font-black uppercase text-black leading-none block text-center tracking-tighter">
                             {state.player.short}
                           </span>
@@ -183,41 +167,33 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoProps) {
                     ) : (
                       <div className="flex flex-col items-center opacity-20">
                         <span className="text-2xl font-thin">+</span>
-                        <span className="text-[7px] font-bold uppercase tracking-widest">{id}</span>
+                        <span className="text-[7px] font-bold uppercase">{id}</span>
                       </div>
                     )}
                   </motion.div>
                 ))}
               </div>
 
-              {/* Botões de Ação */}
               <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-4 z-[120] px-6">
-                <button onClick={() => setStep('formation')} className="flex-1 max-w-[140px] py-4 bg-zinc-900/90 border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-md active:scale-95 transition-all">ALTERAR TÁTICA</button>
-                <button onClick={() => setStep('final')} className="flex-1 max-w-[200px] py-4 bg-yellow-500 text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(234,179,8,0.4)] active:scale-95 transition-all">FINALIZAR TIME</button>
+                <button onClick={() => setStep('formation')} className="flex-1 max-w-[140px] py-4 bg-zinc-900/90 border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest backdrop-blur-md">TÁTICA</button>
+                <button onClick={() => setStep('final')} className="flex-1 max-w-[200px] py-4 bg-yellow-500 text-black rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-2xl">FINALIZAR</button>
               </div>
             </div>
           </motion.div>
         )}
 
         {step === 'final' && (
-          <motion.div 
-            key="final" 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex-1 flex items-center justify-center p-6 bg-zinc-950"
-          >
-             <div className="bg-zinc-900 w-full max-w-sm p-10 rounded-[48px] border-2 border-yellow-500/20 text-center shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-yellow-500" />
-                <h2 className="text-4xl font-black italic text-white mb-8 uppercase tracking-tighter">
+          <motion.div key="f" className="flex-1 flex items-center justify-center p-6 bg-zinc-950">
+             <div className="bg-zinc-900 w-full max-w-sm p-10 rounded-[48px] border-2 border-yellow-500/20 text-center shadow-2xl relative">
+                <h2 className="text-3xl font-black italic text-white mb-8 uppercase tracking-tighter">
                   TIME <span className="text-yellow-500 font-black">ESCALADO</span>
                 </h2>
                 <div className="p-6 bg-black/60 rounded-3xl mb-8 border border-white/5">
                   <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-2">COMANDANTE</p>
-                  <p className="text-2xl font-black italic text-white uppercase tracking-tight">Enderson Moreira</p>
-                  {jogoId && <p className="text-[10px] text-yellow-500/40 mt-3 font-bold uppercase tracking-widest">Partida #{jogoId}</p>}
+                  <p className="text-2xl font-black italic text-white uppercase">Enderson Moreira</p>
                 </div>
-                <button onClick={() => window.location.reload()} className="w-full py-6 bg-yellow-500 text-black font-black rounded-2xl text-base uppercase shadow-xl hover:brightness-110 active:scale-95 transition-all">REINICIAR</button>
-                <p className="mt-10 text-[8px] text-zinc-600 font-bold uppercase tracking-[0.4em]">Felipe Makarios • Arena Tigre FC</p>
+                <button onClick={() => window.location.reload()} className="w-full py-6 bg-yellow-500 text-black font-black rounded-2xl text-base uppercase shadow-xl hover:brightness-110 transition-all">REINICIAR</button>
+                <p className="mt-8 text-[8px] text-zinc-600 font-bold uppercase tracking-[0.4em]">Felipe Makarios • Arena Tigre FC</p>
              </div>
           </motion.div>
         )}
