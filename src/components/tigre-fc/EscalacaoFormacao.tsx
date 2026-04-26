@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import * as htmlToImage from 'html-to-image';
@@ -22,6 +22,7 @@ interface Player {
   num: number;
   pos: string;
   foto: string;
+  ovr?: number;
 }
 
 type SlotCoord = { x: number; y: number };
@@ -36,37 +37,37 @@ interface EscalacaoFormacaoProps {
 }
 
 const PLAYERS_DATA: Player[] = [
-  { id: 23, name: 'Jordi Martins',     short: 'JORDI',      num: 93, pos: 'GOL', foto: 'JORDI.jpg.webp' },
-  { id: 1,  name: 'César',             short: 'CÉSAR',      num: 31, pos: 'GOL', foto: 'CESAR-AUGUSTO.jpg.webp' },
-  { id: 22, name: 'João Scapin',       short: 'SCAPIN',     num: 12, pos: 'GOL', foto: 'JOAO-SCAPIN.jpg.webp' },
-  { id: 62, name: 'Lucas Ribeiro',     short: 'LUCAS',      num: 1,  pos: 'GOL', foto: 'LUCAS-RIBEIRO.jpg.webp' },
-  { id: 8,  name: 'Patrick',           short: 'PATRICK',    num: 4,  pos: 'ZAG', foto: 'PATRICK.jpg.webp' },
-  { id: 38, name: 'Renato Palm',       short: 'R. PALM',    num: 33, pos: 'ZAG', foto: 'RENATO-PALM.jpg.webp' },
-  { id: 34, name: 'Eduardo Brock',     short: 'BROCK',      num: 14, pos: 'ZAG', foto: 'EDUARDO-BROCK.jpg.webp' },
-  { id: 66, name: 'Alexis Alvariño',   short: 'ALVARÍÑO',   num: 22, pos: 'ZAG', foto: 'IVAN-ALVARINO.jpg.webp' },
-  { id: 6,  name: 'Carlinhos',         short: 'CARLINHOS',  num: 3,  pos: 'ZAG', foto: 'CARLINHOS.jpg.webp' },
-  { id: 3,  name: 'Dantas',            short: 'DANTAS',     num: 25, pos: 'ZAG', foto: 'DANTAS.jpg.webp' },
-  { id: 9,  name: 'Sander',            short: 'SANDER',     num: 5,  pos: 'LAT', foto: 'SANDER (1).jpg' },
-  { id: 28, name: 'Maykon Jesus',      short: 'MAYKON',     num: 66, pos: 'LAT', foto: 'MAYKON-JESUS.jpg.webp' },
-  { id: 27, name: 'Nilson Castrillón', short: 'NILSON',     num: 20, pos: 'LAT', foto: 'NILSON-CASTRILLON.jpg.webp' },
-  { id: 75, name: 'Jhilmar Lora',      short: 'LORA',       num: 24, pos: 'LAT', foto: 'LORA.jpg.webp' },
-  { id: 41, name: 'Luís Oyama',        short: 'OYAMA',      num: 6,  pos: 'VOL', foto: 'LUIS-OYAMA.jpg.webp' },
-  { id: 46, name: 'Marlon',            short: 'MARLON',     num: 28, pos: 'VOL', foto: 'MARLON.jpg.webp' },
-  { id: 40, name: 'Léo Naldi',         short: 'NALDI',      num: 18, pos: 'VOL', foto: 'LEO-NALDI.jpg.webp' },
-  { id: 47, name: 'Matheus Bianqui',   short: 'BIANQUI',    num: 17, pos: 'MEI', foto: 'MATHEUS-BIANQUI.jpg.webp' },
-  { id: 10, name: 'Rômulo',            short: 'RÔMULO',     num: 10, pos: 'MEI', foto: 'ROMULO.jpg.webp' },
-  { id: 12, name: 'Juninho',           short: 'JUNINHO',    num: 50, pos: 'MEI', foto: 'JUNINHO.jpg.webp' },
-  { id: 17, name: 'Tavinho',           short: 'TAVINHO',    num: 15, pos: 'MEI', foto: 'TAVINHO.jpg.webp' },
-  { id: 86, name: 'Christian Ortíz',   short: 'TITI ORTÍZ', num: 8,  pos: 'MEI', foto: 'TITI-ORTIZ.jpg.webp' },
-  { id: 13, name: 'Diego Galo',        short: 'D. GALO',    num: 19, pos: 'MEI', foto: 'DIEGO-GALO.jpg.webp' },
-  { id: 15, name: 'Robson',            short: 'ROBSON',     num: 11, pos: 'ATA', foto: 'ROBSON.jpg.webp' },
-  { id: 59, name: 'Vinícius Paiva',    short: 'V. PAIVA',   num: 16, pos: 'ATA', foto: 'VINICIUS-PAIVA.jpg.webp' },
-  { id: 57, name: 'Ronald Barcellos',  short: 'RONALD',     num: 7,  pos: 'ATA', foto: 'RONALD-BARCELLOS.jpg.webp' },
-  { id: 55, name: 'Nicolas Careca',    short: 'CARECA',     num: 30, pos: 'ATA', foto: 'NICOLAS-CARECA.jpg.webp' },
-  { id: 50, name: 'Carlão',            short: 'CARLÃO',     num: 9,  pos: 'ATA', foto: 'CARLAO.jpg.webp' },
-  { id: 52, name: 'Hélio Borges',      short: 'HÉLIO',      num: 41, pos: 'ATA', foto: 'HELIO-BORGES.jpg.webp' },
-  { id: 53, name: 'Jardiel',           short: 'JARDIEL',    num: 40, pos: 'ATA', foto: 'JARDIEL.jpg.webp' },
-  { id: 91, name: 'Hector Bianchi',    short: 'HECTOR',     num: 35, pos: 'ATA', foto: 'HECTOR-BIANCHI.jpg.webp' },
+  { id: 23, name: 'Jordi Martins',     short: 'JORDI',      num: 93, pos: 'GOL', foto: 'JORDI.jpg.webp',           ovr: 82 },
+  { id: 1,  name: 'César',             short: 'CÉSAR',      num: 31, pos: 'GOL', foto: 'CESAR-AUGUSTO.jpg.webp',   ovr: 78 },
+  { id: 22, name: 'João Scapin',       short: 'SCAPIN',     num: 12, pos: 'GOL', foto: 'JOAO-SCAPIN.jpg.webp',     ovr: 72 },
+  { id: 62, name: 'Lucas Ribeiro',     short: 'LUCAS',      num: 1,  pos: 'GOL', foto: 'LUCAS-RIBEIRO.jpg.webp',   ovr: 70 },
+  { id: 8,  name: 'Patrick',           short: 'PATRICK',    num: 4,  pos: 'ZAG', foto: 'PATRICK.jpg.webp',         ovr: 84 },
+  { id: 38, name: 'Renato Palm',       short: 'R. PALM',    num: 33, pos: 'ZAG', foto: 'RENATO-PALM.jpg.webp',     ovr: 81 },
+  { id: 34, name: 'Eduardo Brock',     short: 'BROCK',      num: 14, pos: 'ZAG', foto: 'EDUARDO-BROCK.jpg.webp',   ovr: 80 },
+  { id: 66, name: 'Alexis Alvariño',   short: 'ALVARÍÑO',   num: 22, pos: 'ZAG', foto: 'IVAN-ALVARINO.jpg.webp',   ovr: 79 },
+  { id: 6,  name: 'Carlinhos',         short: 'CARLINHOS',  num: 3,  pos: 'ZAG', foto: 'CARLINHOS.jpg.webp',       ovr: 76 },
+  { id: 3,  name: 'Dantas',            short: 'DANTAS',     num: 25, pos: 'ZAG', foto: 'DANTAS.jpg.webp',          ovr: 75 },
+  { id: 9,  name: 'Sander',            short: 'SANDER',     num: 5,  pos: 'LAT', foto: 'SANDER (1).jpg',           ovr: 81 },
+  { id: 28, name: 'Maykon Jesus',      short: 'MAYKON',     num: 66, pos: 'LAT', foto: 'MAYKON-JESUS.jpg.webp',    ovr: 78 },
+  { id: 27, name: 'Nilson Castrillón', short: 'NILSON',     num: 20, pos: 'LAT', foto: 'NILSON-CASTRILLON.jpg.webp', ovr: 77 },
+  { id: 75, name: 'Jhilmar Lora',      short: 'LORA',       num: 24, pos: 'LAT', foto: 'LORA.jpg.webp',            ovr: 74 },
+  { id: 41, name: 'Luís Oyama',        short: 'OYAMA',      num: 6,  pos: 'VOL', foto: 'LUIS-OYAMA.jpg.webp',      ovr: 83 },
+  { id: 46, name: 'Marlon',            short: 'MARLON',     num: 28, pos: 'VOL', foto: 'MARLON.jpg.webp',          ovr: 80 },
+  { id: 40, name: 'Léo Naldi',         short: 'NALDI',      num: 18, pos: 'VOL', foto: 'LEO-NALDI.jpg.webp',       ovr: 78 },
+  { id: 47, name: 'Matheus Bianqui',   short: 'BIANQUI',    num: 17, pos: 'MEI', foto: 'MATHEUS-BIANQUI.jpg.webp', ovr: 82 },
+  { id: 10, name: 'Rômulo',            short: 'RÔMULO',     num: 10, pos: 'MEI', foto: 'ROMULO.jpg.webp',          ovr: 86 },
+  { id: 12, name: 'Juninho',           short: 'JUNINHO',    num: 50, pos: 'MEI', foto: 'JUNINHO.jpg.webp',         ovr: 79 },
+  { id: 17, name: 'Tavinho',           short: 'TAVINHO',    num: 15, pos: 'MEI', foto: 'TAVINHO.jpg.webp',         ovr: 78 },
+  { id: 86, name: 'Christian Ortíz',   short: 'TITI ORTÍZ', num: 8,  pos: 'MEI', foto: 'TITI-ORTIZ.jpg.webp',      ovr: 84 },
+  { id: 13, name: 'Diego Galo',        short: 'D. GALO',    num: 19, pos: 'MEI', foto: 'DIEGO-GALO.jpg.webp',      ovr: 75 },
+  { id: 15, name: 'Robson',            short: 'ROBSON',     num: 11, pos: 'ATA', foto: 'ROBSON.jpg.webp',          ovr: 85 },
+  { id: 59, name: 'Vinícius Paiva',    short: 'V. PAIVA',   num: 16, pos: 'ATA', foto: 'VINICIUS-PAIVA.jpg.webp',  ovr: 79 },
+  { id: 57, name: 'Ronald Barcellos',  short: 'RONALD',     num: 7,  pos: 'ATA', foto: 'RONALD-BARCELLOS.jpg.webp', ovr: 82 },
+  { id: 55, name: 'Nicolas Careca',    short: 'CARECA',     num: 30, pos: 'ATA', foto: 'NICOLAS-CARECA.jpg.webp',  ovr: 80 },
+  { id: 50, name: 'Carlão',            short: 'CARLÃO',     num: 9,  pos: 'ATA', foto: 'CARLAO.jpg.webp',          ovr: 84 },
+  { id: 52, name: 'Hélio Borges',      short: 'HÉLIO',      num: 41, pos: 'ATA', foto: 'HELIO-BORGES.jpg.webp',    ovr: 76 },
+  { id: 53, name: 'Jardiel',           short: 'JARDIEL',    num: 40, pos: 'ATA', foto: 'JARDIEL.jpg.webp',         ovr: 75 },
+  { id: 91, name: 'Hector Bianchi',    short: 'HECTOR',     num: 35, pos: 'ATA', foto: 'HECTOR-BIANCHI.jpg.webp',  ovr: 77 },
 ];
 
 const formationConfigs: Record<string, Record<string, SlotCoord>> = {
@@ -78,18 +79,99 @@ const formationConfigs: Record<string, Record<string, SlotCoord>> = {
   '5-3-2':   { gk:{x:50,y:85}, lb:{x:12,y:52}, cb1:{x:30,y:70}, cb2:{x:50,y:73}, cb3:{x:70,y:70}, rb:{x:88,y:52}, m1:{x:50,y:48}, m2:{x:30,y:40}, m3:{x:70,y:40}, st1:{x:42,y:18}, st2:{x:58,y:18} },
 };
 
-const SLOT_W_MOBILE = 56;
-const SLOT_H_MOBILE = 80;
-const SLOT_W_DESKTOP = 76;
-const SLOT_H_DESKTOP = 112;
+const SLOT_W_MOBILE  = 60;
+const SLOT_H_MOBILE  = 86;
+const SLOT_W_DESKTOP = 80;
+const SLOT_H_DESKTOP = 116;
+
+const POSICOES = ['TODOS', 'GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'ATA'] as const;
+type Posicao = typeof POSICOES[number];
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
-// =============================================================================
-// SUB-COMPONENTE: DraggableSlot
-// Cada slot tem seus próprios motion values pra suportar drag livre
-// =============================================================================
+const getRarityColors = (ovr: number) => {
+  if (ovr >= 84) return { border: '#fbbf24', glow: 'rgba(251,191,36,0.5)', bar: 'from-amber-400 to-yellow-300' };
+  if (ovr >= 78) return { border: '#fde68a', glow: 'rgba(253,230,138,0.4)', bar: 'from-yellow-200 to-amber-200' };
+  if (ovr >= 73) return { border: '#d4d4d8', glow: 'rgba(212,212,216,0.3)', bar: 'from-zinc-300 to-zinc-400' };
+  return                  { border: '#a16207', glow: 'rgba(161,98,7,0.3)',  bar: 'from-amber-700 to-yellow-800' };
+};
 
+// =============================================================================
+// FUT CARD — usado no mercado
+// =============================================================================
+interface FutCardProps {
+  player: Player;
+  escalado: boolean;
+  pending: boolean;
+  onClick: () => void;
+  getValidPhotoUrl: (foto: string) => string;
+}
+
+function FutCard({ player, escalado, pending, onClick, getValidPhotoUrl }: FutCardProps) {
+  const ovr = player.ovr ?? 75;
+  const colors = getRarityColors(ovr);
+
+  return (
+    <motion.button
+      layout
+      whileHover={{ scale: escalado ? 1 : 1.04, y: escalado ? 0 : -2 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      disabled={escalado}
+      className="relative group rounded-lg overflow-hidden text-left"
+      style={{
+        background: `linear-gradient(180deg, ${colors.border}26 0%, #0a0a0a 60%)`,
+        border: `1.5px solid ${pending ? '#22d3ee' : escalado ? '#10b98180' : colors.border + '80'}`,
+        boxShadow: pending
+          ? '0 0 16px rgba(34,211,238,0.5)'
+          : escalado
+            ? 'inset 0 0 0 1px #10b98140'
+            : `0 0 12px ${colors.glow}`,
+      }}
+    >
+      <div className="flex items-start justify-between px-1.5 pt-1.5 pb-0.5">
+        <div className="flex flex-col leading-none">
+          <span className="text-[12px] md:text-base font-black text-white tabular-nums leading-none">{ovr}</span>
+          <span className="text-[7px] md:text-[8px] font-black tracking-wider mt-0.5" style={{ color: colors.border }}>
+            {player.pos}
+          </span>
+        </div>
+        <span className="text-[8px] md:text-[9px] font-black bg-black/60 text-white px-1 rounded tabular-nums">
+          #{player.num}
+        </span>
+      </div>
+
+      <div className="relative aspect-square overflow-hidden bg-black/40">
+        <img
+          src={getValidPhotoUrl(player.foto)}
+          alt={player.short}
+          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${escalado ? 'opacity-30 grayscale' : ''}`}
+          onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
+        />
+        {!escalado && (
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{ background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)' }}
+          />
+        )}
+        {escalado && (
+          <div className="absolute inset-0 flex items-center justify-center bg-emerald-500/10">
+            <span className="text-emerald-400 text-2xl md:text-3xl font-black drop-shadow-lg">✓</span>
+          </div>
+        )}
+      </div>
+
+      <div className={`px-1 py-0.5 bg-gradient-to-r ${colors.bar} text-black`}>
+        <p className="text-[8px] md:text-[10px] text-center font-black truncate uppercase leading-tight">
+          {player.short}
+        </p>
+      </div>
+    </motion.button>
+  );
+}
+
+// =============================================================================
+// SLOT NO CAMPO
+// =============================================================================
 interface DraggableSlotProps {
   slotId: string;
   state: { player: Player | null; x: number; y: number };
@@ -97,13 +179,16 @@ interface DraggableSlotProps {
   isActive: boolean;
   hasPending: boolean;
   isDesktop: boolean;
+  isCaptain: boolean;
+  isHero: boolean;
   onDragSettled: (slotId: string, newX: number, newY: number) => void;
   onClick: (slotId: string) => void;
   getValidPhotoUrl: (foto: string) => string;
 }
 
 function DraggableSlot({
-  slotId, state, arenaRef, isActive, hasPending, isDesktop, onDragSettled, onClick, getValidPhotoUrl,
+  slotId, state, arenaRef, isActive, hasPending, isDesktop, isCaptain, isHero,
+  onDragSettled, onClick, getValidPhotoUrl,
 }: DraggableSlotProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -112,6 +197,29 @@ function DraggableSlot({
   const w = isDesktop ? SLOT_W_DESKTOP : SLOT_W_MOBILE;
   const h = isDesktop ? SLOT_H_DESKTOP : SLOT_H_MOBILE;
 
+  const ovr = state.player?.ovr ?? 75;
+  const colors = state.player ? getRarityColors(ovr) : null;
+
+  const borderColor = isCaptain
+    ? '#fbbf24'
+    : isHero
+      ? '#22d3ee'
+      : isActive
+        ? '#facc15'
+        : hasPending
+          ? '#22d3ee99'
+          : colors?.border ?? '#ffffff4d';
+
+  const boxShadow = isCaptain
+    ? '0 0 25px #fbbf24, inset 0 0 20px rgba(251,191,36,0.3)'
+    : isHero
+      ? '0 0 25px #22d3ee, inset 0 0 20px rgba(34,211,238,0.3)'
+      : isActive
+        ? '0 0 30px #facc15'
+        : state.player
+          ? `0 4px 18px rgba(0,0,0,0.6), 0 0 12px ${colors?.glow ?? 'rgba(0,0,0,0)'}`
+          : '0 4px 12px rgba(0,0,0,0.6)';
+
   return (
     <motion.div
       drag
@@ -119,6 +227,8 @@ function DraggableSlot({
       dragElastic={0.05}
       dragConstraints={arenaRef}
       whileDrag={{ scale: 1.25, zIndex: 200 }}
+      animate={isCaptain || isHero ? { scale: [1, 1.03, 1] } : { scale: 1 }}
+      transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
       onDragStart={() => { draggedRef.current = false; }}
       onDrag={(_, info) => {
         if (Math.abs(info.offset.x) > 4 || Math.abs(info.offset.y) > 4) {
@@ -129,19 +239,13 @@ function DraggableSlot({
         const arenaEl = arenaRef.current;
         if (!arenaEl) return;
         const rect = arenaEl.getBoundingClientRect();
-        // Posição absoluta do centro do slot na arena → percentual
         const newX = ((info.point.x - rect.left) / rect.width) * 100;
         const newY = ((info.point.y - rect.top) / rect.height) * 100;
-        // Margem mínima pra não sair da arena
-        const xPct = clamp(newX, 5, 95);
-        const yPct = clamp(newY, 5, 95);
-        // Reseta motion values e atualiza o estado externo
         x.set(0);
         y.set(0);
-        onDragSettled(slotId, xPct, yPct);
+        onDragSettled(slotId, clamp(newX, 5, 95), clamp(newY, 5, 95));
       }}
       onClick={() => {
-        // Se moveu durante o drag, ignora o click
         if (draggedRef.current) {
           draggedRef.current = false;
           return;
@@ -157,37 +261,48 @@ function DraggableSlot({
         height: h,
         marginLeft: -w / 2,
         marginTop: -h / 2,
+        border: `2px solid ${borderColor}`,
+        boxShadow,
+        background: state.player
+          ? `linear-gradient(180deg, ${colors?.border ?? '#fff'}33 0%, #000 70%)`
+          : 'rgba(0,0,0,0.55)',
       }}
-      className={`border-2 rounded-2xl flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing transition-colors shadow-2xl ${
-        isActive
-          ? 'border-yellow-400 bg-yellow-500/20 shadow-[0_0_30px_#facc15]'
-          : hasPending
-            ? 'border-cyan-400/60 bg-cyan-500/10'
-            : 'border-white/30 bg-black/70'
-      }`}
+      className="rounded-xl flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
     >
       {state.player ? (
         <div className="relative w-full h-full pointer-events-none">
-          <img
-            src={getValidPhotoUrl(state.player.foto)}
-            alt={state.player.short}
-            className="w-full h-full object-cover"
-            draggable={false}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
-          />
-          <div className="absolute top-0.5 left-0.5 bg-yellow-400 text-black text-[8px] font-black px-1 rounded">
-            {state.player.num}
+          <div className="absolute top-0.5 left-1 z-10 leading-none">
+            <div className="text-[11px] md:text-sm font-black text-white tabular-nums drop-shadow-[0_1px_2px_rgba(0,0,0,1)]">
+              {ovr}
+            </div>
+            <div className="text-[7px] md:text-[8px] font-black tracking-wider"
+              style={{ color: colors?.border, textShadow: '0 1px 2px rgba(0,0,0,1)' }}>
+              {state.player.pos}
+            </div>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black py-1">
-            <span className="text-[9px] font-black text-white block text-center leading-tight">
+          <div className="absolute top-0.5 right-1 z-10 text-[9px] md:text-[10px] font-black text-white tabular-nums drop-shadow-[0_1px_2px_rgba(0,0,0,1)]">
+            #{state.player.num}
+          </div>
+          <img src={getValidPhotoUrl(state.player.foto)} alt={state.player.short}
+            className="w-full h-full object-cover" draggable={false}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+          <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-r ${colors?.bar} py-0.5`}>
+            <span className="text-[8px] md:text-[9px] font-black text-black block text-center leading-tight">
               {state.player.short}
             </span>
           </div>
+          {(isCaptain || isHero) && (
+            <div className={`absolute -top-1.5 -right-1.5 w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[11px] md:text-xs font-black shadow-xl z-20 ${
+              isCaptain ? 'bg-yellow-400 text-black' : 'bg-cyan-400 text-black'
+            }`}>
+              {isCaptain ? 'C' : 'H'}
+            </div>
+          )}
         </div>
       ) : (
-        <div className="text-center opacity-40 pointer-events-none">
-          <span className="text-2xl">+</span>
-          <div className="text-[9px] uppercase mt-0.5">{slotId}</div>
+        <div className="text-center opacity-50 pointer-events-none">
+          <span className="text-2xl md:text-3xl font-thin">+</span>
+          <div className="text-[8px] md:text-[9px] uppercase mt-0.5 font-bold tracking-wider">{slotId}</div>
         </div>
       )}
     </motion.div>
@@ -224,6 +339,7 @@ export default function EscalacaoFormacao({
   const [hadSaved, setHadSaved]     = useState(false);
 
   const [isDesktop, setIsDesktop] = useState(false);
+  const [posFiltro, setPosFiltro] = useState<Posicao>('TODOS');
 
   const finalCardRef = useRef<HTMLDivElement>(null);
   const arenaRef     = useRef<HTMLDivElement>(null);
@@ -234,7 +350,6 @@ export default function EscalacaoFormacao({
     return `${BASE_STORAGE}${encodeURIComponent(filename)}`;
   }, []);
 
-  // Detecta breakpoint
   useEffect(() => {
     const update = () => setIsDesktop(window.innerWidth >= 768);
     update();
@@ -242,62 +357,41 @@ export default function EscalacaoFormacao({
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  // ---------------------- LOAD INICIAL ----------------------
   useEffect(() => {
     let cancelled = false;
-
     const buildEmptySlots = (formacao: string): SlotMap => {
       const coords = formationConfigs[formacao] ?? formationConfigs['4-3-3'];
       const initial: SlotMap = {};
-      Object.entries(coords).forEach(([id, c]) => {
-        initial[id] = { player: null, x: c.x, y: c.y };
-      });
+      Object.entries(coords).forEach(([id, c]) => { initial[id] = { player: null, x: c.x, y: c.y }; });
       return initial;
     };
 
     const loadExisting = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-
         if (!cancelled && user) {
           setUserId(user.id);
-
-          // Tenta buscar o profile na tigre_fc_usuarios
           let profile: { apelido?: string | null; nome?: string | null; avatar_url?: string | null } | null = null;
-
           const { data: byId } = await supabase
-            .from(PROFILE_TABLE)
-            .select('apelido, nome, avatar_url')
-            .eq('id', user.id)
-            .maybeSingle();
-
+            .from(PROFILE_TABLE).select('apelido, nome, avatar_url').eq('id', user.id).maybeSingle();
           if (byId) {
             profile = byId;
           } else if (user.email) {
             const { data: byEmail } = await supabase
-              .from(PROFILE_TABLE)
-              .select('apelido, nome, avatar_url')
-              .eq('email', user.email)
-              .maybeSingle();
+              .from(PROFILE_TABLE).select('apelido, nome, avatar_url').eq('email', user.email).maybeSingle();
             if (byEmail) profile = byEmail;
           }
-
           if (!cancelled) {
             const meta = (user.user_metadata || {}) as Record<string, unknown>;
             const fallbackName =
-              (meta.nome as string) ||
-              (meta.name as string) ||
-              (meta.full_name as string) ||
-              user.email?.split('@')[0] ||
-              'TORCEDOR';
-
+              (meta.nome as string) || (meta.name as string) || (meta.full_name as string) ||
+              user.email?.split('@')[0] || 'TORCEDOR';
             setUserName(
               (profile?.apelido || profile?.nome || fallbackName).toString().toUpperCase().slice(0, 20)
             );
             setUserAvatar(profile?.avatar_url || (meta.avatar_url as string) || null);
           }
         }
-
         if (!user || !jogoId) {
           if (!cancelled) {
             setSlotMap(buildEmptySlots('4-3-3'));
@@ -305,27 +399,20 @@ export default function EscalacaoFormacao({
           }
           return;
         }
-
         const { data, error } = await supabase
           .from(TABLE)
           .select('formacao, slots, capitao_id, heroi_id, palpite_mandante, palpite_visitante')
-          .eq('user_id', user.id)
-          .eq('jogo_id', Number(jogoId))
-          .maybeSingle();
-
+          .eq('user_id', user.id).eq('jogo_id', Number(jogoId)).maybeSingle();
         if (cancelled) return;
-
         if (error || !data) {
           setSlotMap(buildEmptySlots('4-3-3'));
           setStep('formation');
           return;
         }
-
         const formacao = data.formacao || '4-3-3';
         const coords   = formationConfigs[formacao] ?? formationConfigs['4-3-3'];
         const restored: SlotMap = {};
         const slotsJson = (data.slots ?? {}) as Record<string, number | { id: number; x?: number; y?: number } | null>;
-
         Object.entries(coords).forEach(([slotId, c]) => {
           const raw = slotsJson[slotId];
           let pid: number | null = null;
@@ -341,7 +428,6 @@ export default function EscalacaoFormacao({
           const player = pid != null ? PLAYERS_DATA.find(p => p.id === pid) ?? null : null;
           restored[slotId] = { player, x: savedX, y: savedY };
         });
-
         setFormation(formacao);
         setSlotMap(restored);
         setCaptainId(data.capitao_id ?? null);
@@ -358,7 +444,6 @@ export default function EscalacaoFormacao({
         }
       }
     };
-
     loadExisting();
     return () => { cancelled = true; };
   }, [jogoId]);
@@ -367,9 +452,7 @@ export default function EscalacaoFormacao({
     const coords = formationConfigs[novaFormacao];
     const playersAtuais = Object.values(slotMap).map(s => s.player).filter((p): p is Player => p !== null);
     const novo: SlotMap = {};
-    Object.entries(coords).forEach(([id, c]) => {
-      novo[id] = { player: null, x: c.x, y: c.y };
-    });
+    Object.entries(coords).forEach(([id, c]) => { novo[id] = { player: null, x: c.x, y: c.y }; });
     const queue = [...playersAtuais];
     Object.keys(novo).forEach(slotId => {
       if (queue.length > 0) novo[slotId].player = queue.shift()!;
@@ -379,7 +462,6 @@ export default function EscalacaoFormacao({
     setStep('arena');
   };
 
-  // ---------------------- HANDLERS ----------------------
   const handlePlayerSelection = (player: Player) => {
     const slotComEle = Object.entries(slotMap).find(([, s]) => s.player?.id === player.id);
     if (slotComEle) {
@@ -416,6 +498,17 @@ export default function EscalacaoFormacao({
 
   const playerEscalado = (id: number) => selectedPlayers.some(p => p.id === id);
 
+  const teamOvr = useMemo(() => {
+    if (selectedPlayers.length === 0) return 0;
+    const total = selectedPlayers.reduce((sum, p) => sum + (p.ovr ?? 75), 0);
+    return Math.round(total / selectedPlayers.length);
+  }, [selectedPlayers]);
+
+  const filteredPlayers = useMemo(() => {
+    if (posFiltro === 'TODOS') return PLAYERS_DATA;
+    return PLAYERS_DATA.filter(p => p.pos === posFiltro);
+  }, [posFiltro]);
+
   const handleSelectCaptain = (id: number) => { setCaptainId(id); setStep('hero');    };
   const handleSelectHero    = (id: number) => { setHeroId(id);    setStep('palpite'); };
 
@@ -425,17 +518,13 @@ export default function EscalacaoFormacao({
     confetti({ particleCount: 180, angle: 120, spread: 80, origin: { x: 0.9 } });
   };
 
-  // ---------------------- SAVE NO SUPABASE ----------------------
   const saveEscalacao = async (): Promise<{ ok: boolean; reason?: string }> => {
     if (!userId)  return { ok: false, reason: 'sem-login' };
     if (!jogoId)  return { ok: false, reason: 'sem-jogo'  };
-
-    // Salva como objeto { id, x, y } pra preservar a posição customizada do drag
     const slots: Record<string, { id: number; x: number; y: number } | null> = {};
     Object.entries(slotMap).forEach(([slotId, state]) => {
       slots[slotId] = state.player ? { id: state.player.id, x: state.x, y: state.y } : null;
     });
-
     const payload = {
       user_id: userId,
       jogo_id: Number(jogoId),
@@ -447,11 +536,7 @@ export default function EscalacaoFormacao({
       palpite_visitante: palpiteVisitante,
       updated_at: new Date().toISOString(),
     };
-
-    const { error } = await supabase
-      .from(TABLE)
-      .upsert(payload, { onConflict: 'user_id,jogo_id' });
-
+    const { error } = await supabase.from(TABLE).upsert(payload, { onConflict: 'user_id,jogo_id' });
     if (error) {
       console.error('[saveEscalacao] erro:', error);
       return { ok: false, reason: error.message };
@@ -460,37 +545,28 @@ export default function EscalacaoFormacao({
     return { ok: true };
   };
 
-  // ---------------------- GERAR IMAGEM ----------------------
   const generateFinalImage = async () => {
     setStep('saving');
-
     const saveRes = await saveEscalacao();
     if (!saveRes.ok && saveRes.reason === 'sem-login') {
       alert('Você precisa estar logado pra salvar sua escalação no ranking. Mas vou gerar a arte do mesmo jeito!');
     } else if (!saveRes.ok) {
-      console.warn('Erro salvando, continuando mesmo assim:', saveRes.reason);
+      console.warn('Erro salvando:', saveRes.reason);
     }
-
     setIsGenerating(true);
     await new Promise(r => setTimeout(r, 100));
-
     if (!finalCardRef.current) {
       setStep('final');
       await new Promise(r => setTimeout(r, 250));
     }
-
     if (!finalCardRef.current) {
       setIsGenerating(false);
       alert('Erro ao gerar imagem. Tenta de novo.');
       return;
     }
-
     try {
       const dataUrl = await htmlToImage.toPng(finalCardRef.current, {
-        cacheBust:       true,
-        quality:         0.98,
-        pixelRatio:      3,
-        backgroundColor: '#0a0a0a',
+        cacheBust: true, quality: 0.98, pixelRatio: 3, backgroundColor: '#0a0a0a',
       });
       setFinalImageUri(dataUrl);
       setStep('final');
@@ -523,7 +599,6 @@ export default function EscalacaoFormacao({
     setIsGenerating(false);
   };
 
-  // ---------------------- COMPARTILHAMENTO ----------------------
   const buildShareText = () => {
     const cap  = selectedPlayers.find(p => p.id === captainId)?.short ?? '—';
     const hero = selectedPlayers.find(p => p.id === heroId)?.short    ?? '—';
@@ -532,6 +607,7 @@ export default function EscalacaoFormacao({
 
 Acabei de escalar meu Tigrão pro ${mandante} × Novorizontino!
 🛡️ Formação: ${formation}
+⭐ OVR do time: ${teamOvr}
 👑 Capitão: ${cap}
 🔥 Herói: ${hero}
 🎯 Palpite: ${palpiteMandante} × ${palpiteVisitante}
@@ -558,11 +634,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
       const blob = await (await fetch(finalImageUri)).blob();
       const file = new File([blob], `escalacao-tigre-fc-${formation}.png`, { type: 'image/png' });
       if (typeof navigator !== 'undefined' && (navigator as any).canShare?.({ files: [file] })) {
-        await (navigator as any).share({
-          files: [file],
-          title: 'Minha escalação - Arena Tigre FC',
-          text,
-        });
+        await (navigator as any).share({ files: [file], title: 'Minha escalação - Arena Tigre FC', text });
         return;
       }
       downloadImage();
@@ -615,64 +687,39 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
   };
 
   const shareX = () => {
-    const text = `🐯 Minha escalação pro ${mandante} × Novorizontino (${formation}) — Palpite ${palpiteMandante}×${palpiteVisitante} 🔥\nDuvido você fazer melhor! ${SHARE_BASE_URL}/${jogoId ?? ''}`;
+    const text = `🐯 Minha escalação pro ${mandante} × Novorizontino (${formation}) — OVR ${teamOvr} — Palpite ${palpiteMandante}×${palpiteVisitante} 🔥\nDuvido você fazer melhor! ${SHARE_BASE_URL}/${jogoId ?? ''}`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const finalizarEVoltar = () => router.push('/tigre-fc');
 
-  // ---------------------- RENDER ----------------------
   return (
     <div className="fixed inset-0 bg-black text-white font-sans antialiased overflow-hidden flex flex-col select-none">
       <AnimatePresence mode="wait">
 
-        {/* TELA DE LOADING */}
         {step === 'loading' && (
-          <motion.div
-            key="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center bg-zinc-950 relative overflow-hidden"
-          >
-            <div className="absolute inset-0 opacity-20">
-              <img src={STADIUM_BG} alt="" className="w-full h-full object-cover" />
-            </div>
+          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-center bg-zinc-950 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-20"><img src={STADIUM_BG} alt="" className="w-full h-full object-cover" /></div>
             <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90" />
             <div className="relative z-10 flex flex-col items-center">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-7xl mb-6"
-              >
-                🐯
-              </motion.div>
+              <motion.div animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }} className="text-7xl mb-6">🐯</motion.div>
               <div className="text-yellow-400 text-xs font-black tracking-[6px] mb-2">ARENA TIGRE FC</div>
               <div className="text-white text-2xl font-black italic mb-8">ENTRANDO NO VESTIÁRIO...</div>
               <div className="w-48 h-1 bg-zinc-800 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ x: '-100%' }}
-                  animate={{ x: '100%' }}
+                <motion.div initial={{ x: '-100%' }} animate={{ x: '100%' }}
                   transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-                  className="h-full bg-gradient-to-r from-transparent via-yellow-400 to-transparent w-1/2"
-                />
+                  className="h-full bg-gradient-to-r from-transparent via-yellow-400 to-transparent w-1/2" />
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* TELA DE FORMAÇÃO */}
         {step === 'formation' && (
-          <motion.div
-            key="formation"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950 relative overflow-auto"
-          >
-            <div className="absolute inset-0 opacity-10">
-              <img src={STADIUM_BG} alt="" className="w-full h-full object-cover" />
-            </div>
+          <motion.div key="formation" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950 relative overflow-auto">
+            <div className="absolute inset-0 opacity-10"><img src={STADIUM_BG} alt="" className="w-full h-full object-cover" /></div>
             <div className="relative z-10 w-full max-w-md flex flex-col items-center">
               <div className="text-yellow-400 text-xs font-black tracking-[6px] mb-2">ETAPA 1 DE 5</div>
               <h1 className="text-4xl font-black italic mb-2 text-yellow-500 uppercase tracking-tighter text-center">
@@ -681,17 +728,13 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
               <p className="text-zinc-500 text-sm mb-10 text-center">Como o Tigrão vai entrar em campo?</p>
               <div className="grid grid-cols-2 gap-4 w-full">
                 {Object.keys(formationConfigs).map(f => (
-                  <motion.button
-                    key={f}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <motion.button key={f} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                     onClick={() => handleChangeFormation(f)}
-                    className={`py-8 border-2 rounded-3xl active:scale-95 transition-all font-black text-2xl italic ${
+                    className={`py-8 border-2 rounded-3xl font-black text-2xl italic transition-all ${
                       formation === f
                         ? 'border-yellow-400 bg-yellow-500/10 text-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.3)]'
                         : 'bg-zinc-900 border-white/10 hover:border-yellow-500/50 hover:bg-zinc-800'
-                    }`}
-                  >
+                    }`}>
                     {f}
                   </motion.button>
                 ))}
@@ -700,67 +743,56 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
           </motion.div>
         )}
 
-        {/* TELA ARENA — Mercado fixo à esquerda + Campo */}
         {step === 'arena' && (
-          <motion.div
-            key="arena"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex relative overflow-hidden h-full"
-          >
-            {/* MERCADO — sempre à esquerda em pé, grid 3 colunas */}
-            <div className="h-full w-[150px] sm:w-[180px] md:w-[280px] flex-shrink-0 z-[110] bg-black/85 backdrop-blur-xl border-r border-white/10 overflow-y-auto p-2 md:p-3">
-              <div className="flex items-center justify-between mb-2 sticky top-0 bg-black/90 backdrop-blur-md z-10 py-1.5 -mx-2 md:-mx-3 px-2 md:px-3 border-b border-white/10">
-                <h3 className="text-yellow-400 font-black text-[11px] md:text-sm tracking-wider">ELENCO</h3>
-                <div className="text-[10px] md:text-xs text-zinc-400">
-                  <span className="text-yellow-400 font-bold">{selectedPlayers.length}</span>/11
+          <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="flex-1 flex relative overflow-hidden h-full">
+
+            {/* MERCADO À ESQUERDA */}
+            <div className="h-full w-[148px] sm:w-[190px] md:w-[300px] flex-shrink-0 z-[110] bg-gradient-to-b from-zinc-950 via-black to-zinc-950 border-r border-yellow-500/10 flex flex-col">
+              <div className="px-2 md:px-3 pt-2 md:pt-3 pb-1 border-b border-white/10 bg-black/95 backdrop-blur-md">
+                <div className="flex items-center justify-between mb-1.5">
+                  <h3 className="text-yellow-400 font-black text-[11px] md:text-base tracking-widest italic">MERCADO</h3>
+                  <div className="text-[9px] md:text-xs text-zinc-400 tabular-nums">
+                    <span className="text-yellow-400 font-black">{selectedPlayers.length}</span><span className="text-zinc-600">/11</span>
+                  </div>
+                </div>
+                {hadSaved && (
+                  <div className="mb-1.5 px-2 py-1 bg-cyan-500/10 border border-cyan-400/30 rounded text-[8px] md:text-[10px] text-cyan-300 font-bold tracking-wide">
+                    ✓ ESCALAÇÃO SALVA
+                  </div>
+                )}
+                <div className="grid grid-cols-4 md:grid-cols-7 gap-0.5 md:gap-1">
+                  {POSICOES.map(p => (
+                    <button key={p} onClick={() => setPosFiltro(p)}
+                      className={`text-[8px] md:text-[10px] font-black py-1 rounded tracking-wide transition-all ${
+                        posFiltro === p
+                          ? 'bg-yellow-400 text-black shadow-[0_0_10px_rgba(250,204,21,0.5)]'
+                          : 'bg-zinc-900 text-zinc-500 hover:text-white hover:bg-zinc-800'
+                      }`}>
+                      {p === 'TODOS' ? 'ALL' : p}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {hadSaved && (
-                <div className="mb-2 px-2 py-1.5 bg-cyan-500/10 border border-cyan-400/40 rounded-lg text-[8px] md:text-[10px] text-cyan-300 font-bold tracking-wide">
-                  ✓ ESCALAÇÃO RECUPERADA
-                </div>
-              )}
-
-              <div className="grid grid-cols-3 gap-1 md:gap-1.5">
-                {PLAYERS_DATA.map(player => {
-                  const escalado = playerEscalado(player.id);
-                  return (
-                    <motion.button
-                      key={player.id}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.92 }}
-                      onClick={() => handlePlayerSelection(player)}
-                      className={`relative bg-zinc-900 border rounded-md md:rounded-lg p-0.5 md:p-1 transition-all ${
-                        escalado
-                          ? 'border-yellow-400 ring-1 ring-yellow-400/40'
-                          : pendingPlayer?.id === player.id
-                            ? 'border-cyan-400 ring-1 ring-cyan-400/40'
-                            : 'border-white/15 hover:border-yellow-500'
-                      }`}
-                    >
-                      <img
-                        src={getValidPhotoUrl(player.foto)}
-                        alt={player.short}
-                        className={`w-full aspect-square object-cover rounded ${escalado ? 'opacity-50' : ''}`}
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
+              <div className="flex-1 overflow-y-auto p-1.5 md:p-2">
+                <div className="grid grid-cols-3 gap-1 md:gap-1.5">
+                  <AnimatePresence mode="popLayout">
+                    {filteredPlayers.map(player => (
+                      <FutCard
+                        key={player.id}
+                        player={player}
+                        escalado={playerEscalado(player.id)}
+                        pending={pendingPlayer?.id === player.id}
+                        onClick={() => handlePlayerSelection(player)}
+                        getValidPhotoUrl={getValidPhotoUrl}
                       />
-                      {escalado && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
-                          <span className="text-yellow-400 text-lg md:text-xl font-black drop-shadow-lg">✓</span>
-                        </div>
-                      )}
-                      <div className="absolute top-0.5 left-0.5 bg-black/70 text-yellow-400 text-[7px] md:text-[8px] font-black px-0.5 md:px-1 rounded">
-                        {player.pos}
-                      </div>
-                      <p className="text-[8px] md:text-[10px] text-center mt-0.5 font-bold text-white truncate leading-tight">
-                        {player.short}
-                      </p>
-                    </motion.button>
-                  );
-                })}
+                    ))}
+                  </AnimatePresence>
+                </div>
+                {filteredPlayers.length === 0 && (
+                  <div className="text-center text-zinc-500 text-xs mt-8">Nenhum jogador.</div>
+                )}
               </div>
             </div>
 
@@ -769,29 +801,30 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
               <img src={STADIUM_BG} alt="Estádio" className="absolute inset-0 w-full h-full object-cover opacity-75" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 pointer-events-none" />
 
-              {/* Header */}
               <div className="absolute top-2 left-2 right-2 z-30 flex items-center justify-between gap-2">
-                <div className="px-2.5 py-1 bg-black/70 backdrop-blur rounded-full border border-yellow-400/30">
-                  <span className="text-yellow-400 text-[9px] md:text-[10px] font-black tracking-widest">
-                    FORMAÇÃO {formation}
-                  </span>
-                </div>
-                <div className="flex gap-1.5">
-                  <button
-                    onClick={() => setStep('formation')}
-                    className="px-2.5 py-1 bg-black/70 backdrop-blur rounded-full border border-white/20 text-[9px] md:text-[10px] font-black tracking-wider text-white hover:border-yellow-400/50"
-                  >
-                    TROCAR
-                  </button>
-                  <div className="hidden sm:block px-2.5 py-1 bg-cyan-500/10 backdrop-blur rounded-full border border-cyan-400/30">
-                    <span className="text-cyan-300 text-[9px] md:text-[10px] font-black tracking-wider">
-                      ✋ ARRASTE OS JOGADORES
-                    </span>
+                <div className="flex items-center gap-1.5">
+                  <div className="px-2.5 py-1 bg-black/80 backdrop-blur rounded-md border border-yellow-400/40">
+                    <span className="text-yellow-400 text-[9px] md:text-[10px] font-black tracking-widest italic">{formation}</span>
                   </div>
+                  {teamOvr > 0 && (
+                    <div className="px-2.5 py-1 bg-yellow-400 text-black rounded-md font-black tabular-nums">
+                      <span className="text-[9px] md:text-[10px] tracking-widest">OVR </span>
+                      <span className="text-[12px] md:text-sm">{teamOvr}</span>
+                    </div>
+                  )}
                 </div>
+                <button onClick={() => setStep('formation')}
+                  className="px-2.5 py-1 bg-black/80 backdrop-blur rounded-md border border-white/20 text-[9px] md:text-[10px] font-black tracking-wider text-white hover:border-yellow-400/50">
+                  TÁTICA
+                </button>
               </div>
 
-              {/* Slots — drag livre */}
+              <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 px-3 py-1 bg-cyan-500/10 backdrop-blur rounded-full border border-cyan-400/30 hidden sm:block">
+                <span className="text-cyan-300 text-[9px] md:text-[10px] font-black tracking-wider">
+                  ✋ ARRASTE OS JOGADORES PRA POSIÇÃO IDEAL
+                </span>
+              </div>
+
               <div className="absolute inset-0">
                 {Object.entries(slotMap).map(([id, state]) => (
                   <DraggableSlot
@@ -802,6 +835,8 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                     isActive={activeSlot === id}
                     hasPending={!!pendingPlayer}
                     isDesktop={isDesktop}
+                    isCaptain={state.player?.id === captainId}
+                    isHero={state.player?.id === heroId}
                     onDragSettled={handleSlotDragSettled}
                     onClick={handleSlotClick}
                     getValidPhotoUrl={getValidPhotoUrl}
@@ -809,12 +844,9 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 ))}
               </div>
 
-              {/* Bottom CTA */}
               <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 z-50 px-3">
-                <button
-                  onClick={finalizarEVoltar}
-                  className="px-4 py-3 bg-zinc-900/90 border border-white/20 rounded-2xl text-[10px] md:text-xs font-black tracking-wider"
-                >
+                <button onClick={finalizarEVoltar}
+                  className="px-4 py-3 bg-zinc-900/90 border border-white/20 rounded-2xl text-[10px] md:text-xs font-black tracking-wider">
                   ← SAIR
                 </button>
                 <button
@@ -826,200 +858,139 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                     setStep('captain');
                   }}
                   disabled={selectedPlayers.length < 11}
-                  className={`flex-1 max-w-[260px] py-3 rounded-2xl text-[11px] md:text-sm font-black tracking-wider transition-all ${
+                  className={`flex-1 max-w-[280px] py-3 rounded-2xl text-[11px] md:text-sm font-black tracking-wider transition-all ${
                     selectedPlayers.length >= 11
-                      ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-[0_0_30px_rgba(250,204,21,0.5)] active:scale-95'
+                      ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black shadow-[0_0_30px_rgba(250,204,21,0.5)] active:scale-95'
                       : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                  }`}
-                >
-                  ESCOLHER CAPITÃO →
+                  }`}>
+                  ESCOLHER LÍDERES →
                 </button>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* TELA CAPITÃO */}
         {step === 'captain' && (
-          <motion.div
-            key="captain"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto"
-          >
+          <motion.div key="captain" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto">
             <div className="text-center mb-8">
               <div className="text-yellow-400 text-xs font-black tracking-[6px] mb-2">ETAPA 3 DE 5</div>
-              <div className="inline-block px-8 py-2 bg-yellow-500/10 border border-yellow-400 rounded-full text-yellow-400 text-sm font-black tracking-widest mb-4">
-                CAPITÃO 👑
-              </div>
-              <h1 className="text-4xl font-black italic text-yellow-400 tracking-tighter">
-                ESCOLHA O LÍDER DO TIGRE
-              </h1>
+              <div className="inline-block px-8 py-2 bg-yellow-500/10 border border-yellow-400 rounded-full text-yellow-400 text-sm font-black tracking-widest mb-4">CAPITÃO 👑</div>
+              <h1 className="text-4xl font-black italic text-yellow-400 tracking-tighter">ESCOLHA O LÍDER DO TIGRE</h1>
               <p className="text-zinc-500 text-sm mt-2">Pontua em dobro se for o melhor em campo</p>
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 max-w-3xl">
-              {selectedPlayers.map(p => (
-                <motion.button
-                  key={p.id}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleSelectCaptain(p.id)}
-                  className={`relative p-3 rounded-3xl border-4 transition-all overflow-hidden ${
-                    captainId === p.id
-                      ? 'border-yellow-400 shadow-[0_0_50px_#facc15] scale-110'
-                      : 'border-white/20 hover:border-white/40'
-                  }`}
-                >
-                  <img src={getValidPhotoUrl(p.foto)} alt={p.short} className="w-full aspect-[3/4] object-cover rounded-2xl" />
-                  {captainId === p.id && (
-                    <div className="absolute -top-2 -right-2 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center font-black text-black text-2xl shadow-[0_0_25px_#facc15]">
-                      C
+              {selectedPlayers.map(p => {
+                const colors = getRarityColors(p.ovr ?? 75);
+                return (
+                  <motion.button key={p.id} whileHover={{ scale: 1.08, y: -4 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => handleSelectCaptain(p.id)}
+                    className={`relative p-2 rounded-2xl border-4 transition-all overflow-hidden ${
+                      captainId === p.id
+                        ? 'border-yellow-400 shadow-[0_0_50px_#facc15] scale-110'
+                        : 'border-white/20 hover:border-white/40'
+                    }`}
+                    style={{ background: `linear-gradient(180deg, ${colors.border}33 0%, #0a0a0a 60%)` }}>
+                    <div className="flex justify-between mb-1 px-1">
+                      <span className="text-lg font-black text-white tabular-nums leading-none">{p.ovr}</span>
+                      <span className="text-[10px] font-black tracking-wider" style={{ color: colors.border }}>{p.pos}</span>
                     </div>
-                  )}
-                  <p className="text-center mt-3 font-bold text-sm tracking-wide">{p.short}</p>
-                </motion.button>
-              ))}
+                    <img src={getValidPhotoUrl(p.foto)} alt={p.short} className="w-full aspect-[3/4] object-cover rounded-xl" />
+                    {captainId === p.id && (
+                      <div className="absolute -top-2 -right-2 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center font-black text-black text-2xl shadow-[0_0_25px_#facc15] z-10">C</div>
+                    )}
+                    <p className="text-center mt-2 font-black text-sm tracking-wide">{p.short}</p>
+                  </motion.button>
+                );
+              })}
             </div>
-            <button
-              onClick={() => setStep('arena')}
-              className="mt-8 text-zinc-500 hover:text-white text-xs font-black tracking-widest"
-            >
-              ← VOLTAR PARA O CAMPO
-            </button>
+            <button onClick={() => setStep('arena')}
+              className="mt-8 text-zinc-500 hover:text-white text-xs font-black tracking-widest">← VOLTAR PARA O CAMPO</button>
           </motion.div>
         )}
 
-        {/* TELA HERÓI */}
         {step === 'hero' && (
-          <motion.div
-            key="hero"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto"
-          >
+          <motion.div key="hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto">
             <div className="text-center mb-8">
               <div className="text-cyan-400 text-xs font-black tracking-[6px] mb-2">ETAPA 4 DE 5</div>
-              <div className="inline-block px-8 py-2 bg-cyan-400/10 border border-cyan-400 rounded-full text-cyan-400 text-sm font-black tracking-widest mb-4">
-                HERÓI DA PARTIDA 🔥
-              </div>
-              <h1 className="text-4xl font-black italic text-cyan-400 tracking-tighter">
-                QUEM VAI DECIDIR O JOGO?
-              </h1>
+              <div className="inline-block px-8 py-2 bg-cyan-400/10 border border-cyan-400 rounded-full text-cyan-400 text-sm font-black tracking-widest mb-4">HERÓI DA PARTIDA 🔥</div>
+              <h1 className="text-4xl font-black italic text-cyan-400 tracking-tighter">QUEM VAI DECIDIR O JOGO?</h1>
               <p className="text-zinc-500 text-sm mt-2">Bônus extra se ele for o decisivo</p>
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 max-w-3xl">
-              {selectedPlayers.filter(p => p.id !== captainId).map(p => (
-                <motion.button
-                  key={p.id}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleSelectHero(p.id)}
-                  className={`relative p-3 rounded-3xl border-4 transition-all overflow-hidden ${
-                    heroId === p.id
-                      ? 'border-cyan-400 shadow-[0_0_50px_#22d3ee] scale-110'
-                      : 'border-white/20 hover:border-white/40'
-                  }`}
-                >
-                  <img src={getValidPhotoUrl(p.foto)} alt={p.short} className="w-full aspect-[3/4] object-cover rounded-2xl" />
-                  {heroId === p.id && (
-                    <div className="absolute -top-2 -right-2 w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center font-black text-black text-2xl shadow-[0_0_25px_#22d3ee]">
-                      H
+              {selectedPlayers.filter(p => p.id !== captainId).map(p => {
+                const colors = getRarityColors(p.ovr ?? 75);
+                return (
+                  <motion.button key={p.id} whileHover={{ scale: 1.08, y: -4 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => handleSelectHero(p.id)}
+                    className={`relative p-2 rounded-2xl border-4 transition-all overflow-hidden ${
+                      heroId === p.id
+                        ? 'border-cyan-400 shadow-[0_0_50px_#22d3ee] scale-110'
+                        : 'border-white/20 hover:border-white/40'
+                    }`}
+                    style={{ background: `linear-gradient(180deg, ${colors.border}33 0%, #0a0a0a 60%)` }}>
+                    <div className="flex justify-between mb-1 px-1">
+                      <span className="text-lg font-black text-white tabular-nums leading-none">{p.ovr}</span>
+                      <span className="text-[10px] font-black tracking-wider" style={{ color: colors.border }}>{p.pos}</span>
                     </div>
-                  )}
-                  <p className="text-center mt-3 font-bold text-sm tracking-wide">{p.short}</p>
-                </motion.button>
-              ))}
+                    <img src={getValidPhotoUrl(p.foto)} alt={p.short} className="w-full aspect-[3/4] object-cover rounded-xl" />
+                    {heroId === p.id && (
+                      <div className="absolute -top-2 -right-2 w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center font-black text-black text-2xl shadow-[0_0_25px_#22d3ee] z-10">H</div>
+                    )}
+                    <p className="text-center mt-2 font-black text-sm tracking-wide">{p.short}</p>
+                  </motion.button>
+                );
+              })}
             </div>
-            <button
-              onClick={() => setStep('captain')}
-              className="mt-8 text-zinc-500 hover:text-white text-xs font-black tracking-widest"
-            >
-              ← TROCAR CAPITÃO
-            </button>
+            <button onClick={() => setStep('captain')}
+              className="mt-8 text-zinc-500 hover:text-white text-xs font-black tracking-widest">← TROCAR CAPITÃO</button>
           </motion.div>
         )}
 
-        {/* TELA PALPITE */}
         {step === 'palpite' && (
-          <motion.div
-            key="palpite"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950 overflow-auto"
-          >
+          <motion.div key="palpite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950 overflow-auto">
             <div className="text-cyan-400 text-xs font-black tracking-[6px] mb-2">ETAPA 5 DE 5</div>
             <h1 className="text-4xl font-black mb-3">SEU PALPITE</h1>
             <p className="text-zinc-400 mb-12 text-sm">{mandante} × Novorizontino • Série B 2026</p>
-
             <div className="flex items-center gap-6 sm:gap-10 flex-wrap justify-center">
               <div className="flex flex-col items-center">
                 <img src={mandanteLogo} alt={mandante} className="w-20 h-20 sm:w-24 sm:h-24 mb-3 object-contain" />
                 <div className="text-lg sm:text-2xl font-black">{mandante}</div>
               </div>
               <div className="flex gap-4 sm:gap-6 items-center">
-                <input
-                  type="number"
-                  min={0}
-                  value={palpiteMandante}
+                <input type="number" min={0} value={palpiteMandante}
                   onChange={e => setPalpiteMandante(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3"
-                />
+                  className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3" />
                 <span className="text-4xl sm:text-6xl text-yellow-400 font-black">×</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={palpiteVisitante}
+                <input type="number" min={0} value={palpiteVisitante}
                   onChange={e => setPalpiteVisitante(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3"
-                />
+                  className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3" />
               </div>
               <div className="flex flex-col items-center">
                 <img src={ESCUDO_DEFAULT} alt="Novorizontino" className="w-20 h-20 sm:w-24 sm:h-24 mb-3 object-contain" />
                 <div className="text-lg sm:text-2xl font-black">Novorizontino</div>
               </div>
             </div>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={generateFinalImage}
-              disabled={isGenerating}
-              className="mt-12 px-12 sm:px-20 py-6 sm:py-7 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black text-lg sm:text-2xl rounded-3xl shadow-[0_0_50px_#fbbf24] disabled:opacity-60 tracking-wider"
-            >
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={generateFinalImage} disabled={isGenerating}
+              className="mt-12 px-12 sm:px-20 py-6 sm:py-7 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black text-lg sm:text-2xl rounded-3xl shadow-[0_0_50px_#fbbf24] disabled:opacity-60 tracking-wider">
               {isGenerating ? 'GERANDO ARTE ÉPICA...' : 'CONFIRMAR ESCALAÇÃO 🔥'}
             </motion.button>
-
-            <button
-              onClick={() => setStep('hero')}
-              className="mt-6 text-zinc-500 hover:text-white text-xs font-black tracking-widest"
-            >
-              ← TROCAR HERÓI
-            </button>
+            <button onClick={() => setStep('hero')}
+              className="mt-6 text-zinc-500 hover:text-white text-xs font-black tracking-widest">← TROCAR HERÓI</button>
           </motion.div>
         )}
 
-        {/* TELA SAVING */}
         {step === 'saving' && (
-          <motion.div
-            key="saving"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center bg-zinc-950 relative overflow-hidden"
-          >
-            <div className="absolute inset-0 opacity-20">
-              <img src={STADIUM_BG} alt="" className="w-full h-full object-cover" />
-            </div>
+          <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-center bg-zinc-950 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-20"><img src={STADIUM_BG} alt="" className="w-full h-full object-cover" /></div>
             <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90" />
             <div className="relative z-10 flex flex-col items-center">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                className="w-20 h-20 border-4 border-yellow-400 border-t-transparent rounded-full mb-6"
-              />
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                className="w-20 h-20 border-4 border-yellow-400 border-t-transparent rounded-full mb-6" />
               <div className="text-yellow-400 text-xs font-black tracking-[6px] mb-2">ARENA TIGRE FC</div>
               <div className="text-white text-2xl font-black italic">SALVANDO SUA ESCALAÇÃO...</div>
               <div className="text-zinc-500 text-sm mt-3">Computando no ranking 🏆</div>
@@ -1027,45 +998,25 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
           </motion.div>
         )}
 
-        {/* TELA FINAL */}
         {step === 'final' && (
-          <motion.div
-            key="final"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-start p-4 bg-black overflow-auto"
-          >
-            <div className="text-yellow-400 text-xs font-black tracking-[6px] mt-2 mb-3">
-              ✓ ESCALAÇÃO SALVA NO RANKING
-            </div>
+          <motion.div key="final" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-start p-4 bg-black overflow-auto">
+            <div className="text-yellow-400 text-xs font-black tracking-[6px] mt-2 mb-3">✓ ESCALAÇÃO SALVA NO RANKING</div>
 
-            {/* CARD 9:16 */}
-            <div
-              ref={finalCardRef}
+            <div ref={finalCardRef}
               className="relative w-full max-w-[380px] bg-zinc-950 rounded-3xl overflow-hidden border-4 border-yellow-400/40 shadow-[0_0_60px_rgba(250,204,21,0.3)]"
-              style={{ aspectRatio: '9/16' }}
-            >
+              style={{ aspectRatio: '9/16' }}>
               <img src={STADIUM_BG} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black" />
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage: 'repeating-linear-gradient(45deg, #facc15 0, #facc15 1px, transparent 1px, transparent 12px)',
-                }}
-              />
+              <div className="absolute inset-0 opacity-10"
+                style={{ backgroundImage: 'repeating-linear-gradient(45deg, #facc15 0, #facc15 1px, transparent 1px, transparent 12px)' }} />
 
-              {/* HEADER */}
               <div className="absolute top-4 left-4 right-4 flex items-start justify-between z-10">
                 <div className="flex items-start gap-2">
                   {userAvatar && (
-                    <img
-                      src={userAvatar}
-                      alt={userName}
-                      crossOrigin="anonymous"
+                    <img src={userAvatar} alt={userName} crossOrigin="anonymous"
                       className="w-10 h-10 rounded-full border-2 border-yellow-400 object-cover"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                    />
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                   )}
                   <div>
                     <div className="text-yellow-400 tracking-[3px] font-black text-[10px]">ARENA TIGRE FC</div>
@@ -1074,20 +1025,18 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="bg-yellow-400 text-black px-2.5 py-1 rounded-md text-[11px] font-black tracking-wider">
-                    {formation}
+                  <div className="bg-gradient-to-br from-yellow-300 to-amber-500 text-black px-2 py-1 rounded-md text-center mb-1.5 shadow-[0_0_15px_rgba(251,191,36,0.5)]">
+                    <div className="text-[8px] font-black tracking-widest leading-none">OVR</div>
+                    <div className="text-2xl font-black tabular-nums leading-none">{teamOvr}</div>
                   </div>
+                  <div className="bg-yellow-400 text-black px-2 py-0.5 rounded text-[10px] font-black tracking-wider">{formation}</div>
                   {rodada !== undefined && (
-                    <div className="text-[10px] text-zinc-400 mt-1 tracking-widest">RODADA {rodada}</div>
+                    <div className="text-[9px] text-zinc-400 mt-1 tracking-widest">RODADA {rodada}</div>
                   )}
-                  <div className="text-[10px] text-zinc-500 mt-0.5">
-                    {new Date().toLocaleDateString('pt-BR')}
-                  </div>
                 </div>
               </div>
 
-              {/* PLACAR */}
-              <div className="absolute top-[120px] left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur px-6 py-2.5 rounded-2xl border border-yellow-400/40 text-center z-10">
+              <div className="absolute top-[140px] left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur px-6 py-2.5 rounded-2xl border border-yellow-400/40 text-center z-10">
                 <div className="flex items-center gap-3">
                   <img src={mandanteLogo} alt="" className="w-7 h-7 object-contain" />
                   <div className="text-3xl font-black text-yellow-400 tabular-nums">
@@ -1098,36 +1047,25 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 <div className="text-[9px] text-zinc-400 tracking-widest mt-0.5">SEU PALPITE</div>
               </div>
 
-              {/* JOGADORES — usa as posições customizadas do drag */}
               <div className="absolute inset-0 pointer-events-none">
                 {Object.entries(slotMap).map(([id, state]) => state.player && (
-                  <div
-                    key={id}
+                  <div key={id}
                     style={{
                       left: `${state.x}%`,
-                      top: `${state.y * 0.78 + 10}%`,
+                      top: `${state.y * 0.75 + 15}%`,
                       position: 'absolute',
                       transform: 'translate(-50%, -50%)',
                     }}
-                    className="w-12 h-16 rounded-xl overflow-hidden border-2 border-white/70 shadow-[0_4px_15px_rgba(0,0,0,0.6)]"
-                  >
-                    <img
-                      src={getValidPhotoUrl(state.player.foto)}
-                      alt={state.player.short}
-                      className="w-full h-full object-cover"
-                      crossOrigin="anonymous"
-                    />
+                    className="w-12 h-16 rounded-xl overflow-hidden border-2 border-white/70 shadow-[0_4px_15px_rgba(0,0,0,0.6)]">
+                    <img src={getValidPhotoUrl(state.player.foto)} alt={state.player.short}
+                      className="w-full h-full object-cover" crossOrigin="anonymous" />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 py-0.5">
-                      <span className="text-[7px] font-black text-white block text-center leading-none">
-                        {state.player.short}
-                      </span>
+                      <span className="text-[7px] font-black text-white block text-center leading-none">{state.player.short}</span>
                     </div>
                     {(state.player.id === captainId || state.player.id === heroId) && (
-                      <div
-                        className={`absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-xl ${
-                          state.player.id === captainId ? 'bg-yellow-400 text-black' : 'bg-cyan-400 text-black'
-                        }`}
-                      >
+                      <div className={`absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-xl ${
+                        state.player.id === captainId ? 'bg-yellow-400 text-black' : 'bg-cyan-400 text-black'
+                      }`}>
                         {state.player.id === captainId ? 'C' : 'H'}
                       </div>
                     )}
@@ -1135,7 +1073,6 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 ))}
               </div>
 
-              {/* CTA */}
               <div className="absolute bottom-[88px] left-4 right-4 text-center z-10">
                 <div className="text-3xl font-black italic text-white leading-[0.95] drop-shadow-[0_4px_15px_rgba(0,0,0,0.9)]">
                   DUVIDO VOCÊ<br />
@@ -1144,7 +1081,6 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 <div className="text-3xl mt-2">🐯⚡</div>
               </div>
 
-              {/* FOOTER */}
               <div className="absolute bottom-3 left-4 right-4 z-10">
                 <div className="flex items-center justify-between text-[9px] text-zinc-400 mb-1.5">
                   <span>👑 {selectedPlayers.find(p => p.id === captainId)?.short ?? '—'}</span>
@@ -1156,78 +1092,42 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
               </div>
             </div>
 
-            {/* AÇÕES */}
             <div className="mt-6 w-full max-w-[380px] space-y-3 px-2">
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={shareNative}
-                disabled={!finalImageUri}
-                className="w-full py-5 bg-gradient-to-r from-yellow-400 to-amber-400 text-black font-black rounded-2xl text-base tracking-wider shadow-[0_0_30px_rgba(250,204,21,0.4)] disabled:opacity-50"
-              >
+              <motion.button whileTap={{ scale: 0.97 }} onClick={shareNative} disabled={!finalImageUri}
+                className="w-full py-5 bg-gradient-to-r from-yellow-400 to-amber-400 text-black font-black rounded-2xl text-base tracking-wider shadow-[0_0_30px_rgba(250,204,21,0.4)] disabled:opacity-50">
                 📤 COMPARTILHAR
               </motion.button>
-
               <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={shareWhatsApp}
-                  disabled={!finalImageUri}
-                  className="py-4 bg-[#25D366] font-black rounded-2xl active:scale-95 text-xs tracking-wide disabled:opacity-50"
-                >
-                  WhatsApp
-                </button>
-                <button
-                  onClick={shareInstagram}
-                  disabled={!finalImageUri}
-                  className="py-4 bg-gradient-to-br from-purple-600 via-pink-500 to-amber-400 font-black rounded-2xl active:scale-95 text-xs tracking-wide disabled:opacity-50"
-                >
-                  Instagram
-                </button>
-                <button
-                  onClick={shareX}
-                  className="py-4 bg-black border border-white/30 font-black rounded-2xl active:scale-95 text-xs tracking-wide"
-                >
-                  𝕏
-                </button>
+                <button onClick={shareWhatsApp} disabled={!finalImageUri}
+                  className="py-4 bg-[#25D366] font-black rounded-2xl active:scale-95 text-xs tracking-wide disabled:opacity-50">WhatsApp</button>
+                <button onClick={shareInstagram} disabled={!finalImageUri}
+                  className="py-4 bg-gradient-to-br from-purple-600 via-pink-500 to-amber-400 font-black rounded-2xl active:scale-95 text-xs tracking-wide disabled:opacity-50">Instagram</button>
+                <button onClick={shareX}
+                  className="py-4 bg-black border border-white/30 font-black rounded-2xl active:scale-95 text-xs tracking-wide">𝕏</button>
               </div>
-
-              <button
-                onClick={downloadImage}
-                disabled={!finalImageUri}
-                className="w-full py-3 bg-zinc-900 border border-white/15 font-black rounded-2xl text-xs tracking-wider disabled:opacity-50"
-              >
+              <button onClick={downloadImage} disabled={!finalImageUri}
+                className="w-full py-3 bg-zinc-900 border border-white/15 font-black rounded-2xl text-xs tracking-wider disabled:opacity-50">
                 💾 SALVAR IMAGEM
               </button>
-
-              <button
-                onClick={finalizarEVoltar}
-                className="w-full py-4 bg-zinc-950 border-2 border-yellow-400/30 font-black rounded-2xl text-sm tracking-wider mt-2 hover:border-yellow-400/60 transition-all"
-              >
+              <button onClick={finalizarEVoltar}
+                className="w-full py-4 bg-zinc-950 border-2 border-yellow-400/30 font-black rounded-2xl text-sm tracking-wider mt-2 hover:border-yellow-400/60 transition-all">
                 ← VOLTAR PARA A ARENA
               </button>
-
-              <button
-                onClick={() => setStep('arena')}
-                className="w-full py-2 text-zinc-500 hover:text-white text-[11px] font-black tracking-widest"
-              >
+              <button onClick={() => setStep('arena')}
+                className="w-full py-2 text-zinc-500 hover:text-white text-[11px] font-black tracking-widest">
                 EDITAR ESCALAÇÃO
               </button>
             </div>
-
             <div className="h-8" />
           </motion.div>
         )}
 
       </AnimatePresence>
 
-      {/* Atalho fixo: ver arte final quando já tem escalação salva */}
       {hadSaved && step === 'arena' && (
-        <motion.button
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
+        <motion.button initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
           onClick={verEscalacaoSalva}
-          className="fixed top-3 right-3 z-[200] bg-cyan-400 text-black px-3 py-2 rounded-full font-black text-[10px] tracking-widest shadow-[0_0_25px_rgba(34,211,238,0.5)] active:scale-95"
-        >
+          className="fixed top-3 right-3 z-[200] bg-cyan-400 text-black px-3 py-2 rounded-full font-black text-[10px] tracking-widest shadow-[0_0_25px_rgba(34,211,238,0.5)] active:scale-95">
           📸 VER ARTE
         </motion.button>
       )}
