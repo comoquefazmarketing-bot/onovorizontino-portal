@@ -3,17 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import TigreFCPerfilPublico from './TigreFCPerfilPublico';   // Import correto (mesma pasta)
 
-// ── Design tokens (Ajustados para maior contraste) ────────────────
+// ── Design tokens ────────────────
 const C = {
   gold: '#F5C400',
   cyan: '#00F3FF',
   red: '#FF2D55',
   purple: '#BF5FFF',
-  gGold: '0 2px 4px rgba(0,0,0,0.5)',
-  gCyan: '0 2px 4px rgba(0,0,0,0.5)',
-  gRed: '0 2px 4px rgba(0,0,0,0.5)',
-  gPurple: '0 2px 4px rgba(0,0,0,0.5)',
 };
 
 interface Time {
@@ -78,11 +75,6 @@ async function fetchUltimaRodada(): Promise<UltimaRodada> {
   const jogoId = jogos?.[0]?.id;
   if (!jogoId) return { capitao: null, heroi: null, maisEscalado: null, ranking: [], participantes: 0 };
 
-  const { data: scouts } = await supabase
-    .from('scouts_reais')
-    .select('jogador_id, gols, assistencias, sg, potm, nota_sofascore')
-    .eq('jogo_id', jogoId);
-
   const { data: pontuacoes } = await supabase
     .from('pontuacoes_atletas')
     .select('atleta_id, pontos_ganhos')
@@ -102,12 +94,6 @@ async function fetchUltimaRodada(): Promise<UltimaRodada> {
     ? { nome: nomeById[topPontuacao.atleta_id] ?? 'Desconhecido', pts: Number(topPontuacao.pontos_ganhos) }
     : null;
 
-  const potm = scouts?.find(s => s.potm);
-  const heroiScout = potm ?? scouts?.sort((a, b) => (b.nota_sofascore ?? 0) - (a.nota_sofascore ?? 0))[0];
-  const heroi = heroiScout
-    ? { nome: nomeById[heroiScout.jogador_id] ?? 'Desconhecido', pts: heroiScout.nota_sofascore ?? 0 }
-    : null;
-
   const { data: rankData } = await supabase
     .from('view_ranking_geral')
     .select('apelido, pontos_total')
@@ -124,7 +110,7 @@ async function fetchUltimaRodada(): Promise<UltimaRodada> {
 
   return {
     capitao,
-    heroi,
+    heroi: null,
     maisEscalado: null,
     ranking,
     participantes: count ?? 0
@@ -146,7 +132,12 @@ function Countdown({ dataHora }: { dataHora: string }) {
       const h = Math.floor(diff / 3_600_000);
       const m = Math.floor((diff % 3_600_000) / 60_000);
       const s = Math.floor((diff % 60_000) / 1_000);
-      setT({ h: String(h).padStart(2, '0'), m: String(m).padStart(2, '0'), s: String(s).padStart(2, '0'), crit: h === 0 && m < 5 });
+      setT({
+        h: String(h).padStart(2, '0'),
+        m: String(m).padStart(2, '0'),
+        s: String(s).padStart(2, '0'),
+        crit: h === 0 && m < 5
+      });
     };
 
     calc();
@@ -262,21 +253,14 @@ function StatCard({ lbl, val, sub, color, border }: {
       }}>
         {val}
       </div>
-      {sub && (
-        <div style={{
-          fontSize: 11,
-          marginTop: 5,
-          color: 'rgba(255,255,255,0.7)',
-          fontWeight: 700
-        }}>
-          {sub}
-        </div>
-      )}
+      {sub && <div style={{ fontSize: 11, marginTop: 5, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>{sub}</div>}
     </div>
   );
 }
 
-// Componente JumbotronJogo (mantido igual)
+// ========================
+//  COMPONENTE PRINCIPAL
+// ========================
 export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false }: Props) {
   const [ultima, setUltima] = useState<UltimaRodada>({
     capitao: null,
@@ -287,6 +271,8 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
   });
 
   const [loadingUltima, setLoadingUltima] = useState(true);
+  const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
+  const [meuId, setMeuId] = useState<string>('');
 
   useEffect(() => {
     fetchUltimaRodada().then(data => {
@@ -295,85 +281,175 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
     });
   }, []);
 
+  // Carregar ID do usuário logado
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setMeuId(session.user.id);
+      }
+    };
+    getUserId();
+  }, []);
+
   const capitao = stats.capitao ?? ultima.capitao;
   const heroi = stats.heroi ?? ultima.heroi;
   const maisEscalado = stats.maisEscalado ?? ultima.maisEscalado ?? { nome: '—', pct: 0 };
   const ranking = (stats.ranking?.length ?? 0) > 0 ? stats.ranking! : ultima.ranking;
   const participantes = stats.participantes ?? ultima.participantes;
 
-  const { posicao, golsSofridos, mvp, meusPontos } = stats;
-  const mediaTime = stats.mediaSofaTime ?? stats.mediaSofa;
-
-  return (
-    <div style={{
-      fontFamily: "'Barlow Condensed', sans-serif",
-      background: '#000',
-      borderRadius: 24,
-      overflow: 'hidden',
-      position: 'relative',
-      border: '1px solid #333',
-      maxWidth: 460,
-      width: '95%',
-      margin: '0 auto',
-      boxShadow: '0 20px 80px rgba(0,0,0,0.9)'
-    }}>
-      <style>{`
-        @keyframes scan { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        @keyframes pulse-gold { 0%,100%{transform: scale(1)} 50%{transform: scale(1.02)} }
-      `}</style>
-
-      {/* ... resto do componente JumbotronJogo permanece igual ao que você enviou ... */}
-      {/* (para economizar espaço, não repeti todo o JSX aqui, mas ele está idêntico ao original) */}
-
-      {/* Exemplo da parte final do return (mantida igual) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 20 }}>
-        <StatCard
-          lbl="CAPITÃO"
-          val={loadingUltima ? '...' : capitao ? capitao.pts.toFixed(1) : '—'}
-          sub={capitao ? capitao.nome : '—'}
-          color={C.gold}
-          border="rgba(245,196,0,0.3)"
-        />
-        <StatCard
-          lbl="HERÓI"
-          val={loadingUltima ? '...' : heroi ? heroi.pts.toFixed(1) : '—'}
-          sub={heroi ? heroi.nome : '—'}
-          color={C.red}
-          border="rgba(255,45,85,0.3)"
-        />
-      </div>
-
-      {/* ... resto do JSX ... */}
-    </div>
-  );
-}
-
-/* 
-  ====================
-  PARTE CORRIGIDA ABAIXO
-  ====================
-*/
-
-// Se o TigreFCRankingPage for um componente separado, use esta estrutura:
-
-// Exemplo completo da página (ajuste os seus states conforme necessário)
-export function TigreFCRankingPage() {
-  const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
-  const [jogoId, setJogoId] = useState<number | null>(null);
-  const [meuId, setMeuId] = useState<string>(''); // ID do usuário logado (preencha conforme sua lógica de auth)
-
-  // ... seus outros states e useEffects ...
-
   return (
     <>
-      {/* Todo o conteúdo da sua página aqui */}
+      <div style={{
+        fontFamily: "'Barlow Condensed', sans-serif",
+        background: '#000',
+        borderRadius: 24,
+        overflow: 'hidden',
+        position: 'relative',
+        border: '1px solid #333',
+        maxWidth: 460,
+        width: '95%',
+        margin: '0 auto',
+        boxShadow: '0 20px 80px rgba(0,0,0,0.9)'
+      }}>
+        <style>{`
+          @keyframes scan { 0%{background-position:-200% center} 100%{background-position:200% center} }
+          @keyframes pulse-gold { 0%,100%{transform: scale(1)} 50%{transform: scale(1.02)} }
+        `}</style>
 
+        <div style={{ height: 3, background: `linear-gradient(90deg,transparent,${C.gold},#fff,${C.cyan},transparent)`, backgroundSize: '200%', animation: 'scan 3s linear infinite' }} />
+
+        <div style={{ position: 'relative', zIndex: 1, padding: '24px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: C.cyan }} />
+              <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.2em', color: C.cyan }}>
+                {mercadoFechado ? 'MERCADO FECHADO' : 'MERCADO ABERTO'}
+              </span>
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '0.2em', color: C.gold }}>
+              {jogo.competicao.toUpperCase()}
+            </span>
+          </div>
+
+          {!mercadoFechado && <Countdown dataHora={jogo.data_hora} />}
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, flex: 1 }}>
+              <Escudo src={jogo.mandante.escudo_url} alt={jogo.mandante.nome} />
+              <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', textAlign: 'center', lineHeight: 1.1 }}>
+                {jogo.mandante.nome.toUpperCase()}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <span style={{ fontSize: 24, fontWeight: 900, fontStyle: 'italic', color: 'rgba(255,255,255,0.15)' }}>VS</span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: C.gold, textAlign: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px 8px', borderRadius: 8 }}>
+                {new Date(jogo.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} - {new Date(jogo.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, flex: 1 }}>
+              <Escudo src={jogo.visitante.escudo_url} alt={jogo.visitante.nome} novo />
+              <span style={{ fontSize: 13, fontWeight: 900, color: C.gold, textAlign: 'center', lineHeight: 1.1 }}>
+                {jogo.visitante.nome.toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          {(jogo.local || jogo.transmissao) && (
+            <div style={{ background: '#111', border: '1px solid #222', borderRadius: 14, padding: '12px', marginBottom: 16 }}>
+              {jogo.local && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 14 }}>📍</span>
+                  <span style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}>{jogo.local}</span>
+                </div>
+              )}
+              {jogo.transmissao && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 14 }}>📺</span>
+                  <span style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}>{jogo.transmissao}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: C.purple, borderRadius: 12, padding: '14px', marginBottom: 16 }}>
+            <span style={{ fontSize: 18 }}>🎯</span>
+            <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '0.1em', color: '#fff' }}>
+              PLACAR EXATO = +15 XP
+            </span>
+          </div>
+
+          {mercadoFechado ? (
+            <div style={{ width: '100%', background: '#111', border: '1px solid #222', borderRadius: 16, color: 'rgba(255,255,255,0.4)', fontSize: 16, fontWeight: 900, padding: 22, textAlign: 'center' }}>
+              🔒 MERCADO FECHADO
+            </div>
+          ) : (
+            <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%',
+              background: C.gold, borderRadius: 16, color: '#000',
+              fontSize: 18, fontWeight: 900, letterSpacing: '0.1em', padding: 22,
+              textDecoration: 'none', textAlign: 'center',
+              animation: 'pulse-gold 2s ease-in-out infinite'
+            }}>
+              CONVOCAR TITULARES →
+            </Link>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 20 }}>
+            <StatCard
+              lbl="CAPITÃO"
+              val={loadingUltima ? '...' : capitao ? capitao.pts.toFixed(1) : '—'}
+              sub={capitao ? capitao.nome : '—'}
+              color={C.gold}
+              border="rgba(245,196,0,0.3)"
+            />
+            <StatCard
+              lbl="HERÓI"
+              val={loadingUltima ? '...' : heroi ? heroi.pts.toFixed(1) : '—'}
+              sub={heroi ? heroi.nome : '—'}
+              color={C.red}
+              border="rgba(255,45,85,0.3)"
+            />
+          </div>
+
+          <div style={{ marginTop: 16, background: '#0a0a0a', border: `2px solid ${C.purple}`, borderRadius: 16, padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 12, fontWeight: 900, color: C.purple }}>RANKING TOP 5</span>
+              <span style={{ fontSize: 11, color: C.cyan, fontWeight: 800 }}>{participantes} JOGANDO</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {ranking.slice(0, 5).map((r, i) => (
+                <div
+                  key={i}
+                  onClick={() => setPerfilAberto(r.apelido || r.nome || '')} // Clique para abrir perfil
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '10px',
+                    borderRadius: 10,
+                    background: i === 0 ? 'rgba(191,95,255,0.2)' : '#111',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span style={{ fontSize: 14, fontWeight: 900, color: i === 0 ? C.gold : '#555', minWidth: 25 }}>{i + 1}º</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', flex: 1 }}>{r.apelido || r.nome || 'Torcedor'}</span>
+                  <span style={{ fontSize: 14, fontWeight: 900, color: C.purple }}>{r.pontos} pts</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MODAL DE PERFIL */}
       {perfilAberto && (
         <TigreFCPerfilPublico
-          targetUsuarioId={perfilAberto}           // ← CORRIGIDO (era targetUserId)
-          viewerUsuarioId={meuId}                  // ← ADICIONADO (prop esperada)
+          targetUsuarioId={perfilAberto}
+          viewerUsuarioId={meuId || undefined}
           onClose={() => setPerfilAberto(null)}
-          // jogoId={jogoId ?? undefined}         // ← remova ou mantenha só se o componente aceitar
         />
       )}
     </>
