@@ -1,15 +1,19 @@
-'use client'; // Necessário para Next.js 16+ em componentes interativos
+'use client'; // Necessário para Next.js 16+
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, Download, MessageCircle, Instagram, Twitter, RotateCcw, Camera } from 'lucide-react';
 import { toPng } from 'html-to-image';
 
+// --- DEFINIÇÃO DE TIPOS (Resolve o erro do build) ---
+interface EscalacaoFormacaoProps {
+  jogoId?: string | number;
+}
+
 // --- CONFIGURAÇÕES E ASSETS ---
 const SUPABASE_STORAGE_URL = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal";
 const STADIUM_BG = "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2070&auto=format&fit=crop";
 
-// Mapeamento corrigido conforme arquivos enviados
 const PLAYERS_DATA = [
   { id: 1, name: 'Jordi', photo: 'JORDI.jpg.webp', position: 'Goleiro' },
   { id: 2, name: 'Alexis Alvariño', photo: 'IVAN-ALVARINO.jpg.webp', position: 'Zagueiro' }, 
@@ -21,18 +25,16 @@ const PLAYERS_DATA = [
   { id: 8, name: 'Hélio Borges', photo: 'HELIO-BORGES.jpg.webp', position: 'Atacante' },
 ];
 
-const EscalacaoFormacao = () => {
+// Adicionado { jogoId } como prop para bater com o que a page.tsx envia
+const EscalacaoFormacao: React.FC<EscalacaoFormacaoProps> = ({ jogoId }) => {
   const [step, setStep] = useState<'selecao' | 'campo' | 'final'>('selecao');
   const [selectedPlayers, setSelectedPlayers] = useState<any[]>([]);
   const [finalImageUri, setFinalImageUri] = useState<string | null>(null);
   const campoRef = useRef<HTMLDivElement>(null);
 
-  // --- LÓGICA DE CAPTURA DE IMAGEM (MARKETING) ---
   const gerarSnapshot = async () => {
     if (campoRef.current === null) return;
-    
     try {
-      // Gera a imagem PNG do elemento DOM selecionado
       const dataUrl = await toPng(campoRef.current, { 
         cacheBust: true,
         quality: 0.95,
@@ -48,7 +50,7 @@ const EscalacaoFormacao = () => {
   const downloadImagem = () => {
     if (!finalImageUri) return;
     const link = document.createElement('a');
-    link.download = `meu-tigre-escalado.png`;
+    link.download = `meu-tigre-escalado-${jogoId || 'novo'}.png`;
     link.href = finalImageUri;
     link.click();
   };
@@ -58,10 +60,9 @@ const EscalacaoFormacao = () => {
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
-  // --- COMPONENTES DE UI ---
   const PlayerIcon = ({ player, isInteractive = false }: { player: any, isInteractive?: boolean }) => (
     <motion.div
-      drag={isInteractive} // Movimento livre ativado conforme solicitado
+      drag={isInteractive}
       dragConstraints={campoRef}
       dragElastic={0.1}
       whileHover={{ scale: 1.1 }}
@@ -85,22 +86,19 @@ const EscalacaoFormacao = () => {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans overflow-hidden p-4">
-      
-      {/* HEADER DINÂMICO */}
       <header className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-black italic tracking-tighter text-yellow-500">ARENA TIGRE FC</h1>
           <p className="text-[10px] text-gray-400 uppercase tracking-widest italic">By Felipe Makarios</p>
         </div>
         {step === 'campo' && (
-          <button onClick={gerarSnapshot} className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-full flex items-center gap-2 font-bold transition-all shadow-lg shadow-green-900/20">
+          <button onClick={gerarSnapshot} className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-full flex items-center gap-2 font-bold transition-all shadow-lg shadow-green-900/40">
             <Camera size={18} /> FINALIZAR
           </button>
         )}
       </header>
 
       <AnimatePresence mode="wait">
-        {/* STEP 1: SELEÇÃO DE JOGADORES */}
         {step === 'selecao' && (
           <motion.div key="selecao" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-2 gap-4">
             {PLAYERS_DATA.map(player => (
@@ -121,7 +119,6 @@ const EscalacaoFormacao = () => {
           </motion.div>
         )}
 
-        {/* STEP 2: O CAMPO (QUADRO TÁTICO INTERATIVO) */}
         {step === 'campo' && (
           <motion.div 
             key="campo"
@@ -130,18 +127,28 @@ const EscalacaoFormacao = () => {
             style={{ backgroundImage: `url(${STADIUM_BG})` }}
           >
             <div className="absolute inset-0 bg-green-950/60 backdrop-blur-[1px]" />
-            <div className="absolute inset-0 border-[1px] border-white/20 m-4 rounded-lg pointer-events-none" />
-            
-            {/* Logo e Branding na Imagem */}
             <div className="absolute top-10 left-0 right-0 text-center z-10 pointer-events-none">
-              <h2 className="text-3xl font-black italic text-white/10 uppercase tracking-tighter">ESCUDO TIGRE</h2>
-              <p className="text-white/30 font-bold uppercase tracking-[4px] text-[10px]">Técnico: Enderson Moreira</p>
+                <h2 className="text-3xl font-black italic text-white/10 uppercase tracking-tighter">ESCUDO TIGRE</h2>
+                <p className="text-white/30 font-bold uppercase tracking-[4px] text-[10px]">Técnico: Enderson Moreira</p>
             </div>
 
-            {/* Jogadores com Drag & Drop Livre */}
-            <div className="absolute inset-0 p-12">
+            <div className="absolute inset-0 p-10">
               {selectedPlayers.map((player, idx) => (
-                <PlayerIcon key={`${player.id}-${idx}`} player={player} isInteractive={true} />
+                <motion.div
+                  key={`${player.id}-${idx}`}
+                  drag
+                  dragConstraints={campoRef}
+                  dragElastic={0.1}
+                  className="absolute cursor-grab active:cursor-grabbing flex flex-col items-center"
+                  style={{ left: `${20 + (idx * 15)}%`, top: `${20 + (idx * 10)}%` }}
+                >
+                  <div className="w-16 h-16 rounded-full border-2 border-yellow-500 overflow-hidden bg-black shadow-xl">
+                    <img src={`${SUPABASE_STORAGE_URL}/${player.photo}`} className="w-full h-full object-cover" alt={player.name} />
+                  </div>
+                  <span className="mt-1 bg-yellow-500 text-black text-[9px] font-black px-2 py-0.5 rounded-sm uppercase italic shadow-lg">
+                    {player.name}
+                  </span>
+                </motion.div>
               ))}
             </div>
 
@@ -151,34 +158,25 @@ const EscalacaoFormacao = () => {
           </motion.div>
         )}
 
-        {/* STEP 3: CARD FINAL (MARKETING VIRAL) */}
         {step === 'final' && finalImageUri && (
           <motion.div key="final" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
             <div className="bg-white/5 p-4 rounded-[40px] border border-white/10 mb-8 w-full max-w-sm">
               <img src={finalImageUri} className="w-full rounded-[30px] shadow-2xl mb-6" alt="Seu Time" />
-              
-              <div className="text-center mb-6 px-4">
-                <h3 className="text-xl font-black italic mb-1 text-yellow-500 uppercase">Time de Elite Escalado!</h3>
-                <p className="text-gray-400 text-sm">Desafie seus amigos no comando de Enderson Moreira.</p>
-              </div>
-
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <button onClick={downloadImagem} className="flex items-center justify-center gap-2 bg-white text-black font-bold py-3 rounded-2xl hover:bg-gray-200 transition-colors">
-                  <Download size={18} /> SALVAR
+                <button onClick={downloadImagem} className="flex items-center justify-center gap-2 bg-white text-black font-bold py-3 rounded-2xl hover:bg-gray-200 transition-colors uppercase text-xs">
+                  <Download size={18} /> Salvar
                 </button>
-                <button onClick={shareWhatsApp} className="flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3 rounded-2xl hover:bg-green-500 transition-colors">
-                  <MessageCircle size={18} /> WHATSAPP
+                <button onClick={shareWhatsApp} className="flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3 rounded-2xl hover:bg-green-500 transition-colors uppercase text-xs">
+                  <MessageCircle size={18} /> WhatsApp
                 </button>
               </div>
-
               <div className="flex justify-center gap-4 py-4 border-t border-white/10">
                 <Instagram className="text-gray-500 hover:text-pink-500 cursor-pointer" />
                 <Twitter className="text-gray-500 hover:text-blue-400 cursor-pointer" />
                 <Share2 className="text-gray-500 hover:text-white cursor-pointer" />
               </div>
             </div>
-
-            <button onClick={() => setStep('selecao')} className="flex items-center gap-2 text-gray-500 font-bold uppercase text-xs tracking-widest hover:text-yellow-500 transition-colors">
+            <button onClick={() => setStep('selecao')} className="flex items-center gap-2 text-gray-500 font-bold uppercase text-[10px] tracking-widest hover:text-yellow-500">
               <RotateCcw size={14} /> Refazer Escalação
             </button>
           </motion.div>
