@@ -44,6 +44,13 @@ interface Stats {
   [key: string]: any;
 }
 
+// Interface que estava faltando:
+interface Props {
+  jogo: Jogo;
+  stats?: Stats;
+  mercadoFechado?: boolean;
+}
+
 interface UltimaRodada {
   capitao: { nome: string; pts: number } | null;
   heroi: { nome: string; pts: number } | null;
@@ -158,7 +165,6 @@ function Escudo({ src, alt, novo }: { src: string | null; alt: string; novo?: bo
   );
 }
 
-// Sub-componente para os nomes e pontos
 function DestaqueAtleta({ titulo, nome, pts, cor }: { titulo: string, nome: string, pts: number, cor: string }) {
   return (
     <div style={{ flex: 1, textAlign: 'center', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: 14, border: `1px solid ${cor}33` }}>
@@ -249,7 +255,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
             </div>
           </div>
 
-          {/* NOMES E PONTOS (Destaques da Rodada) */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
             <DestaqueAtleta titulo="CAPITÃO" nome={capitao?.nome || '—'} pts={capitao?.pts || 0} cor={C.gold} />
             <DestaqueAtleta titulo="HERÓI" nome={heroi?.nome || '—'} pts={heroi?.pts || 0} cor={C.red} />
@@ -269,7 +274,6 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
             </Link>
           )}
 
-          {/* MINI RANKING INTEGRADO */}
           <div style={{ marginTop: 24, background: 'rgba(191,95,255,0.05)', borderRadius: 16, padding: '16px', border: `1px solid ${C.purple}22` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <span style={{ fontSize: 11, fontWeight: 900, color: C.purple, letterSpacing: '0.1em' }}>TOP 5 GERAL</span>
