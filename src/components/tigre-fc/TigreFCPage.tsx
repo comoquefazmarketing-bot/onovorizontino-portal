@@ -29,17 +29,31 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (u) setMeuId(u.id);
       }
 
+      // Busca o jogo via API ou define o fallback para a 7ª Rodada
       const resJogo = await fetch('/api/proximo-jogo').then(r => r.json()).catch(() => null);
       if (resJogo?.jogos?.length > 0) {
         setJogo(resJogo.jogos[0]);
       } else {
         setJogo({
-          id: 6,
-          data_hora: '2026-04-25T20:30:00',
-          competicao: 'Série B',
-          rodada: '6ª Rodada',
-          mandante:  { nome: 'Sport', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20SPORT.png', sigla: 'SPT' },
-          visitante: { nome: 'Novorizontino', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png', sigla: 'NOV' },
+          idx: 11,
+          id: 12,
+          data_hora: '2026-05-03T21:00:00+00:00',
+          competicao: 'Série B 2026',
+          rodada: '7',
+          local: 'Estádio da Ressacada — Florianópolis, SC',
+          transmissao: 'ESPN · Disney+',
+          mandante: { 
+            nome: 'Avaí', 
+            escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AVAI.png',
+            sigla: 'AVA' 
+          },
+          visitante: { 
+            nome: 'Novorizontino', 
+            escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png', 
+            sigla: 'NOV' 
+          },
+          ativo: true,
+          finalizado: false
         });
       }
 
@@ -85,11 +99,11 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
               capitao: { nome: 'CÉSAR', pts: 6.9 }, 
               heroi: { nome: 'DANTAS', pts: 7.1 },
               posicao: 9, 
-              golsSofridos: 6, 
+              golsSofridos: 0, 
               mediaSofaTime: 6.95, 
               mvp: { nome: 'Dantas', media: 7.1 }, 
               participantes: ranking.length
-            } as any} // 🚀 O 'as any' força o TypeScript a aceitar os campos novos
+            } as any} 
           />
         )}
 
