@@ -1,249 +1,190 @@
-// src/app/tigre-fc/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
+import { supabase as sb } from '@/lib/supabase';
+import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
+import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
+import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
 import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 
-const FONT_FAMILY = "'Barlow Condensed', 'Barlow', system-ui, -apple-system, sans-serif";
+const URL_AVAI = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png";
 
-// ════════════════════════════════════════════════════════════════════════════
-// TIPOS LOCAIS (inline pra evitar conflito de type import com Turbopack)
-// ════════════════════════════════════════════════════════════════════════════
-type Jogo = {
-  id?: number | null;
-  rodada?: number | null;
-  competicao?: string | null;
-  mandante_slug?: string | null;
-  visitante_slug?: string | null;
-  placar_mandante?: number | null;
-  placar_visitante?: number | null;
-  finalizado?: boolean | null;
-  data_jogo?: string | null;
-};
-
-type UserShape = {
-  id: string;
-  email?: string;
-};
-
-type Escalacao = {
-  formacao: string;
-  capitao_id: number | null;
-  heroi_id: number | null;
-  palpite_mandante: number;
-  palpite_visitante: number;
-};
-
-// ════════════════════════════════════════════════════════════════════════════
-// FALLBACK — GARANTIA CONTRA TELA PRETA
-// Sempre renderiza ALGO, mesmo se o Supabase estiver offline ou vazio.
-// ════════════════════════════════════════════════════════════════════════════
-const FALLBACK_JOGO: Jogo = {
+// Fallback para evitar tela preta se o banco falhar
+const JOGO_FALLBACK = {
   id: 12,
-  rodada: 7,
   competicao: 'COPA SUL-SUDESTE',
-  mandante_slug: 'avai',
-  visitante_slug: 'novorizontino',
-  placar_mandante: null,
-  placar_visitante: null,
-  finalizado: false,
-  data_jogo: null,
+  rodada: '7',
+  data_hora: '2026-05-03T21:00:00+00:00',
+  mandante: { nome: 'AVAÍ', escudo_url: URL_AVAI },
+  visitante: { nome: 'NOVORIZONTINO', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png' }
 };
 
-// ════════════════════════════════════════════════════════════════════════════
-// MAPEAMENTO ID → NOME CURTO (mesmo PLAYERS_DATA do EscalacaoFormacao)
-// ════════════════════════════════════════════════════════════════════════════
-const PLAYER_NAMES: Record<number, string> = {
-  // GOL
-  23: 'JORDI',
-  1:  'CÉSAR',
-  22: 'SCAPIN',
-  62: 'LUCAS',
-  // ZAG
-  8:  'PATRICK',
-  38: 'R. PALM',
-  34: 'BROCK',
-  66: 'ALVARÍÑO',
-  6:  'CARLINHOS',
-  3:  'DANTAS',
-  // LAT
-  9:  'SANDER',
-  28: 'MAYKON',
-  27: 'NILSON',
-  75: 'LORA',
-  // VOL
-  41: 'OYAMA',
-  46: 'MARLON',
-  40: 'NALDI',
-  // MEI
-  47: 'BIANQUI',
-  10: 'RÔMULO',
-  12: 'JUNINHO',
-  17: 'TAVINHO',
-  86: 'TITI ORTÍZ',
-  13: 'D. GALO',
-  // ATA
-  15: 'ROBSON',
-  59: 'V. PAIVA',
-  57: 'RONALD',
-  55: 'CARECA',
-  50: 'CARLÃO',
-  52: 'HÉLIO',
-  53: 'JARDIEL',
-  91: 'HECTOR',
-};
-
-// ════════════════════════════════════════════════════════════════════════════
-// PÁGINA
-// ════════════════════════════════════════════════════════════════════════════
 export default function TigreFCPage() {
-  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [meuId, setMeuId] = useState<string | null>(null);
+  const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
+  const [ranking, setRanking] = useState<any[]>([]);
+  const [jogo, setJogo] = useState<any>(JOGO_FALLBACK);
+  const [stats, setStats] = useState({
+    capitao: { nome: '---', pts: 0 },
+    heroi: { nome: '---', pts: 0 }
+  });
 
-  // Inicializa COM o fallback — não esperamos nada pra renderizar
-  const [user, setUser]                       = useState<UserShape | null>(null);
-  const [jogo, setJogo]                       = useState<Jogo>(FALLBACK_JOGO);
-  const [escalacao, setEscalacao]             = useState<Escalacao | null>(null);
-  const [totalEscalacoes, setTotalEscalacoes] = useState(0);
-  const [hydrating, setHydrating]             = useState(true);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadAll = async () => {
-      // ─── 1. SESSÃO (try/catch isolado pra não bloquear o resto) ──
-      try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (!cancelled && authUser) {
-          setUser({ id: authUser.id, email: authUser.email ?? undefined });
-        }
-      } catch (err) {
-        console.warn('[TigreFCPage] sessão indisponível:', err);
+    if (!mounted) return;
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      let userId = null;
+      if (session?.user) {
+        const { data: u } = await sb.from('tigre_fc_usuarios').select('id').eq('google_id', session.user.id).maybeSingle();
+        if (u) { userId = u.id; setMeuId(u.id); }
       }
 
-      // ─── 2. JOGO ATIVO ──────────────────────────────────────────
-      let jogoAtivo: Jogo | null = null;
-      try {
-        const { data: jogosData, error: jogosError } = await supabase
-          .from('jogos')
-          .select('id, rodada, competicao, mandante_slug, visitante_slug, placar_mandante, placar_visitante, finalizado')
-          .eq('finalizado', false)
-          .order('rodada', { ascending: true })
-          .limit(1);
+      // Parallel Fetch: Jogo e Ranking (Estilo FIFA - Dados Dinâmicos)
+      const [resJogo, resRank] = await Promise.all([
+        sb.from('jogos_tigre').select('*, mandante:times(*), visitante:times(*)').eq('ativo', true).maybeSingle(),
+        sb.from('tigre_fc_usuarios')
+          .select('id, nome, apelido, pontos_total, avatar_url')
+          .not('pontos_total', 'is', null)
+          .order('pontos_total', { ascending: false })
+          .limit(6)
+      ]);
 
-        if (jogosError) {
-          console.warn('[TigreFCPage] erro buscando jogo ativo:', jogosError.message);
-        } else {
-          jogoAtivo = jogosData?.[0] ?? null;
-        }
-      } catch (err) {
-        console.warn('[TigreFCPage] exceção buscando jogo:', err);
-      }
+      if (resRank.data) setRanking(resRank.data);
 
-      // Se achou jogo real, substitui o fallback. Se não, mantém o fallback.
-      if (!cancelled && jogoAtivo) {
-        setJogo(jogoAtivo);
-      }
+      if (resJogo.data) {
+        const g = resJogo.data;
+        if (g.mandante?.nome?.toUpperCase() === 'AVAÍ') g.mandante.escudo_url = URL_AVAI;
+        setJogo(g);
 
-      const jogoEfetivo = jogoAtivo ?? FALLBACK_JOGO;
-      const jogoIdEfetivo = jogoEfetivo.id ?? FALLBACK_JOGO.id ?? 0;
-
-      // ─── 3. CONTAGEM DE ESCALAÇÕES ──────────────────────────────
-      try {
-        const { count: countEscs } = await supabase
-          .from('tigre_fc_escalacoes')
-          .select('id', { count: 'exact', head: true })
-          .eq('jogo_id', jogoIdEfetivo);
-
-        if (!cancelled) setTotalEscalacoes(countEscs ?? 0);
-      } catch (err) {
-        console.warn('[TigreFCPage] contagem indisponível:', err);
-      }
-
-      // ─── 4. ESCALAÇÃO DO USUÁRIO ────────────────────────────────
-      try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser && jogoIdEfetivo) {
-          const { data: escData, error: escError } = await supabase
-            .from('tigre_fc_escalacoes')
-            .select('formacao, capitao_id, heroi_id, palpite_mandante, palpite_visitante')
-            .eq('user_id', authUser.id)
-            .eq('jogo_id', jogoIdEfetivo)
+        if (userId) {
+          const { data: esc } = await sb.from('tigre_fc_escalacoes')
+            .select('capitao_nome, heroi_nome')
+            .eq('usuario_id', userId)
+            .eq('jogo_id', g.id)
             .maybeSingle();
-
-          if (escError) {
-            console.warn('[TigreFCPage] erro buscando escalação:', escError.message);
+          if (esc) {
+            setStats({
+              capitao: { nome: esc.capitao_nome || '---', pts: 0 },
+              heroi: { nome: esc.heroi_nome || '---', pts: 0 }
+            });
           }
-          if (!cancelled) setEscalacao(escData ?? null);
         }
-      } catch (err) {
-        console.warn('[TigreFCPage] exceção buscando escalação:', err);
       }
+    }
+    init();
+  }, [mounted]);
 
-      if (!cancelled) setHydrating(false);
-    };
+  if (!mounted) return null;
 
-    loadAll();
-    return () => { cancelled = true; };
-  }, []);
-
-  // ─── DERIVADOS ──────────────────────────────────────────────────────
-  const capitaoNome: string | null = escalacao?.capitao_id != null
-    ? (PLAYER_NAMES[escalacao.capitao_id] ?? '---')
-    : null;
-
-  const heroiNome: string | null = escalacao?.heroi_id != null
-    ? (PLAYER_NAMES[escalacao.heroi_id] ?? '---')
-    : null;
-
-  const handleEscalar = () => {
-    const targetId = jogo.id ?? FALLBACK_JOGO.id ?? 12;
-    router.push(`/tigre-fc/escalar/${targetId}`);
-  };
-
-  // ════════════════════════════════════════════════════════════════════
-  // RENDER — sempre tem conteúdo, jamais retorna null nem tela preta
-  // ════════════════════════════════════════════════════════════════════
   return (
-    <main className="min-h-screen bg-black text-white" style={{ fontFamily: FONT_FAMILY }}>
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+    <main className="min-h-screen bg-[#050505] text-white font-sans selection:bg-yellow-400/30">
+      {/* HUD SUPERIOR - DESIGN FIFA */}
+      <header className="relative pt-12 pb-24 text-center overflow-hidden border-b border-white/5">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,196,0,0.08)_0%,transparent_70%)]" />
+        <h1 className="text-8xl font-black italic uppercase tracking-tighter leading-none opacity-90">
+          TIGRE <span className="text-[#F5C400]">FC</span>
+        </h1>
+        <div className="inline-block mt-4 px-6 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full">
+          <p className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.5em]">Live Match Engine</p>
+        </div>
+      </header>
 
-        <header className="text-center pt-2 sm:pt-4">
-          <div className="text-yellow-400 text-[10px] sm:text-xs font-black tracking-[6px] mb-2">
-            ⚡ TIGRE FC
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-black italic tracking-tighter">
-            ARENA DA TORCIDA
-          </h1>
-          <p className="text-zinc-400 text-xs sm:text-sm mt-2 max-w-md mx-auto">
-            Escala o Tigrão, palpita no placar e entra no ranking dos torcedores.
-          </p>
-        </header>
-
-        <JumbotronJogo
-          jogo={jogo}
-          formacao={escalacao?.formacao ?? null}
-          capitaoNome={capitaoNome}
-          heroiNome={heroiNome}
-          palpiteMandante={escalacao?.palpite_mandante ?? null}
-          palpiteVisitante={escalacao?.palpite_visitante ?? null}
-          totalEscalacoes={totalEscalacoes}
-          onEscalar={handleEscalar}
-          loading={false}
-        />
-
-        {!hydrating && !user && (
-          <div className="bg-zinc-950 border border-yellow-400/30 rounded-2xl p-4 text-center">
-            <div className="text-2xl mb-2">🔐</div>
-            <div className="text-sm font-black mb-1">Faça login pra escalar</div>
-            <div className="text-zinc-400 text-xs">
-              Entre com sua conta pra montar seu time, palpitar no placar e disputar o ranking.
+      <div className="max-w-7xl mx-auto px-4 -mt-16 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20">
+        
+        {/* COLUNA ESQUERDA: RANKING & NEWS (CLUSTERS) */}
+        <aside className="lg:col-span-3 space-y-6">
+          {/* RANKING PUBLICO - DESIGN DOPAMINÉRGICO */}
+          <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-[32px] p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xs font-black uppercase tracking-widest text-zinc-500">Global Leaderboard</h2>
+              <div className="w-2 h-2 rounded-full bg-yellow-400" />
+            </div>
+            <div className="space-y-3">
+              {ranking.map((u, i) => (
+                <button 
+                  key={u.id}
+                  onClick={() => setPerfilAberto(u.id)}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-transparent hover:border-yellow-400/20 transition-all group"
+                >
+                  <span className="text-sm font-black italic text-zinc-600 group-hover:text-yellow-400">#{i+1}</span>
+                  <div className="flex-1 text-left">
+                    <p className="text-xs font-black uppercase truncate">{u.apelido || u.nome}</p>
+                    <p className="text-[9px] font-bold text-zinc-500">{u.pontos_total || 0} SCORE</p>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
-        )}
+
+          {/* CLUSTER DE NOTÍCIAS (PORTAL) */}
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-[32px] p-[1px]">
+            <div className="bg-black rounded-[31px] p-6">
+              <h2 className="text-xs font-black text-yellow-400 uppercase tracking-widest mb-4">News Flash</h2>
+              <div className="space-y-4">
+                {[
+                  "Novorizontino inicia check-in para sócios.",
+                  "Novo reforço disponível no mercado do Tigre FC.",
+                  "Análise tática: Como vencer o Avaí fora de casa."
+                ].map((txt, i) => (
+                  <div key={i} className="group cursor-pointer">
+                    <p className="text-[10px] font-black text-zinc-500 uppercase">Update 0{i+1}</p>
+                    <p className="text-xs font-bold leading-tight group-hover:text-yellow-400 transition-colors">{txt}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* COLUNA CENTRAL: JUMBOTRON & CHAT */}
+        <div className="lg:col-span-6 space-y-6">
+          <JumbotronJogo jogo={jogo} stats={stats} />
+          
+          <div className="bg-zinc-900/60 backdrop-blur-2xl border border-white/10 rounded-[48px] h-[650px] overflow-hidden shadow-2xl relative">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+            <TigreFCChat usuarioId={meuId} />
+          </div>
+        </div>
+
+        {/* COLUNA DIREITA: FIFA STATS & ADS */}
+        <aside className="lg:col-span-3 space-y-6">
+          <DestaquesFifa />
+          
+          {/* CARD DE CTA DOPAMINA */}
+          <div className="bg-zinc-900/40 border border-white/5 rounded-[32px] p-6 text-center space-y-4">
+            <div className="w-16 h-16 bg-yellow-400/10 rounded-full flex items-center justify-center mx-auto border border-yellow-400/20">
+              <span className="text-2xl">🏆</span>
+            </div>
+            <div>
+              <p className="text-sm font-black uppercase italic">Conquiste o Topo</p>
+              <p className="text-[10px] text-zinc-500 font-medium">Cada palpite certeiro te aproxima da liderança global.</p>
+            </div>
+            <button className="w-full py-3 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-yellow-400 transition-colors">
+              Ver Prêmios
+            </button>
+          </div>
+        </aside>
 
       </div>
+
+      {/* MODAL PERFIL - LÓGICA REUTILIZADA */}
+      {perfilAberto && (
+        <TigreFCPerfilPublico
+          targetUsuarioId={perfilAberto}
+          viewerUsuarioId={meuId || undefined}
+          onClose={() => setPerfilAberto(null)}
+        />
+      )}
+
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,900&display=swap');
+        body { font-family: 'Barlow Condensed', sans-serif !important; background-color: #050505; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+      `}</style>
     </main>
   );
 }
