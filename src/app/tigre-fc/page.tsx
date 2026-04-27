@@ -41,13 +41,10 @@ interface MVPData {
   media: number;
 }
 
-// 🔑 Interface Stats perfeitamente alinhada com o Componente
 interface Stats {
-  ranking: { apelido: string; pontos: number }[];
+  ranking: { id: string; apelido: string; pontos: number }[];
   participantes: number;
   posicao?: number;
-  mediaSofa?: number;
-  golsSofridos?: number;
   mvp?: { nome: string; media: number };
   capitao?: { nome: string; pts: number };
   heroi?: { nome: string; pts: number };
@@ -55,12 +52,12 @@ interface Stats {
 }
 
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
-  use(params);
+  const resolvedParams = use(params);
 
   const [mounted, setMounted]               = useState(false);
   const [isLoading, setIsLoading]            = useState(true);
   
-  // Forçando Avaí no estado inicial para garantir atualização visual
+  // Estado inicial sincronizado com o Jumbotron elite (Avaí x Novorizontino)
   const [jogo, setJogo]                     = useState<Jogo | null>({
     id: 12,
     competicao: 'SÉRIE B 2026',
@@ -71,7 +68,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     mandante: { 
       id: 1, 
       nome: 'AVAÍ', 
-      escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AVAI.png', 
+      escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png', 
       sigla: 'AVA' 
     },
     visitante: { 
@@ -103,6 +100,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       try {
         const { data: { session } } = await sb.auth.getSession();
         let meuUsuarioId: string | null = null;
+        
         if (session?.user?.id) {
           const { data: u } = await sb
             .from('tigre_fc_usuarios')
@@ -133,8 +131,16 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             .maybeSingle()
         ]);
 
-        if (resJogo?.jogos?.[0]) setJogo(resJogo.jogos[0] as Jogo);
-        if (resRank.data)        setRanking(resRank.data as UsuarioRanking[]);
+        if (resJogo?.jogos?.[0]) {
+          const gameData = resJogo.jogos[0];
+          // Força o escudo novo do Avaí se o nome for compatível
+          if (gameData.mandante.nome.toUpperCase() === 'AVAÍ') {
+            gameData.mandante.escudo_url = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png';
+          }
+          setJogo(gameData as Jogo);
+        }
+        
+        if (resRank.data) setRanking(resRank.data as UsuarioRanking[]);
 
         if (resMVP?.data) {
           setMvp({
@@ -159,7 +165,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           }
         }
       } catch (e) {
-        console.error('[TigreFCPage] Erro:', e);
+        console.error('[TigreFCPage] Erro ao inicializar dados:', e);
       } finally {
         setIsLoading(false);
       }
@@ -170,20 +176,21 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       .channel('tigre-fc-live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'jogos' }, () => init())
       .subscribe();
+      
     return () => { sb.removeChannel(channel); };
   }, [mounted]);
 
   if (!mounted) return <div className="min-h-screen bg-[#050505]" />;
 
+  // Formata os stats para o Jumbotron (incluindo ID para clique no ranking)
   const statsFinal: Stats = {
     ranking: ranking.map(u => ({
+      id: u.id,
       apelido: u.apelido || u.nome || 'Jogador',
       pontos:  u.pontos_total ?? 0,
     })),
     participantes: ranking.length,
     posicao: minhaPosicao ?? undefined,
-    mediaSofa: mvp?.media ?? 0,
-    golsSofridos: 0,
     mvp: mvp ?? { nome: '—', media: 0 },
     capitao: { nome: '---', pts: 0 },
     heroi: { nome: '---', pts: 0 }
@@ -193,6 +200,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     <main className="min-h-screen bg-[#050505] text-white pb-40 font-sans overflow-x-hidden">
       <div ref={topRef} tabIndex={-1} className="pt-2 outline-none" />
 
+      {/* Header Estilo Broadcast */}
       <header className="relative pt-12 pb-24 text-center overflow-hidden bg-black border-b border-white/5">
         <div className="absolute inset-0 opacity-10 led-scan-bar pointer-events-none z-0" style={{
           backgroundImage: 'linear-gradient(90deg, transparent, #BF5FFF, #00F3FF, transparent)',
@@ -216,6 +224,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       </header>
 
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-20 space-y-12">
+        {/* Jumbotron Principal (NBA/NFL Style) */}
         {jogo ? (
           <section className="mb-10">
             <JumbotronJogo
@@ -231,12 +240,15 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+          {/* Coluna Esquerda: Chat em Tempo Real */}
           <section className="h-[600px] rounded-[40px] border border-white/5 overflow-hidden bg-black/40 relative">
             <TigreFCChat usuarioId={meuId} />
           </section>
 
+          {/* Coluna Direita: Destaques e Ranking Lateral */}
           <div className="space-y-8">
             <DestaquesFifa />
+            
             <section>
               <div className="flex justify-between items-end mb-6 px-4">
                 <div>
@@ -244,13 +256,18 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
                   <p className="text-xl font-black uppercase italic tracking-tighter text-white">Elite Top Performance</p>
                 </div>
               </div>
+              
               <div className="space-y-3">
                 {ranking.slice(0, 5).map((u, i) => (
                   <div key={u.id} onClick={() => setPerfilAberto(u.id)}
                     className={`flex items-center p-4 rounded-3xl border cursor-pointer transition-all hover:scale-[1.01] ${
-                      i === 0 ? 'bg-gradient-to-r from-[#F5C400] to-[#D4A200] border-none text-black' : 'bg-zinc-900/40 border-white/5 hover:border-white/15'
+                      i === 0 
+                        ? 'bg-gradient-to-r from-[#F5C400] to-[#D4A200] border-none text-black' 
+                        : 'bg-zinc-900/40 border-white/5 hover:border-white/15'
                     }`}>
-                    <span className="w-8 text-center font-black italic opacity-50">{i + 1}</span>
+                    <span className={`w-8 text-center font-black italic ${i === 0 ? 'text-black/40' : 'opacity-50'}`}>
+                      {i + 1}º
+                    </span>
                     <div className="flex-1">
                       <p className="font-black uppercase italic text-sm truncate">{u.apelido || u.nome}</p>
                     </div>
@@ -263,6 +280,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </div>
       </div>
 
+      {/* Modal de Perfil Público */}
       {perfilAberto && (
         <TigreFCPerfilPublico
           targetUsuarioId={perfilAberto}
@@ -273,9 +291,18 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       <style jsx global>{`
         ::-webkit-scrollbar { width: 0px; }
-        body { background-color: #050505; color: white; font-family: 'Barlow Condensed', sans-serif !important; }
-        .led-cyan { color: #00F3FF !important; text-shadow: 0 0 10px rgba(0,243,255,0.7) !important; }
-        .led-scan-bar { animation: led-scan-header 5s linear infinite; }
+        body { 
+          background-color: #050505; 
+          color: white; 
+          font-family: 'Barlow Condensed', sans-serif !important; 
+        }
+        .led-cyan { 
+          color: #00F3FF !important; 
+          text-shadow: 0 0 10px rgba(0,243,255,0.7) !important; 
+        }
+        .led-scan-bar { 
+          animation: led-scan-header 5s linear infinite; 
+        }
         @keyframes led-scan-header {
           0%   { background-position: -300% 0; }
           100% { background-position:  300% 0; }
