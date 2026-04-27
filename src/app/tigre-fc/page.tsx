@@ -4,11 +4,25 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import JumbotronJogo, { type Jogo } from '@/components/tigre-fc/JumbotronJogo';
+import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 
 // ────────────────────────────────────────────────────────────────────────────
-// MAPEAMENTO ID → NOME CURTO (mesmo PLAYERS_DATA do EscalacaoFormacao)
-// Mantém apenas os shorts pra não duplicar payload na home.
+// TIPO LOCAL (inline pra evitar problema de type import com Turbopack/Next 16)
+// ────────────────────────────────────────────────────────────────────────────
+type Jogo = {
+  id: number;
+  rodada: number;
+  competicao: string;
+  mandante_slug: string;
+  visitante_slug: string;
+  placar_mandante: number | null;
+  placar_visitante: number | null;
+  finalizado: boolean;
+  data_jogo?: string | null;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// MAPEAMENTO ID → NOME CURTO (idêntico ao PLAYERS_DATA do EscalacaoFormacao)
 // ────────────────────────────────────────────────────────────────────────────
 const PLAYER_NAMES: Record<number, string> = {
   // GOL
@@ -51,20 +65,20 @@ const PLAYER_NAMES: Record<number, string> = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
-// TIPOS
+// TIPOS LOCAIS
 // ────────────────────────────────────────────────────────────────────────────
-interface UserShape {
+type UserShape = {
   id: string;
   email?: string;
-}
+};
 
-interface Escalacao {
+type Escalacao = {
   formacao: string;
   capitao_id: number | null;
   heroi_id: number | null;
   palpite_mandante: number;
   palpite_visitante: number;
-}
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 // PÁGINA
@@ -89,7 +103,7 @@ export default function TigreFCPage() {
           setUser(authUser ? { id: authUser.id, email: authUser.email ?? undefined } : null);
         }
 
-        // ─── 2. PRÓXIMO JOGO ATIVO (não finalizado, menor rodada) ──
+        // ─── 2. PRÓXIMO JOGO ATIVO ─────────────────────────────────
         const { data: jogosData, error: jogosError } = await supabase
           .from('jogos')
           .select('id, rodada, competicao, mandante_slug, visitante_slug, placar_mandante, placar_visitante, finalizado')
@@ -105,7 +119,7 @@ export default function TigreFCPage() {
         if (!cancelled) setJogo(jogoAtivo);
 
         if (jogoAtivo) {
-          // ─── 3. CONTAGEM DE ESCALAÇÕES PRA ESSE JOGO ──────────────
+          // ─── 3. CONTAGEM DE ESCALAÇÕES ────────────────────────────
           const { count: countEscs } = await supabase
             .from('tigre_fc_escalacoes')
             .select('id', { count: 'exact', head: true })
@@ -113,7 +127,7 @@ export default function TigreFCPage() {
 
           if (!cancelled) setTotalEscalacoes(countEscs ?? 0);
 
-          // ─── 4. ESCALAÇÃO DO USUÁRIO LOGADO ───────────────────────
+          // ─── 4. ESCALAÇÃO DO USUÁRIO ──────────────────────────────
           if (authUser) {
             const { data: escData, error: escError } = await supabase
               .from('tigre_fc_escalacoes')
@@ -140,7 +154,7 @@ export default function TigreFCPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // ─── DERIVADOS: ID → NOME ─────────────────────────────────────────────
+  // ─── DERIVADOS ─────────────────────────────────────────────────────────
   const capitaoNome: string | null = escalacao?.capitao_id != null
     ? (PLAYER_NAMES[escalacao.capitao_id] ?? '---')
     : null;
@@ -149,7 +163,6 @@ export default function TigreFCPage() {
     ? (PLAYER_NAMES[escalacao.heroi_id] ?? '---')
     : null;
 
-  // ─── HANDLERS ─────────────────────────────────────────────────────────
   const handleEscalar = () => {
     if (jogo) {
       router.push(`/tigre-fc/escalar/${jogo.id}`);
@@ -161,7 +174,6 @@ export default function TigreFCPage() {
     <main className="min-h-screen bg-black text-white">
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
 
-        {/* HERO HEADER */}
         <header className="text-center pt-2 sm:pt-4">
           <div className="text-yellow-400 text-[10px] sm:text-xs font-black tracking-[6px] mb-2">
             ⚡ TIGRE FC
@@ -174,7 +186,6 @@ export default function TigreFCPage() {
           </p>
         </header>
 
-        {/* JUMBOTRON DA RODADA */}
         <JumbotronJogo
           jogo={jogo}
           formacao={escalacao?.formacao ?? null}
@@ -187,7 +198,6 @@ export default function TigreFCPage() {
           loading={loading}
         />
 
-        {/* AVISO LOGIN (só se não autenticado) */}
         {!loading && !user && (
           <div className="bg-zinc-950 border border-yellow-400/30 rounded-2xl p-4 text-center">
             <div className="text-2xl mb-2">🔐</div>
@@ -198,7 +208,6 @@ export default function TigreFCPage() {
           </div>
         )}
 
-        {/* AVISO SEM JOGO (estado raro) */}
         {!loading && !jogo && (
           <div className="bg-zinc-950 border border-white/10 rounded-2xl p-4 text-center">
             <div className="text-zinc-500 text-xs">
