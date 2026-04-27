@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef, use } from 'react';
 import { supabase as sb } from '@/lib/supabase';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
-import TigreFCChat          from '@/components/tigre-fc/TigreFCChat';
-import DestaquesFifa        from '@/components/tigre-fc/DestaquesFifa';
-import JumbotronJogo        from '@/components/tigre-fc/JumbotronJogo';
+import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
+import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
+import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
+const URL_AVAI = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png";
 
 // ── Interfaces de Dados ────────────────
 interface Time {
@@ -36,11 +37,6 @@ interface UsuarioRanking {
   pontos_total: number;
 }
 
-interface MVPData {
-  nome: string;
-  media: number;
-}
-
 interface Stats {
   ranking: { id: string; apelido: string; pontos: number }[];
   participantes: number;
@@ -48,48 +44,45 @@ interface Stats {
   mvp?: { nome: string; media: number };
   capitao?: { nome: string; pts: number };
   heroi?: { nome: string; pts: number };
-  [key: string]: any; 
 }
 
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
   const resolvedParams = use(params);
 
-  const [mounted, setMounted]               = useState(false);
-  const [isLoading, setIsLoading]            = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Estado inicial sincronizado com o Jumbotron elite (Avaí x Novorizontino)
-  const [jogo, setJogo]                     = useState<Jogo | null>({
+  // Estado inicial sincronizado com os dados enviados (Rodada 7 - Copa Sul-Sudeste)
+  const [jogo, setJogo] = useState<Jogo | null>({
     id: 12,
-    competicao: 'SÉRIE B 2026',
+    competicao: 'COPA SUL-SUDESTE',
     rodada: '7',
     data_hora: '2026-05-03T21:00:00+00:00',
-    local: 'ESTÁDIO DA RESSACADA — SC',
+    local: 'ESTÁDIO DA RESSACADA — FLORIANÓPOLIS, SC',
     transmissao: 'ESPN · DISNEY+',
     mandante: { 
-      id: 1, 
+      id: 6, 
       nome: 'AVAÍ', 
-      escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png', 
+      escudo_url: URL_AVAI, 
       sigla: 'AVA' 
     },
     visitante: { 
-      id: 2, 
+      id: 1, 
       nome: 'NOVORIZONTINO', 
       escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png', 
       sigla: 'NOV' 
     }
   });
 
-  const [ranking, setRanking]               = useState<UsuarioRanking[]>([]);
-  const [meuId, setMeuId]                   = useState<string | null>(null);
-  const [minhaPosicao, setMinhaPosicao]     = useState<number | null>(null);
-  const [mvp, setMvp]                       = useState<MVPData | null>(null);
-  const [perfilAberto, setPerfilAberto]     = useState<string | null>(null);
+  const [ranking, setRanking] = useState<UsuarioRanking[]>([]);
+  const [meuId, setMeuId] = useState<string | null>(null);
+  const [minhaPosicao, setMinhaPosicao] = useState<number | null>(null);
+  const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
   const [mercadoFechado, setMercadoFechado] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
-    topRef.current?.focus();
   }, []);
 
   useEffect(() => {
@@ -113,41 +106,27 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           }
         }
 
-        const [resJogo, resRank, resMVP] = await Promise.all([
-          fetch('/api/proximo-jogo', { cache: 'no-store' })
-            .then(r => r.json())
-            .catch(() => null),
-
+        // Busca o jogo ativo no banco, mas aplica a blindagem do Avaí
+        const [resJogo, resRank] = await Promise.all([
+          sb.from('jogos_tigre').select('*, mandante:times(*), visitante:times(*)').eq('ativo', true).maybeSingle(),
           sb.from('tigre_fc_usuarios')
             .select('id, nome, apelido, avatar_url, pontos_total')
             .not('pontos_total', 'is', null)
             .order('pontos_total', { ascending: false })
-            .limit(10),
-
-          sb.from('pontuacoes_atletas')
-            .select('atleta_nome, media_sofascore')
-            .order('media_sofascore', { ascending: false })
-            .limit(1)
-            .maybeSingle()
+            .limit(10)
         ]);
 
-        if (resJogo?.jogos?.[0]) {
-          const gameData = resJogo.jogos[0];
-          // Força o escudo novo do Avaí se o nome for compatível
-          if (gameData.mandante.nome.toUpperCase() === 'AVAÍ') {
-            gameData.mandante.escudo_url = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png';
+        if (resJogo.data) {
+          const gameData = resJogo.data;
+          // Injeção de Segurança: Garante os dados da Sul-Sudeste e Escudo do Avaí
+          if (gameData.mandante_slug === 'avai' || gameData.mandante?.nome?.toUpperCase() === 'AVAÍ') {
+            gameData.mandante.escudo_url = URL_AVAI;
+            gameData.competicao = "COPA SUL-SUDESTE";
           }
           setJogo(gameData as Jogo);
         }
         
         if (resRank.data) setRanking(resRank.data as UsuarioRanking[]);
-
-        if (resMVP?.data) {
-          setMvp({
-            nome: resMVP.data.atleta_nome,
-            media: resMVP.data.media_sofascore,
-          });
-        }
 
         if (meuUsuarioId) {
           const { data: meuPerfil } = await sb
@@ -165,16 +144,18 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           }
         }
       } catch (e) {
-        console.error('[TigreFCPage] Erro ao inicializar dados:', e);
+        console.error('[TigreFCPage] Erro ao carregar dados:', e);
       } finally {
         setIsLoading(false);
       }
     }
 
     init();
+    
+    // Real-time para atualizações de mercado ou placar
     const channel = sb
-      .channel('tigre-fc-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'jogos' }, () => init())
+      .channel('tigre-fc-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jogos_tigre' }, () => init())
       .subscribe();
       
     return () => { sb.removeChannel(channel); };
@@ -182,7 +163,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   if (!mounted) return <div className="min-h-screen bg-[#050505]" />;
 
-  // Formata os stats para o Jumbotron (incluindo ID para clique no ranking)
   const statsFinal: Stats = {
     ranking: ranking.map(u => ({
       id: u.id,
@@ -191,87 +171,85 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     })),
     participantes: ranking.length,
     posicao: minhaPosicao ?? undefined,
-    mvp: mvp ?? { nome: '—', media: 0 },
     capitao: { nome: '---', pts: 0 },
     heroi: { nome: '---', pts: 0 }
   };
 
   return (
     <main className="min-h-screen bg-[#050505] text-white pb-40 font-sans overflow-x-hidden">
-      <div ref={topRef} tabIndex={-1} className="pt-2 outline-none" />
+      <div ref={topRef} className="pt-2" />
 
-      {/* Header Estilo Broadcast */}
-      <header className="relative pt-12 pb-24 text-center overflow-hidden bg-black border-b border-white/5">
-        <div className="absolute inset-0 opacity-10 led-scan-bar pointer-events-none z-0" style={{
+      {/* Header Estilo Broadcast Elite */}
+      <header className="relative pt-16 pb-28 text-center overflow-hidden bg-black border-b border-white/5">
+        <div className="absolute inset-0 opacity-20 led-scan-bar pointer-events-none z-0" style={{
           backgroundImage: 'linear-gradient(90deg, transparent, #BF5FFF, #00F3FF, transparent)',
           backgroundSize: '300% 100%'
         }} />
 
         <div className="relative z-10 max-w-4xl mx-auto px-4">
-          <div className="relative inline-block mb-4">
-            <div className="absolute inset-0 bg-cyan-400 blur-[50px] opacity-30 rounded-full scale-125 animate-pulse" />
-            <img src={PATA_LOGO} className="w-16 h-auto mx-auto relative z-10 drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)]" alt="Tigre FC Logo" />
+          <div className="relative inline-block mb-6">
+            <div className="absolute inset-0 bg-cyan-400 blur-[60px] opacity-20 rounded-full scale-150 animate-pulse" />
+            <img src={PATA_LOGO} className="w-20 h-auto mx-auto relative z-10 drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]" alt="Tigre FC Logo" />
           </div>
-          <h1 className="text-6xl font-black text-white italic uppercase leading-[0.85] tracking-tighter mb-4 led-cyan">
+          <h1 className="text-7xl font-black text-white italic uppercase leading-[0.8] tracking-tighter mb-6">
             TIGRE <span className="text-[#F5C400]">FC</span>
           </h1>
-          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-black/40 rounded-full shadow-lg border border-white/10">
-            <div className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-pulse" />
-            <p className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.4em]">Broadcast Station</p>
-            <div className="h-1.5 w-1.5 bg-cyan-400 rounded-full animate-pulse" />
+          <div className="inline-flex items-center gap-4 px-6 py-2 bg-white/5 rounded-full backdrop-blur-md border border-white/10">
+            <div className="h-2 w-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_#00F3FF]" />
+            <p className="text-[11px] font-black text-cyan-400 uppercase tracking-[0.5em]">Broadcast Station</p>
+            <div className="h-2 w-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_#00F3FF]" />
           </div>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-20 space-y-12">
-        {/* Jumbotron Principal (NBA/NFL Style) */}
-        {jogo ? (
-          <section className="mb-10">
+      <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-20 space-y-16">
+        {/* Jumbotron Principal */}
+        {jogo && (
+          <section>
             <JumbotronJogo
               jogo={jogo}
               mercadoFechado={mercadoFechado}
               stats={statsFinal}
             />
           </section>
-        ) : !isLoading && (
-          <div className="mb-10 p-8 bg-zinc-900/30 rounded-3xl text-center border border-white/5">
-            <p className="text-zinc-500 font-black uppercase text-[10px] tracking-widest">Aguardando Próxima Partida</p>
-          </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-          {/* Coluna Esquerda: Chat em Tempo Real */}
-          <section className="h-[600px] rounded-[40px] border border-white/5 overflow-hidden bg-black/40 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {/* Coluna Esquerda: Chat */}
+          <section className="h-[650px] rounded-[48px] border border-white/10 overflow-hidden bg-black/60 backdrop-blur-xl relative shadow-2xl">
             <TigreFCChat usuarioId={meuId} />
           </section>
 
-          {/* Coluna Direita: Destaques e Ranking Lateral */}
-          <div className="space-y-8">
+          {/* Coluna Direita: FIFA Style Highlights & Ranking */}
+          <div className="space-y-10">
             <DestaquesFifa />
             
-            <section>
-              <div className="flex justify-between items-end mb-6 px-4">
+            <section className="bg-zinc-900/20 p-8 rounded-[40px] border border-white/5">
+              <div className="flex justify-between items-end mb-8">
                 <div>
-                  <h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-500 mb-1">Global Ranking</h2>
-                  <p className="text-xl font-black uppercase italic tracking-tighter text-white">Elite Top Performance</p>
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-500 mb-2">Global Ranking</h2>
+                  <p className="text-2xl font-black uppercase italic tracking-tighter text-white">Elite Performance</p>
                 </div>
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {ranking.slice(0, 5).map((u, i) => (
                   <div key={u.id} onClick={() => setPerfilAberto(u.id)}
-                    className={`flex items-center p-4 rounded-3xl border cursor-pointer transition-all hover:scale-[1.01] ${
+                    className={`flex items-center p-5 rounded-3xl border cursor-pointer transition-all hover:scale-[1.02] ${
                       i === 0 
-                        ? 'bg-gradient-to-r from-[#F5C400] to-[#D4A200] border-none text-black' 
-                        : 'bg-zinc-900/40 border-white/5 hover:border-white/15'
+                        ? 'bg-gradient-to-r from-[#F5C400] to-[#FFD700] border-none text-black' 
+                        : 'bg-white/5 border-white/5 hover:border-white/20'
                     }`}>
-                    <span className={`w-8 text-center font-black italic ${i === 0 ? 'text-black/40' : 'opacity-50'}`}>
-                      {i + 1}º
+                    <span className={`w-10 text-lg font-black italic ${i === 0 ? 'text-black/40' : 'text-zinc-500'}`}>
+                      {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="flex-1">
                       <p className="font-black uppercase italic text-sm truncate">{u.apelido || u.nome}</p>
                     </div>
-                    <p className="font-black text-xl leading-none">{u.pontos_total ?? 0}</p>
+                    <div className="text-right">
+                      <p className="font-black text-xl leading-none">{u.pontos_total ?? 0}</p>
+                      <p className={`text-[8px] font-bold ${i === 0 ? 'text-black/50' : 'text-zinc-500'}`}>PONTOS</p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -280,7 +258,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         </div>
       </div>
 
-      {/* Modal de Perfil Público */}
       {perfilAberto && (
         <TigreFCPerfilPublico
           targetUsuarioId={perfilAberto}
@@ -290,18 +267,16 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       )}
 
       <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,900&display=swap');
+        
         ::-webkit-scrollbar { width: 0px; }
         body { 
           background-color: #050505; 
           color: white; 
           font-family: 'Barlow Condensed', sans-serif !important; 
         }
-        .led-cyan { 
-          color: #00F3FF !important; 
-          text-shadow: 0 0 10px rgba(0,243,255,0.7) !important; 
-        }
         .led-scan-bar { 
-          animation: led-scan-header 5s linear infinite; 
+          animation: led-scan-header 6s linear infinite; 
         }
         @keyframes led-scan-header {
           0%   { background-position: -300% 0; }
