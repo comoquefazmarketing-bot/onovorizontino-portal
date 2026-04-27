@@ -9,6 +9,19 @@ import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
+// ── DEFINIÇÃO DA INTERFACE PARA O BUILD ────────────────
+interface Stats {
+  ranking: { nome: string; apelido: string | null; pontos: number }[];
+  capitao: { nome: string; pts: number };
+  heroi: { nome: string; pts: number };
+  posicao: number;
+  golsSofridos: number;
+  mediaSofaTime: number;
+  mvp: { nome: string; media: number };
+  participantes: number;
+  [key: string]: any; // Permite flexibilidade futura
+}
+
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
   const resolvedParams = use(params);
   const [mounted, setMounted] = useState(false);
@@ -51,6 +64,22 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   if (!mounted) return <div className="min-h-screen bg-[#050505]" />;
 
+  // Montagem do objeto Stats com tipagem explícita para evitar erro de 'Object literal'
+  const statsParaJumbotron: Stats = {
+    ranking: ranking.map(u => ({ 
+      nome: u.nome, 
+      apelido: u.apelido, 
+      pontos: u.pontos_total ?? 0 
+    })),
+    capitao: { nome: 'CÉSAR', pts: 6.9 }, 
+    heroi: { nome: 'DANTAS', pts: 7.1 },
+    posicao: 9, 
+    golsSofridos: 6, 
+    mediaSofaTime: 6.95, 
+    mvp: { nome: 'Dantas', media: 7.1 }, 
+    participantes: ranking.length
+  };
+
   return (
     <main className="min-h-screen bg-[#050505] text-white pb-20 overflow-x-hidden" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
       <style jsx global>{` 
@@ -80,17 +109,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           <JumbotronJogo 
             jogo={jogo} 
             mercadoFechado={mercadoFechado} 
-            stats={{
-              ranking: ranking.map(u => ({ nome: u.nome, apelido: u.apelido, pontos: u.pontos_total ?? 0 })),
-              // Removido o campo 'foto' temporariamente para o TS não dar erro de compilação
-              capitao: { nome: 'CÉSAR', pts: 6.9 }, 
-              heroi: { nome: 'DANTAS', pts: 7.1 },
-              posicao: 9, 
-              golsSofridos: 6, 
-              mediaSofaTime: 6.95, 
-              mvp: { nome: 'Dantas', media: 7.1 }, 
-              participantes: ranking.length
-            }}
+            stats={statsParaJumbotron}
           />
         )}
 
@@ -143,7 +162,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
       <AnimatePresence>
         {perfilAberto && (
-          <TigreFCPerfilPublico targetUsuarioId={perfilAberto} viewerUsuarioId={meuId} onClose={() => setPerfilAberto(null)} />
+          <TigreFCPerfilPublico targetUsuarioId={perfilAberto} viewerUsuarioId={meuId || undefined} onClose={() => setPerfilAberto(null)} />
         )}
       </AnimatePresence>
 
