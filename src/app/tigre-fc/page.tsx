@@ -10,28 +10,13 @@ import TigreNewsFlash from '@/components/tigre-fc/TigreNewsFlash';
 
 const URL_AVAI = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png";
 
-const JOGO_FALLBACK = {
-  id: 12,
-  competicao: 'COPA SUL-SUDESTE',
-  rodada: '7',
-  data_hora: '2026-05-03T21:00:00+00:00',
-  mandante: { nome: 'AVAÍ', escudo_url: URL_AVAI },
-  visitante: { nome: 'NOVORIZONTINO', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png' }
-};
-
 export default function TigreFCPage() {
   const [mounted, setMounted] = useState(false);
   const [meuId, setMeuId] = useState<string | null>(null);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
   const [ranking, setRanking] = useState<any[]>([]);
-  const [noticiasCluster, setNoticiasCluster] = useState<any[]>([]);
-  const [jogo, setJogo] = useState<any>(JOGO_FALLBACK);
-  const [stats, setStats] = useState({
-    capitao: { nome: '---', pts: 0 },
-    heroi: { nome: '---', pts: 0 }
-  });
+  const [jogo, setJogo] = useState<any>(null);
 
-  // Garante que a página inicie no topo e registra montagem
   useEffect(() => {
     setMounted(true);
     window.scrollTo(0, 0);
@@ -41,49 +26,22 @@ export default function TigreFCPage() {
     if (!mounted) return;
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
-      let userId = null;
       if (session?.user) {
         const { data: u } = await sb.from('tigre_fc_usuarios').select('id').eq('google_id', session.user.id).maybeSingle();
-        if (u) { userId = u.id; setMeuId(u.id); }
+        if (u) setMeuId(u.id);
       }
 
-      // Parallel Fetch: Jogo, Ranking e Cluster de Notícias
-      const [resJogo, resRank, resNews] = await Promise.all([
+      const [resJogo, resRank] = await Promise.all([
         sb.from('jogos_tigre').select('*, mandante:times(*), visitante:times(*)').eq('ativo', true).maybeSingle(),
         sb.from('tigre_fc_usuarios')
           .select('id, nome, apelido, pontos_total, avatar_url')
           .not('pontos_total', 'is', null)
           .order('pontos_total', { ascending: false })
-          .limit(6),
-        sb.from('postagens')
-          .select('titulo')
-          .eq('status', 'publicado')
-          .order('criado_em', { ascending: false })
-          .limit(3)
+          .limit(6)
       ]);
 
       if (resRank.data) setRanking(resRank.data);
-      if (resNews.data) setNoticiasCluster(resNews.data);
-
-      if (resJogo.data) {
-        const g = resJogo.data;
-        if (g.mandante?.nome?.toUpperCase() === 'AVAÍ') g.mandante.escudo_url = URL_AVAI;
-        setJogo(g);
-
-        if (userId) {
-          const { data: esc } = await sb.from('tigre_fc_escalacoes')
-            .select('capitao_nome, heroi_nome')
-            .eq('usuario_id', userId)
-            .eq('jogo_id', g.id)
-            .maybeSingle();
-          if (esc) {
-            setStats({
-              capitao: { nome: esc.capitao_nome || '---', pts: 0 },
-              heroi: { nome: esc.heroi_nome || '---', pts: 0 }
-            });
-          }
-        }
-      }
+      if (resJogo.data) setJogo(resJogo.data);
     }
     init();
   }, [mounted]);
@@ -91,100 +49,148 @@ export default function TigreFCPage() {
   if (!mounted) return null;
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white font-sans selection:bg-yellow-400/30 flex flex-col">
+    <main className="min-h-screen bg-[#030303] text-white font-sans overflow-x-hidden flex flex-col relative">
       
-      {/* HEADER FIFA 26 */}
-      <header className="relative pt-16 pb-24 text-center overflow-hidden border-b border-white/5">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(245,196,0,0.1)_0%,transparent_60%)]" />
-        <h1 className="text-8xl font-black italic uppercase tracking-tighter leading-none opacity-90 mix-blend-lighten">
-          TIGRE <span className="text-[#F5C400]">FC</span>
-        </h1>
-        <div className="inline-block mt-4 px-6 py-1 bg-white/5 border border-white/10 rounded-full">
-          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.5em]">Live Match Engine</p>
-        </div>
-      </header>
-
-      {/* GRID PRINCIPAL */}
-      <div className="max-w-7xl mx-auto w-full px-4 -mt-12 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20 flex-1">
+      {/* ── CAMADA DE FX: BACKGROUND ELETRIZADO ── */}
+      <div className="fixed inset-0 z-0">
+        {/* Gradiente de Profundidade */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#F5C40033_0%,transparent_50%)] opacity-40" />
         
-        {/* COLUNA ESQUERDA: RANKING & CLUSTER NOTÍCIAS */}
-        <aside className="lg:col-span-3 space-y-6">
-          {/* RANKING */}
-          <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-[32px] p-6 shadow-2xl">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-6">Global Leaderboard</h2>
-            <div className="space-y-3">
-              {ranking.map((u, i) => (
-                <button 
-                  key={u.id}
-                  onClick={() => setPerfilAberto(u.id)}
-                  className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-transparent hover:border-yellow-400/20 transition-all group"
-                >
-                  <span className="text-sm font-black italic text-zinc-600 group-hover:text-yellow-400">#{i+1}</span>
-                  <div className="flex-1 text-left">
-                    <p className="text-xs font-black uppercase truncate">{u.apelido || u.nome}</p>
-                    <p className="text-[9px] font-bold text-zinc-500">{u.pontos_total || 0} SCORE</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* CLUSTER DE NOTÍCIAS (DESIGN LÍMPO) */}
-          <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-[32px] p-6 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-yellow-400/20" />
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-yellow-400 mb-6 px-2">Neural News Flash</h2>
-            <div className="space-y-6 px-2">
-              {noticiasCluster.map((n, i) => (
-                <div key={i} className="group cursor-pointer">
-                  <p className="text-[9px] font-black text-zinc-600 uppercase mb-1 tracking-tighter">Broadcast Update 0{i+1}</p>
-                  <p className="text-[11px] font-bold leading-tight group-hover:text-yellow-400 transition-colors uppercase italic">{n.titulo}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        {/* CENTRO: JUMBOTRON E CHAT */}
-        <div className="lg:col-span-6 space-y-6">
-          <JumbotronJogo jogo={jogo} stats={stats} />
-          <div className="bg-zinc-900/60 backdrop-blur-2xl border border-white/10 rounded-[48px] h-[650px] overflow-hidden shadow-2xl">
-            <TigreFCChat usuarioId={meuId} />
-          </div>
+        {/* Scanlines (Linhas de TV antiga/Monitor Gamer) */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] z-10 bg-[length:100%_4px,3px_100%] pointer-events-none" />
+        
+        {/* Efeito de Fumaça/Neblina Animada */}
+        <div className="absolute inset-0 opacity-30 mix-blend-screen overflow-hidden">
+          <div className="absolute -inset-[100%] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-slow-pan pointer-events-none" />
         </div>
 
-        {/* DESTAQUES À DIREITA */}
-        <aside className="lg:col-span-3">
-          <DestaquesFifa />
-        </aside>
+        {/* Holofotes Dinâmicos */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-yellow-500/10 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-yellow-600/5 rounded-full blur-[150px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
       </div>
 
-      {/* RODAPÉ COM TICKER NOTÍCIAS */}
-      <footer className="mt-auto">
+      {/* ── CONTEÚDO (Z-INDEX SUPERIOR) ── */}
+      <div className="relative z-20 flex flex-col flex-1">
+        
+        {/* HEADER TITANIC */}
+        <header className="relative pt-24 pb-32 text-center">
+          <div className="inline-block relative">
+             <h1 className="text-9xl font-black italic uppercase tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-700 animate-glow">
+              TIGRE <span className="text-[#F5C400] drop-shadow-[0_0_30px_rgba(245,196,0,0.5)]">FC</span>
+            </h1>
+            <div className="absolute -top-4 -right-8 bg-red-600 text-[10px] font-black px-2 py-0.5 transform rotate-12 animate-bounce">
+              LIVE
+            </div>
+          </div>
+          
+          <div className="mt-6 flex justify-center gap-4">
+            <div className="h-[1px] w-24 bg-gradient-to-r from-transparent to-yellow-500 self-center" />
+            <p className="text-[11px] font-black text-yellow-500 uppercase tracking-[0.8em] drop-shadow-neon">
+              Next Gen Experience
+            </p>
+            <div className="h-[1px] w-24 bg-gradient-to-l from-transparent to-yellow-500 self-center" />
+          </div>
+        </header>
+
+        {/* GRID DE JOGO */}
+        <div className="max-w-[1400px] mx-auto w-full px-6 -mt-16 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24">
+          
+          {/* RANKING LATERAL (NEON BOX) */}
+          <aside className="lg:col-span-3 space-y-6">
+            <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative group overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-ping" />
+                Live Ranking
+              </h2>
+              <div className="space-y-3">
+                {ranking.map((u, i) => (
+                  <div key={u.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-yellow-500/10 hover:border-yellow-500/30 transition-all cursor-pointer group/item">
+                    <span className="text-xl font-black italic text-zinc-800 group-hover/item:text-yellow-500/50">0{i+1}</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-black uppercase tracking-tight">{u.apelido || u.nome}</p>
+                      <div className="w-full bg-zinc-800 h-1 mt-1.5 rounded-full overflow-hidden">
+                        <div className="bg-yellow-500 h-full shadow-[0_0_10px_#F5C400]" style={{ width: `${100 - (i*12)}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          {/* MAIN ARENA (JUMBOTRON & CHAT) */}
+          <div className="lg:col-span-6 space-y-8">
+            <div className="transform transition-transform hover:scale-[1.01] duration-500">
+              <JumbotronJogo jogo={jogo} />
+            </div>
+            
+            <div className="bg-zinc-900/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] h-[700px] overflow-hidden shadow-2xl relative">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none" />
+              <TigreFCChat usuarioId={meuId} />
+            </div>
+          </div>
+
+          {/* RIGHT SIDE: CARDS FIFA */}
+          <aside className="lg:col-span-3">
+            <DestaquesFifa />
+          </aside>
+        </div>
+      </div>
+
+      {/* FOOTER BROADCAST */}
+      <footer className="relative z-30 mt-auto">
         <TigreNewsFlash />
-        <div className="bg-black py-4 border-t border-white/5 text-center">
-          <p className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
-            Tigre FC • Broadcast Interface v2.6
-          </p>
+        <div className="bg-black/90 backdrop-blur-md py-6 border-t border-white/10 flex justify-center items-center gap-8">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">System Online</span>
+          </div>
+          <p className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">© 2026 TIGRE FC DIGITAL ARENA</p>
+          <div className="text-[10px] font-black text-yellow-500/50 uppercase tracking-[0.3em]">V2.6.0-PRO</div>
         </div>
       </footer>
 
-      {/* MODAL PERFIL */}
-      {perfilAberto && (
-        <TigreFCPerfilPublico
-          targetUsuarioId={perfilAberto}
-          viewerUsuarioId={meuId || undefined}
-          onClose={() => setPerfilAberto(null)}
-        />
-      )}
-
+      {/* ESTILOS DE ANIMAÇÃO "GAME-ON" */}
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,900;1,900&display=swap');
+        
         body { 
-          font-family: 'Barlow Condensed', sans-serif !important; 
-          background-color: #050505; 
-          scroll-behavior: smooth;
+          background-color: #030303;
+          font-family: 'Barlow Condensed', sans-serif !important;
+          overflow-x: hidden;
         }
-        ::-webkit-scrollbar { width: 0px; }
+
+        @keyframes slow-pan {
+          from { background-position: 0 0; }
+          to { background-position: 1000px 1000px; }
+        }
+
+        .animate-slow-pan {
+          animation: slow-pan 60s linear infinite;
+        }
+
+        .animate-pulse-slow {
+          animation: pulse 8s ease-in-out infinite;
+        }
+
+        .drop-shadow-neon {
+          filter: drop-shadow(0 0 5px rgba(245,196,0,0.4));
+        }
+
+        .animate-glow {
+          filter: drop-shadow(0 0 20px rgba(255,255,255,0.1));
+          animation: text-glow 4s ease-in-out infinite;
+        }
+
+        @keyframes text-glow {
+          0%, 100% { filter: drop-shadow(0 0 20px rgba(255,255,255,0.1)); }
+          50% { filter: drop-shadow(0 0 40px rgba(245,196,0,0.2)); }
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #F5C400; border-radius: 10px; }
       `}</style>
     </main>
   );
