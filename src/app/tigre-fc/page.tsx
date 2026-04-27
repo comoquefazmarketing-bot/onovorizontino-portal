@@ -41,14 +41,16 @@ interface MVPData {
   media: number;
 }
 
-// 🔑 Interface Stats para resolver o erro da Vercel
+// 🔑 Interface Stats perfeitamente alinhada com o Componente
 interface Stats {
   ranking: { apelido: string; pontos: number }[];
   participantes: number;
   posicao?: number;
-  mediaSofa: number;
-  golsSofridos: number;
-  mvp: { nome: string; media: number };
+  mediaSofa?: number;
+  golsSofridos?: number;
+  mvp?: { nome: string; media: number };
+  capitao?: { nome: string; pts: number };
+  heroi?: { nome: string; pts: number };
   [key: string]: any; 
 }
 
@@ -57,7 +59,29 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   const [mounted, setMounted]               = useState(false);
   const [isLoading, setIsLoading]            = useState(true);
-  const [jogo, setJogo]                     = useState<Jogo | null>(null);
+  
+  // Forçando Avaí no estado inicial para garantir atualização visual
+  const [jogo, setJogo]                     = useState<Jogo | null>({
+    id: 12,
+    competicao: 'SÉRIE B 2026',
+    rodada: '7',
+    data_hora: '2026-05-03T21:00:00+00:00',
+    local: 'ESTÁDIO DA RESSACADA — SC',
+    transmissao: 'ESPN · DISNEY+',
+    mandante: { 
+      id: 1, 
+      nome: 'AVAÍ', 
+      escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AVAI.png', 
+      sigla: 'AVA' 
+    },
+    visitante: { 
+      id: 2, 
+      nome: 'NOVORIZONTINO', 
+      escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png', 
+      sigla: 'NOV' 
+    }
+  });
+
   const [ranking, setRanking]               = useState<UsuarioRanking[]>([]);
   const [meuId, setMeuId]                   = useState<string | null>(null);
   const [minhaPosicao, setMinhaPosicao]     = useState<number | null>(null);
@@ -151,7 +175,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
 
   if (!mounted) return <div className="min-h-screen bg-[#050505]" />;
 
-  // ── Preparação das Stats para o Jumbotron ────────────────
   const statsFinal: Stats = {
     ranking: ranking.map(u => ({
       apelido: u.apelido || u.nome || 'Jogador',
@@ -162,13 +185,14 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
     mediaSofa: mvp?.media ?? 0,
     golsSofridos: 0,
     mvp: mvp ?? { nome: '—', media: 0 },
+    capitao: { nome: '---', pts: 0 },
+    heroi: { nome: '---', pts: 0 }
   };
 
   return (
     <main className="min-h-screen bg-[#050505] text-white pb-40 font-sans overflow-x-hidden">
       <div ref={topRef} tabIndex={-1} className="pt-2 outline-none" />
 
-      {/* ── HEADER ── */}
       <header className="relative pt-12 pb-24 text-center overflow-hidden bg-black border-b border-white/5">
         <div className="absolute inset-0 opacity-10 led-scan-bar pointer-events-none z-0" style={{
           backgroundImage: 'linear-gradient(90deg, transparent, #BF5FFF, #00F3FF, transparent)',
@@ -192,7 +216,6 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
       </header>
 
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-20 space-y-12">
-        {/* ── JUMBOTRON ── */}
         {jogo ? (
           <section className="mb-10">
             <JumbotronJogo
