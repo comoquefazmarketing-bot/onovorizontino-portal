@@ -72,7 +72,7 @@ const NOMES: Record<string, string> = {
 };
 
 const slugToNome = (slug?: string) => (slug ? NOMES[slug] ?? slug.replace(/-/g, ' ').toUpperCase() : '---');
-const slugToLogo = (slug?: string) => (slug ? LOGOS[slug] ?? ESCUDO_NOVORIZONTINO : ESCUDO_NOVORIZONTINO);
+const slugToLogo = (slug?: string) => (slug ? LOGOS[slug] ?? ESCUDO_AVAI_OFICIAL : ESCUDO_NOVORIZONTINO);
 
 // ════════════════════════════════════════════════════════════════════════════
 // TIPOS
