@@ -55,7 +55,7 @@ export type Jogo = {
   placar_mandante?: number | null;
   placar_visitante?: number | null;
   finalizado?: boolean | null;
-  data_hora?: string | null; // Sincronizado com seu JSON
+  data_hora?: string | null; 
   local?: string | null;
   transmissao?: string | null;
 };
@@ -71,6 +71,7 @@ export type JumbotronJogoProps = {
   onEscalar?: () => void;
   loading?: boolean;
   stats?: any;
+  mercadoFechado?: boolean; // Adicionado para corrigir erro de build
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -111,6 +112,7 @@ export default function JumbotronJogo({
   onEscalar,
   loading = false,
   stats,
+  mercadoFechado = false,
 }: JumbotronJogoProps) {
 
   // Lógica de Extração de Dados
@@ -125,6 +127,10 @@ export default function JumbotronJogo({
 
   const countdown = useCountdown(j.data_hora);
   const dataFormatada = j.data_hora ? new Date(j.data_hora.replace(' ', 'T')).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+
+  const ctaLabel = mercadoFechado 
+    ? '🔒 MERCADO FECHADO' 
+    : (stats?.capitao ? '✏️ EDITAR MINHA ESCALAÇÃO' : '⚡ ESCALAR MEU TIME AGORA');
 
   if (loading) return <div className="w-full h-64 bg-zinc-900 animate-pulse rounded-3xl" />;
 
@@ -211,16 +217,23 @@ export default function JumbotronJogo({
         
         <div className="text-center">
            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{j.local}</p>
+           {dataFormatada && <p className="text-[9px] text-zinc-600 mt-1">{dataFormatada}</p>}
         </div>
       </div>
 
       {/* Botão de Ação (FIFA Style) */}
-      <Link 
-        href={`/tigre-fc/escalar/${j.id}`}
-        className="block w-full py-5 bg-gradient-to-r from-[#F5C400] to-[#ffaa00] text-black text-center font-black italic tracking-[4px] text-sm hover:brightness-110 transition-all uppercase"
-      >
-        {stats?.capitao ? '✏️ EDITAR MINHA ESCALAÇÃO' : '⚡ ESCALAR MEU TIME AGORA'}
-      </Link>
+      {mercadoFechado ? (
+        <div className="block w-full py-5 bg-zinc-800 text-zinc-500 text-center font-black italic tracking-[4px] text-sm uppercase">
+          {ctaLabel}
+        </div>
+      ) : (
+        <Link 
+          href={`/tigre-fc/escalar/${j.id}`}
+          className="block w-full py-5 bg-gradient-to-r from-[#F5C400] to-[#ffaa00] text-black text-center font-black italic tracking-[4px] text-sm hover:brightness-110 transition-all uppercase"
+        >
+          {ctaLabel}
+        </Link>
+      )}
 
       <div className="bg-black/80 py-2 text-center border-t border-white/5">
         <span className="text-[9px] font-bold text-zinc-500 tracking-widest uppercase">
