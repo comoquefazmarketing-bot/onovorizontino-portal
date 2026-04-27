@@ -146,6 +146,7 @@ function FutCard({ player, escalado, pending, onClick, getValidPhotoUrl }: FutCa
           src={getValidPhotoUrl(player.foto)}
           alt={player.short}
           className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${escalado ? 'opacity-30 grayscale' : ''}`}
+          style={{ objectPosition: '15% center' }}
           onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
         />
         {!escalado && (
@@ -284,7 +285,7 @@ function DraggableSlot({
             #{state.player.num}
           </div>
           <img src={getValidPhotoUrl(state.player.foto)} alt={state.player.short}
-            className="w-full h-full object-cover" draggable={false}
+            className="w-full h-full object-cover" style={{ objectPosition: '85% center' }} draggable={false}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
           <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-r ${colors?.bar} py-0.5`}>
             <span className="text-[8px] md:text-[9px] font-black text-black block text-center leading-tight">
@@ -872,79 +873,224 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
 
         {step === 'captain' && (
           <motion.div key="captain" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto">
-            <div className="text-center mb-8">
+            className="flex-1 flex flex-col items-center justify-start p-4 sm:p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto">
+
+            <div className="text-center mb-6 mt-4">
               <div className="text-yellow-400 text-xs font-black tracking-[6px] mb-2">ETAPA 3 DE 5</div>
-              <div className="inline-block px-8 py-2 bg-yellow-500/10 border border-yellow-400 rounded-full text-yellow-400 text-sm font-black tracking-widest mb-4">CAPITÃO 👑</div>
-              <h1 className="text-4xl font-black italic text-yellow-400 tracking-tighter">ESCOLHA O LÍDER DO TIGRE</h1>
-              <p className="text-zinc-500 text-sm mt-2">Pontua em dobro se for o melhor em campo</p>
+              <div className="inline-flex items-center gap-2 px-5 py-2 bg-yellow-500/15 border-2 border-yellow-400 rounded-full text-yellow-400 text-sm font-black tracking-widest mb-3 shadow-[0_0_25px_rgba(250,204,21,0.3)]">
+                <span className="text-xl">👑</span> CAPITÃO
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black italic text-yellow-400 tracking-tighter">ESCOLHA O LÍDER</h1>
+              <div className="mt-3 inline-block px-4 py-1.5 bg-yellow-400 text-black rounded-md text-xs font-black tracking-wider">
+                ⚡ PONTUA 2× MAIS QUE OS OUTROS
+              </div>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 max-w-3xl">
-              {selectedPlayers.map(p => {
+
+            {!captainId ? (
+              <>
+                <p className="text-zinc-400 text-sm mb-4 text-center max-w-md">
+                  Toca no jogador que você acredita que vai brilhar. Os pontos dele valem dobrado no ranking.
+                </p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl pb-8">
+                  {selectedPlayers.map(p => {
+                    const colors = getRarityColors(p.ovr ?? 75);
+                    return (
+                      <motion.button key={p.id} whileHover={{ scale: 1.08, y: -4 }} whileTap={{ scale: 0.95 }}
+                        onClick={() => setCaptainId(p.id)}
+                        className="relative p-2 rounded-2xl border-2 border-white/20 hover:border-yellow-400/60 transition-all overflow-hidden"
+                        style={{ background: `linear-gradient(180deg, ${colors.border}33 0%, #0a0a0a 60%)` }}>
+                        <div className="flex justify-between mb-1 px-1">
+                          <span className="text-base font-black text-white tabular-nums leading-none">{p.ovr}</span>
+                          <span className="text-[10px] font-black tracking-wider" style={{ color: colors.border }}>{p.pos}</span>
+                        </div>
+                        <img src={getValidPhotoUrl(p.foto)} alt={p.short}
+                          className="w-full aspect-[3/4] object-cover rounded-xl"
+                          style={{ objectPosition: '15% center' }} />
+                        <p className="text-center mt-2 font-black text-sm tracking-wide truncate">{p.short}</p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => setStep('arena')}
+                  className="text-zinc-500 hover:text-white text-xs font-black tracking-widest pb-6">← VOLTAR PARA O CAMPO</button>
+              </>
+            ) : (
+              // PREVIEW: jogador escolhido em destaque
+              (() => {
+                const p = selectedPlayers.find(pl => pl.id === captainId);
+                if (!p) return null;
                 const colors = getRarityColors(p.ovr ?? 75);
                 return (
-                  <motion.button key={p.id} whileHover={{ scale: 1.08, y: -4 }} whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSelectCaptain(p.id)}
-                    className={`relative p-2 rounded-2xl border-4 transition-all overflow-hidden ${
-                      captainId === p.id
-                        ? 'border-yellow-400 shadow-[0_0_50px_#facc15] scale-110'
-                        : 'border-white/20 hover:border-white/40'
-                    }`}
-                    style={{ background: `linear-gradient(180deg, ${colors.border}33 0%, #0a0a0a 60%)` }}>
-                    <div className="flex justify-between mb-1 px-1">
-                      <span className="text-lg font-black text-white tabular-nums leading-none">{p.ovr}</span>
-                      <span className="text-[10px] font-black tracking-wider" style={{ color: colors.border }}>{p.pos}</span>
+                  <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+                    className="flex flex-col items-center w-full max-w-sm">
+                    <div className="relative">
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                        className="absolute -inset-3 rounded-3xl"
+                        style={{ background: 'conic-gradient(from 0deg, #fbbf24, transparent, #fbbf24)' }} />
+                      <div className="relative p-3 rounded-3xl border-4 border-yellow-400 overflow-hidden shadow-[0_0_60px_#facc15]"
+                        style={{ background: `linear-gradient(180deg, ${colors.border}66 0%, #0a0a0a 70%)` }}>
+                        <div className="flex justify-between mb-2 px-2">
+                          <div>
+                            <div className="text-3xl font-black text-white tabular-nums leading-none">{p.ovr}</div>
+                            <div className="text-xs font-black tracking-wider mt-0.5" style={{ color: colors.border }}>{p.pos}</div>
+                          </div>
+                          <div className="text-sm font-black bg-black/60 text-white px-2 py-0.5 rounded h-fit">#{p.num}</div>
+                        </div>
+                        <img src={getValidPhotoUrl(p.foto)} alt={p.short}
+                          className="w-48 h-64 object-cover rounded-xl mx-auto"
+                          style={{ objectPosition: '15% center' }} />
+                        <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
+                          className="absolute -top-3 -right-3 w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center font-black text-black text-4xl shadow-[0_0_30px_#facc15] z-20">
+                          C
+                        </motion.div>
+                        <div className="text-center mt-3">
+                          <div className="text-yellow-400 text-[10px] font-black tracking-[3px] mb-1">SEU CAPITÃO</div>
+                          <div className="text-2xl font-black italic">{p.short}</div>
+                        </div>
+                      </div>
                     </div>
-                    <img src={getValidPhotoUrl(p.foto)} alt={p.short} className="w-full aspect-[3/4] object-cover rounded-xl" />
-                    {captainId === p.id && (
-                      <div className="absolute -top-2 -right-2 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center font-black text-black text-2xl shadow-[0_0_25px_#facc15] z-10">C</div>
-                    )}
-                    <p className="text-center mt-2 font-black text-sm tracking-wide">{p.short}</p>
-                  </motion.button>
+
+                    <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-4 py-2 mt-5 mb-5 text-center">
+                      <span className="text-yellow-300 text-xs font-black tracking-wider">
+                        ⚡ Os pontos de <span className="text-yellow-400">{p.short}</span> valerão <span className="text-yellow-400">2×</span>
+                      </span>
+                    </div>
+
+                    <div className="flex gap-3 w-full">
+                      <button onClick={() => setCaptainId(null)}
+                        className="flex-1 py-4 bg-zinc-900 border-2 border-white/15 rounded-2xl text-xs font-black tracking-wider hover:border-white/30">
+                        ← TROCAR
+                      </button>
+                      <motion.button whileTap={{ scale: 0.95 }} onClick={() => setStep('hero')}
+                        className="flex-[2] py-4 bg-gradient-to-r from-yellow-400 to-amber-400 text-black rounded-2xl text-sm font-black tracking-wider shadow-[0_0_30px_rgba(250,204,21,0.5)]">
+                        CONFIRMAR CAPITÃO →
+                      </motion.button>
+                    </div>
+                  </motion.div>
                 );
-              })}
-            </div>
-            <button onClick={() => setStep('arena')}
-              className="mt-8 text-zinc-500 hover:text-white text-xs font-black tracking-widest">← VOLTAR PARA O CAMPO</button>
+              })()
+            )}
           </motion.div>
         )}
 
         {step === 'hero' && (
           <motion.div key="hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto">
-            <div className="text-center mb-8">
+            className="flex-1 flex flex-col items-center justify-start p-4 sm:p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto">
+
+            <div className="text-center mb-6 mt-4">
               <div className="text-cyan-400 text-xs font-black tracking-[6px] mb-2">ETAPA 4 DE 5</div>
-              <div className="inline-block px-8 py-2 bg-cyan-400/10 border border-cyan-400 rounded-full text-cyan-400 text-sm font-black tracking-widest mb-4">HERÓI DA PARTIDA 🔥</div>
-              <h1 className="text-4xl font-black italic text-cyan-400 tracking-tighter">QUEM VAI DECIDIR O JOGO?</h1>
-              <p className="text-zinc-500 text-sm mt-2">Bônus extra se ele for o decisivo</p>
+              <div className="inline-flex items-center gap-2 px-5 py-2 bg-cyan-400/15 border-2 border-cyan-400 rounded-full text-cyan-400 text-sm font-black tracking-widest mb-3 shadow-[0_0_25px_rgba(34,211,238,0.3)]">
+                <span className="text-xl">🔥</span> HERÓI DA PARTIDA
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black italic text-cyan-400 tracking-tighter">QUEM VAI DECIDIR?</h1>
+              <div className="mt-3 inline-block px-4 py-1.5 bg-cyan-400 text-black rounded-md text-xs font-black tracking-wider">
+                ⚡ +50% DE BÔNUS SE MARCAR OU DAR ASSISTÊNCIA
+              </div>
+              {captainId && (
+                <div className="mt-3 text-[11px] text-zinc-500">
+                  Capitão: <span className="text-yellow-400 font-black">👑 {selectedPlayers.find(p => p.id === captainId)?.short}</span>
+                </div>
+              )}
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 max-w-3xl">
-              {selectedPlayers.filter(p => p.id !== captainId).map(p => {
+
+            {!heroId ? (
+              <>
+                <p className="text-zinc-400 text-sm mb-4 text-center max-w-md">
+                  Aposte no jogador que vai resolver o jogo (não pode ser o capitão).
+                </p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl pb-8">
+                  {selectedPlayers.filter(p => p.id !== captainId).map(p => {
+                    const colors = getRarityColors(p.ovr ?? 75);
+                    return (
+                      <motion.button key={p.id} whileHover={{ scale: 1.08, y: -4 }} whileTap={{ scale: 0.95 }}
+                        onClick={() => setHeroId(p.id)}
+                        className="relative p-2 rounded-2xl border-2 border-white/20 hover:border-cyan-400/60 transition-all overflow-hidden"
+                        style={{ background: `linear-gradient(180deg, ${colors.border}33 0%, #0a0a0a 60%)` }}>
+                        <div className="flex justify-between mb-1 px-1">
+                          <span className="text-base font-black text-white tabular-nums leading-none">{p.ovr}</span>
+                          <span className="text-[10px] font-black tracking-wider" style={{ color: colors.border }}>{p.pos}</span>
+                        </div>
+                        <img src={getValidPhotoUrl(p.foto)} alt={p.short}
+                          className="w-full aspect-[3/4] object-cover rounded-xl"
+                          style={{ objectPosition: '15% center' }} />
+                        <p className="text-center mt-2 font-black text-sm tracking-wide truncate">{p.short}</p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => setStep('captain')}
+                  className="text-zinc-500 hover:text-white text-xs font-black tracking-widest pb-6">← TROCAR CAPITÃO</button>
+              </>
+            ) : (
+              (() => {
+                const p = selectedPlayers.find(pl => pl.id === heroId);
+                if (!p) return null;
                 const colors = getRarityColors(p.ovr ?? 75);
                 return (
-                  <motion.button key={p.id} whileHover={{ scale: 1.08, y: -4 }} whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSelectHero(p.id)}
-                    className={`relative p-2 rounded-2xl border-4 transition-all overflow-hidden ${
-                      heroId === p.id
-                        ? 'border-cyan-400 shadow-[0_0_50px_#22d3ee] scale-110'
-                        : 'border-white/20 hover:border-white/40'
-                    }`}
-                    style={{ background: `linear-gradient(180deg, ${colors.border}33 0%, #0a0a0a 60%)` }}>
-                    <div className="flex justify-between mb-1 px-1">
-                      <span className="text-lg font-black text-white tabular-nums leading-none">{p.ovr}</span>
-                      <span className="text-[10px] font-black tracking-wider" style={{ color: colors.border }}>{p.pos}</span>
+                  <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+                    className="flex flex-col items-center w-full max-w-sm">
+                    <div className="relative">
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                        className="absolute -inset-3 rounded-3xl"
+                        style={{ background: 'conic-gradient(from 0deg, #22d3ee, transparent, #22d3ee)' }} />
+                      <div className="relative p-3 rounded-3xl border-4 border-cyan-400 overflow-hidden shadow-[0_0_60px_#22d3ee]"
+                        style={{ background: `linear-gradient(180deg, ${colors.border}66 0%, #0a0a0a 70%)` }}>
+                        <div className="flex justify-between mb-2 px-2">
+                          <div>
+                            <div className="text-3xl font-black text-white tabular-nums leading-none">{p.ovr}</div>
+                            <div className="text-xs font-black tracking-wider mt-0.5" style={{ color: colors.border }}>{p.pos}</div>
+                          </div>
+                          <div className="text-sm font-black bg-black/60 text-white px-2 py-0.5 rounded h-fit">#{p.num}</div>
+                        </div>
+                        <img src={getValidPhotoUrl(p.foto)} alt={p.short}
+                          className="w-48 h-64 object-cover rounded-xl mx-auto"
+                          style={{ objectPosition: '15% center' }} />
+                        <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
+                          className="absolute -top-3 -right-3 w-16 h-16 bg-cyan-400 rounded-full flex items-center justify-center font-black text-black text-4xl shadow-[0_0_30px_#22d3ee] z-20">
+                          H
+                        </motion.div>
+                        <div className="text-center mt-3">
+                          <div className="text-cyan-400 text-[10px] font-black tracking-[3px] mb-1">SEU HERÓI</div>
+                          <div className="text-2xl font-black italic">{p.short}</div>
+                        </div>
+                      </div>
                     </div>
-                    <img src={getValidPhotoUrl(p.foto)} alt={p.short} className="w-full aspect-[3/4] object-cover rounded-xl" />
-                    {heroId === p.id && (
-                      <div className="absolute -top-2 -right-2 w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center font-black text-black text-2xl shadow-[0_0_25px_#22d3ee] z-10">H</div>
-                    )}
-                    <p className="text-center mt-2 font-black text-sm tracking-wide">{p.short}</p>
-                  </motion.button>
+
+                    <div className="bg-cyan-400/10 border border-cyan-400/30 rounded-xl px-4 py-2 mt-5 mb-3 text-center">
+                      <span className="text-cyan-300 text-xs font-black tracking-wider">
+                        ⚡ <span className="text-cyan-400">{p.short}</span> ganha bônus de <span className="text-cyan-400">+50%</span>
+                      </span>
+                    </div>
+
+                    {/* Recap dos 2 líderes */}
+                    <div className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-3 mb-4 flex items-center justify-around">
+                      <div className="text-center">
+                        <div className="text-yellow-400 text-[10px] font-black tracking-wider">👑 CAPITÃO</div>
+                        <div className="text-sm font-black">{selectedPlayers.find(pl => pl.id === captainId)?.short}</div>
+                      </div>
+                      <div className="w-px h-8 bg-white/15" />
+                      <div className="text-center">
+                        <div className="text-cyan-400 text-[10px] font-black tracking-wider">🔥 HERÓI</div>
+                        <div className="text-sm font-black">{p.short}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 w-full">
+                      <button onClick={() => setHeroId(null)}
+                        className="flex-1 py-4 bg-zinc-900 border-2 border-white/15 rounded-2xl text-xs font-black tracking-wider hover:border-white/30">
+                        ← TROCAR
+                      </button>
+                      <motion.button whileTap={{ scale: 0.95 }} onClick={() => setStep('palpite')}
+                        className="flex-[2] py-4 bg-gradient-to-r from-cyan-400 to-cyan-300 text-black rounded-2xl text-sm font-black tracking-wider shadow-[0_0_30px_rgba(34,211,238,0.5)]">
+                        CONFIRMAR HERÓI →
+                      </motion.button>
+                    </div>
+                  </motion.div>
                 );
-              })}
-            </div>
-            <button onClick={() => setStep('captain')}
-              className="mt-8 text-zinc-500 hover:text-white text-xs font-black tracking-widest">← TROCAR CAPITÃO</button>
+              })()
+            )}
           </motion.div>
         )}
 
@@ -1006,88 +1152,122 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
             <div ref={finalCardRef}
               className="relative w-full max-w-[380px] bg-zinc-950 rounded-3xl overflow-hidden border-4 border-yellow-400/40 shadow-[0_0_60px_rgba(250,204,21,0.3)]"
               style={{ aspectRatio: '9/16' }}>
-              <img src={STADIUM_BG} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black" />
-              <div className="absolute inset-0 opacity-10"
-                style={{ backgroundImage: 'repeating-linear-gradient(45deg, #facc15 0, #facc15 1px, transparent 1px, transparent 12px)' }} />
+              {/* BG estádio + overlay escuro */}
+              <img src={STADIUM_BG} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/55 to-black/95" />
+              <div className="absolute inset-0 opacity-[0.06]"
+                style={{ backgroundImage: 'repeating-linear-gradient(45deg, #facc15 0, #facc15 1px, transparent 1px, transparent 14px)' }} />
 
-              <div className="absolute top-4 left-4 right-4 flex items-start justify-between z-10">
-                <div className="flex items-start gap-2">
-                  {userAvatar && (
-                    <img src={userAvatar} alt={userName} crossOrigin="anonymous"
-                      className="w-10 h-10 rounded-full border-2 border-yellow-400 object-cover"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-                  )}
-                  <div>
-                    <div className="text-yellow-400 tracking-[3px] font-black text-[10px]">ARENA TIGRE FC</div>
-                    <div className="text-2xl font-black italic leading-tight">MINHA ESCALAÇÃO</div>
-                    <div className="text-cyan-400 font-black text-xs mt-0.5">@{userName}</div>
+              {/* ========== HEADER (top 0% - 16%) ========== */}
+              <div className="absolute top-0 left-0 right-0 px-4 pt-4 pb-2 z-20 bg-gradient-to-b from-black/90 to-transparent">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    {userAvatar && (
+                      <img src={userAvatar} alt={userName} crossOrigin="anonymous"
+                        className="w-11 h-11 rounded-full border-2 border-yellow-400 object-cover shadow-[0_0_15px_rgba(250,204,21,0.4)]"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                    )}
+                    <div>
+                      <div className="text-yellow-400 tracking-[3px] font-black text-[9px] leading-none mb-0.5">⚡ ARENA TIGRE FC</div>
+                      <div className="text-xl font-black italic leading-none">MINHA ESCALAÇÃO</div>
+                      <div className="text-cyan-400 font-black text-[11px] mt-0.5 leading-none">@{userName}</div>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="bg-gradient-to-br from-yellow-300 to-amber-500 text-black px-2 py-1 rounded-md text-center mb-1.5 shadow-[0_0_15px_rgba(251,191,36,0.5)]">
-                    <div className="text-[8px] font-black tracking-widest leading-none">OVR</div>
-                    <div className="text-2xl font-black tabular-nums leading-none">{teamOvr}</div>
+                  <div className="flex flex-col items-end gap-1">
+                    {/* OVR card style FUT */}
+                    <div className="relative">
+                      <div className="bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 text-black px-2.5 py-1 rounded-lg shadow-[0_0_20px_rgba(251,191,36,0.6)] border border-yellow-200 text-center min-w-[52px]">
+                        <div className="text-[8px] font-black tracking-widest leading-none">OVR</div>
+                        <div className="text-2xl font-black tabular-nums leading-none mt-0.5">{teamOvr}</div>
+                      </div>
+                    </div>
+                    <div className="bg-yellow-400 text-black px-2 py-0.5 rounded text-[10px] font-black tracking-wider">{formation}</div>
                   </div>
-                  <div className="bg-yellow-400 text-black px-2 py-0.5 rounded text-[10px] font-black tracking-wider">{formation}</div>
-                  {rodada !== undefined && (
-                    <div className="text-[9px] text-zinc-400 mt-1 tracking-widest">RODADA {rodada}</div>
-                  )}
                 </div>
               </div>
 
-              <div className="absolute top-[140px] left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur px-6 py-2.5 rounded-2xl border border-yellow-400/40 text-center z-10">
-                <div className="flex items-center gap-3">
-                  <img src={mandanteLogo} alt="" className="w-7 h-7 object-contain" />
-                  <div className="text-3xl font-black text-yellow-400 tabular-nums">
-                    {palpiteMandante}<span className="text-zinc-600 mx-1.5">×</span>{palpiteVisitante}
-                  </div>
-                  <img src={ESCUDO_DEFAULT} alt="" className="w-7 h-7 object-contain" />
-                </div>
-                <div className="text-[9px] text-zinc-400 tracking-widest mt-0.5">SEU PALPITE</div>
-              </div>
-
-              <div className="absolute inset-0 pointer-events-none">
+              {/* ========== CAMPO (top 17% - 73%) ========== */}
+              <div className="absolute top-[17%] bottom-[32%] left-0 right-0 z-10">
                 {Object.entries(slotMap).map(([id, state]) => state.player && (
                   <div key={id}
                     style={{
                       left: `${state.x}%`,
-                      top: `${state.y * 0.75 + 15}%`,
+                      top: `${state.y}%`,
                       position: 'absolute',
                       transform: 'translate(-50%, -50%)',
                     }}
-                    className="w-12 h-16 rounded-xl overflow-hidden border-2 border-white/70 shadow-[0_4px_15px_rgba(0,0,0,0.6)]">
-                    <img src={getValidPhotoUrl(state.player.foto)} alt={state.player.short}
-                      className="w-full h-full object-cover" crossOrigin="anonymous" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 py-0.5">
-                      <span className="text-[7px] font-black text-white block text-center leading-none">{state.player.short}</span>
-                    </div>
-                    {(state.player.id === captainId || state.player.id === heroId) && (
-                      <div className={`absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-xl ${
-                        state.player.id === captainId ? 'bg-yellow-400 text-black' : 'bg-cyan-400 text-black'
+                    className="w-14 h-[76px]">
+                    <div className={`relative w-full h-full rounded-lg overflow-hidden border-2 shadow-[0_4px_15px_rgba(0,0,0,0.7)] ${
+                      state.player.id === captainId ? 'border-yellow-400 shadow-[0_0_18px_rgba(251,191,36,0.7)]' :
+                      state.player.id === heroId    ? 'border-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.7)]'  :
+                      'border-white/80'
+                    }`}>
+                      <img src={getValidPhotoUrl(state.player.foto)} alt={state.player.short}
+                        className="w-full h-full object-cover" crossOrigin="anonymous"
+                        style={{ objectPosition: '85% center' }} />
+                      <div className={`absolute bottom-0 left-0 right-0 py-0.5 ${
+                        state.player.id === captainId ? 'bg-gradient-to-t from-yellow-400/95 to-yellow-400/70' :
+                        state.player.id === heroId    ? 'bg-gradient-to-t from-cyan-400/95 to-cyan-400/70'    :
+                        'bg-gradient-to-t from-black/95 to-transparent'
                       }`}>
-                        {state.player.id === captainId ? 'C' : 'H'}
+                        <span className={`text-[8px] font-black block text-center leading-none ${
+                          (state.player.id === captainId || state.player.id === heroId) ? 'text-black' : 'text-white'
+                        }`}>
+                          {state.player.short}
+                        </span>
                       </div>
-                    )}
+                      {(state.player.id === captainId || state.player.id === heroId) && (
+                        <div className={`absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-sm font-black shadow-xl border-2 border-black ${
+                          state.player.id === captainId ? 'bg-yellow-400 text-black' : 'bg-cyan-400 text-black'
+                        }`}>
+                          {state.player.id === captainId ? 'C' : 'H'}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <div className="absolute bottom-[88px] left-4 right-4 text-center z-10">
-                <div className="text-3xl font-black italic text-white leading-[0.95] drop-shadow-[0_4px_15px_rgba(0,0,0,0.9)]">
-                  DUVIDO VOCÊ<br />
-                  <span className="text-yellow-400">ESCALAR MELHOR!</span>
+              {/* ========== PLACAR (bottom 21%) ========== */}
+              <div className="absolute bottom-[22%] left-4 right-4 z-20">
+                <div className="bg-black/90 backdrop-blur border-2 border-yellow-400/50 rounded-2xl px-3 py-2 flex items-center justify-around">
+                  <div className="flex items-center gap-1.5 flex-1">
+                    <img src={mandanteLogo} alt="" className="w-7 h-7 object-contain" crossOrigin="anonymous" />
+                    <span className="text-[10px] font-black uppercase truncate">{mandante}</span>
+                  </div>
+                  <div className="text-3xl font-black text-yellow-400 tabular-nums px-3">
+                    {palpiteMandante}<span className="text-zinc-600 mx-1.5">×</span>{palpiteVisitante}
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-1 justify-end">
+                    <span className="text-[10px] font-black uppercase">NOV</span>
+                    <img src={ESCUDO_DEFAULT} alt="" className="w-7 h-7 object-contain" crossOrigin="anonymous" />
+                  </div>
                 </div>
-                <div className="text-3xl mt-2">🐯⚡</div>
+                <div className="text-center text-[8px] text-zinc-500 tracking-[3px] mt-1">SEU PALPITE</div>
               </div>
 
-              <div className="absolute bottom-3 left-4 right-4 z-10">
-                <div className="flex items-center justify-between text-[9px] text-zinc-400 mb-1.5">
-                  <span>👑 {selectedPlayers.find(p => p.id === captainId)?.short ?? '—'}</span>
-                  <span>🔥 {selectedPlayers.find(p => p.id === heroId)?.short ?? '—'}</span>
+              {/* ========== LÍDERES (bottom ~10%) ========== */}
+              <div className="absolute bottom-[10%] left-4 right-4 z-20 flex gap-2">
+                <div className="flex-1 bg-yellow-400/15 border border-yellow-400/50 rounded-lg px-2 py-1 flex items-center gap-1.5">
+                  <span className="text-base">👑</span>
+                  <div className="leading-none flex-1 min-w-0">
+                    <div className="text-yellow-400 text-[7px] font-black tracking-widest">CAPITÃO 2×</div>
+                    <div className="text-[10px] font-black text-white truncate">{selectedPlayers.find(p => p.id === captainId)?.short ?? '—'}</div>
+                  </div>
                 </div>
-                <div className="bg-yellow-400 text-black text-center text-[9px] font-black tracking-[2px] py-1.5 rounded-md">
-                  MONTE A SUA: ONOVORIZONTINO.COM.BR/TIGRE-FC
+                <div className="flex-1 bg-cyan-400/15 border border-cyan-400/50 rounded-lg px-2 py-1 flex items-center gap-1.5">
+                  <span className="text-base">🔥</span>
+                  <div className="leading-none flex-1 min-w-0">
+                    <div className="text-cyan-400 text-[7px] font-black tracking-widest">HERÓI +50%</div>
+                    <div className="text-[10px] font-black text-white truncate">{selectedPlayers.find(p => p.id === heroId)?.short ?? '—'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ========== FOOTER URL (bottom 2%) ========== */}
+              <div className="absolute bottom-2 left-4 right-4 z-20">
+                <div className="bg-yellow-400 text-black text-center text-[10px] font-black tracking-[2px] py-1.5 rounded-md">
+                  ONOVORIZONTINO.COM.BR/TIGRE-FC
                 </div>
               </div>
             </div>
