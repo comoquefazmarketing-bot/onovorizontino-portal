@@ -1,7 +1,7 @@
 'use client';
 
 // ─── THE BEST TIGRE FC — VERSÃO EVOLUÍDA FIFA 26 ────────────────────────────
-// Rodada 6 · Sport 0x0 Novorizontino
+// Rodada 6 · Sport 1x0 Novorizontino
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function DestaquesFifa() {
@@ -130,7 +130,7 @@ export default function DestaquesFifa() {
         
         <div className="flex flex-col items-center mt-3">
           <p className="px-3 py-0.5 bg-zinc-900/50 border border-white/5 rounded-full text-[8px] text-zinc-400 font-black uppercase tracking-[0.3em]">
-            Rodada 6 · Sport <span className="text-white">0×0</span> Novorizontino
+            Rodada 6 · Sport <span className="text-white">1×0</span> Novorizontino
           </p>
         </div>
       </div>
