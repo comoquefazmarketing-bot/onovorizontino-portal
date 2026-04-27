@@ -6,15 +6,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as htmlToImage from 'html-to-image';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
+import { Share2, Download, Zap, Trophy, Shield, Target } from 'lucide-react';
 
 const BASE_STORAGE   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const STADIUM_BG     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
 const ESCUDO_DEFAULT = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-const AVAI_LOGO      = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png';
 
-const TABLE          = 'tigre_fc_escalacoes';
-const PROFILE_TABLE  = 'tigre_fc_usuarios';
-const SHARE_BASE_URL = 'https://www.onovorizontino.com.br/tigre-fc/escalar';
+const COLORS = {
+  gold: '#F5C400',
+  cyan: '#00F3FF',
+  red: '#FF2D55',
+  glass: 'rgba(0,0,0,0.7)'
+};
 
 interface Player {
   id: number;
@@ -26,215 +29,207 @@ interface Player {
   ovr?: number;
 }
 
-interface EscalacaoFormacaoProps {
-  jogoId?: number | string;
-  mandante?: string;
-  mandanteLogo?: string;
-  rodada?: string | number;
-}
-
-type SlotCoord = { x: number; y: number };
-type SlotMap   = Record<string, { player: Player | null; x: number; y: number }>;
-type Step      = 'loading' | 'formation' | 'arena' | 'captain' | 'hero' | 'palpite' | 'saving' | 'final';
-
-const formationConfigs: Record<string, Record<string, SlotCoord>> = {
-  '4-3-3':   { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, m1:{x:50,y:48}, m2:{x:30,y:42}, m3:{x:70,y:42}, st:{x:50,y:15}, lw:{x:22,y:22}, rw:{x:78,y:22} },
-  '4-4-2':   { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, m1:{x:35,y:45}, m2:{x:65,y:45}, m3:{x:15,y:38}, m4:{x:85,y:38}, st1:{x:40,y:18}, st2:{x:60,y:18} },
-  '3-5-2':   { gk:{x:50,y:85}, cb1:{x:30,y:70}, cb2:{x:50,y:73}, cb3:{x:70,y:70}, lm:{x:15,y:45}, rm:{x:85,y:45}, m1:{x:35,y:50}, m2:{x:65,y:50}, am:{x:50,y:32}, st1:{x:40,y:15}, st2:{x:60,y:15} },
-  '4-5-1':   { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, m1:{x:30,y:48}, m2:{x:50,y:48}, m3:{x:70,y:48}, am1:{x:35,y:30}, am2:{x:65,y:30}, st:{x:50,y:15} },
-  '4-2-3-1': { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, v1:{x:40,y:52}, v2:{x:60,y:52}, am:{x:50,y:35}, lw:{x:20,y:28}, rw:{x:80,y:28}, st:{x:50,y:12} },
-  '5-3-2':   { gk:{x:50,y:85}, lb:{x:12,y:52}, cb1:{x:30,y:70}, cb2:{x:50,y:73}, cb3:{x:70,y:70}, rb:{x:88,y:52}, m1:{x:50,y:48}, m2:{x:30,y:40}, m3:{x:70,y:40}, st1:{x:42,y:18}, st2:{x:58,y:18} },
-};
-
-const PLAYERS_DATA: Player[] = [ /* ... mantenha toda a lista de jogadores que você já tinha ... */ ];
-
-const SLOT_W_MOBILE  = 60;
-const SLOT_H_MOBILE  = 86;
-const SLOT_W_DESKTOP = 80;
-const SLOT_H_DESKTOP = 116;
-
-const POSICOES = ['TODOS', 'GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'ATA'] as const;
-type Posicao = typeof POSICOES[number];
-
-// ====================== COMPONENTES AUXILIARES ======================
-// (FutCard e DraggableSlot - mantenha iguais ao que você já tinha)
-// Cole aqui os componentes FutCard e DraggableSlot do seu arquivo original se quiser manter exatamente igual.
-
-function FutCard({ player, escalado, pending, onClick, getValidPhotoUrl }: any) {
-  // ... seu código original do FutCard ...
-  return <></>; // substitua pelo seu código real
-}
-
-function DraggableSlot({ ...props }: any) {
-  // ... seu código original do DraggableSlot ...
-  return <></>; // substitua pelo seu código real
-}
-
-// ====================== COMPONENTE PRINCIPAL ======================
-export default function EscalacaoFormacao({
-  jogoId,
-  mandante = 'Avaí',
-  mandanteLogo = AVAI_LOGO,
-  rodada,
-}: EscalacaoFormacaoProps) {
-
+export default function EscalacaoFormacao({ jogoId }: { jogoId: string }) {
   const router = useRouter();
-
-  const [step, setStep] = useState<Step>('loading');
-  const [formation, setFormation] = useState('4-3-3');
-  const [slotMap, setSlotMap] = useState<Record<string, { player: Player | null; x: number; y: number }>>({});
-  const [activeSlot, setActiveSlot] = useState<string | null>(null);
-  const [pendingPlayer, setPendingPlayer] = useState<Player | null>(null);
-  const [captainId, setCaptainId] = useState<number | null>(null);
-  const [heroId, setHeroId] = useState<number | null>(null);
-  const [palpiteMandante, setPalpiteMandante] = useState(1);
-  const [palpiteVisitante, setPalpiteVisitante] = useState(2);
+  const [step, setStep] = useState<'arena' | 'capitao' | 'palpite' | 'share'>('arena');
+  const [slots, setSlots] = useState<Record<string, Player | null>>({
+    gk: null, df_l: null, df_c1: null, df_c2: null, df_r: null,
+    mf_l: null, mf_c: null, mf_r: null, fw_l: null, fw_c: null, fw_r: null
+  });
+  const [capitao, setCapitao] = useState<number | null>(null);
+  const [heroi, setHeroi] = useState<number | null>(null);
+  const [palpite, setPalpite] = useState({ mandante: 0, visitante: 0 });
   const [finalImageUri, setFinalImageUri] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string>('TORCEDOR');
-  const [userAvatar, setUserAvatar] = useState<string | null>(null);
-  const [hadSaved, setHadSaved] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [posFiltro, setPosFiltro] = useState<Posicao>('TODOS');
-
-  const finalCardRef = useRef<HTMLDivElement>(null);
-  const arenaRef = useRef<HTMLDivElement>(null);
-
-  const getValidPhotoUrl = useCallback((fotoPath: string) => {
-    if (!fotoPath) return ESCUDO_DEFAULT;
-    const filename = fotoPath.split('/').pop() || fotoPath;
-    return `${BASE_STORAGE}${encodeURIComponent(filename)}`;
-  }, []);
-
-  // ... (mantenha todo o useEffect de loadExisting, handleChangeFormation, etc. igual ao seu código original)
-
-  const handlePalpiteChange = (team: 'mandante' | 'visitante', value: number) => {
-    if (team === 'mandante') setPalpiteMandante(Math.max(0, Math.min(9, value)));
-    else setPalpiteVisitante(Math.max(0, Math.min(9, value)));
-  };
-
-  const generateFinalImage = async () => {
-    setStep('saving');
-    await saveEscalacao(); // sua função original
-
-    setIsGenerating(true);
-    await new Promise(r => setTimeout(r, 300));
-
-    if (!finalCardRef.current) {
-      setStep('final');
-      setIsGenerating(false);
-      return;
-    }
-
+  // Gerar imagem para compartilhamento
+  const generateShareImage = async () => {
+    if (!cardRef.current) return;
+    setLoading(true);
     try {
-      const dataUrl = await htmlToImage.toPng(finalCardRef.current, {
-        cacheBust: true,
-        quality: 0.98,
-        pixelRatio: 3,
-        backgroundColor: '#0a0a0a',
-      });
+      const dataUrl = await htmlToImage.toPng(cardRef.current, { quality: 0.95, backgroundColor: '#000' });
       setFinalImageUri(dataUrl);
-      setStep('final');
-      setTimeout(() => {
-        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
-      }, 400);
-    } catch (e) {
-      console.error(e);
-      alert('Erro ao gerar a imagem. Tente novamente.');
+      setStep('share');
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: [COLORS.gold, '#fff', COLORS.cyan] });
+    } catch (err) {
+      console.error("Erro ao gerar imagem", err);
     } finally {
-      setIsGenerating(false);
+      setLoading(false);
     }
   };
-
-  // ... (mantenha as funções saveEscalacao, shareNative, downloadImage, etc.)
 
   return (
-    <div className="fixed inset-0 bg-black text-white font-sans antialiased overflow-hidden flex flex-col select-none">
+    <main className="relative min-h-screen w-full bg-black text-white overflow-hidden font-['Barlow_Condensed']">
+      
+      {/* BACKGROUND ÚNICO PARA TODAS AS TELAS */}
+      <div className="absolute inset-0 z-0">
+        <img src={STADIUM_BG} className="w-full h-full object-cover opacity-40" alt="Estádio" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
+      </div>
+
       <AnimatePresence mode="wait">
+        
+        {/* STEP 1: ARENA (ESCALAÇÃO) - Mantenha sua lógica de slots aqui */}
+        {step === 'arena' && (
+          <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 p-4">
+             <div className="text-center mb-6">
+                <h1 className="text-4xl font-black italic tracking-tighter text-yellow-400">CONVOCAR TITULARES</h1>
+                <p className="text-zinc-400 text-xs tracking-[0.2em]">RODADA 7 • SÉRIE B</p>
+             </div>
+             {/* Renderize seu campo aqui... simplificado para o exemplo */}
+             <div className="flex flex-col gap-4 items-center">
+                <button 
+                  onClick={() => setStep('capitao')}
+                  className="w-full max-w-xs py-4 bg-yellow-400 text-black font-black rounded-2xl shadow-[0_0_20px_rgba(245,196,0,0.4)]"
+                >
+                  DEFINIR CAPITÃO →
+                </button>
+             </div>
+          </motion.div>
+        )}
 
-        {/* ... mantenha loading, formation, arena, captain, hero iguais ao seu código original ... */}
+        {/* STEP 2: CAPITÃO E HERÓI */}
+        {step === 'capitao' && (
+          <motion.div key="capitao" initial={{ x: 300, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -300, opacity: 0 }} className="relative z-10 p-6 flex flex-col items-center justify-center min-h-screen">
+             <div className="bg-black/80 backdrop-blur-xl p-8 rounded-[40px] border border-white/10 w-full max-w-sm text-center">
+                <Shield className="mx-auto mb-4 text-cyan-400" size={48} />
+                <h2 className="text-3xl font-black italic text-white mb-2">LIDERANÇA</h2>
+                <p className="text-zinc-500 text-sm mb-8">Escolha quem comandará o Tigre e quem será o herói do jogo.</p>
+                
+                {/* Lógica de seleção de capitão aqui... */}
+                
+                <button 
+                  onClick={() => setStep('palpite')}
+                  className="w-full py-4 bg-white text-black font-black rounded-2xl"
+                >
+                  PRÓXIMO: PALPITE →
+                </button>
+             </div>
+          </motion.div>
+        )}
 
-        {/* ====================== PALPITE TURBINADO ====================== */}
+        {/* STEP 3: PALPITE TURBINADO (O CHOQUE) */}
         {step === 'palpite' && (
-          <motion.div
-            key="palpite"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 relative overflow-hidden bg-zinc-950"
+          <motion.div 
+            key="palpite" 
+            initial={{ scale: 0.8, opacity: 0 }} 
+            animate={{ scale: 1, opacity: 1 }} 
+            className="relative z-10 p-4 flex flex-col items-center justify-center min-h-screen"
           >
-            <div className="absolute inset-0">
-              <img src={STADIUM_BG} alt="" className="w-full h-full object-cover opacity-30" />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/90" />
+            <div 
+              ref={cardRef}
+              className="relative w-full max-w-[400px] aspect-[4/5] bg-black/90 rounded-[48px] border border-white/10 overflow-hidden flex flex-col items-center p-8 shadow-2xl"
+            >
+              {/* Glow Central de Choque */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-400/10 blur-[80px] rounded-full" />
 
-            <div className="relative z-10 h-full flex flex-col items-center justify-center px-6">
-              <div className="text-center mb-12">
-                <div className="text-yellow-400 text-xs font-black tracking-[6px] mb-3">ETAPA FINAL</div>
-                <h1 className="text-5xl font-black italic tracking-[-2px]">SEU PALPITE</h1>
-                <p className="text-zinc-400 mt-2">{mandante} × Novorizontino</p>
+              <div className="relative z-20 text-center mb-8">
+                <div className="inline-block px-4 py-1 bg-cyan-400/20 border border-cyan-400/30 rounded-full mb-2">
+                   <span className="text-cyan-400 text-[10px] font-black tracking-[0.3em]">CONFRONTO DIRETO</span>
+                </div>
+                <h3 className="text-white text-xl font-black italic tracking-widest uppercase">Palpite do Torcedor</h3>
               </div>
 
-              <div className="flex items-center gap-10 relative">
-                {/* Time Mandante */}
-                <motion.div animate={{ x: [-6, 6, -6] }} transition={{ duration: 2.5, repeat: Infinity }} className="flex flex-col items-center">
-                  <div className="relative">
-                    <img src={mandanteLogo} alt={mandante} className="w-28 h-28 object-contain drop-shadow-[0_0_40px_#fbbf24]" />
-                  </div>
-                  <div className="mt-4 font-black text-xl text-yellow-400">{mandante}</div>
-                </motion.div>
-
-                {/* Placar Gigante */}
-                <div className="flex flex-col items-center z-20">
-                  <div className="flex items-center gap-8 bg-black/90 border-4 border-yellow-400/80 rounded-3xl px-12 py-8 shadow-[0_0_80px_rgba(250,204,21,0.7)]">
-                    <input
-                      type="number"
-                      min={0}
-                      max={9}
-                      value={palpiteMandante}
-                      onChange={(e) => handlePalpiteChange('mandante', parseInt(e.target.value) || 0)}
-                      className="w-20 bg-transparent text-7xl font-black text-yellow-400 text-center outline-none tabular-nums"
-                    />
-                    <div className="text-6xl font-black text-yellow-400/60">×</div>
-                    <input
-                      type="number"
-                      min={0}
-                      max={9}
-                      value={palpiteVisitante}
-                      onChange={(e) => handlePalpiteChange('visitante', parseInt(e.target.value) || 0)}
-                      className="w-20 bg-transparent text-7xl font-black text-cyan-400 text-center outline-none tabular-nums"
-                    />
-                  </div>
+              {/* Área do Confronto */}
+              <div className="relative z-20 flex w-full justify-between items-center px-4">
+                <div className="flex flex-col items-center gap-3 flex-1">
+                   <motion.img 
+                    initial={{ x: -20 }} animate={{ x: 0 }}
+                    src={ESCUDO_DEFAULT} className="w-20 h-20 drop-shadow-[0_0_15px_rgba(245,196,0,0.5)]" 
+                   />
+                   <span className="text-xs font-black text-white">NOVORIZONTINO</span>
                 </div>
 
-                {/* Novorizontino */}
-                <motion.div animate={{ x: [6, -6, 6] }} transition={{ duration: 2.5, repeat: Infinity }} className="flex flex-col items-center">
-                  <div className="relative">
-                    <img src={ESCUDO_DEFAULT} alt="Novorizontino" className="w-28 h-28 object-contain drop-shadow-[0_0_40px_#22d3ee]" />
-                  </div>
-                  <div className="mt-4 font-black text-xl text-cyan-400">NOVORIZONTINO</div>
-                </motion.div>
+                <div className="relative flex items-center justify-center">
+                   <motion.div 
+                    animate={{ scale: [1, 1.2, 1] }} 
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="absolute inset-0 bg-yellow-400/20 blur-xl rounded-full"
+                   />
+                   <Zap size={44} className="text-yellow-400 relative z-10 drop-shadow-[0_0_10px_#F5C400]" />
+                   <span className="absolute -bottom-6 text-3xl font-black italic opacity-20">VS</span>
+                </div>
+
+                <div className="flex flex-col items-center gap-3 flex-1">
+                   <motion.img 
+                    initial={{ x: 20 }} animate={{ x: 0 }}
+                    src="https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/escudo-avai.png" 
+                    className="w-20 h-20 drop-shadow-[0_0_15px_rgba(0,243,255,0.3)]" 
+                   />
+                   <span className="text-xs font-black text-cyan-400">AVAÍ FC</span>
+                </div>
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={generateFinalImage}
-                disabled={isGenerating}
-                className="mt-16 px-16 py-7 bg-gradient-to-r from-yellow-400 to-amber-400 text-black font-black text-2xl rounded-3xl shadow-[0_0_70px_rgba(250,204,21,0.8)] disabled:opacity-70"
-              >
-                {isGenerating ? 'GERANDO ARTE ÉPICA...' : 'CONFIRMAR PALPITE E GERAR ARTE'}
-              </motion.button>
+              {/* Inputs de Palpite */}
+              <div className="relative z-20 mt-12 flex items-center gap-6">
+                <div className="flex flex-col items-center">
+                  <input 
+                    type="number"
+                    value={palpite.mandante}
+                    onChange={(e) => setPalpite({...palpite, mandante: parseInt(e.target.value) || 0})}
+                    className="w-20 h-24 bg-white/5 border-2 border-white/10 rounded-3xl text-center text-5xl font-black text-yellow-400 focus:border-yellow-400 focus:outline-none transition-all"
+                  />
+                </div>
+                <div className="text-4xl font-black italic text-zinc-700">X</div>
+                <div className="flex flex-col items-center">
+                  <input 
+                    type="number"
+                    value={palpite.visitante}
+                    onChange={(e) => setPalpite({...palpite, visitante: parseInt(e.target.value) || 0})}
+                    className="w-20 h-24 bg-white/5 border-2 border-white/10 rounded-3xl text-center text-5xl font-black text-white focus:border-white focus:outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Botão Salvar dentro do Palpite */}
+              <div className="mt-auto w-full flex flex-col gap-3">
+                <button 
+                  onClick={generateShareImage}
+                  disabled={loading}
+                  className="w-full py-4 bg-yellow-400 text-black font-black rounded-2xl flex items-center justify-center gap-2 text-sm"
+                >
+                  {loading ? 'GERANDO...' : <><Download size={18}/> FINALIZAR E COMPARTILHAR</>}
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
 
-        {/* Final Card - mantenha ou melhore conforme sua necessidade */}
+        {/* STEP 4: SHARE (TELA FINAL) */}
+        {step === 'share' && finalImageUri && (
+          <motion.div key="share" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-20 p-6 flex flex-col items-center justify-center min-h-screen bg-black">
+             <div className="w-full max-w-sm">
+                <img src={finalImageUri} className="w-full rounded-[32px] shadow-[0_0_40px_rgba(245,196,0,0.2)] mb-8" alt="Seu Palpite" />
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <button onClick={() => {
+                    const link = document.createElement('a');
+                    link.download = 'palpite-tigre.png';
+                    link.href = finalImageUri;
+                    link.click();
+                  }} className="flex flex-col items-center gap-2 p-4 bg-zinc-900 rounded-2xl border border-white/10">
+                    <Download size={24} className="text-yellow-400" />
+                    <span className="text-[10px] font-black">SALVAR</span>
+                  </button>
+                  <button className="flex flex-col items-center gap-2 p-4 bg-zinc-900 rounded-2xl border border-white/10">
+                    <Share2 size={24} className="text-cyan-400" />
+                    <span className="text-[10px] font-black">INSTAGRAM</span>
+                  </button>
+                </div>
+
+                <button 
+                  onClick={() => setStep('arena')}
+                  className="w-full py-4 bg-zinc-800 text-white font-black rounded-2xl text-xs tracking-widest"
+                >
+                  VOLTAR PARA A ARENA
+                </button>
+             </div>
+          </motion.div>
+        )}
 
       </AnimatePresence>
-    </div>
+    </main>
   );
 }
