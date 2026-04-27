@@ -24,13 +24,18 @@ export default function TigreFCPage() {
   const [meuId, setMeuId] = useState<string | null>(null);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
   const [ranking, setRanking] = useState<any[]>([]);
+  const [noticiasCluster, setNoticiasCluster] = useState<any[]>([]);
   const [jogo, setJogo] = useState<any>(JOGO_FALLBACK);
   const [stats, setStats] = useState({
     capitao: { nome: '---', pts: 0 },
     heroi: { nome: '---', pts: 0 }
   });
 
-  useEffect(() => { setMounted(true); }, []);
+  // Garante que a página inicie no topo e registra montagem
+  useEffect(() => {
+    setMounted(true);
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;
@@ -42,16 +47,23 @@ export default function TigreFCPage() {
         if (u) { userId = u.id; setMeuId(u.id); }
       }
 
-      const [resJogo, resRank] = await Promise.all([
+      // Parallel Fetch: Jogo, Ranking e Cluster de Notícias
+      const [resJogo, resRank, resNews] = await Promise.all([
         sb.from('jogos_tigre').select('*, mandante:times(*), visitante:times(*)').eq('ativo', true).maybeSingle(),
         sb.from('tigre_fc_usuarios')
           .select('id, nome, apelido, pontos_total, avatar_url')
           .not('pontos_total', 'is', null)
           .order('pontos_total', { ascending: false })
-          .limit(6)
+          .limit(6),
+        sb.from('postagens')
+          .select('titulo')
+          .eq('status', 'publicado')
+          .order('criado_em', { ascending: false })
+          .limit(3)
       ]);
 
       if (resRank.data) setRanking(resRank.data);
+      if (resNews.data) setNoticiasCluster(resNews.data);
 
       if (resJogo.data) {
         const g = resJogo.data;
@@ -92,11 +104,12 @@ export default function TigreFCPage() {
         </div>
       </header>
 
-      {/* GRID LÍMPO */}
+      {/* GRID PRINCIPAL */}
       <div className="max-w-7xl mx-auto w-full px-4 -mt-12 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20 flex-1">
         
-        {/* RANKING À ESQUERDA */}
-        <aside className="lg:col-span-3">
+        {/* COLUNA ESQUERDA: RANKING & CLUSTER NOTÍCIAS */}
+        <aside className="lg:col-span-3 space-y-6">
+          {/* RANKING */}
           <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-[32px] p-6 shadow-2xl">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-6">Global Leaderboard</h2>
             <div className="space-y-3">
@@ -115,12 +128,25 @@ export default function TigreFCPage() {
               ))}
             </div>
           </div>
+
+          {/* CLUSTER DE NOTÍCIAS (DESIGN LÍMPO) */}
+          <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-[32px] p-6 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-yellow-400/20" />
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-yellow-400 mb-6 px-2">Neural News Flash</h2>
+            <div className="space-y-6 px-2">
+              {noticiasCluster.map((n, i) => (
+                <div key={i} className="group cursor-pointer">
+                  <p className="text-[9px] font-black text-zinc-600 uppercase mb-1 tracking-tighter">Broadcast Update 0{i+1}</p>
+                  <p className="text-[11px] font-bold leading-tight group-hover:text-yellow-400 transition-colors uppercase italic">{n.titulo}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </aside>
 
-        {/* JUMBOTRON E CHAT NO CENTRO */}
+        {/* CENTRO: JUMBOTRON E CHAT */}
         <div className="lg:col-span-6 space-y-6">
           <JumbotronJogo jogo={jogo} stats={stats} />
-          
           <div className="bg-zinc-900/60 backdrop-blur-2xl border border-white/10 rounded-[48px] h-[650px] overflow-hidden shadow-2xl">
             <TigreFCChat usuarioId={meuId} />
           </div>
@@ -132,7 +158,7 @@ export default function TigreFCPage() {
         </aside>
       </div>
 
-      {/* RODAPÉ COM NOTÍCIAS */}
+      {/* RODAPÉ COM TICKER NOTÍCIAS */}
       <footer className="mt-auto">
         <TigreNewsFlash />
         <div className="bg-black py-4 border-t border-white/5 text-center">
@@ -142,6 +168,7 @@ export default function TigreFCPage() {
         </div>
       </footer>
 
+      {/* MODAL PERFIL */}
       {perfilAberto && (
         <TigreFCPerfilPublico
           targetUsuarioId={perfilAberto}
@@ -152,7 +179,11 @@ export default function TigreFCPage() {
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,900&display=swap');
-        body { font-family: 'Barlow Condensed', sans-serif !important; background-color: #050505; }
+        body { 
+          font-family: 'Barlow Condensed', sans-serif !important; 
+          background-color: #050505; 
+          scroll-behavior: smooth;
+        }
         ::-webkit-scrollbar { width: 0px; }
       `}</style>
     </main>
