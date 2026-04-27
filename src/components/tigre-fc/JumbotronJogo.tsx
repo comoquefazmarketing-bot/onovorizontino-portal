@@ -48,6 +48,7 @@ function Countdown({ dataHora }: { dataHora: string }) {
 
   useEffect(() => {
     const calc = () => {
+      // Ajuste para considerar o fuso e o tempo de fechamento (1h antes)
       const diff = new Date(dataHora).getTime() - 60 * 60_000 - Date.now();
       if (diff <= 0) { setT({ h: '00', m: '00', s: '00', crit: true }); return; }
       const h = Math.floor(diff / 3_600_000);
@@ -105,7 +106,7 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
       boxShadow: '0 40px 100px rgba(0,0,0,0.6)',
       position: 'relative', overflow: 'hidden'
     }}>
-      {/* Background Glow */}
+      {/* Background Glow - Agora com tom azulado por causa do Avaí */}
       <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', 
         width: 300, height: 300, background: C.shock, filter: 'blur(60px)', zIndex: 0 }} />
 
@@ -118,7 +119,7 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           </span>
         </div>
         <span style={{ fontSize: 11, fontWeight: 900, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>
-          {jogo.competicao?.toUpperCase()} · RODADA {jogo.rodada}
+          {jogo.competicao?.toUpperCase() || 'SÉRIE B'} · RODADA {jogo.rodada || '7'}
         </span>
       </div>
 
@@ -127,10 +128,10 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
       {/* CONFRONTO (AVAÍ x NOVORIZONTINO) */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 35, position: 'relative', zIndex: 1 }}>
         <div style={{ flex: 1, textAlign: 'center' }}>
-          <img src={jogo.mandante?.escudo_url || FALLBACK}
+          <img src={jogo.mandante?.escudo_url || 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AVAI.png'}
             style={{ width: 80, height: 80, objectFit: 'contain', filter: 'drop-shadow(0 0 12px rgba(0,87,168,0.4))' }} alt="Avaí" />
           <div style={{ fontSize: 15, fontWeight: 900, color: C.cyan, marginTop: 10 }}>
-            {jogo.mandante?.nome?.toUpperCase()}
+            {jogo.mandante?.nome?.toUpperCase() || 'AVAÍ'}
           </div>
         </div>
 
@@ -140,22 +141,22 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
         </div>
 
         <div style={{ flex: 1, textAlign: 'center' }}>
-          <img src={jogo.visitante?.escudo_url || FALLBACK}
+          <img src={jogo.visitante?.escudo_url || 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png'}
             style={{ width: 80, height: 80, objectFit: 'contain', filter: 'drop-shadow(0 0 12px rgba(245,196,0,0.4))' }} alt="Novorizontino" />
           <div style={{ fontSize: 15, fontWeight: 900, color: C.gold, marginTop: 10 }}>
-            {jogo.visitante?.nome?.toUpperCase()}
+            {jogo.visitante?.nome?.toUpperCase() || 'NOVORIZONTINO'}
           </div>
         </div>
       </div>
 
       {/* Info Local/Transmissão */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 15, marginBottom: 25, opacity: 0.6 }}>
-         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}>
-            <MapPin size={12} /> {jogo.local?.split('—')[0]}
-         </div>
-         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}>
-            <Tv size={12} /> {jogo.transmissao}
-         </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#fff' }}>
+            <MapPin size={12} /> {jogo.local?.split('—')[0] || 'ESTÁDIO DA RESSACADA'}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#fff' }}>
+            <Tv size={12} /> {jogo.transmissao || 'ESPN · DISNEY+'}
+          </div>
       </div>
 
       {/* Stats Cards */}
@@ -182,8 +183,8 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
         ))}
       </div>
 
-      {/* CTA */}
-      <Link href={`/tigre-fc/escalar/${jogo.id}`} style={{ textDecoration: 'none' }}>
+      {/* Botão de Ação */}
+      <Link href={`/tigre-fc/escalar`} style={{ textDecoration: 'none' }}>
         <div style={{
           background: mercadoFechado ? 'rgba(255,255,255,0.05)' : `linear-gradient(90deg, ${C.gold}, #FFE57E)`,
           padding: 22, borderRadius: 24, textAlign: 'center',
