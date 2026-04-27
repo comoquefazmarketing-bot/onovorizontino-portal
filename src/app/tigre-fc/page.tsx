@@ -1,255 +1,213 @@
+// src/app/tigre-fc/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { supabase as sb } from '@/lib/supabase';
-import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
-import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
-import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
-import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import JumbotronJogo, { type Jogo } from '@/components/tigre-fc/JumbotronJogo';
 
-const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
-const URL_AVAI = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png";
+// ────────────────────────────────────────────────────────────────────────────
+// MAPEAMENTO ID → NOME CURTO (mesmo PLAYERS_DATA do EscalacaoFormacao)
+// Mantém apenas os shorts pra não duplicar payload na home.
+// ────────────────────────────────────────────────────────────────────────────
+const PLAYER_NAMES: Record<number, string> = {
+  // GOL
+  23: 'JORDI',
+  1:  'CÉSAR',
+  22: 'SCAPIN',
+  62: 'LUCAS',
+  // ZAG
+  8:  'PATRICK',
+  38: 'R. PALM',
+  34: 'BROCK',
+  66: 'ALVARÍÑO',
+  6:  'CARLINHOS',
+  3:  'DANTAS',
+  // LAT
+  9:  'SANDER',
+  28: 'MAYKON',
+  27: 'NILSON',
+  75: 'LORA',
+  // VOL
+  41: 'OYAMA',
+  46: 'MARLON',
+  40: 'NALDI',
+  // MEI
+  47: 'BIANQUI',
+  10: 'RÔMULO',
+  12: 'JUNINHO',
+  17: 'TAVINHO',
+  86: 'TITI ORTÍZ',
+  13: 'D. GALO',
+  // ATA
+  15: 'ROBSON',
+  59: 'V. PAIVA',
+  57: 'RONALD',
+  55: 'CARECA',
+  50: 'CARLÃO',
+  52: 'HÉLIO',
+  53: 'JARDIEL',
+  91: 'HECTOR',
+};
 
-// ── Interfaces Alinhadas com o Jumbotron ────────────────
-interface Time {
-  id: number;
-  nome: string;
-  escudo_url: string;
-  sigla: string | null;
-}
-
-interface Jogo {
-  id: number;
-  competicao: string;
-  rodada: string;
-  data_hora: string;
-  local: string | null;
-  transmissao: string | null;
-  mandante: Time;
-  visitante: Time;
-  mandante_slug?: string;
-}
-
-interface UsuarioRanking {
+// ────────────────────────────────────────────────────────────────────────────
+// TIPOS
+// ────────────────────────────────────────────────────────────────────────────
+interface UserShape {
   id: string;
-  nome: string;
-  apelido: string | null;
-  avatar_url: string | null;
-  pontos_total: number;
+  email?: string;
 }
 
-// Interface Stats exatamente como o Jumbotron espera
-interface Stats {
-  capitao: { nome: string; pts: number };
-  heroi: { nome: string; pts: number };
-  ranking: any[];
-  participantes: number;
+interface Escalacao {
+  formacao: string;
+  capitao_id: number | null;
+  heroi_id: number | null;
+  palpite_mandante: number;
+  palpite_visitante: number;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// PÁGINA
+// ────────────────────────────────────────────────────────────────────────────
 export default function TigreFCPage() {
-  const [mounted, setMounted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [jogo, setJogo] = useState<Jogo | null>(null);
-  const [ranking, setRanking] = useState<UsuarioRanking[]>([]);
-  const [meuId, setMeuId] = useState<string | null>(null);
-  const [minhaPosicao, setMinhaPosicao] = useState<number | null>(null);
-  const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
-  
-  // Inicialização segura para evitar que o Jumbotron quebre por falta de dados
-  const [statsState, setStatsState] = useState<Stats>({
-    capitao: { nome: '---', pts: 0.0 },
-    heroi: { nome: '---', pts: 0.0 },
-    ranking: [],
-    participantes: 0
-  });
+  const router = useRouter();
 
-  useEffect(() => { setMounted(true); }, []);
+  const [user, setUser]                       = useState<UserShape | null>(null);
+  const [jogo, setJogo]                       = useState<Jogo | null>(null);
+  const [escalacao, setEscalacao]             = useState<Escalacao | null>(null);
+  const [totalEscalacoes, setTotalEscalacoes] = useState(0);
+  const [loading, setLoading]                 = useState(true);
 
   useEffect(() => {
-    if (!mounted) return;
+    let cancelled = false;
 
-    async function init() {
-      setIsLoading(true);
+    const loadAll = async () => {
       try {
-        const { data: { session } } = await sb.auth.getSession();
-        let meuUsuarioId: string | null = null;
-        
-        if (session?.user?.id) {
-          const { data: u } = await sb
-            .from('tigre_fc_usuarios')
-            .select('id')
-            .eq('google_id', session.user.id)
-            .maybeSingle();
-          if (u) {
-            meuUsuarioId = u.id;
-            setMeuId(u.id);
-          }
+        // ─── 1. SESSÃO ─────────────────────────────────────────────
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!cancelled) {
+          setUser(authUser ? { id: authUser.id, email: authUser.email ?? undefined } : null);
         }
 
-        const [resJogo, resRank] = await Promise.all([
-          sb.from('jogos_tigre')
-            .select('*, mandante:times(*), visitante:times(*)')
-            .eq('ativo', true)
-            .maybeSingle(),
-          sb.from('tigre_fc_usuarios')
-            .select('id, nome, apelido, avatar_url, pontos_total')
-            .not('pontos_total', 'is', null)
-            .order('pontos_total', { ascending: false })
-            .limit(10)
-        ]);
+        // ─── 2. PRÓXIMO JOGO ATIVO (não finalizado, menor rodada) ──
+        const { data: jogosData, error: jogosError } = await supabase
+          .from('jogos')
+          .select('id, rodada, competicao, mandante_slug, visitante_slug, placar_mandante, placar_visitante, finalizado')
+          .eq('finalizado', false)
+          .order('rodada', { ascending: true })
+          .limit(1);
 
-        if (resJogo.data) {
-          const gameData = resJogo.data;
-          
-          // Blindagem Avaí e Competição
-          if (gameData.mandante_slug === 'avai' || gameData.mandante?.nome?.toUpperCase() === 'AVAÍ') {
-            gameData.mandante.escudo_url = URL_AVAI;
-            gameData.competicao = "COPA SUL-SUDESTE";
-          }
-          setJogo(gameData as Jogo);
+        if (jogosError) {
+          console.error('[TigreFCPage] erro ao buscar jogo ativo:', jogosError);
+        }
 
-          // Busca Escalação em Tempo Real para o Jumbotron
-          if (meuUsuarioId) {
-            const { data: esc } = await sb
+        const jogoAtivo: Jogo | null = jogosData?.[0] ?? null;
+        if (!cancelled) setJogo(jogoAtivo);
+
+        if (jogoAtivo) {
+          // ─── 3. CONTAGEM DE ESCALAÇÕES PRA ESSE JOGO ──────────────
+          const { count: countEscs } = await supabase
+            .from('tigre_fc_escalacoes')
+            .select('id', { count: 'exact', head: true })
+            .eq('jogo_id', jogoAtivo.id);
+
+          if (!cancelled) setTotalEscalacoes(countEscs ?? 0);
+
+          // ─── 4. ESCALAÇÃO DO USUÁRIO LOGADO ───────────────────────
+          if (authUser) {
+            const { data: escData, error: escError } = await supabase
               .from('tigre_fc_escalacoes')
-              .select('capitao_nome, heroi_nome')
-              .eq('usuario_id', meuUsuarioId)
-              .eq('jogo_id', gameData.id)
+              .select('formacao, capitao_id, heroi_id, palpite_mandante, palpite_visitante')
+              .eq('user_id', authUser.id)
+              .eq('jogo_id', jogoAtivo.id)
               .maybeSingle();
 
-            setStatsState({
-              capitao: { nome: esc?.capitao_nome || '---', pts: 0.0 },
-              heroi: { nome: esc?.heroi_nome || '---', pts: 0.0 },
-              ranking: resRank.data || [],
-              participantes: resRank.data?.length || 0
-            });
-          }
-        }
-        
-        if (resRank.data) setRanking(resRank.data as UsuarioRanking[]);
+            if (escError) {
+              console.error('[TigreFCPage] erro ao buscar escalação:', escError);
+            }
 
-        // Cálculo de posição no ranking
-        if (meuUsuarioId) {
-          const { data: meuPerfil } = await sb
-            .from('tigre_fc_usuarios')
-            .select('pontos_total')
-            .eq('id', meuUsuarioId)
-            .maybeSingle();
-          
-          if (meuPerfil?.pontos_total !== null) {
-            const { count } = await sb
-              .from('tigre_fc_usuarios')
-              .select('id', { count: 'exact', head: true })
-              .gt('pontos_total', meuPerfil.pontos_total);
-            setMinhaPosicao((count ?? 0) + 1);
+            if (!cancelled) setEscalacao(escData ?? null);
           }
         }
-      } catch (e) {
-        console.error('Erro na inicialização:', e);
+      } catch (err) {
+        console.error('[TigreFCPage] erro geral:', err);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setLoading(false);
       }
+    };
+
+    loadAll();
+    return () => { cancelled = true; };
+  }, []);
+
+  // ─── DERIVADOS: ID → NOME ─────────────────────────────────────────────
+  const capitaoNome: string | null = escalacao?.capitao_id != null
+    ? (PLAYER_NAMES[escalacao.capitao_id] ?? '---')
+    : null;
+
+  const heroiNome: string | null = escalacao?.heroi_id != null
+    ? (PLAYER_NAMES[escalacao.heroi_id] ?? '---')
+    : null;
+
+  // ─── HANDLERS ─────────────────────────────────────────────────────────
+  const handleEscalar = () => {
+    if (jogo) {
+      router.push(`/tigre-fc/escalar/${jogo.id}`);
     }
+  };
 
-    init();
-  }, [mounted]);
-
-  if (!mounted) return null;
-
+  // ─── RENDER ───────────────────────────────────────────────────────────
   return (
-    <main className="min-h-screen bg-[#050505] text-white pb-40 font-sans selection:bg-cyan-500/30">
-      {/* Header com Efeito Broadcast */}
-      <header className="relative pt-16 pb-28 text-center bg-black border-b border-white/5 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(0,243,255,0.05)_0%,transparent_70%)]" />
-        <div className="relative z-10">
-          <img src={PATA_LOGO} className="w-20 h-auto mx-auto mb-6 drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]" alt="Logo" />
-          <h1 className="text-7xl font-black italic uppercase leading-[0.8] tracking-tighter mb-6">
-            TIGRE <span className="text-[#F5C400]">FC</span>
-          </h1>
-          <div className="inline-flex items-center gap-4 px-6 py-2 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
-            <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <p className="text-[11px] font-black text-cyan-400 uppercase tracking-[0.5em]">Broadcast Station</p>
-          </div>
-        </div>
-      </header>
+    <main className="min-h-screen bg-black text-white">
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
 
-      <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-20 space-y-16">
-        {/* Renderização Condicional Protegida */}
-        {jogo && (
-          <JumbotronJogo
-            jogo={jogo}
-            stats={statsState}
-          />
+        {/* HERO HEADER */}
+        <header className="text-center pt-2 sm:pt-4">
+          <div className="text-yellow-400 text-[10px] sm:text-xs font-black tracking-[6px] mb-2">
+            ⚡ TIGRE FC
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-black italic tracking-tighter">
+            ARENA DA TORCIDA
+          </h1>
+          <p className="text-zinc-400 text-xs sm:text-sm mt-2 max-w-md mx-auto">
+            Escala o Tigrão, palpita no placar e entra no ranking dos torcedores.
+          </p>
+        </header>
+
+        {/* JUMBOTRON DA RODADA */}
+        <JumbotronJogo
+          jogo={jogo}
+          formacao={escalacao?.formacao ?? null}
+          capitaoNome={capitaoNome}
+          heroiNome={heroiNome}
+          palpiteMandante={escalacao?.palpite_mandante ?? null}
+          palpiteVisitante={escalacao?.palpite_visitante ?? null}
+          totalEscalacoes={totalEscalacoes}
+          onEscalar={handleEscalar}
+          loading={loading}
+        />
+
+        {/* AVISO LOGIN (só se não autenticado) */}
+        {!loading && !user && (
+          <div className="bg-zinc-950 border border-yellow-400/30 rounded-2xl p-4 text-center">
+            <div className="text-2xl mb-2">🔐</div>
+            <div className="text-sm font-black mb-1">Faça login pra escalar</div>
+            <div className="text-zinc-400 text-xs">
+              Entre com sua conta pra montar seu time, palpitar no placar e disputar o ranking.
+            </div>
+          </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* Chat / Feed Central */}
-          <section className="lg:col-span-7 h-[700px] rounded-[48px] border border-white/10 overflow-hidden bg-black/60 backdrop-blur-xl relative shadow-2xl">
-            <TigreFCChat usuarioId={meuId} />
-          </section>
-
-          {/* Sidebar de Destaques e Ranking */}
-          <div className="lg:col-span-5 space-y-10">
-            <DestaquesFifa />
-            
-            <section className="bg-zinc-900/40 p-8 rounded-[48px] border border-white/5 backdrop-blur-md shadow-xl">
-              <div className="flex justify-between items-end mb-8">
-                <div>
-                  <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-500 mb-2">Power Ranking</h2>
-                  <p className="text-2xl font-black italic uppercase">Liderança</p>
-                </div>
-                {minhaPosicao && (
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase">Sua Posição</p>
-                    <p className="text-xl font-black text-cyan-400">#{minhaPosicao}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                {ranking.map((u, i) => (
-                  <div 
-                    key={u.id} 
-                    onClick={() => setPerfilAberto(u.id)}
-                    className={`flex items-center gap-4 p-4 rounded-3xl transition-all cursor-pointer group ${
-                      u.id === meuId ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-white/5 border border-transparent hover:bg-white/10'
-                    }`}
-                  >
-                    <span className={`w-8 font-black italic text-lg ${i < 3 ? 'text-[#F5C400]' : 'text-zinc-500'}`}>
-                      {(i + 1).toString().padStart(2, '0')}
-                    </span>
-                    <div className="flex-1">
-                      <p className="font-black uppercase italic text-sm truncate">{u.apelido || u.nome}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-black text-xl leading-none">{u.pontos_total ?? 0}</p>
-                      <p className="text-[8px] font-bold text-zinc-500">PONTOS</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+        {/* AVISO SEM JOGO (estado raro) */}
+        {!loading && !jogo && (
+          <div className="bg-zinc-950 border border-white/10 rounded-2xl p-4 text-center">
+            <div className="text-zinc-500 text-xs">
+              A próxima rodada está sendo definida. Volte em breve!
+            </div>
           </div>
-        </div>
+        )}
+
       </div>
-
-      {perfilAberto && (
-        <TigreFCPerfilPublico
-          targetUsuarioId={perfilAberto}
-          viewerUsuarioId={meuId || undefined}
-          onClose={() => setPerfilAberto(null)}
-        />
-      )}
-
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,900&display=swap');
-        ::-webkit-scrollbar { width: 0px; }
-        body { 
-          background-color: #050505; 
-          color: white; 
-          font-family: 'Barlow Condensed', sans-serif !important; 
-        }
-      `}</style>
     </main>
   );
 }
