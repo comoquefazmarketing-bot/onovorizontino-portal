@@ -17,7 +17,7 @@ export const C = {
 } as const;
 
 // ────────────────────────────────────────────────────────────────────────────
-// MAPA DE LOGOS / NOMES POR SLUG (extensível)
+// MAPA DE LOGOS / NOMES POR SLUG
 // ────────────────────────────────────────────────────────────────────────────
 const STORAGE_BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal';
 
@@ -67,13 +67,13 @@ const NOMES: Record<string, string> = {
   'botafogo-sp':          'BOTAFOGO-SP',
 };
 
-const slugToNome  = (slug?: string) => (slug ? NOMES[slug] ?? slug.replace(/-/g, ' ').toUpperCase() : '---');
-const slugToLogo  = (slug?: string) => (slug ? LOGOS[slug] ?? `${STORAGE_BASE}/Escudo%20Novorizontino.png` : `${STORAGE_BASE}/Escudo%20Novorizontino.png`);
+const slugToNome = (slug?: string) => (slug ? NOMES[slug] ?? slug.replace(/-/g, ' ').toUpperCase() : '---');
+const slugToLogo = (slug?: string) => (slug ? LOGOS[slug] ?? `${STORAGE_BASE}/Escudo%20Novorizontino.png` : `${STORAGE_BASE}/Escudo%20Novorizontino.png`);
 
 // ────────────────────────────────────────────────────────────────────────────
-// TIPOS
+// TIPOS — `type` em vez de `interface` por compat com Turbopack
 // ────────────────────────────────────────────────────────────────────────────
-export interface Jogo {
+export type Jogo = {
   id: number;
   rodada: number;
   competicao: string;
@@ -83,10 +83,20 @@ export interface Jogo {
   placar_visitante: number | null;
   finalizado: boolean;
   data_jogo?: string | null;
-}
+};
 
-export interface JumbotronJogoProps {
+export type JumbotronStats = {
+  ranking?: Array<{ nome?: string; apelido?: string; pontos?: number }>;
+  capitao?: { nome?: string; pts?: number };
+  heroi?:   { nome?: string; pts?: number };
+  totalEscalacoes?: number;
+  [key: string]: unknown;
+};
+
+export type JumbotronJogoProps = {
   jogo: Jogo | null;
+
+  // ─── API NOVA (page.tsx) ───────────────────────────────────────────
   formacao?: string | null;
   capitaoNome?: string | null;
   heroiNome?: string | null;
@@ -95,7 +105,11 @@ export interface JumbotronJogoProps {
   totalEscalacoes?: number;
   onEscalar?: () => void;
   loading?: boolean;
-}
+
+  // ─── API LEGADA (TigreFCPage.tsx) — opcional, retrocompat ──────────
+  mercadoFechado?: boolean;
+  stats?: JumbotronStats;
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 // COMPONENTE
@@ -107,12 +121,19 @@ export default function JumbotronJogo({
   heroiNome = null,
   palpiteMandante = null,
   palpiteVisitante = null,
-  totalEscalacoes = 0,
+  totalEscalacoes,
   onEscalar,
   loading = false,
+  mercadoFechado = false,
+  stats,
 }: JumbotronJogoProps) {
 
-  // ─── ESTADO DE LOADING ───────────────────────────────────────────────
+  // ─── MERGE API NOVA + LEGADA ────────────────────────────────────────
+  const effectiveCapitao = capitaoNome ?? stats?.capitao?.nome ?? null;
+  const effectiveHeroi   = heroiNome   ?? stats?.heroi?.nome   ?? null;
+  const effectiveTotal   = totalEscalacoes ?? stats?.totalEscalacoes ?? (stats?.ranking?.length ?? 0);
+
+  // ─── LOADING ────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="w-full max-w-2xl mx-auto rounded-3xl p-8 border border-white/10 animate-pulse"
@@ -124,7 +145,7 @@ export default function JumbotronJogo({
     );
   }
 
-  // ─── SEM JOGO ATIVO ──────────────────────────────────────────────────
+  // ─── SEM JOGO ───────────────────────────────────────────────────────
   if (!jogo) {
     return (
       <div className="w-full max-w-2xl mx-auto rounded-3xl p-6 border text-center"
@@ -136,14 +157,14 @@ export default function JumbotronJogo({
     );
   }
 
-  // ─── DADOS DERIVADOS ─────────────────────────────────────────────────
+  // ─── DADOS ──────────────────────────────────────────────────────────
   const mandanteLogo  = slugToLogo(jogo.mandante_slug);
   const visitanteLogo = slugToLogo(jogo.visitante_slug);
   const mandanteNome  = slugToNome(jogo.mandante_slug);
   const visitanteNome = slugToNome(jogo.visitante_slug);
 
-  const hasCapitao = !!(capitaoNome && capitaoNome !== '---');
-  const hasHeroi   = !!(heroiNome   && heroiNome   !== '---');
+  const hasCapitao = !!(effectiveCapitao && effectiveCapitao !== '---');
+  const hasHeroi   = !!(effectiveHeroi   && effectiveHeroi   !== '---');
   const hasEscalacao = !!formacao && hasCapitao && hasHeroi;
 
   const palpiteText = (palpiteMandante !== null && palpiteVisitante !== null)
@@ -154,7 +175,12 @@ export default function JumbotronJogo({
     ? new Date(jogo.data_jogo).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
     : null;
 
-  // ─── RENDER ──────────────────────────────────────────────────────────
+  const ctaDisabled = mercadoFechado;
+  const ctaLabel = mercadoFechado
+    ? '🔒 MERCADO FECHADO'
+    : (hasEscalacao ? '✏ EDITAR ESCALAÇÃO' : '⚡ ESCALAR AGORA');
+
+  // ─── RENDER ─────────────────────────────────────────────────────────
   return (
     <div
       className="relative w-full max-w-2xl mx-auto rounded-3xl overflow-hidden"
@@ -168,7 +194,7 @@ export default function JumbotronJogo({
       <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
         style={{ backgroundImage: `repeating-linear-gradient(45deg, ${C.gold} 0, ${C.gold} 1px, transparent 1px, transparent 14px)` }} />
 
-      {/* Linha superior dourada animada */}
+      {/* Linha superior animada */}
       <motion.div
         className="absolute top-0 left-0 right-0 h-[2px]"
         style={{ background: `linear-gradient(90deg, transparent, ${C.gold}, ${C.cyan}, ${C.gold}, transparent)` }}
@@ -208,11 +234,9 @@ export default function JumbotronJogo({
 
       {/* CONFRONTO */}
       <div className="flex items-center justify-around px-4 sm:px-6 pb-5 relative z-10">
-        {/* MANDANTE */}
         <div className="flex flex-col items-center flex-1">
           <div className="relative">
-            <div className="absolute inset-0 rounded-full blur-xl"
-              style={{ background: `${C.gold}40` }} />
+            <div className="absolute inset-0 rounded-full blur-xl" style={{ background: `${C.gold}40` }} />
             <img src={mandanteLogo} alt={mandanteNome}
               className="relative w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)]"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = `${STORAGE_BASE}/Escudo%20Novorizontino.png`; }} />
@@ -223,7 +247,6 @@ export default function JumbotronJogo({
           </div>
         </div>
 
-        {/* CENTRO: VS ou PLACAR */}
         <div className="flex flex-col items-center px-2 sm:px-4">
           {jogo.finalizado && jogo.placar_mandante !== null && jogo.placar_visitante !== null ? (
             <>
@@ -243,11 +266,9 @@ export default function JumbotronJogo({
           )}
         </div>
 
-        {/* VISITANTE */}
         <div className="flex flex-col items-center flex-1">
           <div className="relative">
-            <div className="absolute inset-0 rounded-full blur-xl"
-              style={{ background: `${C.cyan}30` }} />
+            <div className="absolute inset-0 rounded-full blur-xl" style={{ background: `${C.cyan}30` }} />
             <img src={visitanteLogo} alt={visitanteNome}
               className="relative w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)]"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = `${STORAGE_BASE}/Escudo%20Novorizontino.png`; }} />
@@ -259,7 +280,7 @@ export default function JumbotronJogo({
         </div>
       </div>
 
-      {/* PAINEL: ESCALAÇÃO DO USUÁRIO */}
+      {/* PAINEL ESCALAÇÃO */}
       <div
         className="mx-4 mb-4 rounded-2xl p-3 sm:p-4 relative z-10"
         style={{
@@ -270,7 +291,6 @@ export default function JumbotronJogo({
       >
         {hasEscalacao ? (
           <>
-            {/* Header do painel: status + formação */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="text-base">✓</span>
@@ -283,8 +303,6 @@ export default function JumbotronJogo({
                 {formacao}
               </div>
             </div>
-
-            {/* Capitão + Herói lado a lado */}
             <div className="grid grid-cols-2 gap-2 mb-3">
               <div className="bg-zinc-950/60 rounded-lg px-3 py-2 border"
                 style={{ borderColor: `${C.gold}50`, boxShadow: `inset 0 0 10px ${C.gold}10` }}>
@@ -292,7 +310,7 @@ export default function JumbotronJogo({
                   <span className="text-sm">👑</span>
                   <span className="text-[8px] font-black tracking-[2px]" style={{ color: C.gold }}>CAPITÃO 2×</span>
                 </div>
-                <div className="text-sm font-black truncate text-white">{capitaoNome}</div>
+                <div className="text-sm font-black truncate text-white">{effectiveCapitao}</div>
               </div>
               <div className="bg-zinc-950/60 rounded-lg px-3 py-2 border"
                 style={{ borderColor: `${C.cyan}50`, boxShadow: `inset 0 0 10px ${C.cyan}10` }}>
@@ -300,11 +318,9 @@ export default function JumbotronJogo({
                   <span className="text-sm">🔥</span>
                   <span className="text-[8px] font-black tracking-[2px]" style={{ color: C.cyan }}>HERÓI +50%</span>
                 </div>
-                <div className="text-sm font-black truncate text-white">{heroiNome}</div>
+                <div className="text-sm font-black truncate text-white">{effectiveHeroi}</div>
               </div>
             </div>
-
-            {/* Palpite */}
             {palpiteText && (
               <div className="text-center bg-black/40 rounded-lg py-1.5 border border-white/5">
                 <span className="text-[9px] tracking-[3px] text-zinc-500 font-black">SEU PALPITE: </span>
@@ -332,21 +348,29 @@ export default function JumbotronJogo({
         )}
       </div>
 
-      {/* CTA PRINCIPAL */}
+      {/* CTA */}
       {onEscalar ? (
         <button
-          onClick={onEscalar}
-          className="block w-full py-4 font-black tracking-[3px] text-sm uppercase active:scale-[0.99] transition-transform relative z-10"
+          onClick={ctaDisabled ? undefined : onEscalar}
+          disabled={ctaDisabled}
+          className="block w-full py-4 font-black tracking-[3px] text-sm uppercase active:scale-[0.99] transition-transform relative z-10 disabled:cursor-not-allowed"
           style={{
-            background: hasEscalacao
-              ? `linear-gradient(90deg, ${C.cyan}, ${C.gold})`
-              : `linear-gradient(90deg, ${C.gold}, #ffaa00, ${C.gold})`,
-            color: C.black,
-            boxShadow: `0 0 25px ${hasEscalacao ? C.cyan : C.gold}50`,
+            background: ctaDisabled
+              ? '#2a2a2a'
+              : hasEscalacao
+                ? `linear-gradient(90deg, ${C.cyan}, ${C.gold})`
+                : `linear-gradient(90deg, ${C.gold}, #ffaa00, ${C.gold})`,
+            color: ctaDisabled ? '#666' : C.black,
+            boxShadow: ctaDisabled ? 'none' : `0 0 25px ${hasEscalacao ? C.cyan : C.gold}50`,
           }}
         >
-          {hasEscalacao ? '✏ EDITAR ESCALAÇÃO' : '⚡ ESCALAR AGORA'}
+          {ctaLabel}
         </button>
+      ) : ctaDisabled ? (
+        <div className="block w-full py-4 font-black tracking-[3px] text-sm uppercase text-center relative z-10"
+          style={{ background: '#2a2a2a', color: '#666' }}>
+          {ctaLabel}
+        </div>
       ) : (
         <Link
           href={`/tigre-fc/escalar/${jogo.id}`}
@@ -359,15 +383,15 @@ export default function JumbotronJogo({
             boxShadow: `0 0 25px ${hasEscalacao ? C.cyan : C.gold}50`,
           }}
         >
-          {hasEscalacao ? '✏ EDITAR ESCALAÇÃO' : '⚡ ESCALAR AGORA'}
+          {ctaLabel}
         </Link>
       )}
 
-      {/* FOOTER: contador de torcedores */}
-      {totalEscalacoes > 0 && (
+      {/* FOOTER contador */}
+      {effectiveTotal > 0 && (
         <div className="px-4 py-2 text-center relative z-10" style={{ background: 'rgba(0,0,0,0.6)' }}>
           <span className="text-[10px] tracking-[2px] text-zinc-400 font-bold">
-            <span className="font-black" style={{ color: C.gold }}>{totalEscalacoes.toLocaleString('pt-BR')}</span>
+            <span className="font-black" style={{ color: C.gold }}>{effectiveTotal.toLocaleString('pt-BR')}</span>
             {' '}torcedores já escalaram
           </span>
         </div>
