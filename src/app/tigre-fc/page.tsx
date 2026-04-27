@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase as sb } from '@/lib/supabase';
 import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
 import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
@@ -10,7 +10,7 @@ import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 const URL_AVAI = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png";
 
-// ── Interfaces de Dados ────────────────
+// ── Interfaces Alinhadas com o Jumbotron ────────────────
 interface Time {
   id: number;
   nome: string;
@@ -38,6 +38,7 @@ interface UsuarioRanking {
   pontos_total: number;
 }
 
+// Interface Stats exatamente como o Jumbotron espera
 interface Stats {
   capitao: { nome: string; pts: number };
   heroi: { nome: string; pts: number };
@@ -54,9 +55,10 @@ export default function TigreFCPage() {
   const [minhaPosicao, setMinhaPosicao] = useState<number | null>(null);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
   
+  // Inicialização segura para evitar que o Jumbotron quebre por falta de dados
   const [statsState, setStatsState] = useState<Stats>({
-    capitao: { nome: '---', pts: 0 },
-    heroi: { nome: '---', pts: 0 },
+    capitao: { nome: '---', pts: 0.0 },
+    heroi: { nome: '---', pts: 0.0 },
     ranking: [],
     participantes: 0
   });
@@ -85,7 +87,10 @@ export default function TigreFCPage() {
         }
 
         const [resJogo, resRank] = await Promise.all([
-          sb.from('jogos_tigre').select('*, mandante:times(*), visitante:times(*)').eq('ativo', true).maybeSingle(),
+          sb.from('jogos_tigre')
+            .select('*, mandante:times(*), visitante:times(*)')
+            .eq('ativo', true)
+            .maybeSingle(),
           sb.from('tigre_fc_usuarios')
             .select('id, nome, apelido, avatar_url, pontos_total')
             .not('pontos_total', 'is', null)
@@ -93,43 +98,37 @@ export default function TigreFCPage() {
             .limit(10)
         ]);
 
-        // --- BUSCA ESCALAÇÃO SALVA ---
-        let dadosEscalacao = { capitao: '---', heroi: '---' };
-        if (meuUsuarioId && resJogo.data) {
-          const { data: esc } = await sb
-            .from('tigre_fc_escalacoes')
-            .select('capitao_nome, heroi_nome')
-            .eq('usuario_id', meuUsuarioId)
-            .eq('jogo_id', resJogo.data.id)
-            .maybeSingle();
-
-          if (esc) {
-            dadosEscalacao = {
-              capitao: esc.capitao_nome || '---',
-              heroi: esc.heroi_nome || '---'
-            };
-          }
-        }
-
         if (resJogo.data) {
           const gameData = resJogo.data;
+          
+          // Blindagem Avaí e Competição
           if (gameData.mandante_slug === 'avai' || gameData.mandante?.nome?.toUpperCase() === 'AVAÍ') {
             gameData.mandante.escudo_url = URL_AVAI;
             gameData.competicao = "COPA SUL-SUDESTE";
           }
           setJogo(gameData as Jogo);
-          
-          setStatsState(prev => ({
-            ...prev,
-            capitao: { nome: dadosEscalacao.capitao, pts: 0 },
-            heroi: { nome: dadosEscalacao.heroi, pts: 0 },
-            ranking: resRank.data ? resRank.data.map(u => ({ id: u.id, apelido: u.apelido || u.nome, pontos: u.pontos_total || 0 })) : [],
-            participantes: resRank.data ? resRank.data.length : 0
-          }));
+
+          // Busca Escalação em Tempo Real para o Jumbotron
+          if (meuUsuarioId) {
+            const { data: esc } = await sb
+              .from('tigre_fc_escalacoes')
+              .select('capitao_nome, heroi_nome')
+              .eq('usuario_id', meuUsuarioId)
+              .eq('jogo_id', gameData.id)
+              .maybeSingle();
+
+            setStatsState({
+              capitao: { nome: esc?.capitao_nome || '---', pts: 0.0 },
+              heroi: { nome: esc?.heroi_nome || '---', pts: 0.0 },
+              ranking: resRank.data || [],
+              participantes: resRank.data?.length || 0
+            });
+          }
         }
         
         if (resRank.data) setRanking(resRank.data as UsuarioRanking[]);
 
+        // Cálculo de posição no ranking
         if (meuUsuarioId) {
           const { data: meuPerfil } = await sb
             .from('tigre_fc_usuarios')
@@ -137,7 +136,7 @@ export default function TigreFCPage() {
             .eq('id', meuUsuarioId)
             .maybeSingle();
           
-          if (meuPerfil?.pontos_total !== null && meuPerfil?.pontos_total !== undefined) {
+          if (meuPerfil?.pontos_total !== null) {
             const { count } = await sb
               .from('tigre_fc_usuarios')
               .select('id', { count: 'exact', head: true })
@@ -146,26 +145,20 @@ export default function TigreFCPage() {
           }
         }
       } catch (e) {
-        console.error('[TigreFCPage] Erro ao carregar dados:', e);
+        console.error('Erro na inicialização:', e);
       } finally {
         setIsLoading(false);
       }
     }
 
     init();
-    
-    const channel = sb
-      .channel('tigre-fc-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'jogos_tigre' }, () => init())
-      .subscribe();
-      
-    return () => { sb.removeChannel(channel); };
   }, [mounted]);
 
   if (!mounted) return null;
 
   return (
     <main className="min-h-screen bg-[#050505] text-white pb-40 font-sans selection:bg-cyan-500/30">
+      {/* Header com Efeito Broadcast */}
       <header className="relative pt-16 pb-28 text-center bg-black border-b border-white/5 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(0,243,255,0.05)_0%,transparent_70%)]" />
         <div className="relative z-10">
@@ -181,6 +174,7 @@ export default function TigreFCPage() {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-20 space-y-16">
+        {/* Renderização Condicional Protegida */}
         {jogo && (
           <JumbotronJogo
             jogo={jogo}
@@ -189,10 +183,12 @@ export default function TigreFCPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          {/* Chat / Feed Central */}
           <section className="lg:col-span-7 h-[700px] rounded-[48px] border border-white/10 overflow-hidden bg-black/60 backdrop-blur-xl relative shadow-2xl">
             <TigreFCChat usuarioId={meuId} />
           </section>
 
+          {/* Sidebar de Destaques e Ranking */}
           <div className="lg:col-span-5 space-y-10">
             <DestaquesFifa />
             
