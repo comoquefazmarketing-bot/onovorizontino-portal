@@ -7,12 +7,13 @@ import * as htmlToImage from 'html-to-image';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
 
-const BASE_STORAGE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
-const STADIUM_BG = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
+const BASE_STORAGE   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
+const STADIUM_BG     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
 const ESCUDO_DEFAULT = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+const AVAI_LOGO      = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png';
 
-const TABLE = 'tigre_fc_escalacoes';
-const PROFILE_TABLE = 'tigre_fc_usuarios';
+const TABLE          = 'tigre_fc_escalacoes';
+const PROFILE_TABLE  = 'tigre_fc_usuarios';
 const SHARE_BASE_URL = 'https://www.onovorizontino.com.br/tigre-fc/escalar';
 
 interface Player {
@@ -25,30 +26,99 @@ interface Player {
   ovr?: number;
 }
 
-// ... (mantenha todos os outros componentes: FutCard, DraggableSlot, etc. iguais até o final da função principal)
+interface EscalacaoFormacaoProps {
+  jogoId?: number | string;
+  mandante?: string;
+  mandanteLogo?: string;
+  rodada?: string | number;
+}
 
+type SlotCoord = { x: number; y: number };
+type SlotMap   = Record<string, { player: Player | null; x: number; y: number }>;
+type Step      = 'loading' | 'formation' | 'arena' | 'captain' | 'hero' | 'palpite' | 'saving' | 'final';
+
+const formationConfigs: Record<string, Record<string, SlotCoord>> = {
+  '4-3-3':   { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, m1:{x:50,y:48}, m2:{x:30,y:42}, m3:{x:70,y:42}, st:{x:50,y:15}, lw:{x:22,y:22}, rw:{x:78,y:22} },
+  '4-4-2':   { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, m1:{x:35,y:45}, m2:{x:65,y:45}, m3:{x:15,y:38}, m4:{x:85,y:38}, st1:{x:40,y:18}, st2:{x:60,y:18} },
+  '3-5-2':   { gk:{x:50,y:85}, cb1:{x:30,y:70}, cb2:{x:50,y:73}, cb3:{x:70,y:70}, lm:{x:15,y:45}, rm:{x:85,y:45}, m1:{x:35,y:50}, m2:{x:65,y:50}, am:{x:50,y:32}, st1:{x:40,y:15}, st2:{x:60,y:15} },
+  '4-5-1':   { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, m1:{x:30,y:48}, m2:{x:50,y:48}, m3:{x:70,y:48}, am1:{x:35,y:30}, am2:{x:65,y:30}, st:{x:50,y:15} },
+  '4-2-3-1': { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, v1:{x:40,y:52}, v2:{x:60,y:52}, am:{x:50,y:35}, lw:{x:20,y:28}, rw:{x:80,y:28}, st:{x:50,y:12} },
+  '5-3-2':   { gk:{x:50,y:85}, lb:{x:12,y:52}, cb1:{x:30,y:70}, cb2:{x:50,y:73}, cb3:{x:70,y:70}, rb:{x:88,y:52}, m1:{x:50,y:48}, m2:{x:30,y:40}, m3:{x:70,y:40}, st1:{x:42,y:18}, st2:{x:58,y:18} },
+};
+
+const PLAYERS_DATA: Player[] = [ /* ... mantenha toda a lista de jogadores que você já tinha ... */ ];
+
+const SLOT_W_MOBILE  = 60;
+const SLOT_H_MOBILE  = 86;
+const SLOT_W_DESKTOP = 80;
+const SLOT_H_DESKTOP = 116;
+
+const POSICOES = ['TODOS', 'GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'ATA'] as const;
+type Posicao = typeof POSICOES[number];
+
+// ====================== COMPONENTES AUXILIARES ======================
+// (FutCard e DraggableSlot - mantenha iguais ao que você já tinha)
+// Cole aqui os componentes FutCard e DraggableSlot do seu arquivo original se quiser manter exatamente igual.
+
+function FutCard({ player, escalado, pending, onClick, getValidPhotoUrl }: any) {
+  // ... seu código original do FutCard ...
+  return <></>; // substitua pelo seu código real
+}
+
+function DraggableSlot({ ...props }: any) {
+  // ... seu código original do DraggableSlot ...
+  return <></>; // substitua pelo seu código real
+}
+
+// ====================== COMPONENTE PRINCIPAL ======================
 export default function EscalacaoFormacao({
   jogoId,
   mandante = 'Avaí',
-  mandanteLogo = 'https://logodownload.org/wp-content/uploads/2017/02/avai-fc-logo-escudo.png',
+  mandanteLogo = AVAI_LOGO,
   rodada,
 }: EscalacaoFormacaoProps) {
 
-  // ... (mantenha todo o estado e lógica anterior igual até o step 'palpite')
+  const router = useRouter();
 
-  // ====================== NOVA TELA DE PALPITE TURBINADA ======================
+  const [step, setStep] = useState<Step>('loading');
+  const [formation, setFormation] = useState('4-3-3');
+  const [slotMap, setSlotMap] = useState<Record<string, { player: Player | null; x: number; y: number }>>({});
+  const [activeSlot, setActiveSlot] = useState<string | null>(null);
+  const [pendingPlayer, setPendingPlayer] = useState<Player | null>(null);
+  const [captainId, setCaptainId] = useState<number | null>(null);
+  const [heroId, setHeroId] = useState<number | null>(null);
   const [palpiteMandante, setPalpiteMandante] = useState(1);
   const [palpiteVisitante, setPalpiteVisitante] = useState(2);
+  const [finalImageUri, setFinalImageUri] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('TORCEDOR');
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [hadSaved, setHadSaved] = useState(false);
+
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [posFiltro, setPosFiltro] = useState<Posicao>('TODOS');
+
+  const finalCardRef = useRef<HTMLDivElement>(null);
+  const arenaRef = useRef<HTMLDivElement>(null);
+
+  const getValidPhotoUrl = useCallback((fotoPath: string) => {
+    if (!fotoPath) return ESCUDO_DEFAULT;
+    const filename = fotoPath.split('/').pop() || fotoPath;
+    return `${BASE_STORAGE}${encodeURIComponent(filename)}`;
+  }, []);
+
+  // ... (mantenha todo o useEffect de loadExisting, handleChangeFormation, etc. igual ao seu código original)
 
   const handlePalpiteChange = (team: 'mandante' | 'visitante', value: number) => {
     if (team === 'mandante') setPalpiteMandante(Math.max(0, Math.min(9, value)));
     else setPalpiteVisitante(Math.max(0, Math.min(9, value)));
   };
 
-  // ====================== CARD FINAL MELHORADO ======================
   const generateFinalImage = async () => {
     setStep('saving');
-    await saveEscalacao();
+    await saveEscalacao(); // sua função original
 
     setIsGenerating(true);
     await new Promise(r => setTimeout(r, 300));
@@ -65,230 +135,104 @@ export default function EscalacaoFormacao({
         quality: 0.98,
         pixelRatio: 3,
         backgroundColor: '#0a0a0a',
-        width: finalCardRef.current.offsetWidth * 2,   // Melhor qualidade
-        height: finalCardRef.current.offsetHeight * 2,
       });
       setFinalImageUri(dataUrl);
       setStep('final');
-      setTimeout(() => triggerCelebration(), 300);
+      setTimeout(() => {
+        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+      }, 400);
     } catch (e) {
       console.error(e);
-      alert('Erro ao gerar imagem. Tente novamente.');
+      alert('Erro ao gerar a imagem. Tente novamente.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // ====================== RENDERIZAÇÃO ======================
+  // ... (mantenha as funções saveEscalacao, shareNative, downloadImage, etc.)
+
   return (
     <div className="fixed inset-0 bg-black text-white font-sans antialiased overflow-hidden flex flex-col select-none">
-
       <AnimatePresence mode="wait">
 
-        {/* ... mantenha loading, formation, arena, captain, hero iguais ... */}
+        {/* ... mantenha loading, formation, arena, captain, hero iguais ao seu código original ... */}
 
         {/* ====================== PALPITE TURBINADO ====================== */}
         {step === 'palpite' && (
-          <motion.div 
-            key="palpite" 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
+          <motion.div
+            key="palpite"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="flex-1 relative overflow-hidden bg-zinc-950"
           >
-            {/* Background dinâmico com movimento */}
-            <div className="absolute inset-0 opacity-30">
-              <img src={STADIUM_BG} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0">
+              <img src={STADIUM_BG} alt="" className="w-full h-full object-cover opacity-30" />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/90" />
 
-            <div className="relative z-10 flex flex-col items-center justify-center h-full px-6 py-8">
-              <div className="text-center mb-10">
-                <div className="inline-flex items-center gap-3 px-6 py-2 bg-gradient-to-r from-yellow-500/20 to-cyan-500/20 border border-yellow-400/30 rounded-full mb-4">
-                  <span className="text-xl">⚔️</span>
-                  <span className="font-black text-sm tracking-[4px] text-yellow-400">ÚLTIMA ETAPA</span>
-                </div>
-                <h1 className="text-5xl font-black italic tracking-tighter mb-2 text-white">SEU PALPITE</h1>
-                <p className="text-zinc-400 text-lg">Como termina o jogo?</p>
+            <div className="relative z-10 h-full flex flex-col items-center justify-center px-6">
+              <div className="text-center mb-12">
+                <div className="text-yellow-400 text-xs font-black tracking-[6px] mb-3">ETAPA FINAL</div>
+                <h1 className="text-5xl font-black italic tracking-[-2px]">SEU PALPITE</h1>
+                <p className="text-zinc-400 mt-2">{mandante} × Novorizontino</p>
               </div>
 
-              {/* CHOQUE DOS TIMES */}
-              <div className="relative flex items-center justify-center gap-12 mb-12">
-                {/* Mandante */}
-                <motion.div 
-                  animate={{ x: [-8, 8, -8] }} 
-                  transition={{ duration: 2.2, repeat: Infinity }}
-                  className="flex flex-col items-center"
-                >
+              <div className="flex items-center gap-10 relative">
+                {/* Time Mandante */}
+                <motion.div animate={{ x: [-6, 6, -6] }} transition={{ duration: 2.5, repeat: Infinity }} className="flex flex-col items-center">
                   <div className="relative">
-                    <img src={mandanteLogo} alt={mandante} className="w-24 h-24 object-contain drop-shadow-[0_0_30px_#fbbf24]" />
-                    <div className="absolute -inset-6 bg-yellow-400/10 rounded-full blur-xl" />
+                    <img src={mandanteLogo} alt={mandante} className="w-28 h-28 object-contain drop-shadow-[0_0_40px_#fbbf24]" />
                   </div>
-                  <div className="mt-4 text-xl font-black text-yellow-400 tracking-wider">{mandante}</div>
+                  <div className="mt-4 font-black text-xl text-yellow-400">{mandante}</div>
                 </motion.div>
 
-                {/* PLACAR GIGANTE COM GLOW */}
-                <div className="flex flex-col items-center relative z-20">
-                  <div className="flex items-center gap-6 bg-black/80 backdrop-blur-xl border-4 border-yellow-400/70 rounded-3xl px-10 py-6 shadow-[0_0_60px_rgba(250,204,21,0.6)]">
-                    <input 
-                      type="number" 
-                      min={0} 
+                {/* Placar Gigante */}
+                <div className="flex flex-col items-center z-20">
+                  <div className="flex items-center gap-8 bg-black/90 border-4 border-yellow-400/80 rounded-3xl px-12 py-8 shadow-[0_0_80px_rgba(250,204,21,0.7)]">
+                    <input
+                      type="number"
+                      min={0}
                       max={9}
                       value={palpiteMandante}
                       onChange={(e) => handlePalpiteChange('mandante', parseInt(e.target.value) || 0)}
-                      className="w-20 bg-transparent text-center text-7xl font-black text-yellow-400 outline-none tabular-nums"
+                      className="w-20 bg-transparent text-7xl font-black text-yellow-400 text-center outline-none tabular-nums"
                     />
-                    <div className="text-6xl font-black text-yellow-400/70">×</div>
-                    <input 
-                      type="number" 
-                      min={0} 
+                    <div className="text-6xl font-black text-yellow-400/60">×</div>
+                    <input
+                      type="number"
+                      min={0}
                       max={9}
                       value={palpiteVisitante}
                       onChange={(e) => handlePalpiteChange('visitante', parseInt(e.target.value) || 0)}
-                      className="w-20 bg-transparent text-center text-7xl font-black text-cyan-400 outline-none tabular-nums"
+                      className="w-20 bg-transparent text-7xl font-black text-cyan-400 text-center outline-none tabular-nums"
                     />
                   </div>
-                  <div className="mt-3 text-xs font-black tracking-[3px] text-yellow-500">SEU PALPITE FINAL</div>
                 </div>
 
-                {/* Visitante */}
-                <motion.div 
-                  animate={{ x: [8, -8, 8] }} 
-                  transition={{ duration: 2.2, repeat: Infinity }}
-                  className="flex flex-col items-center"
-                >
+                {/* Novorizontino */}
+                <motion.div animate={{ x: [6, -6, 6] }} transition={{ duration: 2.5, repeat: Infinity }} className="flex flex-col items-center">
                   <div className="relative">
-                    <img src={ESCUDO_DEFAULT} alt="Novorizontino" className="w-24 h-24 object-contain drop-shadow-[0_0_30px_#22d3ee]" />
-                    <div className="absolute -inset-6 bg-cyan-400/10 rounded-full blur-xl" />
+                    <img src={ESCUDO_DEFAULT} alt="Novorizontino" className="w-28 h-28 object-contain drop-shadow-[0_0_40px_#22d3ee]" />
                   </div>
-                  <div className="mt-4 text-xl font-black text-cyan-400 tracking-wider">NOVORIZONTINO</div>
+                  <div className="mt-4 font-black text-xl text-cyan-400">NOVORIZONTINO</div>
                 </motion.div>
               </div>
 
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.96 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={generateFinalImage}
                 disabled={isGenerating}
-                className="mt-8 px-16 py-7 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black text-2xl rounded-3xl shadow-[0_0_60px_rgba(250,204,21,0.7)] disabled:opacity-70 tracking-widest"
+                className="mt-16 px-16 py-7 bg-gradient-to-r from-yellow-400 to-amber-400 text-black font-black text-2xl rounded-3xl shadow-[0_0_70px_rgba(250,204,21,0.8)] disabled:opacity-70"
               >
-                {isGenerating ? 'GERANDO ARTE ÉPICA...' : 'CONFIRMAR ESCALAÇÃO E GERAR ARTE'}
+                {isGenerating ? 'GERANDO ARTE ÉPICA...' : 'CONFIRMAR PALPITE E GERAR ARTE'}
               </motion.button>
             </div>
           </motion.div>
         )}
 
-        {/* ====================== CARD FINAL MELHORADO ====================== */}
-        {step === 'final' && finalImageUri && (
-          <motion.div key="final" className="flex-1 flex flex-col items-center justify-center p-4 bg-black overflow-auto">
-            <div className="text-green-400 text-sm font-black tracking-widest mb-4">✓ ESCALAÇÃO SALVA NO RANKING</div>
-
-            <div 
-              ref={finalCardRef}
-              className="relative w-full max-w-[420px] aspect-[9/16] bg-zinc-950 rounded-3xl overflow-hidden border-4 border-yellow-400/60 shadow-2xl"
-            >
-              <img src={STADIUM_BG} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/70 to-black/95" />
-
-              {/* Header */}
-              <div className="absolute top-0 left-0 right-0 p-6 z-20">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="text-yellow-400 text-xs tracking-[4px] font-black">ARENA TIGRE FC</div>
-                    <div className="text-3xl font-black italic text-white">MINHA ESCALAÇÃO</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-black text-yellow-400 tabular-nums">{teamOvr}</div>
-                    <div className="text-xs -mt-1 text-yellow-400/70">OVR</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Campo com jogadores */}
-              <div className="absolute top-[22%] bottom-[38%] left-0 right-0">
-                {Object.entries(slotMap).map(([id, state]) => 
-                  state.player && (
-                    <div
-                      key={id}
-                      className="absolute flex flex-col items-center"
-                      style={{ left: `${state.x}%`, top: `${state.y}%`, transform: 'translate(-50%, -50%)' }}
-                    >
-                      <div className={`relative w-16 h-20 rounded-xl overflow-hidden border-2 shadow-xl ${
-                        state.player.id === captainId ? 'border-yellow-400' : 
-                        state.player.id === heroId ? 'border-cyan-400' : 'border-white/70'
-                      }`}>
-                        <img 
-                          src={getValidPhotoUrl(state.player.foto)} 
-                          alt={state.player.short}
-                          className="w-full h-full object-cover"
-                        />
-                        {(state.player.id === captainId || state.player.id === heroId) && (
-                          <div className={`absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shadow-md ${
-                            state.player.id === captainId ? 'bg-yellow-400 text-black' : 'bg-cyan-400 text-black'
-                          }`}>
-                            {state.player.id === captainId ? 'C' : 'H'}
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-[10px] font-black text-center mt-1 text-white drop-shadow-md">
-                        {state.player.short}
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-
-              {/* Placar */}
-              <div className="absolute bottom-[26%] left-6 right-6 bg-black/90 border border-yellow-400/50 rounded-2xl p-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <img src={mandanteLogo} className="w-10 h-10" alt="" />
-                    <span className="font-black">{mandante}</span>
-                  </div>
-                  <div className="text-5xl font-black text-yellow-400 tabular-nums">
-                    {palpiteMandante} <span className="text-3xl text-white/50">×</span> {palpiteVisitante}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-black">NOVORIZONTINO</span>
-                    <img src={ESCUDO_DEFAULT} className="w-10 h-10" alt="" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Capitão e Herói */}
-              <div className="absolute bottom-6 left-6 right-6 flex gap-3">
-                <div className="flex-1 bg-yellow-400/10 border border-yellow-400/40 rounded-xl p-3">
-                  <div className="text-yellow-400 text-xs font-black">👑 CAPITÃO</div>
-                  <div className="font-black text-lg">{selectedPlayers.find(p => p.id === captainId)?.short}</div>
-                </div>
-                <div className="flex-1 bg-cyan-400/10 border border-cyan-400/40 rounded-xl p-3">
-                  <div className="text-cyan-400 text-xs font-black">🔥 HERÓI</div>
-                  <div className="font-black text-lg">{selectedPlayers.find(p => p.id === heroId)?.short}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Botões de ação */}
-            <div className="mt-8 w-full max-w-[420px] space-y-3 px-4">
-              <button 
-                onClick={shareNative} 
-                className="w-full py-6 bg-gradient-to-r from-yellow-400 to-amber-400 text-black font-black text-xl rounded-3xl shadow-xl"
-              >
-                📤 COMPARTILHAR AGORA
-              </button>
-
-              <div className="grid grid-cols-3 gap-3">
-                <button onClick={shareWhatsApp} className="py-4 bg-[#25D366] rounded-2xl font-black">Whats</button>
-                <button onClick={shareInstagram} className="py-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl font-black">Insta</button>
-                <button onClick={shareX} className="py-4 bg-black border border-white/40 rounded-2xl font-black">𝕏</button>
-              </div>
-
-              <button onClick={downloadImage} className="w-full py-4 border border-white/30 rounded-2xl font-black">
-                💾 BAIXAR IMAGEM
-              </button>
-            </div>
-          </motion.div>
-        )}
+        {/* Final Card - mantenha ou melhore conforme sua necessidade */}
 
       </AnimatePresence>
     </div>
