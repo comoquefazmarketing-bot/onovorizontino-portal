@@ -73,7 +73,8 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, position: 'relative' }}>
         <div style={{ textAlign: 'center', flex: 1 }}>
           <img src={jogo.mandante.escudo_url || FALLBACK} style={{ width: 75, height: 75, objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.1))' }} alt="Mandante" />
-          <div style={{ fontSize: 14, fontWeight: 900, marginTop: 10, color: '#fff', italic: 'true' }}>{jogo.mandante.nome.toUpperCase()}</div>
+          {/* CORREÇÃO AQUI: fontStyle em vez de italic */}
+          <div style={{ fontSize: 14, fontWeight: 900, marginTop: 10, color: '#fff', fontStyle: 'italic' }}>{jogo.mandante.nome.toUpperCase()}</div>
         </div>
         
         <div style={{ textAlign: 'center', padding: '0 20px' }}>
@@ -83,17 +84,17 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
 
         <div style={{ textAlign: 'center', flex: 1 }}>
           <img src={jogo.visitante.escudo_url || FALLBACK} style={{ width: 75, height: 75, objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.1))' }} alt="Visitante" />
-          <div style={{ fontSize: 14, fontWeight: 900, marginTop: 10, color: C.gold }}>{jogo.visitante.nome.toUpperCase()}</div>
+          <div style={{ fontSize: 14, fontWeight: 900, marginTop: 10, color: C.gold, fontStyle: 'italic' }}>{jogo.visitante.nome.toUpperCase()}</div>
         </div>
       </div>
 
-      {/* Grid de Escalação Atual (A Simbiose de Dados) */}
+      {/* Grid de Escalação Atual */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24, position: 'relative' }}>
         <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.gold}30`, borderRadius: 24, padding: 18, textAlign: 'center' }}>
           <div style={{ fontSize: 10, fontWeight: 900, color: C.gold, marginBottom: 6, letterSpacing: '1px' }}>
             <Trophy size={12} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} /> CAPITÃO
           </div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: capitaoNome === '---' ? 'rgba(255,255,255,0.1)' : '#fff', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 18, fontWeight: 900, color: capitaoNome === '---' ? 'rgba(255,255,255,0.1)' : '#fff', textTransform: 'uppercase', fontStyle: 'italic' }}>
             {capitaoNome}
           </div>
         </div>
@@ -102,23 +103,20 @@ export default function JumbotronJogo({ jogo, stats = {}, mercadoFechado = false
           <div style={{ fontSize: 10, fontWeight: 900, color: C.red, marginBottom: 6, letterSpacing: '1px' }}>
             <Shield size={12} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} /> HERÓI
           </div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: heroiNome === '---' ? 'rgba(255,255,255,0.1)' : '#fff', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 18, fontWeight: 900, color: heroiNome === '---' ? 'rgba(255,255,255,0.1)' : '#fff', textTransform: 'uppercase', fontStyle: 'italic' }}>
             {heroiNome}
           </div>
         </div>
       </div>
 
-      {/* Botão de Ação - Destino Corrigido */}
+      {/* Botão de Ação */}
       <Link href="/tigre-fc/escalar" style={{ textDecoration: 'none' }}>
         <div style={{
           background: `linear-gradient(90deg, ${C.gold}, #FFE57E)`,
           padding: 22, borderRadius: 24, textAlign: 'center', color: '#000',
-          fontSize: 16, fontWeight: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          fontSize: 16, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           cursor: 'pointer', transition: 'transform 0.2s', boxShadow: '0 10px 20px rgba(245,196,0,0.2)'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        >
+        }}>
           <Users size={20} />
           {capitaoNome === '---' ? 'CONVOCAR TITULARES →' : 'ALTERAR ESCALAÇÃO →'}
         </div>
