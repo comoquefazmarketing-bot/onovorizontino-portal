@@ -97,7 +97,7 @@ const getRarityColors = (ovr: number) => {
 };
 
 // =============================================================================
-// FUT CARD
+// FUT CARD — usado no mercado
 // =============================================================================
 interface FutCardProps {
   player: Player;
@@ -218,7 +218,7 @@ function DraggableSlot({
       : isActive
         ? '0 0 30px #facc15'
         : state.player
-          ? `0 4px 18px rgba(0,0,0,0.6), 0 0 12px ${colors?.glow ?? 'rgba(0,0,0,0)'}` 
+          ? `0 4px 18px rgba(0,0,0,0.6), 0 0 12px ${colors?.glow ?? 'rgba(0,0,0,0)'}`
           : '0 4px 12px rgba(0,0,0,0.6)';
 
   return (
@@ -317,7 +317,7 @@ function DraggableSlot({
 export default function EscalacaoFormacao({
   jogoId,
   mandante = 'Avaí',
-  mandanteLogo = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Avai_Futebol_Clube_logo.svg.png',
+  mandanteLogo = 'https://logodownload.org/wp-content/uploads/2017/02/avai-fc-logo-escudo.png',
   rodada,
 }: EscalacaoFormacaoProps) {
   const router = useRouter();
@@ -567,10 +567,7 @@ export default function EscalacaoFormacao({
     }
     try {
       const dataUrl = await htmlToImage.toPng(finalCardRef.current, {
-        cacheBust: true, 
-        quality: 0.98, 
-        pixelRatio: 3, 
-        backgroundColor: '#0a0a0a',
+        cacheBust: true, quality: 0.98, pixelRatio: 3, backgroundColor: '#0a0a0a',
       });
       setFinalImageUri(dataUrl);
       setStep('final');
@@ -874,24 +871,229 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
           </motion.div>
         )}
 
-        {/* Captain, Hero, Saving steps mantidos iguais ao seu código original */}
         {step === 'captain' && (
           <motion.div key="captain" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="flex-1 flex flex-col items-center justify-start p-4 sm:p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto">
-            {/* ... seu código original do captain ... */}
-            {/* (mantido igual - não alterei) */}
+
+            <div className="text-center mb-6 mt-4">
+              <div className="text-yellow-400 text-xs font-black tracking-[6px] mb-2">ETAPA 3 DE 5</div>
+              <div className="inline-flex items-center gap-2 px-5 py-2 bg-yellow-500/15 border-2 border-yellow-400 rounded-full text-yellow-400 text-sm font-black tracking-widest mb-3 shadow-[0_0_25px_rgba(250,204,21,0.3)]">
+                <span className="text-xl">👑</span> CAPITÃO
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black italic text-yellow-400 tracking-tighter">ESCOLHA O LÍDER</h1>
+              <div className="mt-3 inline-block px-4 py-1.5 bg-yellow-400 text-black rounded-md text-xs font-black tracking-wider">
+                ⚡ PONTUA 2× MAIS QUE OS OUTROS
+              </div>
+            </div>
+
+            {!captainId ? (
+              <>
+                <p className="text-zinc-400 text-sm mb-4 text-center max-w-md">
+                  Toca no jogador que você acredita que vai brilhar. Os pontos dele valem dobrado no ranking.
+                </p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl pb-8">
+                  {selectedPlayers.map(p => {
+                    const colors = getRarityColors(p.ovr ?? 75);
+                    return (
+                      <motion.button key={p.id} whileHover={{ scale: 1.08, y: -4 }} whileTap={{ scale: 0.95 }}
+                        onClick={() => setCaptainId(p.id)}
+                        className="relative p-2 rounded-2xl border-2 border-white/20 hover:border-yellow-400/60 transition-all overflow-hidden"
+                        style={{ background: `linear-gradient(180deg, ${colors.border}33 0%, #0a0a0a 60%)` }}>
+                        <div className="flex justify-between mb-1 px-1">
+                          <span className="text-base font-black text-white tabular-nums leading-none">{p.ovr}</span>
+                          <span className="text-[10px] font-black tracking-wider" style={{ color: colors.border }}>{p.pos}</span>
+                        </div>
+                        <img src={getValidPhotoUrl(p.foto)} alt={p.short}
+                          className="w-full aspect-[3/4] object-cover rounded-xl"
+                          style={{ objectPosition: '15% center' }} />
+                        <p className="text-center mt-2 font-black text-sm tracking-wide truncate">{p.short}</p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => setStep('arena')}
+                  className="text-zinc-500 hover:text-white text-xs font-black tracking-widest pb-6">← VOLTAR PARA O CAMPO</button>
+              </>
+            ) : (
+              // PREVIEW: jogador escolhido em destaque
+              (() => {
+                const p = selectedPlayers.find(pl => pl.id === captainId);
+                if (!p) return null;
+                const colors = getRarityColors(p.ovr ?? 75);
+                return (
+                  <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+                    className="flex flex-col items-center w-full max-w-sm">
+                    <div className="relative">
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                        className="absolute -inset-3 rounded-3xl"
+                        style={{ background: 'conic-gradient(from 0deg, #fbbf24, transparent, #fbbf24)' }} />
+                      <div className="relative p-3 rounded-3xl border-4 border-yellow-400 overflow-hidden shadow-[0_0_60px_#facc15]"
+                        style={{ background: `linear-gradient(180deg, ${colors.border}66 0%, #0a0a0a 70%)` }}>
+                        <div className="flex justify-between mb-2 px-2">
+                          <div>
+                            <div className="text-3xl font-black text-white tabular-nums leading-none">{p.ovr}</div>
+                            <div className="text-xs font-black tracking-wider mt-0.5" style={{ color: colors.border }}>{p.pos}</div>
+                          </div>
+                          <div className="text-sm font-black bg-black/60 text-white px-2 py-0.5 rounded h-fit">#{p.num}</div>
+                        </div>
+                        <img src={getValidPhotoUrl(p.foto)} alt={p.short}
+                          className="w-48 h-64 object-cover rounded-xl mx-auto"
+                          style={{ objectPosition: '15% center' }} />
+                        <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
+                          className="absolute -top-3 -right-3 w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center font-black text-black text-4xl shadow-[0_0_30px_#facc15] z-20">
+                          C
+                        </motion.div>
+                        <div className="text-center mt-3">
+                          <div className="text-yellow-400 text-[10px] font-black tracking-[3px] mb-1">SEU CAPITÃO</div>
+                          <div className="text-2xl font-black italic">{p.short}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-4 py-2 mt-5 mb-5 text-center">
+                      <span className="text-yellow-300 text-xs font-black tracking-wider">
+                        ⚡ Os pontos de <span className="text-yellow-400">{p.short}</span> valerão <span className="text-yellow-400">2×</span>
+                      </span>
+                    </div>
+
+                    <div className="flex gap-3 w-full">
+                      <button onClick={() => setCaptainId(null)}
+                        className="flex-1 py-4 bg-zinc-900 border-2 border-white/15 rounded-2xl text-xs font-black tracking-wider hover:border-white/30">
+                        ← TROCAR
+                      </button>
+                      <motion.button whileTap={{ scale: 0.95 }} onClick={() => setStep('hero')}
+                        className="flex-[2] py-4 bg-gradient-to-r from-yellow-400 to-amber-400 text-black rounded-2xl text-sm font-black tracking-wider shadow-[0_0_30px_rgba(250,204,21,0.5)]">
+                        CONFIRMAR CAPITÃO →
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                );
+              })()
+            )}
           </motion.div>
         )}
 
         {step === 'hero' && (
           <motion.div key="hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="flex-1 flex flex-col items-center justify-start p-4 sm:p-6 bg-gradient-to-b from-zinc-950 to-black overflow-auto">
-            {/* ... seu código original do hero ... */}
-            {/* (mantido igual) */}
+
+            <div className="text-center mb-6 mt-4">
+              <div className="text-cyan-400 text-xs font-black tracking-[6px] mb-2">ETAPA 4 DE 5</div>
+              <div className="inline-flex items-center gap-2 px-5 py-2 bg-cyan-400/15 border-2 border-cyan-400 rounded-full text-cyan-400 text-sm font-black tracking-widest mb-3 shadow-[0_0_25px_rgba(34,211,238,0.3)]">
+                <span className="text-xl">🔥</span> HERÓI DA PARTIDA
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black italic text-cyan-400 tracking-tighter">QUEM VAI DECIDIR?</h1>
+              <div className="mt-3 inline-block px-4 py-1.5 bg-cyan-400 text-black rounded-md text-xs font-black tracking-wider">
+                ⚡ +50% DE BÔNUS SE MARCAR OU DAR ASSISTÊNCIA
+              </div>
+              {captainId && (
+                <div className="mt-3 text-[11px] text-zinc-500">
+                  Capitão: <span className="text-yellow-400 font-black">👑 {selectedPlayers.find(p => p.id === captainId)?.short}</span>
+                </div>
+              )}
+            </div>
+
+            {!heroId ? (
+              <>
+                <p className="text-zinc-400 text-sm mb-4 text-center max-w-md">
+                  Aposte no jogador que vai resolver o jogo (não pode ser o capitão).
+                </p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl pb-8">
+                  {selectedPlayers.filter(p => p.id !== captainId).map(p => {
+                    const colors = getRarityColors(p.ovr ?? 75);
+                    return (
+                      <motion.button key={p.id} whileHover={{ scale: 1.08, y: -4 }} whileTap={{ scale: 0.95 }}
+                        onClick={() => setHeroId(p.id)}
+                        className="relative p-2 rounded-2xl border-2 border-white/20 hover:border-cyan-400/60 transition-all overflow-hidden"
+                        style={{ background: `linear-gradient(180deg, ${colors.border}33 0%, #0a0a0a 60%)` }}>
+                        <div className="flex justify-between mb-1 px-1">
+                          <span className="text-base font-black text-white tabular-nums leading-none">{p.ovr}</span>
+                          <span className="text-[10px] font-black tracking-wider" style={{ color: colors.border }}>{p.pos}</span>
+                        </div>
+                        <img src={getValidPhotoUrl(p.foto)} alt={p.short}
+                          className="w-full aspect-[3/4] object-cover rounded-xl"
+                          style={{ objectPosition: '15% center' }} />
+                        <p className="text-center mt-2 font-black text-sm tracking-wide truncate">{p.short}</p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => setStep('captain')}
+                  className="text-zinc-500 hover:text-white text-xs font-black tracking-widest pb-6">← TROCAR CAPITÃO</button>
+              </>
+            ) : (
+              (() => {
+                const p = selectedPlayers.find(pl => pl.id === heroId);
+                if (!p) return null;
+                const colors = getRarityColors(p.ovr ?? 75);
+                return (
+                  <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+                    className="flex flex-col items-center w-full max-w-sm">
+                    <div className="relative">
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                        className="absolute -inset-3 rounded-3xl"
+                        style={{ background: 'conic-gradient(from 0deg, #22d3ee, transparent, #22d3ee)' }} />
+                      <div className="relative p-3 rounded-3xl border-4 border-cyan-400 overflow-hidden shadow-[0_0_60px_#22d3ee]"
+                        style={{ background: `linear-gradient(180deg, ${colors.border}66 0%, #0a0a0a 70%)` }}>
+                        <div className="flex justify-between mb-2 px-2">
+                          <div>
+                            <div className="text-3xl font-black text-white tabular-nums leading-none">{p.ovr}</div>
+                            <div className="text-xs font-black tracking-wider mt-0.5" style={{ color: colors.border }}>{p.pos}</div>
+                          </div>
+                          <div className="text-sm font-black bg-black/60 text-white px-2 py-0.5 rounded h-fit">#{p.num}</div>
+                        </div>
+                        <img src={getValidPhotoUrl(p.foto)} alt={p.short}
+                          className="w-48 h-64 object-cover rounded-xl mx-auto"
+                          style={{ objectPosition: '15% center' }} />
+                        <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
+                          className="absolute -top-3 -right-3 w-16 h-16 bg-cyan-400 rounded-full flex items-center justify-center font-black text-black text-4xl shadow-[0_0_30px_#22d3ee] z-20">
+                          H
+                        </motion.div>
+                        <div className="text-center mt-3">
+                          <div className="text-cyan-400 text-[10px] font-black tracking-[3px] mb-1">SEU HERÓI</div>
+                          <div className="text-2xl font-black italic">{p.short}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-cyan-400/10 border border-cyan-400/30 rounded-xl px-4 py-2 mt-5 mb-3 text-center">
+                      <span className="text-cyan-300 text-xs font-black tracking-wider">
+                        ⚡ <span className="text-cyan-400">{p.short}</span> ganha bônus de <span className="text-cyan-400">+50%</span>
+                      </span>
+                    </div>
+
+                    {/* Recap dos 2 líderes */}
+                    <div className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-3 mb-4 flex items-center justify-around">
+                      <div className="text-center">
+                        <div className="text-yellow-400 text-[10px] font-black tracking-wider">👑 CAPITÃO</div>
+                        <div className="text-sm font-black">{selectedPlayers.find(pl => pl.id === captainId)?.short}</div>
+                      </div>
+                      <div className="w-px h-8 bg-white/15" />
+                      <div className="text-center">
+                        <div className="text-cyan-400 text-[10px] font-black tracking-wider">🔥 HERÓI</div>
+                        <div className="text-sm font-black">{p.short}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 w-full">
+                      <button onClick={() => setHeroId(null)}
+                        className="flex-1 py-4 bg-zinc-900 border-2 border-white/15 rounded-2xl text-xs font-black tracking-wider hover:border-white/30">
+                        ← TROCAR
+                      </button>
+                      <motion.button whileTap={{ scale: 0.95 }} onClick={() => setStep('palpite')}
+                        className="flex-[2] py-4 bg-gradient-to-r from-cyan-400 to-cyan-300 text-black rounded-2xl text-sm font-black tracking-wider shadow-[0_0_30px_rgba(34,211,238,0.5)]">
+                        CONFIRMAR HERÓI →
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                );
+              })()
+            )}
           </motion.div>
         )}
 
-        {/* PALPITE - mantido simples por enquanto */}
         {step === 'palpite' && (
           <motion.div key="palpite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950 overflow-auto">
@@ -942,178 +1144,320 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
           </motion.div>
         )}
 
-        {/* ====================== TELA FINAL CORRIGIDA ====================== */}
         {step === 'final' && (
-          <motion.div 
-            key="final" 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-start p-4 bg-black overflow-auto"
-          >
-            <div className="text-yellow-400 text-xs font-black tracking-[6px] mt-4 mb-6">
+          <motion.div key="final" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-start p-4 bg-black overflow-auto">
+
+            <div className="text-yellow-400 text-[10px] font-black tracking-[6px] mt-2 mb-3">
               ✓ ESCALAÇÃO SALVA NO RANKING
             </div>
 
-            <div className="relative w-full max-w-[380px] bg-zinc-950 rounded-3xl overflow-hidden border border-yellow-400/50 shadow-2xl" 
-                 ref={finalCardRef}
-                 style={{ aspectRatio: '9 / 16' }}>
+            {/* ════════════════════════════════════════════════════════════
+                CARD 9:16 FIFA 26 — LIMPO, JOGADORES BEM DISTRIBUÍDOS
+            ════════════════════════════════════════════════════════════ */}
+            <div className="relative w-full max-w-[380px]">
+              <div ref={finalCardRef}
+                className="relative w-full bg-black rounded-3xl overflow-hidden"
+                style={{
+                  aspectRatio: '9 / 16',
+                  border: '2px solid rgba(245,196,0,0.35)',
+                  boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(245,196,0,0.2)',
+                }}>
 
-              <img src={STADIUM_BG} alt="Estádio" className="absolute inset-0 w-full h-full object-cover opacity-40" />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/70 to-black/95" />
+                {/* BG: campo do estádio em escala vertical */}
+                <img src={STADIUM_BG} alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ objectPosition: 'center' }} />
 
-              {/* Header */}
-              <div className="absolute top-0 left-0 right-0 px-6 pt-6 z-20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {userAvatar && (
-                      <img src={userAvatar} alt={userName} crossOrigin="anonymous"
-                        className="w-11 h-11 rounded-full object-cover border-2 border-yellow-400" 
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-                    )}
-                    <div>
-                      <div className="text-[10px] font-black tracking-[3px] text-yellow-400">ARENA TIGRE FC</div>
-                      <div className="text-lg font-black italic text-white">@{userName}</div>
-                    </div>
-                  </div>
+                {/* Vinheta cinematográfica — claro no centro, escuro nas pontas */}
+                <div className="absolute inset-0" style={{
+                  background: `
+                    linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.25) 18%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.95) 100%),
+                    radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)
+                  `,
+                }} />
 
-                  <div className="text-right">
-                    <div className="text-4xl font-black tabular-nums text-yellow-400">{teamOvr}</div>
-                    <div className="text-[10px] -mt-1 text-yellow-400/70">OVR • {formation}</div>
-                  </div>
-                </div>
-              </div>
+                {/* Glow lateral dourado discreto */}
+                <div className="absolute inset-y-0 left-0 w-12 pointer-events-none" style={{
+                  background: 'linear-gradient(90deg, rgba(245,196,0,0.18), transparent)',
+                }} />
+                <div className="absolute inset-y-0 right-0 w-12 pointer-events-none" style={{
+                  background: 'linear-gradient(270deg, rgba(0,243,255,0.15), transparent)',
+                }} />
 
-              {/* Campo */}
-              <div className="absolute top-[18%] bottom-[35%] left-0 right-0">
-                {Object.entries(slotMap).map(([id, state]) => state.player && (
-                  <div
-                    key={id}
-                    className="absolute flex flex-col items-center"
-                    style={{
-                      left: `${state.x}%`,
-                      top: `${state.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                  >
-                    <div 
-                      className={`relative w-14 h-20 rounded-lg overflow-hidden border-2 shadow-xl ${
-                        state.player.id === captainId 
-                          ? 'border-yellow-400 shadow-yellow-400/50' 
-                          : state.player.id === heroId 
-                            ? 'border-cyan-400 shadow-cyan-400/50' 
-                            : 'border-white/70'
-                      }`}
-                    >
-                      <img 
-                        src={getValidPhotoUrl(state.player.foto)} 
-                        alt={state.player.short}
-                        crossOrigin="anonymous"
-                        className="w-full h-full object-cover"
-                        style={{ objectPosition: '85% center' }}
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
-                      />
-                      {(state.player.id === captainId || state.player.id === heroId) && (
-                        <div className={`absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-md z-10 ${
-                          state.player.id === captainId ? 'bg-yellow-400 text-black' : 'bg-cyan-400 text-black'
-                        }`}>
-                          {state.player.id === captainId ? 'C' : 'H'}
-                        </div>
+                {/* ═══════════════ HEADER (0-12%) ═══════════════ */}
+                <div className="absolute top-0 left-0 right-0 px-5 pt-5 z-20">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2.5">
+                      {userAvatar && (
+                        <img src={userAvatar} alt={userName} crossOrigin="anonymous"
+                          className="w-10 h-10 rounded-full object-cover"
+                          style={{
+                            border: '2px solid #F5C400',
+                            boxShadow: '0 0 12px rgba(245,196,0,0.5)',
+                          }}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                       )}
+                      <div className="leading-none">
+                        <div className="text-[9px] font-black tracking-[3px] text-[#F5C400]">⚡ TIGRE FC</div>
+                        <div className="text-[15px] font-black italic mt-1 text-white">@{userName}</div>
+                      </div>
                     </div>
-                    <div className="text-[9px] font-black text-center mt-1 text-white drop-shadow-md tracking-tight">
-                      {state.player.short}
+
+                    {/* OVR card FUT — limpo, sem segundo badge */}
+                    <div className="relative">
+                      <div className="text-center px-3 py-1.5 rounded-xl"
+                        style={{
+                          background: 'linear-gradient(135deg, #fde68a 0%, #F5C400 50%, #b45309 100%)',
+                          boxShadow: '0 0 20px rgba(245,196,0,0.6), inset 0 1px 0 rgba(255,255,255,0.4)',
+                        }}>
+                        <div className="text-[8px] font-black tracking-[3px] text-black/70 leading-none">OVR</div>
+                        <div className="text-2xl font-black italic tabular-nums leading-none mt-0.5 text-black">
+                          {teamOvr}
+                        </div>
+                      </div>
+                      <div className="text-center text-[8px] tracking-[3px] font-black text-white/80 mt-1 italic">
+                        {formation}
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
 
-              {/* Placar */}
-              <div className="absolute bottom-[26%] left-6 right-6 z-20">
-                <div className="bg-black/90 border border-yellow-400/60 rounded-2xl py-4 flex items-center justify-center gap-6">
-                  <img src={mandanteLogo} alt={mandante} className="w-9 h-9 object-contain" crossOrigin="anonymous" />
-                  <div className="text-5xl font-black tabular-nums text-yellow-400">
-                    {palpiteMandante} <span className="text-white/40 mx-2">×</span> {palpiteVisitante}
+                {/* ═══════════════ CAMPO (12-72%) ═══════════════
+                    JOGADORES BEM DISTRIBUÍDOS:
+                    Mapeamento: y do campo (0-100%) → faixa do card (12-72%)
+                    Fórmula: cardY = 12 + (state.y / 100) * 60
+                ═══════════════════════════════════════════════════ */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {Object.entries(slotMap).map(([id, state]) => state.player && (
+                    <div key={id}
+                      style={{
+                        left: `${state.x}%`,
+                        top: `${12 + (state.y / 100) * 60}%`,
+                        position: 'absolute',
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                      className="w-[52px]">
+
+                      {/* Mini card FUT — sombra projetada no gramado */}
+                      <div className="relative">
+                        {/* Sombra circular embaixo do card pra dar peso */}
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-10 h-2 rounded-full blur-sm"
+                          style={{ background: 'rgba(0,0,0,0.6)' }} />
+
+                        <div className="relative h-[68px] rounded-md overflow-hidden"
+                          style={{
+                            border: state.player.id === captainId
+                              ? '2px solid #F5C400'
+                              : state.player.id === heroId
+                                ? '2px solid #00F3FF'
+                                : '1.5px solid rgba(255,255,255,0.85)',
+                            boxShadow: state.player.id === captainId
+                              ? '0 0 18px rgba(245,196,0,0.85), 0 4px 8px rgba(0,0,0,0.7)'
+                              : state.player.id === heroId
+                                ? '0 0 18px rgba(0,243,255,0.85), 0 4px 8px rgba(0,0,0,0.7)'
+                                : '0 4px 10px rgba(0,0,0,0.7)',
+                          }}>
+                          <img src={getValidPhotoUrl(state.player.foto)} alt={state.player.short}
+                            crossOrigin="anonymous"
+                            className="w-full h-full object-cover"
+                            style={{ objectPosition: '85% center' }} />
+
+                          {/* Faixa de nome — colorida pra C/H */}
+                          <div className="absolute bottom-0 left-0 right-0 py-0.5"
+                            style={{
+                              background: state.player.id === captainId
+                                ? 'linear-gradient(180deg, transparent, #F5C400 60%)'
+                                : state.player.id === heroId
+                                  ? 'linear-gradient(180deg, transparent, #00F3FF 60%)'
+                                  : 'linear-gradient(180deg, transparent, rgba(0,0,0,0.95) 60%)',
+                            }}>
+                            <span className="text-[8px] font-black block text-center leading-tight"
+                              style={{
+                                color: (state.player.id === captainId || state.player.id === heroId) ? '#000' : '#fff',
+                              }}>
+                              {state.player.short}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Selo C ou H — flutuando no canto, fora do card */}
+                        {(state.player.id === captainId || state.player.id === heroId) && (
+                          <div className="absolute -top-2 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black z-30"
+                            style={{
+                              background: state.player.id === captainId ? '#F5C400' : '#00F3FF',
+                              color: '#000',
+                              border: '1.5px solid #000',
+                              boxShadow: state.player.id === captainId
+                                ? '0 0 10px rgba(245,196,0,0.9)'
+                                : '0 0 10px rgba(0,243,255,0.9)',
+                            }}>
+                            {state.player.id === captainId ? 'C' : 'H'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ═══════════════ FAIXA INFERIOR (72-100%) ═══════════════ */}
+
+                {/* Linha divisória dourada */}
+                <div className="absolute left-6 right-6 z-10"
+                  style={{
+                    top: '74%',
+                    height: '1px',
+                    background: 'linear-gradient(90deg, transparent, rgba(245,196,0,0.4), transparent)',
+                  }} />
+
+                {/* Placar — único e dominante */}
+                <div className="absolute left-0 right-0 z-20" style={{ top: '77%' }}>
+                  <div className="flex items-center justify-center gap-4">
+                    <img src={mandanteLogo} alt="" className="w-10 h-10 object-contain"
+                      crossOrigin="anonymous"
+                      style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
+
+                    <div className="text-4xl font-black italic tabular-nums leading-none"
+                      style={{
+                        color: '#F5C400',
+                        textShadow: '0 0 20px rgba(245,196,0,0.6), 0 2px 4px rgba(0,0,0,0.9)',
+                      }}>
+                      {palpiteMandante}
+                      <span className="text-zinc-600 mx-2">×</span>
+                      {palpiteVisitante}
+                    </div>
+
+                    <img src={ESCUDO_DEFAULT} alt="" className="w-10 h-10 object-contain"
+                      crossOrigin="anonymous"
+                      style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
                   </div>
-                  <img src={ESCUDO_DEFAULT} alt="Novorizontino" className="w-9 h-9 object-contain" crossOrigin="anonymous" />
+                  <div className="text-center text-[8px] tracking-[5px] font-black text-white/40 mt-1.5">
+                    SEU PALPITE
+                  </div>
                 </div>
-                <div className="text-center text-[9px] tracking-[3px] text-yellow-400/70 mt-2 font-black">SEU PALPITE</div>
+
+                {/* Capitão & Herói — linha enxuta */}
+                <div className="absolute left-6 right-6 z-20 flex justify-between" style={{ top: '90%' }}>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px]">👑</span>
+                    <span className="text-[10px] font-black tracking-wide text-[#F5C400] truncate max-w-[100px]">
+                      {selectedPlayers.find(p => p.id === captainId)?.short ?? '—'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black tracking-wide text-[#00F3FF] truncate max-w-[100px]">
+                      {selectedPlayers.find(p => p.id === heroId)?.short ?? '—'}
+                    </span>
+                    <span className="text-[10px]">🔥</span>
+                  </div>
+                </div>
+
+                {/* Marca — TIGRE FC italic minimalista */}
+                <div className="absolute bottom-3 left-0 right-0 text-center z-20">
+                  <div className="text-base font-black italic tracking-tight">
+                    TIGRE <span style={{ color: '#F5C400' }}>FC</span>
+                  </div>
+                  <div className="text-[7px] tracking-[3px] text-white/30 font-bold mt-0.5">
+                    onovorizontino.com.br
+                  </div>
+                </div>
               </div>
 
-              {/* Capitão e Herói */}
-              <div className="absolute bottom-6 left-6 right-6 z-20 flex gap-3 text-sm">
-                <div className="flex-1 bg-yellow-400/10 border border-yellow-400/40 rounded-xl px-4 py-3">
-                  <div className="text-yellow-400 text-xs">👑 CAPITÃO</div>
-                  <div className="font-black">{selectedPlayers.find(p => p.id === captainId)?.short || '—'}</div>
-                </div>
-                <div className="flex-1 bg-cyan-400/10 border border-cyan-400/40 rounded-xl px-4 py-3">
-                  <div className="text-cyan-400 text-xs">🔥 HERÓI</div>
-                  <div className="font-black">{selectedPlayers.find(p => p.id === heroId)?.short || '—'}</div>
-                </div>
-              </div>
-
-              {/* Rodapé */}
-              <div className="absolute bottom-3 left-0 right-0 text-center z-20">
-                <div className="text-[10px] font-black text-white/30 tracking-widest">
-                  onovorizontino.com.br/tigre-fc
-                </div>
-              </div>
-            </div>
-
-            {/* Botões de Ação */}
-            <div className="mt-8 w-full max-w-[380px] px-4 space-y-3">
+              {/* ═══════════════════════════════════════════════════════════
+                  BOTÃO SALVAR — circular, glassmorphism, fora do card
+                  Posição: canto inferior direito, OVERLAY do card
+              ═══════════════════════════════════════════════════════════ */}
               <motion.button
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={downloadImage}
                 disabled={!finalImageUri}
-                className="w-full py-5 bg-gradient-to-r from-yellow-400 to-amber-400 text-black font-black rounded-2xl text-lg shadow-xl disabled:opacity-50"
+                aria-label="Salvar imagem"
+                className="absolute bottom-3 right-3 w-12 h-12 rounded-full flex items-center justify-center disabled:opacity-40 z-30"
+                style={{
+                  background: 'rgba(20,20,20,0.55)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(245,196,0,0.4)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5), 0 0 15px rgba(245,196,0,0.2)',
+                }}
               >
-                💾 SALVAR IMAGEM
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="#F5C400" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </motion.button>
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════════
+                AÇÕES SECUNDÁRIAS — fora do card, visualmente discretas
+            ═══════════════════════════════════════════════════════════ */}
+            <div className="mt-6 w-full max-w-[380px] space-y-3 px-2">
+              {/* Compartilhar nativo — 1 CTA principal */}
+              <motion.button whileTap={{ scale: 0.97 }} onClick={shareNative} disabled={!finalImageUri}
+                className="w-full py-4 font-black rounded-2xl text-sm tracking-[3px] uppercase disabled:opacity-50"
+                style={{
+                  background: 'linear-gradient(90deg, #F5C400, #fbbf24)',
+                  color: '#000',
+                  boxShadow: '0 8px 24px rgba(245,196,0,0.3)',
+                }}>
+                Compartilhar
               </motion.button>
 
-              <div className="grid grid-cols-3 gap-3">
-                <button 
-                  onClick={shareWhatsApp} 
-                  disabled={!finalImageUri}
-                  className="py-4 bg-[#25D366] rounded-2xl text-sm font-black disabled:opacity-50"
-                >
+              {/* Atalhos por rede — minimalistas */}
+              <div className="grid grid-cols-3 gap-2">
+                <button onClick={shareWhatsApp} disabled={!finalImageUri}
+                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase disabled:opacity-50 transition-all hover:scale-105"
+                  style={{
+                    background: 'rgba(37,211,102,0.12)',
+                    border: '1px solid rgba(37,211,102,0.4)',
+                    color: '#25D366',
+                  }}>
                   WhatsApp
                 </button>
-                <button 
-                  onClick={shareInstagram} 
-                  disabled={!finalImageUri}
-                  className="py-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl text-sm font-black disabled:opacity-50"
-                >
+                <button onClick={shareInstagram} disabled={!finalImageUri}
+                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase disabled:opacity-50 transition-all hover:scale-105"
+                  style={{
+                    background: 'rgba(225,48,108,0.12)',
+                    border: '1px solid rgba(225,48,108,0.4)',
+                    color: '#E1306C',
+                  }}>
                   Instagram
                 </button>
-                <button 
-                  onClick={shareX}
-                  className="py-4 bg-black border border-white/30 rounded-2xl text-sm font-black"
-                >
+                <button onClick={shareX}
+                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase transition-all hover:scale-105"
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                  }}>
                   𝕏
                 </button>
               </div>
 
-              <button 
-                onClick={finalizarEVoltar}
-                className="w-full py-4 border border-white/20 rounded-2xl text-sm font-black hover:border-yellow-400/50 transition-colors"
-              >
-                ← VOLTAR PARA A ARENA
-              </button>
+              {/* Links de navegação — texto puro, sem peso visual */}
+              <div className="flex items-center justify-between pt-3">
+                <button onClick={() => setStep('arena')}
+                  className="text-zinc-500 hover:text-white text-[10px] font-black tracking-[2px] uppercase">
+                  ← Editar
+                </button>
+                <button onClick={finalizarEVoltar}
+                  className="text-zinc-500 hover:text-[#F5C400] text-[10px] font-black tracking-[2px] uppercase">
+                  Arena →
+                </button>
+              </div>
             </div>
+            <div className="h-8" />
           </motion.div>
         )}
 
       </AnimatePresence>
 
       {hadSaved && step === 'arena' && (
-        <motion.button 
-          initial={{ y: 100, opacity: 0 }} 
-          animate={{ y: 0, opacity: 1 }} 
-          transition={{ delay: 0.5 }}
+        <motion.button initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
           onClick={verEscalacaoSalva}
-          className="fixed top-3 right-3 z-[200] bg-cyan-400 text-black px-3 py-2 rounded-full font-black text-[10px] tracking-widest shadow-[0_0_25px_rgba(34,211,238,0.5)] active:scale-95"
-        >
+          className="fixed top-3 right-3 z-[200] bg-cyan-400 text-black px-3 py-2 rounded-full font-black text-[10px] tracking-widest shadow-[0_0_25px_rgba(34,211,238,0.5)] active:scale-95">
           📸 VER ARTE
         </motion.button>
       )}
