@@ -44,9 +44,6 @@ type UsuarioRanking = {
   pontos_total: number | null;
 };
 
-// ════════════════════════════════════════════════════════════════════════════
-// FALLBACK CONTRA TELA PRETA
-// ════════════════════════════════════════════════════════════════════════════
 const FALLBACK_JOGO: Jogo = {
   id: 12,
   rodada: 7,
@@ -59,9 +56,6 @@ const FALLBACK_JOGO: Jogo = {
   data_jogo: '2026-05-03T21:00:00+00:00',
 };
 
-// ════════════════════════════════════════════════════════════════════════════
-// PLAYER NAMES
-// ════════════════════════════════════════════════════════════════════════════
 const PLAYER_NAMES: Record<number, string> = {
   23: 'JORDI', 1: 'CÉSAR', 22: 'SCAPIN', 62: 'LUCAS',
   8: 'PATRICK', 38: 'R. PALM', 34: 'BROCK', 66: 'ALVARÍÑO', 6: 'CARLINHOS', 3: 'DANTAS',
@@ -86,18 +80,57 @@ export default function TigreFCPage() {
   const [perfilAberto, setPerfilAberto]       = useState<string | null>(null);
   const [hydrating, setHydrating]             = useState(true);
 
-  // ─── INSTANT RESET ─────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════
+  // SCROLL LOCK BRUTAL — força topo nos primeiros 800ms, sem exceção
+  // ════════════════════════════════════════════════════════════════════
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    if (typeof window === 'undefined') return;
+
+    // 1. Limpa hash da URL (#alguma-coisa força scroll automático do browser)
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
+
+    // 2. Desativa scroll restoration nativo do browser (volta da nav)
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    // 3. Trava overflow no html e body por 600ms (impede QUALQUER scroll programático)
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.overflow;
+    const prevBody = body.style.overflow;
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+
+    // 4. Força topo agora E em loop nos próximos 800ms
+    //    (cobre re-renders, useEffects de filhos, scrollIntoView do chat)
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    let count = 0;
+    const interval = setInterval(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+      count++;
+      if (count >= 16) clearInterval(interval); // 16 × 50ms = 800ms
+    }, 50);
+
+    // 5. Libera o scroll após 600ms — agora o user pode rolar normalmente
+    const releaseTimer = setTimeout(() => {
+      html.style.overflow = prevHtml;
+      body.style.overflow = prevBody;
+    }, 600);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(releaseTimer);
+      html.style.overflow = prevHtml;
+      body.style.overflow = prevBody;
+    };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-
     const loadAll = async () => {
-      // Sessão
       let authUser: { id: string; email?: string } | null = null;
       try {
         const { data: { user: u } } = await sb.auth.getUser();
@@ -108,11 +141,10 @@ export default function TigreFCPage() {
             const { data: profile } = await sb
               .from('tigre_fc_usuarios').select('id').eq('google_id', u.id).maybeSingle();
             if (!cancelled && profile?.id) setMeuId(profile.id);
-          } catch (err) { console.warn('[TigreFC] meuId:', err); }
+          } catch (err) { console.warn('[TigreFC]', err); }
         }
-      } catch (err) { console.warn('[TigreFC] sessão:', err); }
+      } catch (err) { console.warn('[TigreFC]', err); }
 
-      // Jogo
       let jogoAtivo: Jogo | null = null;
       try {
         const { data } = await sb
@@ -120,19 +152,17 @@ export default function TigreFCPage() {
           .select('id, rodada, competicao, mandante_slug, visitante_slug, placar_mandante, placar_visitante, finalizado')
           .eq('finalizado', false).order('rodada', { ascending: true }).limit(1);
         jogoAtivo = data?.[0] ?? null;
-      } catch (err) { console.warn('[TigreFC] jogo:', err); }
+      } catch (err) { console.warn('[TigreFC]', err); }
 
       if (!cancelled && jogoAtivo) setJogo(jogoAtivo);
       const jogoIdEfetivo = (jogoAtivo ?? FALLBACK_JOGO).id ?? 0;
 
-      // Contagem
       try {
         const { count } = await sb.from('tigre_fc_escalacoes')
           .select('id', { count: 'exact', head: true }).eq('jogo_id', jogoIdEfetivo);
         if (!cancelled) setTotalEscalacoes(count ?? 0);
-      } catch (err) { console.warn('[TigreFC] contagem:', err); }
+      } catch (err) { console.warn('[TigreFC]', err); }
 
-      // Escalação
       if (authUser && jogoIdEfetivo) {
         try {
           const { data } = await sb
@@ -140,10 +170,9 @@ export default function TigreFCPage() {
             .select('formacao, capitao_id, heroi_id, palpite_mandante, palpite_visitante')
             .eq('user_id', authUser.id).eq('jogo_id', jogoIdEfetivo).maybeSingle();
           if (!cancelled) setEscalacao(data ?? null);
-        } catch (err) { console.warn('[TigreFC] escalação:', err); }
+        } catch (err) { console.warn('[TigreFC]', err); }
       }
 
-      // Ranking
       try {
         const { data } = await sb
           .from('tigre_fc_usuarios')
@@ -151,7 +180,7 @@ export default function TigreFCPage() {
           .not('pontos_total', 'is', null)
           .order('pontos_total', { ascending: false }).limit(5);
         if (!cancelled && data) setRanking(data as UsuarioRanking[]);
-      } catch (err) { console.warn('[TigreFC] ranking:', err); }
+      } catch (err) { console.warn('[TigreFC]', err); }
 
       if (!cancelled) setHydrating(false);
     };
@@ -171,41 +200,92 @@ export default function TigreFCPage() {
   };
 
   // ════════════════════════════════════════════════════════════════════
-  // RENDER
+  // RENDER FIFA 26 ULTIMATE TEAM HOME STYLE
   // ════════════════════════════════════════════════════════════════════
   return (
     <main
-      className="min-h-screen bg-[#030303] text-white overflow-x-hidden"
-      style={{ fontFamily: FONT_FAMILY }}
+      className="min-h-screen text-white overflow-x-hidden"
+      style={{
+        fontFamily: FONT_FAMILY,
+        background: 'radial-gradient(ellipse at top, #0a0a0a 0%, #030303 50%, #000 100%)',
+      }}
     >
-      {/* BG decorativo (fixed, fora do flow) */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,#F5C40012_0%,transparent_45%)]" />
-      </div>
+      {/* ════════════════════════════════════════════════════════════════
+          HERO TOPO — gigante, com brilho FIFA. Sem -mt, padding constante
+      ════════════════════════════════════════════════════════════════ */}
+      <header className="relative pt-10 pb-6 sm:pt-14 sm:pb-8 px-4 text-center overflow-hidden">
+        {/* Light beams animados */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] opacity-30"
+            style={{
+              background: 'radial-gradient(ellipse, #F5C40040 0%, transparent 60%)',
+              filter: 'blur(40px)',
+            }} />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full"
+            style={{ background: 'linear-gradient(180deg, #F5C40080, transparent)' }} />
+        </div>
 
-      <div className="relative z-10 flex flex-col">
-
-        {/* ═══════════════════════════════════════════════════════════════
-            HEADER
-        ═══════════════════════════════════════════════════════════════ */}
-        <header className="px-4 pt-8 pb-6 sm:pt-12 sm:pb-8 text-center">
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">
-            TIGRE <span className="text-[#F5C400]">FC</span>
-          </h1>
-          <div className="inline-flex items-center gap-3 mt-4 px-4 py-1.5 bg-white/5 rounded-full border border-white/5 backdrop-blur-md">
-            <span className="w-1.5 h-1.5 bg-[#00F3FF] rounded-full animate-pulse" style={{ boxShadow: '0 0 8px #00F3FF' }} />
-            <span className="text-[10px] font-black tracking-[0.5em] text-[#00F3FF]">BROADCAST STATION</span>
-            <span className="w-1.5 h-1.5 bg-[#00F3FF] rounded-full animate-pulse" style={{ boxShadow: '0 0 8px #00F3FF' }} />
+        <div className="relative z-10">
+          {/* Tag superior */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5C400]/10 border border-[#F5C400]/30 mb-3">
+            <span className="w-1.5 h-1.5 bg-[#F5C400] rounded-full animate-pulse" />
+            <span className="text-[9px] font-black tracking-[4px] text-[#F5C400]">ULTIMATE EXPERIENCE</span>
           </div>
-        </header>
 
-        {/* ═══════════════════════════════════════════════════════════════
-            DASHBOARD GRID — gap-6 fixo, ZERO margem negativa
-        ═══════════════════════════════════════════════════════════════ */}
-        <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Title gigante */}
+          <h1 className="text-6xl sm:text-8xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.85]"
+            style={{
+              background: 'linear-gradient(180deg, #fff 0%, #888 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              filter: 'drop-shadow(0 4px 20px rgba(245,196,0,0.2))',
+            }}
+          >
+            TIGRE <span style={{ color: '#F5C400', WebkitTextFillColor: '#F5C400' }}>FC</span>
+          </h1>
 
-          {/* ─── 1. JUMBOTRON (centro/topo, prioridade 1) ─── */}
-          <section className="lg:col-span-8 lg:row-start-1">
+          {/* Subtitle */}
+          <div className="mt-3 text-[10px] sm:text-xs font-black tracking-[6px] sm:tracking-[8px] text-zinc-500 uppercase">
+            Broadcast Station <span className="text-[#00F3FF]">·</span> Rádio Vox
+          </div>
+
+          {/* Stats inline tipo HUD FIFA */}
+          <div className="flex items-center justify-center gap-4 sm:gap-8 mt-5 text-[10px] sm:text-xs">
+            <div>
+              <div className="text-[#F5C400] font-black tabular-nums text-base sm:text-lg leading-none">
+                {totalEscalacoes.toLocaleString('pt-BR')}
+              </div>
+              <div className="text-zinc-600 tracking-[2px] font-bold mt-0.5">ESCALADOS</div>
+            </div>
+            <div className="w-px h-8 bg-white/10" />
+            <div>
+              <div className="text-[#00F3FF] font-black tabular-nums text-base sm:text-lg leading-none">
+                R{jogo.rodada ?? '?'}
+              </div>
+              <div className="text-zinc-600 tracking-[2px] font-bold mt-0.5">RODADA</div>
+            </div>
+            <div className="w-px h-8 bg-white/10" />
+            <div>
+              <div className="text-white font-black tabular-nums text-base sm:text-lg leading-none">
+                {ranking.length}
+              </div>
+              <div className="text-zinc-600 tracking-[2px] font-bold mt-0.5">NO RANKING</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ════════════════════════════════════════════════════════════════
+          DASHBOARD GRID — FIFA 26 Ultimate Team home style
+      ═══════════════════════════════════════════════════════════════ */}
+      <div className="max-w-[1400px] mx-auto w-full px-3 sm:px-6 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+
+        {/* ═══ JUMBOTRON — protagonista absoluto ═══ */}
+        <section className="lg:col-span-8 lg:row-start-1 relative">
+          <div className="absolute -inset-px rounded-3xl pointer-events-none opacity-50"
+            style={{ background: 'linear-gradient(135deg, #F5C40060, transparent 30%, transparent 70%, #00F3FF40)' }} />
+          <div className="relative">
             <JumbotronJogo
               jogo={jogo}
               formacao={escalacao?.formacao ?? null}
@@ -217,87 +297,126 @@ export default function TigreFCPage() {
               onEscalar={handleEscalar}
               loading={false}
             />
-          </section>
-
-          {/* ─── 2. DESTAQUES (lateral superior, story) ─── */}
-          <aside className="lg:col-span-4 lg:row-start-1 lg:row-span-2">
-            <DestaquesFifa />
-          </aside>
-
-          {/* ─── 3. CHAT (logo abaixo do placar, prioridade 3) ─── */}
-          <section className="lg:col-span-8 lg:row-start-2">
-            <div className="bg-black/40 backdrop-blur-2xl border border-white/5 rounded-3xl h-[480px] sm:h-[600px] overflow-hidden">
-              <TigreFCChat usuarioId={meuId} />
-            </div>
-          </section>
-
-          {/* ─── 4. RANKING (lateral inferior, suporte) ─── */}
-          <aside className="lg:col-span-12 lg:row-start-3">
-            <div className="bg-zinc-900/30 backdrop-blur-xl border border-white/5 rounded-3xl p-4 sm:p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-[#F5C400] rounded-full" />
-                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">LIVE RANKING</h2>
-                </div>
-                <span className="text-[9px] tracking-widest text-zinc-600 font-bold">TOP 5</span>
-              </div>
-              {ranking.length === 0 ? (
-                <p className="text-zinc-600 text-xs text-center py-4">Aguardando torcedores na disputa...</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                  {ranking.map((u, i) => {
-                    const isFirst = i === 0;
-                    const pts = u.pontos_total ?? 0;
-                    return (
-                      <button
-                        key={u.id}
-                        onClick={() => setPerfilAberto(u.id)}
-                        className={`text-left p-3 rounded-2xl border transition-all hover:scale-[1.02] ${
-                          isFirst
-                            ? 'bg-gradient-to-br from-[#F5C400]/15 to-transparent border-[#F5C400]/40'
-                            : 'bg-black/40 border-white/5 hover:border-white/15'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className={`text-xs font-black italic ${isFirst ? 'text-[#F5C400]' : 'text-zinc-700'}`}>
-                            #0{i + 1}
-                          </span>
-                          {isFirst && <span className="text-[10px]">👑</span>}
-                        </div>
-                        <p className="text-[11px] font-black uppercase truncate">
-                          {u.apelido || u.nome || 'Torcedor'}
-                        </p>
-                        <p className={`text-lg font-black tabular-nums leading-none mt-1 ${isFirst ? 'text-[#F5C400]' : 'text-white'}`}>
-                          {pts}
-                        </p>
-                        <p className="text-[7px] tracking-[2px] text-zinc-600 font-bold uppercase mt-0.5">PONTOS</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </aside>
-
-        </div>
-
-        {/* Aviso login (não-bloqueante) */}
-        {!hydrating && !user && (
-          <div className="max-w-md mx-auto w-full px-4 pb-10">
-            <div className="bg-zinc-950 border border-yellow-400/20 rounded-2xl p-4 text-center">
-              <div className="text-2xl mb-2">🔐</div>
-              <div className="text-sm font-black mb-1">Faça login pra escalar</div>
-              <div className="text-zinc-400 text-xs">
-                Entre com sua conta pra montar seu time e disputar o ranking.
-              </div>
-            </div>
           </div>
-        )}
+        </section>
 
-        <footer className="border-t border-white/5 py-6 text-center bg-black/40">
-          <p className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.6em]">TIGRE FC DIGITAL</p>
-        </footer>
+        {/* ═══ DESTAQUES STORY — coluna lateral toda ═══ */}
+        <aside className="lg:col-span-4 lg:row-start-1 lg:row-span-2">
+          <div className="relative">
+            {/* Tab header tipo FIFA */}
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <div className="h-2 w-2 rotate-45 bg-[#F5C400]" />
+              <span className="text-[10px] font-black tracking-[4px] text-[#F5C400] uppercase italic">
+                Spotlight
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-[#F5C400]/40 to-transparent" />
+            </div>
+            <DestaquesFifa />
+          </div>
+        </aside>
+
+        {/* ═══ CHAT — base do placar ═══ */}
+        <section className="lg:col-span-8 lg:row-start-2">
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <div className="h-2 w-2 rotate-45 bg-[#00F3FF]" />
+            <span className="text-[10px] font-black tracking-[4px] text-[#00F3FF] uppercase italic">
+              Live Chat · Vestiário
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-[#00F3FF]/40 to-transparent" />
+          </div>
+          <div className="relative rounded-3xl overflow-hidden h-[480px] sm:h-[560px]"
+            style={{
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(10,10,10,0.4) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.05)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.4)',
+            }}>
+            <TigreFCChat usuarioId={meuId} />
+          </div>
+        </section>
+
+        {/* ═══ RANKING — barra horizontal FIFA leaderboard ═══ */}
+        <section className="lg:col-span-12 lg:row-start-3">
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <div className="h-2 w-2 rotate-45 bg-white" />
+            <span className="text-[10px] font-black tracking-[4px] text-white uppercase italic">
+              Top Performers · Live Leaderboard
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-white/40 to-transparent" />
+          </div>
+          <div className="rounded-3xl p-4 sm:p-5"
+            style={{
+              background: 'linear-gradient(135deg, rgba(20,20,20,0.6) 0%, rgba(10,10,10,0.4) 100%)',
+              border: '1px solid rgba(255,255,255,0.05)',
+            }}>
+            {ranking.length === 0 ? (
+              <p className="text-zinc-600 text-xs text-center py-6">Aguardando torcedores na disputa...</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {ranking.map((u, i) => {
+                  const isFirst = i === 0;
+                  const pts = u.pontos_total ?? 0;
+                  return (
+                    <button
+                      key={u.id}
+                      onClick={() => setPerfilAberto(u.id)}
+                      className="relative text-left p-3 rounded-2xl transition-all hover:scale-[1.03] hover:-translate-y-0.5 group"
+                      style={{
+                        background: isFirst
+                          ? 'linear-gradient(135deg, rgba(245,196,0,0.18) 0%, rgba(245,196,0,0.04) 100%)'
+                          : 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+                        border: isFirst ? '1px solid rgba(245,196,0,0.4)' : '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      {isFirst && (
+                        <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center"
+                          style={{ background: '#F5C400', boxShadow: '0 0 15px rgba(245,196,0,0.6)' }}>
+                          <span className="text-sm">👑</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className={`text-xs font-black italic ${isFirst ? 'text-[#F5C400]' : 'text-zinc-700'}`}>
+                          #0{i + 1}
+                        </span>
+                        {u.avatar_url && (
+                          <img src={u.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover border border-white/10" />
+                        )}
+                      </div>
+                      <p className="text-[11px] font-black uppercase truncate group-hover:text-[#F5C400] transition-colors">
+                        {u.apelido || u.nome || 'Torcedor'}
+                      </p>
+                      <p className={`text-2xl font-black tabular-nums leading-none mt-1 italic ${isFirst ? 'text-[#F5C400]' : 'text-white'}`}>
+                        {pts}
+                      </p>
+                      <p className="text-[7px] tracking-[2px] text-zinc-700 font-bold uppercase mt-0.5">PONTOS</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
       </div>
+
+      {/* Aviso login */}
+      {!hydrating && !user && (
+        <div className="max-w-md mx-auto w-full px-4 pb-10">
+          <div className="relative rounded-2xl p-4 text-center overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(245,196,0,0.08) 0%, rgba(0,0,0,0.6) 100%)',
+              border: '1px solid rgba(245,196,0,0.25)',
+            }}>
+            <div className="text-2xl mb-2">🔐</div>
+            <div className="text-sm font-black mb-1">Faça login pra escalar</div>
+            <div className="text-zinc-400 text-xs">Entre pra disputar o ranking 🏆</div>
+          </div>
+        </div>
+      )}
+
+      <footer className="border-t border-white/5 py-6 text-center bg-black/40">
+        <p className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.6em]">TIGRE FC DIGITAL · EA-STYLE</p>
+      </footer>
 
       {perfilAberto && (
         <TigreFCPerfilPublico
@@ -310,15 +429,23 @@ export default function TigreFCPage() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,900&display=swap');
 
-        html { scroll-behavior: auto; }
-        body {
+        html, body {
+          scroll-behavior: auto !important;
+          margin: 0;
+          padding: 0;
           background-color: #030303;
           color: white;
           font-family: 'Barlow Condensed', sans-serif !important;
-          margin: 0;
           overflow-x: hidden;
         }
+
+        /* Anchor jump kill — mata qualquer #id de scroll automático */
+        :target { scroll-margin-top: 0 !important; }
+
         ::-webkit-scrollbar { width: 0; display: none; }
+
+        /* Garante que nada use scrollIntoView({ behavior: 'smooth' }) */
+        * { scroll-behavior: auto !important; }
       `}</style>
     </main>
   );
