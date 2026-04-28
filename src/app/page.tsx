@@ -1,4 +1,5 @@
 // src/app/page.tsx
+import Ticker from '@/components/layout/Ticker';
 import { Suspense } from 'react';
 import HomeHero from '@/components/home/HomeHero';
 import PostagensGrid from '@/components/layout/NewsGrid';
