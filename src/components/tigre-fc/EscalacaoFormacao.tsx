@@ -37,37 +37,58 @@ interface EscalacaoFormacaoProps {
 }
 
 const PLAYERS_DATA: Player[] = [
-  { id: 23, name: 'Jordi Martins',     short: 'JORDI',      num: 93, pos: 'GOL', foto: 'JORDI.jpg.webp',           ovr: 82 },
-  { id: 1,  name: 'César',             short: 'CÉSAR',      num: 31, pos: 'GOL', foto: 'CESAR-AUGUSTO.jpg.webp',   ovr: 78 },
-  { id: 22, name: 'João Scapin',       short: 'SCAPIN',     num: 12, pos: 'GOL', foto: 'JOAO-SCAPIN.jpg.webp',     ovr: 72 },
-  { id: 62, name: 'Lucas Ribeiro',     short: 'LUCAS',      num: 1,  pos: 'GOL', foto: 'LUCAS-RIBEIRO.jpg.webp',   ovr: 70 },
-  { id: 8,  name: 'Patrick',           short: 'PATRICK',    num: 4,  pos: 'ZAG', foto: 'PATRICK.jpg.webp',         ovr: 84 },
-  { id: 38, name: 'Renato Palm',       short: 'R. PALM',    num: 33, pos: 'ZAG', foto: 'RENATO-PALM.jpg.webp',     ovr: 81 },
-  { id: 34, name: 'Eduardo Brock',     short: 'BROCK',      num: 14, pos: 'ZAG', foto: 'EDUARDO-BROCK.jpg.webp',   ovr: 80 },
-  { id: 66, name: 'Alexis Alvariño',   short: 'ALVARÍÑO',   num: 22, pos: 'ZAG', foto: 'IVAN-ALVARINO.jpg.webp',   ovr: 79 },
-  { id: 6,  name: 'Carlinhos',         short: 'CARLINHOS',  num: 3,  pos: 'ZAG', foto: 'CARLINHOS.jpg.webp',       ovr: 76 },
-  { id: 3,  name: 'Dantas',            short: 'DANTAS',     num: 25, pos: 'ZAG', foto: 'DANTAS.jpg.webp',          ovr: 75 },
-  { id: 9,  name: 'Sander',            short: 'SANDER',     num: 5,  pos: 'LAT', foto: 'SANDER (1).jpg',           ovr: 81 },
-  { id: 28, name: 'Maykon Jesus',      short: 'MAYKON',     num: 66, pos: 'LAT', foto: 'MAYKON-JESUS.jpg.webp',    ovr: 78 },
-  { id: 27, name: 'Nilson Castrillón', short: 'NILSON',     num: 20, pos: 'LAT', foto: 'NILSON-CASTRILLON.jpg.webp', ovr: 77 },
-  { id: 75, name: 'Jhilmar Lora',      short: 'LORA',       num: 24, pos: 'LAT', foto: 'LORA.jpg.webp',            ovr: 74 },
-  { id: 41, name: 'Luís Oyama',        short: 'OYAMA',      num: 6,  pos: 'VOL', foto: 'LUIS-OYAMA.jpg.webp',      ovr: 83 },
-  { id: 46, name: 'Marlon',            short: 'MARLON',     num: 28, pos: 'VOL', foto: 'MARLON.jpg.webp',          ovr: 80 },
-  { id: 40, name: 'Léo Naldi',         short: 'NALDI',      num: 18, pos: 'VOL', foto: 'LEO-NALDI.jpg.webp',       ovr: 78 },
-  { id: 47, name: 'Matheus Bianqui',   short: 'BIANQUI',    num: 17, pos: 'MEI', foto: 'MATHEUS-BIANQUI.jpg.webp', ovr: 82 },
-  { id: 10, name: 'Rômulo',            short: 'RÔMULO',     num: 10, pos: 'MEI', foto: 'ROMULO.jpg.webp',          ovr: 86 },
-  { id: 12, name: 'Juninho',           short: 'JUNINHO',    num: 50, pos: 'MEI', foto: 'JUNINHO.jpg.webp',         ovr: 79 },
-  { id: 17, name: 'Tavinho',           short: 'TAVINHO',    num: 15, pos: 'MEI', foto: 'TAVINHO.jpg.webp',         ovr: 78 },
-  { id: 86, name: 'Christian Ortíz',   short: 'TITI ORTÍZ', num: 8,  pos: 'MEI', foto: 'TITI-ORTIZ.jpg.webp',      ovr: 84 },
-  { id: 13, name: 'Diego Galo',        short: 'D. GALO',    num: 19, pos: 'MEI', foto: 'DIEGO-GALO.jpg.webp',      ovr: 75 },
-  { id: 15, name: 'Robson',            short: 'ROBSON',     num: 11, pos: 'ATA', foto: 'ROBSON.jpg.webp',          ovr: 85 },
-  { id: 59, name: 'Vinícius Paiva',    short: 'V. PAIVA',   num: 16, pos: 'ATA', foto: 'VINICIUS-PAIVA.jpg.webp',  ovr: 79 },
-  { id: 57, name: 'Ronald Barcellos',  short: 'RONALD',     num: 7,  pos: 'ATA', foto: 'RONALD-BARCELLOS.jpg.webp', ovr: 82 },
-  { id: 55, name: 'Nicolas Careca',    short: 'CARECA',     num: 30, pos: 'ATA', foto: 'NICOLAS-CARECA.jpg.webp',  ovr: 80 },
-  { id: 50, name: 'Carlão',            short: 'CARLÃO',     num: 9,  pos: 'ATA', foto: 'CARLAO.jpg.webp',          ovr: 84 },
-  { id: 52, name: 'Hélio Borges',      short: 'HÉLIO',      num: 41, pos: 'ATA', foto: 'HELIO-BORGES.jpg.webp',    ovr: 76 },
-  { id: 53, name: 'Jardiel',           short: 'JARDIEL',    num: 40, pos: 'ATA', foto: 'JARDIEL.jpg.webp',         ovr: 75 },
-  { id: 91, name: 'Hector Bianchi',    short: 'HECTOR',     num: 35, pos: 'ATA', foto: 'HECTOR-BIANCHI.jpg.webp',  ovr: 77 },
+  // --- GOLEIROS ---
+  { id: 23, name: 'Jordi Martins',       short: 'JORDI',      num: 93, pos: 'GOL', foto: 'JORDI.jpg.webp',           ovr: 82 },
+  { id: 1,  name: 'César Augusto',      short: 'CÉSAR',      num: 31, pos: 'GOL', foto: 'CESAR-AUGUSTO.jpg.webp',   ovr: 78 },
+  { id: 22, name: 'João Scapin',        short: 'SCAPIN',     num: 12, pos: 'GOL', foto: 'JOAO-SCAPIN.jpg.webp',      ovr: 72 },
+  { id: 62, name: 'Lucas Ribeiro',      short: 'LUCAS',      num: 1,  pos: 'GOL', foto: 'LUCAS-RIBEIRO.jpg.webp',    ovr: 70 },
+  { id: 101, name: 'Paulo Henrique',    short: 'P. HENRIQUE', num: 29, pos: 'GOL', foto: 'PAULO-HENRIQUE.jpg.webp',  ovr: 71 },
+
+  // --- DEFESAS (Zagueiros e Laterais) ---
+  { id: 8,  name: 'Patrick Marcos',     short: 'PATRICK',    num: 4,  pos: 'ZAG', foto: 'PATRICK.jpg.webp',          ovr: 84 },
+  { id: 38, name: 'Renato Palm',        short: 'R. PALM',    num: 33, pos: 'ZAG', foto: 'RENATO-PALM.jpg.webp',      ovr: 81 },
+  { id: 34, name: 'Eduardo Brock',      short: 'BROCK',      num: 8,  pos: 'ZAG', foto: 'EDUARDO-BROCK.jpg.webp',    ovr: 80 },
+  { id: 66, name: 'Alexis Alvariño',    short: 'ALVARÍÑO',   num: 22, pos: 'ZAG', foto: 'IVAN-ALVARINO.jpg.webp',    ovr: 79 },
+  { id: 6,  name: 'Carlinhos',          short: 'CARLINHOS',  num: 44, pos: 'ZAG', foto: 'CARLINHOS.jpg.webp',        ovr: 76 },
+  { id: 3,  name: 'João Vitor Dantas',  short: 'DANTAS',     num: 25, pos: 'ZAG', foto: 'DANTAS.jpg.webp',           ovr: 75 },
+  { id: 102, name: 'Arthur Barbosa',    short: 'ARTHUR',     num: 3,  pos: 'ZAG', foto: 'ARTHUR-BARBOSA.jpg.webp',   ovr: 73 },
+  { id: 103, name: 'Antony Gustavo',    short: 'ANTONY',     num: 38, pos: 'ZAG', foto: 'ANTONY.jpg.webp',          ovr: 70 },
+  { id: 104, name: 'Kauã Rocha',        short: 'ALEMÃO',     num: 21, pos: 'ZAG', foto: 'ALEMAO.jpg.webp',           ovr: 72 },
+  
+  { id: 9,  name: 'Sander Bortolotto',  short: 'SANDER',     num: 36, pos: 'LAT', foto: 'SANDER.jpg.webp',           ovr: 81 },
+  { id: 28, name: 'Maykon Jesus',       short: 'MAYKON',     num: 66, pos: 'LAT', foto: 'MAYKON-JESUS.jpg.webp',     ovr: 78 },
+  { id: 27, name: 'Nilson Castrillón',  short: 'CASTRILLÓN', num: 20, pos: 'LAT', foto: 'NILSON-CASTRILLON.jpg.webp', ovr: 77 },
+  { id: 75, name: 'Jhilmar Lora',       short: 'LORA',       num: 2,  pos: 'LAT', foto: 'LORA.jpg.webp',             ovr: 74 },
+  { id: 105, name: 'Carlos Roberto',    short: 'ESQUERDA',   num: 26, pos: 'LAT', foto: 'CARLOS-ESQUERDA.jpg.webp',  ovr: 71 },
+
+  // --- MEIO-CAMPO ---
+  { id: 41, name: 'Luís Oyama',         short: 'OYAMA',      num: 6,  pos: 'VOL', foto: 'LUIS-OYAMA.jpg.webp',       ovr: 83 },
+  { id: 46, name: 'Marlon Adriano',     short: 'MARLON',     num: 28, pos: 'VOL', foto: 'MARLON.jpg.webp',           ovr: 80 },
+  { id: 40, name: 'Léo Naldi',          short: 'NALDI',      num: 18, pos: 'VOL', foto: 'LEO-NALDI.jpg.webp',        ovr: 78 },
+  { id: 106, name: 'Gabriel Bahia',     short: 'G. BAHIA',   num: 5,  pos: 'VOL', foto: 'GABRIEL-BAHIA.jpg.webp',    ovr: 74 },
+  
+  { id: 47, name: 'Matheus Bianqui',    short: 'BIANQUI',    num: 17, pos: 'MEI', foto: 'MATHEUS-BIANQUI.jpg.webp',  ovr: 82 },
+  { id: 10, name: 'Rômulo Azevedo',     short: 'RÔMULO',     num: 10, pos: 'MEI', foto: 'ROMULO.jpg.webp',           ovr: 86 },
+  { id: 12, name: 'Alexandre Silva',    short: 'JUNINHO',    num: 50, pos: 'MEI', foto: 'JUNINHO.jpg.webp',          ovr: 79 },
+  { id: 17, name: 'Luiz Otavio',        short: 'TAVINHO',    num: 15, pos: 'MEI', foto: 'TAVINHO.jpg.webp',          ovr: 78 },
+  { id: 86, name: 'Christian Ortíz',    short: 'TITI ORTÍZ', num: 77, pos: 'MEI', foto: 'TITI-ORTIZ.jpg.webp',       ovr: 84 },
+  { id: 13, name: 'Diego Galo',         short: 'D. GALO',    num: 19, pos: 'MEI', foto: 'DIEGO-GALO.jpg.webp',       ovr: 75 },
+  { id: 107, name: 'Gabriel Correia',   short: 'G. CORREIA', num: 14, pos: 'MEI', foto: 'GABRIEL-CORREIA.jpg.webp',  ovr: 72 },
+  { id: 108, name: 'Luiz Gabriel',      short: 'L. GABRIEL', num: 23, pos: 'MEI', foto: 'LUIZ-GABRIEL.jpg.webp',     ovr: 70 },
+  { id: 109, name: 'Hector Bianchi',    short: 'HECTOR',     num: 32, pos: 'MEI', foto: 'HECTOR-BIANCHI.jpg.webp',   ovr: 73 },
+  { id: 110, name: 'Miguel Contiero',   short: 'CONTIERO',   num: 35, pos: 'MEI', foto: 'MIGUEL-CONTIERO.jpg.webp',  ovr: 69 },
+  { id: 111, name: 'Edson Junior',      short: 'NOGUEIRA',   num: 37, pos: 'MEI', foto: 'NOGUEIRA.jpg.webp',         ovr: 68 },
+
+  // --- ATACANTES ---
+  { id: 15, name: 'Robson Fernandes',   short: 'ROBSON',     num: 11, pos: 'ATA', foto: 'ROBSON.jpg.webp',           ovr: 85 },
+  { id: 59, name: 'Vinícius Paiva',     short: 'V. PAIVA',   num: 16, pos: 'ATA', foto: 'VINICIUS-PAIVA.jpg.webp',   ovr: 79 },
+  { id: 57, name: 'Ronald Barcellos',   short: 'RONALD',     num: 7,  pos: 'ATA', foto: 'RONALD-BARCELLOS.jpg.webp',  ovr: 82 },
+  { id: 55, name: 'Nicolas Careca',     short: 'CARECA',     num: 16, pos: 'ATA', foto: 'NICOLAS-CARECA.jpg.webp',   ovr: 80 }, // Obs: Vinícius Paiva assumiu a 16
+  { id: 50, name: 'Carlos Henrique',    short: 'CARLÃO',     num: 9,  pos: 'ATA', foto: 'CARLAO.jpg.webp',           ovr: 84 },
+  { id: 52, name: 'Hélio Borges',       short: 'HÉLIO',      num: 41, pos: 'ATA', foto: 'HELIO-BORGES.jpg.webp',     ovr: 76 },
+  { id: 53, name: 'Jardiel Marciel',    short: 'JARDIEL',    num: 30, pos: 'ATA', foto: 'JARDIEL.jpg.webp',          ovr: 75 },
+  { id: 112, name: 'Diego Mathias',     short: 'D. MATHIAS', num: 27, pos: 'ATA', foto: 'DIEGO-MATHIAS.jpg.webp',    ovr: 76 },
+  { id: 113, name: 'Jhones Kauê',       short: 'J. KAUÊ',    num: 47, pos: 'ATA', foto: 'JHONES-KAUE.jpg.webp',      ovr: 71 }
 ];
 
 const formationConfigs: Record<string, Record<string, SlotCoord>> = {
