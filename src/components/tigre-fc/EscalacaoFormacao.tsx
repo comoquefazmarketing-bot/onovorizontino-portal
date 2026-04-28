@@ -552,32 +552,32 @@ export default function EscalacaoFormacao({
     }
     setIsGenerating(true);
     
-    // Pequeno delay para garantir renderização do DOM
-    await new Promise(r => setTimeout(r, 200));
-    
-    // Tenta capturar pelo ID caso o ref falhe
+    await new Promise(r => setTimeout(r, 400));
     const node = document.getElementById('arena-capture-area') || finalCardRef.current;
     
     if (!node) {
       setIsGenerating(false);
-      alert('Erro ao encontrar área de captura. Tente novamente.');
+      setStep('arena');
       return;
     }
 
     try {
-      const dataUrl = await htmlToImage.toPng(node, {
-        cacheBust: true, 
-        quality: 0.98, 
-        pixelRatio: 3, 
+      // Ajuste de tipagem para evitar erro no Vercel build
+      const options = {
+        cacheBust: true,
+        quality: 0.95,
+        pixelRatio: 2,
         backgroundColor: '#0a0a0a',
-        includeGraphics: true
-      });
+        skipFonts: true,
+      } as any;
+
+      const dataUrl = await htmlToImage.toPng(node, options);
       setFinalImageUri(dataUrl);
       setStep('final');
-      setTimeout(() => triggerCelebration(), 200);
+      setTimeout(() => triggerCelebration(), 300);
     } catch (e) {
       console.error('[EscalacaoFormacao] erro ao gerar imagem:', e);
-      alert('Erro ao gerar a imagem. Tente novamente!');
+      setStep('arena');
     } finally {
       setIsGenerating(false);
     }
@@ -594,8 +594,8 @@ export default function EscalacaoFormacao({
     if (node) {
       try {
         const dataUrl = await htmlToImage.toPng(node, {
-          cacheBust: true, quality: 0.98, pixelRatio: 3, backgroundColor: '#0a0a0a',
-        });
+          cacheBust: true, quality: 0.95, pixelRatio: 2, backgroundColor: '#0a0a0a',
+        } as any);
         setFinalImageUri(dataUrl);
         triggerCelebration();
       } catch (e) {
@@ -644,56 +644,322 @@ export default function EscalacaoFormacao({
           </motion.div>
         )}
 
-        {/* ... Os passos intermediários 'formation', 'arena', 'captain', 'hero', 'palpite' permanecem iguais conforme o original ... */}
+        {/* --- PASSO: ESCOLHA DA FORMAÇÃO --- */}
+        {step === 'formation' && (
+          <motion.div key="form" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="flex-1 flex flex-col p-6 items-center justify-center space-y-8 bg-zinc-950 relative">
+             <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent" />
+             <div className="text-center">
+                <div className="text-[#F5C400] font-black text-[10px] tracking-[4px] uppercase mb-2">Tactical Setup</div>
+                <h2 className="text-4xl font-black italic tracking-tighter text-white uppercase drop-shadow-lg">Escolha o Esquema</h2>
+             </div>
+             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-lg">
+                {Object.keys(formationConfigs).map((f) => (
+                  <button key={f} onClick={() => handleChangeFormation(f)}
+                    className="group relative h-24 bg-zinc-900 border-2 border-zinc-800 rounded-2xl flex items-center justify-center overflow-hidden transition-all hover:border-[#F5C400] hover:scale-105 active:scale-95 shadow-xl">
+                    <div className="absolute inset-0 bg-[#F5C400] opacity-0 group-hover:opacity-5 transition-opacity" />
+                    <span className="text-2xl font-black italic text-zinc-400 group-hover:text-white transition-colors">{f}</span>
+                  </button>
+                ))}
+             </div>
+          </motion.div>
+        )}
 
+        {/* --- PASSO: ARENA (ESCALAÇÃO) --- */}
+        {step === 'arena' && (
+          <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col md:flex-row relative bg-[#050505]">
+            <div ref={arenaRef} className="relative flex-1 bg-zinc-900 overflow-hidden">
+               <img src={STADIUM_BG} alt="Arena" className="w-full h-full object-cover opacity-80" draggable={false} />
+               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
+               <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/60 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 z-50">
+                  <div className="text-center">
+                    <div className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">OVR TIME</div>
+                    <div className="text-xl font-black italic text-[#F5C400] leading-none tabular-nums">{teamOvr}</div>
+                  </div>
+                  <div className="w-[1px] h-6 bg-white/10" />
+                  <div className="text-center">
+                    <div className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">ESCALADOS</div>
+                    <div className="text-xl font-black italic text-white leading-none tabular-nums">{selectedPlayers.length}/11</div>
+                  </div>
+               </div>
+               {Object.entries(slotMap).map(([id, state]) => (
+                 <DraggableSlot key={id} slotId={id} state={state} arenaRef={arenaRef}
+                   isActive={activeSlot === id} hasPending={!!pendingPlayer} isDesktop={isDesktop}
+                   isCaptain={state.player?.id === captainId} isHero={state.player?.id === heroId}
+                   onDragSettled={handleSlotDragSettled} onClick={handleSlotClick} getValidPhotoUrl={getValidPhotoUrl} />
+               ))}
+            </div>
+            <div className="h-[40vh] md:h-full md:w-96 bg-zinc-950 border-t md:border-t-0 md:border-l border-white/10 flex flex-col shadow-2xl z-[100]">
+               <div className="p-4 space-y-4">
+                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                   {POSICOES.map(p => (
+                     <button key={p} onClick={() => setPosFiltro(p)}
+                       className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                         posFiltro === p ? 'bg-[#F5C400] text-black shadow-[0_0_15px_rgba(245,196,0,0.3)]' : 'bg-zinc-900 text-zinc-500 border border-zinc-800'
+                       }`}>
+                       {p}
+                     </button>
+                   ))}
+                 </div>
+               </div>
+               <div className="flex-1 overflow-y-auto p-4 pt-0 grid grid-cols-3 md:grid-cols-2 gap-3 no-scrollbar">
+                 {filteredPlayers.map(p => (
+                   <FutCard key={p.id} player={p} escalado={selectedPlayers.some(sp => sp.id === p.id)}
+                     pending={pendingPlayer?.id === p.id} onClick={() => handlePlayerSelection(p)} getValidPhotoUrl={getValidPhotoUrl} />
+                 ))}
+               </div>
+               <div className="p-4 bg-zinc-950/80 backdrop-blur-xl border-t border-white/5">
+                 <button onClick={() => selectedPlayers.length === 11 ? setStep('captain') : alert('Escale os 11 jogadores!')}
+                   className={`w-full h-14 rounded-2xl font-black uppercase italic tracking-tighter text-lg transition-all ${
+                     selectedPlayers.length === 11 ? 'bg-[#F5C400] text-black hover:scale-[1.02] active:scale-95 shadow-xl' : 'bg-zinc-900 text-zinc-600 cursor-not-allowed'
+                   }`}>
+                   Confirmar Time
+                 </button>
+               </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* --- PASSO: CAPITÃO --- */}
+        {step === 'captain' && (
+          <motion.div key="cap" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} className="flex-1 flex flex-col p-6 bg-zinc-950 items-center justify-center">
+            <div className="text-center mb-10">
+              <div className="text-[#fbbf24] font-black text-xs tracking-[4px] uppercase mb-2">The Leader</div>
+              <h2 className="text-5xl font-black italic tracking-tighter uppercase drop-shadow-xl">Quem é o Capitão?</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl overflow-y-auto max-h-[60vh] p-4 no-scrollbar">
+              {selectedPlayers.map(p => (
+                <button key={p.id} onClick={() => handleSelectCaptain(p.id)}
+                  className="relative aspect-[3/4] bg-zinc-900 rounded-2xl overflow-hidden border-2 border-zinc-800 transition-all hover:border-[#fbbf24] hover:scale-105 active:scale-95 group shadow-2xl">
+                  <img src={getValidPhotoUrl(p.foto)} alt={p.short} className="w-full h-full object-cover transition-transform group-hover:scale-110" onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+                  <div className="absolute bottom-3 left-0 right-0 text-center px-2">
+                    <div className="text-sm font-black italic text-white uppercase truncate">{p.short}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* --- PASSO: HERÓI --- */}
+        {step === 'hero' && (
+          <motion.div key="hero" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} className="flex-1 flex flex-col p-6 bg-zinc-950 items-center justify-center">
+            <div className="text-center mb-10">
+              <div className="text-cyan-400 font-black text-xs tracking-[4px] uppercase mb-2">Match Winner</div>
+              <h2 className="text-5xl font-black italic tracking-tighter uppercase drop-shadow-xl">Quem decide o Jogo?</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl overflow-y-auto max-h-[60vh] p-4 no-scrollbar">
+              {selectedPlayers.map(p => (
+                <button key={p.id} onClick={() => handleSelectHero(p.id)}
+                  className="relative aspect-[3/4] bg-zinc-900 rounded-2xl overflow-hidden border-2 border-zinc-800 transition-all hover:border-cyan-400 hover:scale-105 active:scale-95 group shadow-2xl">
+                  <img src={getValidPhotoUrl(p.foto)} alt={p.short} className="w-full h-full object-cover transition-transform group-hover:scale-110" onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+                  <div className="absolute bottom-3 left-0 right-0 text-center px-2">
+                    <div className="text-sm font-black italic text-white uppercase truncate">{p.short}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* --- PASSO: PALPITE --- */}
+        {step === 'palpite' && (
+          <motion.div key="palp" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex-1 flex flex-col p-6 bg-zinc-950 items-center justify-center">
+            <div className="text-center mb-12">
+              <div className="text-[#F5C400] font-black text-xs tracking-[4px] uppercase mb-2">Score Prediction</div>
+              <h2 className="text-5xl font-black italic tracking-tighter uppercase drop-shadow-xl">Qual o seu Palpite?</h2>
+            </div>
+            <div className="flex items-center justify-center gap-6 md:gap-12 mb-16 scale-110 md:scale-125">
+               <div className="flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 md:w-28 md:h-28 flex items-center justify-center bg-zinc-900 rounded-3xl border-2 border-zinc-800 shadow-2xl">
+                    <img src={mandanteLogo} alt={mandante} className="w-14 h-14 md:w-20 md:h-20 object-contain" />
+                  </div>
+                  <input type="number" value={palpiteMandante} onChange={(e) => setPalpiteMandante(Number(e.target.value))}
+                    className="w-20 h-24 md:w-24 md:h-28 bg-zinc-900 border-2 border-zinc-800 rounded-3xl text-center text-5xl font-black italic text-white focus:border-[#F5C400] transition-all shadow-2xl outline-none" />
+               </div>
+               <div className="text-5xl font-black italic text-zinc-800 mt-20">X</div>
+               <div className="flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 md:w-28 md:h-28 flex items-center justify-center bg-[#F5C400] rounded-3xl border-2 border-yellow-300 shadow-[0_0_40px_rgba(245,196,0,0.2)]">
+                    <img src={ESCUDO_DEFAULT} alt="Novorizontino" className="w-14 h-14 md:w-20 md:h-20 object-contain" />
+                  </div>
+                  <input type="number" value={palpiteVisitante} onChange={(e) => setPalpiteVisitante(Number(e.target.value))}
+                    className="w-20 h-24 md:w-24 md:h-28 bg-zinc-900 border-2 border-zinc-800 rounded-3xl text-center text-5xl font-black italic text-[#F5C400] focus:border-[#F5C400] transition-all shadow-2xl outline-none" />
+               </div>
+            </div>
+            <button onClick={generateFinalImage} disabled={isGenerating}
+              className="w-full max-w-sm h-16 bg-[#F5C400] text-black rounded-2xl font-black uppercase italic tracking-tighter text-xl hover:scale-[1.02] active:scale-95 transition-all shadow-2xl">
+              {isGenerating ? 'Processando Dados...' : 'Gerar Minha Escalada'}
+            </button>
+          </motion.div>
+        )}
+
+        {/* --- PASSO: SALVANDO (INTERMEDIÁRIO) --- */}
+        {step === 'saving' && (
+          <motion.div key="saving" className="flex-1 flex flex-col items-center justify-center bg-zinc-950 p-6 text-center">
+             <div className="relative mb-8 w-32 h-32 flex items-center justify-center">
+                <div className="absolute inset-0 border-4 border-zinc-800 rounded-full" />
+                <motion.div className="absolute inset-0 border-4 border-t-[#F5C400] border-r-transparent border-b-transparent border-l-transparent rounded-full"
+                  animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} />
+                <span className="text-4xl">🐯</span>
+             </div>
+             <h3 className="text-2xl font-black italic uppercase tracking-tight mb-2">Renderizando Campo</h3>
+             <p className="text-zinc-500 font-bold text-sm tracking-widest uppercase">Aguarde um instante...</p>
+          </motion.div>
+        )}
+
+        {/* --- PASSO: FINAL (SUCESSO / COMPARTILHAMENTO) --- */}
         {step === 'final' && (
-          <motion.div key="final" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] bg-black overflow-y-auto p-4 flex flex-col items-center">
+          <motion.div key="final" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="flex-1 flex flex-col bg-zinc-950 overflow-y-auto no-scrollbar relative">
             
-            {/* AREA DE CAPTURA COM ID PARA O SCRIPT ENCONTRAR */}
-            <div id="arena-capture-area" ref={finalCardRef} className="relative w-full max-w-md aspect-[9/16] rounded-[40px] overflow-hidden border-2 border-zinc-800 bg-zinc-950 shadow-2xl">
-                {finalImageUri ? (
-                    <img src={finalImageUri} alt="Sua Escalacao" className="w-full h-full object-contain" />
-                ) : (
-                    <div className="flex items-center justify-center h-full">Gerando imagem...</div>
-                )}
+            {/* FUNDO DINÂMICO PARA CELEBRAÇÃO */}
+            <div className="absolute inset-0 pointer-events-none opacity-30">
+               <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#F5C400]/10 blur-[120px] rounded-full" />
+               <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 blur-[120px] rounded-full" />
             </div>
 
-            {/* BOTÕES DE AÇÃO */}
-            <div className="w-full max-w-md mt-6 space-y-3 pb-10">
-              <button 
-                onClick={handleDownload}
-                className="w-full bg-[#F5C400] text-black h-14 rounded-2xl font-black uppercase tracking-tighter text-lg hover:scale-[1.02] active:scale-95 transition-all"
-              >
-                Baixar Imagem
-              </button>
+            {/* CARD PRINCIPAL DE CAPTURA - ESTILO STORY */}
+            <div className="flex-1 flex flex-col items-center pt-8 px-4 pb-6">
+              <div id="arena-capture-area" ref={finalCardRef}
+                className="relative w-full max-w-[360px] aspect-[9/16] rounded-[40px] overflow-hidden border-[1px] border-white/10 bg-[#050505] shadow-[0_20px_80px_rgba(0,0,0,0.8)]">
+                
+                {/* CAMPO DE FUNDO */}
+                <div className="absolute inset-0 scale-[1.02]">
+                   <img src={STADIUM_BG} alt="Arena" className="w-full h-full object-cover opacity-90" />
+                   <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black" />
+                </div>
+
+                {/* INFO DO TOPO - ROUND / COMPETITION */}
+                <div className="absolute top-8 left-0 right-0 flex flex-col items-center z-20">
+                   <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 mb-2">
+                      <span className="text-[10px] font-black text-white/80 uppercase tracking-[3px]">Tigre FC • Arena</span>
+                   </div>
+                   <div className="flex items-center gap-5 mt-1 scale-110">
+                      <div className="flex flex-col items-center">
+                        <img src={mandanteLogo} alt={mandante} className="w-10 h-10 object-contain drop-shadow-lg" />
+                        <span className="text-[8px] font-black text-white/50 uppercase mt-1 tracking-tighter">{mandante}</span>
+                      </div>
+                      <div className="text-xl font-black italic text-[#F5C400] drop-shadow-lg">X</div>
+                      <div className="flex flex-col items-center">
+                        <img src={ESCUDO_DEFAULT} alt="Novorizontino" className="w-10 h-10 object-contain drop-shadow-lg" />
+                        <span className="text-[8px] font-black text-[#F5C400] uppercase mt-1 tracking-tighter">Novorizontino</span>
+                      </div>
+                   </div>
+                </div>
+
+                {/* ESCALAÇÃO VISUAL - MINI JOGADORES NO CARD FINAL */}
+                <div className="absolute inset-0 z-10 p-6 pointer-events-none">
+                  {Object.entries(slotMap).map(([id, state]) => {
+                    if (!state.player) return null;
+                    const c = getRarityColors(state.player.ovr ?? 75);
+                    return (
+                      <div key={id} style={{ position: 'absolute', left: `${state.x}%`, top: `${state.y}%`, width: 44, height: 60, marginLeft: -22, marginTop: -30 }}
+                        className="flex flex-col items-center">
+                        <div className="relative w-full aspect-square rounded-full border-[1.5px] overflow-hidden shadow-2xl bg-black" style={{ borderColor: state.player.id === captainId ? '#fbbf24' : state.player.id === heroId ? '#22d3ee' : c.border }}>
+                          <img src={getValidPhotoUrl(state.player.foto)} alt="" className="w-full h-full object-cover" />
+                          {state.player.id === captainId && <div className="absolute top-0 right-0 w-3 h-3 bg-yellow-400 text-black text-[6px] font-black flex items-center justify-center rounded-full">C</div>}
+                        </div>
+                        <div className="mt-1 bg-black/80 backdrop-blur-md border border-white/10 px-1.5 py-0.5 rounded-sm">
+                           <span className="text-[6px] font-black text-white uppercase whitespace-nowrap tracking-tighter">{state.player.short}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* INFO RODAPÉ DO STORY - PALPITE E USER */}
+                <div className="absolute bottom-0 left-0 right-0 p-8 z-20">
+                   <div className="flex items-end justify-between">
+                      <div className="flex flex-col">
+                        <div className="text-[9px] font-black text-[#F5C400] uppercase tracking-widest mb-1">Palpite Final</div>
+                        <div className="text-4xl font-black italic text-white tabular-nums leading-none tracking-tighter shadow-black">
+                          {palpiteMandante}<span className="text-[#F5C400] mx-1">×</span>{palpiteVisitante}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-2 mb-1">
+                           <div className="text-right">
+                              <div className="text-[8px] font-black text-white/40 uppercase tracking-widest leading-none">Escalado por</div>
+                              <div className="text-[12px] font-black italic text-white uppercase leading-none tracking-tighter truncate max-w-[80px]">{userName}</div>
+                           </div>
+                           <div className="w-8 h-8 rounded-full border border-white/10 overflow-hidden bg-zinc-900">
+                              {userAvatar ? <img src={userAvatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px]">🐯</div>}
+                           </div>
+                        </div>
+                      </div>
+                   </div>
+                   <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
+                      <div className="flex gap-4">
+                        <div className="flex flex-col">
+                           <span className="text-[7px] font-black text-white/30 uppercase tracking-[2px]">Team OVR</span>
+                           <span className="text-sm font-black italic text-[#F5C400] leading-none">{teamOvr}</span>
+                        </div>
+                        <div className="flex flex-col">
+                           <span className="text-[7px] font-black text-white/30 uppercase tracking-[2px]">Tática</span>
+                           <span className="text-sm font-black italic text-white leading-none">{formation}</span>
+                        </div>
+                      </div>
+                      <div className="text-[7px] font-black text-white/20 uppercase tracking-[4px] rotate-[-90deg] origin-right">#TigreFC</div>
+                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* BARRA DE AÇÕES - FIXA AO FUNDO NO MOBILE */}
+            <div className="w-full max-w-md mx-auto px-6 pb-12 space-y-4">
+              <div className="grid grid-cols-1 gap-3">
+                <button onClick={handleDownload}
+                  className="w-full h-14 bg-[#F5C400] text-black rounded-2xl font-black uppercase italic tracking-tighter text-lg flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(245,196,0,0.15)] transition-all active:scale-95">
+                  <span className="text-xl">💾</span> Baixar Escalada
+                </button>
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <button 
-                  onClick={shareWhatsApp}
-                  className="bg-[#25D366] text-white h-14 rounded-2xl font-black text-lg flex items-center justify-center hover:opacity-90 transition-all"
-                >
-                  WhatsApp
+                <button onClick={shareWhatsApp}
+                  className="h-14 rounded-2xl flex items-center justify-center gap-2 font-black uppercase italic tracking-tighter transition-all active:scale-95 shadow-xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                    color: '#fff',
+                  }}>
+                  <span className="text-xl">💬</span> WhatsApp
                 </button>
-                <button 
-                  onClick={shareX}
-                  className="bg-zinc-900 border border-zinc-800 text-white h-14 rounded-2xl font-black text-2xl flex items-center justify-center hover:scale-105 transition-all"
-                >
+                <button onClick={shareX}
+                  className="h-14 rounded-2xl flex items-center justify-center font-black text-2xl tracking-wider uppercase transition-all hover:scale-105 active:scale-95 shadow-xl"
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                  }}>
                   𝕏
                 </button>
               </div>
 
-              <div className="flex items-center justify-between pt-4">
-                <button onClick={() => setStep('arena')} className="text-zinc-500 hover:text-white text-[10px] font-black uppercase">
-                  ← Editar
+              {/* Links de navegação — texto puro, sem peso visual */}
+              <div className="flex items-center justify-between pt-3">
+                <button onClick={() => setStep('arena')}
+                  className="text-zinc-500 hover:text-white text-[10px] font-black tracking-[2px] uppercase transition-colors">
+                  ← Editar Escalada
                 </button>
-                <button onClick={finalizarEVoltar} className="text-zinc-500 hover:text-[#F5C400] text-[10px] font-black uppercase">
-                  Arena →
+                <button onClick={finalizarEVoltar}
+                  className="text-zinc-500 hover:text-[#F5C400] text-[10px] font-black tracking-[2px] uppercase transition-colors">
+                  Painel Arena →
                 </button>
               </div>
             </div>
+            <div className="h-8" />
           </motion.div>
         )}
+
       </AnimatePresence>
+
+      {hadSaved && step === 'arena' && (
+        <motion.button initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
+          onClick={verEscalacaoSalva}
+          className="fixed top-3 right-3 z-[200] bg-cyan-400 text-black px-3 py-2 rounded-full font-black text-[10px] uppercase tracking-wider shadow-lg">
+          Ver Salva
+        </motion.button>
+      )}
     </div>
   );
 }
