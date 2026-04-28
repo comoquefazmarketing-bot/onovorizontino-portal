@@ -6,13 +6,14 @@ import Analytics from '@/components/layout/Analytics';
 import LgpdBanner from '@/components/layout/LgpdBanner';
 import PortalHeader from '@/components/layout/PortalHeader';
 import HomeFAB from '@/components/layout/HomeFAB';
+import TickerHomeOnly from '@/components/layout/TickerHomeOnly';
 import TigreFCButton from '@/components/tigre-fc/TigreFCButton';
 import ModoDesespero from '@/components/tigre-fc/ModoDesespero';
 
-// NOTA: O <Ticker /> NÃO é mais importado/renderizado aqui.
-// Ele agora vive apenas em src/app/page.tsx (a home), porque não
-// faz sentido aparecer em páginas de leitura (notícia, escalação,
-// expediente, etc.) onde compete com o conteúdo principal.
+// O <Ticker /> não é importado diretamente aqui — usamos
+// <TickerHomeOnly /> que faz a verificação de rota e só renderiza
+// na home. Assim o ticker aparece em "/" mas não em /noticias/[slug],
+// /escalacao, /expediente, etc.
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.onovorizontino.com.br'),
@@ -99,6 +100,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-black antialiased flex flex-col min-h-screen">
         {/* ─── HEADER GLOBAL (sticky, em todas as páginas) ─── */}
         <PortalHeader />
+
+        {/* ─── TICKER (renderiza APENAS em "/") ─── */}
+        <TickerHomeOnly />
 
         {/* Main wrapper para empurrar o footer para baixo */}
         <main className="flex-grow">{children}</main>
