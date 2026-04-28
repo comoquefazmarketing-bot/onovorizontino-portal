@@ -2,13 +2,17 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Script from 'next/script';
 
-import Ticker from '@/components/layout/Ticker';
 import Analytics from '@/components/layout/Analytics';
 import LgpdBanner from '@/components/layout/LgpdBanner';
-import PortalHeader from '@/components/layout/PortalHeader';   // ← NOVO
-import HomeFAB from '@/components/layout/HomeFAB';             // ← NOVO
+import PortalHeader from '@/components/layout/PortalHeader';
+import HomeFAB from '@/components/layout/HomeFAB';
 import TigreFCButton from '@/components/tigre-fc/TigreFCButton';
 import ModoDesespero from '@/components/tigre-fc/ModoDesespero';
+
+// NOTA: O <Ticker /> NÃO é mais importado/renderizado aqui.
+// Ele agora vive apenas em src/app/page.tsx (a home), porque não
+// faz sentido aparecer em páginas de leitura (notícia, escalação,
+// expediente, etc.) onde compete com o conteúdo principal.
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.onovorizontino.com.br'),
@@ -93,12 +97,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
 
       <body className="bg-black antialiased flex flex-col min-h-screen">
-        {/* ─── HEADER GLOBAL ─── (sticky, presente em todas as páginas) */}
+        {/* ─── HEADER GLOBAL (sticky, em todas as páginas) ─── */}
         <PortalHeader />
-
-        {/* ─── TICKER (marquee de slogans) ─── */}
-        {/* Fica abaixo do header sticky, rola normalmente com a página */}
-        <Ticker />
 
         {/* Main wrapper para empurrar o footer para baixo */}
         <main className="flex-grow">{children}</main>
