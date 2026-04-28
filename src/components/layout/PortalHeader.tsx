@@ -1,19 +1,17 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import Image from 'next/image'
-import { Home, Menu, X } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import Link from 'next/link';
+import Image from 'next/image';
+import { Home, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 /**
  * Links do menu principal do Portal.
  *
- * NOTA: links com `/#secao` funcionam em qualquer página do Next.js —
- * o roteador navega pra home e faz scroll pro ID. Por isso não importa
- * em que página o usuário está, o menu sempre funciona.
- *
- * Para adicionar/reordenar links, edite só este array.
+ * Links com `/#secao` funcionam em qualquer página — Next.js navega
+ * para a home e faz scroll para o ID. Por isso o menu não quebra em
+ * páginas internas (notícia, escalação, etc.).
  */
 const NAV_LINKS = [
   { label: 'Notícias', href: '/#noticias' },
@@ -22,57 +20,52 @@ const NAV_LINKS = [
   { label: 'Tabela', href: '/#agenda' },
   { label: 'Expediente', href: '/expediente-portal-o-novorizontino' },
   { label: 'Tigre FC', href: '/tigre-fc/sobre' },
-] as const
+] as const;
 
 /**
  * Header global do Portal O Novorizontino.
  *
- * Este header DEVE ser montado no `app/layout.tsx` (root layout)
- * — não no `app/page.tsx`. Caso contrário, ele só aparece na home
- * e some em todas as páginas internas (que é o bug atual).
+ * Montado no `app/layout.tsx` (root layout) — aparece em TODAS as
+ * páginas (home, notícias, escalação, expediente, Tigre FC, futuras).
  *
- * Comportamento:
- * - Sticky no topo, fundo black/95 com backdrop blur
- * - Desktop (≥md): logo + menu horizontal + ícone Home
- * - Mobile (<md): logo + ícone Home + hamburger que abre drawer
- * - Drawer fecha automaticamente quando o usuário clica em qualquer link
- *   ou quando navega pra outra rota
+ * Visual alinhado ao branding do portal:
+ * - Fundo #050505/95 com backdrop blur
+ * - Acento amarelo #F5C400 (não yellow-500 do Tailwind)
+ * - Tipografia brutalista: uppercase, font-black, tracking-tighter
+ * - Sticky no topo (z-50, acima do Ticker)
  *
  * Acessibilidade:
  * - Touch targets ≥ 44x44px (h-11)
  * - aria-label em ícones-only
- * - aria-expanded no botão hamburger
+ * - aria-expanded / aria-controls no hamburger
  * - Foco visível com ring amarelo
- * - Navegação por teclado preservada
+ * - Drawer fecha ao mudar de rota
+ * - Scroll do body trava enquanto drawer está aberto
  */
-export function PortalHeader() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const pathname = usePathname()
+export default function PortalHeader() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
-  // Fecha o drawer automaticamente ao mudar de rota
+  // Fecha drawer ao navegar
   useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
+    setMobileOpen(false);
+  }, [pathname]);
 
-  // Trava o scroll do body quando o drawer está aberto
+  // Trava scroll do body com drawer aberto
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileOpen])
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
 
   return (
     <header
       className="
         sticky top-0 z-50 w-full
-        border-b border-yellow-500/20
-        bg-black/95 backdrop-blur
-        supports-[backdrop-filter]:bg-black/80
+        border-b border-[#F5C400]/20
+        bg-[#050505]/95 backdrop-blur
+        supports-[backdrop-filter]:bg-[#050505]/80
       "
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
@@ -83,7 +76,7 @@ export function PortalHeader() {
           className="
             flex items-center gap-2 rounded
             transition-opacity hover:opacity-80
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5C400]
           "
         >
           <Image
@@ -96,9 +89,9 @@ export function PortalHeader() {
           />
         </Link>
 
-        {/* ─── NAVEGAÇÃO DESKTOP ─── */}
+        {/* ─── DESKTOP NAV ─── */}
         <nav
-          className="hidden items-center gap-1 md:flex"
+          className="hidden items-center gap-0.5 md:flex"
           aria-label="Navegação principal"
         >
           <Link
@@ -106,10 +99,10 @@ export function PortalHeader() {
             aria-label="Home"
             className="
               flex h-11 items-center gap-2 rounded-md px-3
-              text-sm font-medium text-zinc-300
+              text-[11px] font-black uppercase tracking-widest text-zinc-300
               transition-colors
-              hover:bg-yellow-500/10 hover:text-yellow-500
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500
+              hover:bg-[#F5C400]/10 hover:text-[#F5C400]
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5C400]
             "
           >
             <Home className="h-4 w-4" aria-hidden="true" />
@@ -122,10 +115,10 @@ export function PortalHeader() {
               href={link.href}
               className="
                 flex h-11 items-center rounded-md px-3
-                text-sm font-medium text-zinc-400
+                text-[11px] font-black uppercase tracking-widest text-zinc-400
                 transition-colors
-                hover:bg-yellow-500/10 hover:text-yellow-500
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500
+                hover:bg-[#F5C400]/10 hover:text-[#F5C400]
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5C400]
               "
             >
               {link.label}
@@ -142,8 +135,8 @@ export function PortalHeader() {
               flex h-11 w-11 items-center justify-center rounded-md
               text-zinc-300
               transition-colors
-              hover:bg-yellow-500/10 hover:text-yellow-500
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500
+              hover:bg-[#F5C400]/10 hover:text-[#F5C400]
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5C400]
             "
           >
             <Home className="h-5 w-5" aria-hidden="true" />
@@ -153,14 +146,14 @@ export function PortalHeader() {
             type="button"
             aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={mobileOpen}
-            aria-controls="mobile-menu"
+            aria-controls="portal-mobile-menu"
             onClick={() => setMobileOpen(!mobileOpen)}
             className="
               flex h-11 w-11 items-center justify-center rounded-md
               text-zinc-300
               transition-colors
-              hover:bg-yellow-500/10 hover:text-yellow-500
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500
+              hover:bg-[#F5C400]/10 hover:text-[#F5C400]
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5C400]
             "
           >
             {mobileOpen ? (
@@ -175,21 +168,21 @@ export function PortalHeader() {
       {/* ─── DRAWER MOBILE ─── */}
       {mobileOpen && (
         <nav
-          id="mobile-menu"
+          id="portal-mobile-menu"
           aria-label="Navegação móvel"
-          className="border-t border-yellow-500/20 bg-black/95 backdrop-blur md:hidden"
+          className="border-t border-[#F5C400]/20 bg-[#050505]/95 backdrop-blur md:hidden"
         >
-          <ul className="mx-auto max-w-7xl divide-y divide-zinc-800 px-4 py-2">
+          <ul className="mx-auto max-w-7xl divide-y divide-zinc-900 px-4 py-2">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
                   className="
                     flex h-12 items-center px-2
-                    text-base font-medium text-zinc-300
+                    text-sm font-black uppercase tracking-widest text-zinc-300
                     transition-colors
-                    hover:text-yellow-500
-                    focus-visible:text-yellow-500 focus-visible:outline-none
+                    hover:text-[#F5C400]
+                    focus-visible:text-[#F5C400] focus-visible:outline-none
                   "
                 >
                   {link.label}
@@ -200,5 +193,5 @@ export function PortalHeader() {
         </nav>
       )}
     </header>
-  )
+  );
 }
