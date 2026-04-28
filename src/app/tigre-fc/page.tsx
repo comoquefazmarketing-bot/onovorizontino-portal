@@ -12,7 +12,7 @@ import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 const FONT_FAMILY = "'Barlow Condensed', 'Barlow', system-ui, -apple-system, sans-serif";
 
 // ════════════════════════════════════════════════════════════════════════════
-// TIPOS LOCAIS
+// TIPOS
 // ════════════════════════════════════════════════════════════════════════════
 type Jogo = {
   id?: number | null;
@@ -45,7 +45,7 @@ type UsuarioRanking = {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// FALLBACK CONTRA TELA PRETA — sempre renderiza algo
+// FALLBACK CONTRA TELA PRETA
 // ════════════════════════════════════════════════════════════════════════════
 const FALLBACK_JOGO: Jogo = {
   id: 12,
@@ -60,7 +60,7 @@ const FALLBACK_JOGO: Jogo = {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// PLAYER NAMES (id → short)
+// PLAYER NAMES
 // ════════════════════════════════════════════════════════════════════════════
 const PLAYER_NAMES: Record<number, string> = {
   23: 'JORDI', 1: 'CÉSAR', 22: 'SCAPIN', 62: 'LUCAS',
@@ -86,7 +86,7 @@ export default function TigreFCPage() {
   const [perfilAberto, setPerfilAberto]       = useState<string | null>(null);
   const [hydrating, setHydrating]             = useState(true);
 
-  // ─── Scroll lock no carregamento ───
+  // ─── INSTANT RESET ─────────────────────────────────────────────────
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
@@ -97,86 +97,61 @@ export default function TigreFCPage() {
     let cancelled = false;
 
     const loadAll = async () => {
-      // ─── 1. Sessão ───
+      // Sessão
       let authUser: { id: string; email?: string } | null = null;
       try {
         const { data: { user: u } } = await sb.auth.getUser();
         if (u) {
           authUser = { id: u.id, email: u.email ?? undefined };
           if (!cancelled) setUser(authUser);
-
-          // Lookup do id interno via google_id (compat com schema legado)
           try {
             const { data: profile } = await sb
-              .from('tigre_fc_usuarios')
-              .select('id')
-              .eq('google_id', u.id)
-              .maybeSingle();
+              .from('tigre_fc_usuarios').select('id').eq('google_id', u.id).maybeSingle();
             if (!cancelled && profile?.id) setMeuId(profile.id);
-          } catch (err) {
-            console.warn('[TigreFC] lookup meuId falhou:', err);
-          }
+          } catch (err) { console.warn('[TigreFC] meuId:', err); }
         }
-      } catch (err) {
-        console.warn('[TigreFC] sessão indisponível:', err);
-      }
+      } catch (err) { console.warn('[TigreFC] sessão:', err); }
 
-      // ─── 2. Jogo ativo ───
+      // Jogo
       let jogoAtivo: Jogo | null = null;
       try {
-        const { data: jogosData } = await sb
+        const { data } = await sb
           .from('jogos')
           .select('id, rodada, competicao, mandante_slug, visitante_slug, placar_mandante, placar_visitante, finalizado')
-          .eq('finalizado', false)
-          .order('rodada', { ascending: true })
-          .limit(1);
-        jogoAtivo = jogosData?.[0] ?? null;
-      } catch (err) {
-        console.warn('[TigreFC] erro buscando jogo:', err);
-      }
+          .eq('finalizado', false).order('rodada', { ascending: true }).limit(1);
+        jogoAtivo = data?.[0] ?? null;
+      } catch (err) { console.warn('[TigreFC] jogo:', err); }
 
       if (!cancelled && jogoAtivo) setJogo(jogoAtivo);
-      const jogoEfetivo = jogoAtivo ?? FALLBACK_JOGO;
-      const jogoIdEfetivo = jogoEfetivo.id ?? FALLBACK_JOGO.id ?? 0;
+      const jogoIdEfetivo = (jogoAtivo ?? FALLBACK_JOGO).id ?? 0;
 
-      // ─── 3. Contagem de escalações ───
+      // Contagem
       try {
-        const { count } = await sb
-          .from('tigre_fc_escalacoes')
-          .select('id', { count: 'exact', head: true })
-          .eq('jogo_id', jogoIdEfetivo);
+        const { count } = await sb.from('tigre_fc_escalacoes')
+          .select('id', { count: 'exact', head: true }).eq('jogo_id', jogoIdEfetivo);
         if (!cancelled) setTotalEscalacoes(count ?? 0);
-      } catch (err) {
-        console.warn('[TigreFC] contagem indisponível:', err);
-      }
+      } catch (err) { console.warn('[TigreFC] contagem:', err); }
 
-      // ─── 4. Escalação do user ───
+      // Escalação
       if (authUser && jogoIdEfetivo) {
         try {
-          const { data: escData } = await sb
+          const { data } = await sb
             .from('tigre_fc_escalacoes')
             .select('formacao, capitao_id, heroi_id, palpite_mandante, palpite_visitante')
-            .eq('user_id', authUser.id)
-            .eq('jogo_id', jogoIdEfetivo)
-            .maybeSingle();
-          if (!cancelled) setEscalacao(escData ?? null);
-        } catch (err) {
-          console.warn('[TigreFC] erro escalação:', err);
-        }
+            .eq('user_id', authUser.id).eq('jogo_id', jogoIdEfetivo).maybeSingle();
+          if (!cancelled) setEscalacao(data ?? null);
+        } catch (err) { console.warn('[TigreFC] escalação:', err); }
       }
 
-      // ─── 5. Ranking ───
+      // Ranking
       try {
-        const { data: rankData } = await sb
+        const { data } = await sb
           .from('tigre_fc_usuarios')
           .select('id, nome, apelido, avatar_url, pontos_total')
           .not('pontos_total', 'is', null)
-          .order('pontos_total', { ascending: false })
-          .limit(5);
-        if (!cancelled && rankData) setRanking(rankData as UsuarioRanking[]);
-      } catch (err) {
-        console.warn('[TigreFC] ranking indisponível:', err);
-      }
+          .order('pontos_total', { ascending: false }).limit(5);
+        if (!cancelled && data) setRanking(data as UsuarioRanking[]);
+      } catch (err) { console.warn('[TigreFC] ranking:', err); }
 
       if (!cancelled) setHydrating(false);
     };
@@ -185,13 +160,10 @@ export default function TigreFCPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // ─── Derivados ───
   const capitaoNome = escalacao?.capitao_id != null
-    ? (PLAYER_NAMES[escalacao.capitao_id] ?? '---')
-    : null;
+    ? (PLAYER_NAMES[escalacao.capitao_id] ?? '---') : null;
   const heroiNome = escalacao?.heroi_id != null
-    ? (PLAYER_NAMES[escalacao.heroi_id] ?? '---')
-    : null;
+    ? (PLAYER_NAMES[escalacao.heroi_id] ?? '---') : null;
 
   const handleEscalar = () => {
     const targetId = jogo.id ?? FALLBACK_JOGO.id ?? 12;
@@ -199,28 +171,28 @@ export default function TigreFCPage() {
   };
 
   // ════════════════════════════════════════════════════════════════════
-  // RENDER — mobile-first, zero margens negativas, gap fixo
+  // RENDER
   // ════════════════════════════════════════════════════════════════════
   return (
     <main
       className="min-h-screen bg-[#030303] text-white overflow-x-hidden"
       style={{ fontFamily: FONT_FAMILY }}
     >
-      {/* BG decorativo fixo (não afeta layout) */}
+      {/* BG decorativo (fixed, fora do flow) */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,#F5C40015_0%,transparent_45%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,#F5C40012_0%,transparent_45%)]" />
       </div>
 
       <div className="relative z-10 flex flex-col">
 
         {/* ═══════════════════════════════════════════════════════════════
-            HEADER — espaçamento fixo, sem margem negativa em filhos
+            HEADER
         ═══════════════════════════════════════════════════════════════ */}
         <header className="px-4 pt-8 pb-6 sm:pt-12 sm:pb-8 text-center">
           <h1 className="text-5xl sm:text-7xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">
             TIGRE <span className="text-[#F5C400]">FC</span>
           </h1>
-          <div className="inline-flex items-center gap-3 mt-4 px-4 py-1.5 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
+          <div className="inline-flex items-center gap-3 mt-4 px-4 py-1.5 bg-white/5 rounded-full border border-white/5 backdrop-blur-md">
             <span className="w-1.5 h-1.5 bg-[#00F3FF] rounded-full animate-pulse" style={{ boxShadow: '0 0 8px #00F3FF' }} />
             <span className="text-[10px] font-black tracking-[0.5em] text-[#00F3FF]">BROADCAST STATION</span>
             <span className="w-1.5 h-1.5 bg-[#00F3FF] rounded-full animate-pulse" style={{ boxShadow: '0 0 8px #00F3FF' }} />
@@ -228,12 +200,12 @@ export default function TigreFCPage() {
         </header>
 
         {/* ═══════════════════════════════════════════════════════════════
-            CONTEÚDO — gap-6 fixo entre tudo, sem -mt
+            DASHBOARD GRID — gap-6 fixo, ZERO margem negativa
         ═══════════════════════════════════════════════════════════════ */}
-        <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 flex flex-col gap-6 pb-20 lg:grid lg:grid-cols-12">
+        <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* ─── 1. JUMBOTRON ─── */}
-          <section className="lg:col-span-7 lg:col-start-1 lg:row-start-1">
+          {/* ─── 1. JUMBOTRON (centro/topo, prioridade 1) ─── */}
+          <section className="lg:col-span-8 lg:row-start-1">
             <JumbotronJogo
               jogo={jogo}
               formacao={escalacao?.formacao ?? null}
@@ -247,71 +219,72 @@ export default function TigreFCPage() {
             />
           </section>
 
-          {/* ─── 2. DESTAQUES (story estilo Instagram) ─── */}
-          <section className="lg:col-span-5 lg:col-start-8 lg:row-start-1">
+          {/* ─── 2. DESTAQUES (lateral superior, story) ─── */}
+          <aside className="lg:col-span-4 lg:row-start-1 lg:row-span-2">
             <DestaquesFifa />
+          </aside>
+
+          {/* ─── 3. CHAT (logo abaixo do placar, prioridade 3) ─── */}
+          <section className="lg:col-span-8 lg:row-start-2">
+            <div className="bg-black/40 backdrop-blur-2xl border border-white/5 rounded-3xl h-[480px] sm:h-[600px] overflow-hidden">
+              <TigreFCChat usuarioId={meuId} />
+            </div>
           </section>
 
-          {/* ─── 3. RANKING (compacto) ─── */}
-          <section className="lg:col-span-5 lg:col-start-8 lg:row-start-2">
-            <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-4 sm:p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="w-1.5 h-1.5 bg-[#F5C400] rounded-full" />
-                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">LIVE RANKING</h2>
+          {/* ─── 4. RANKING (lateral inferior, suporte) ─── */}
+          <aside className="lg:col-span-12 lg:row-start-3">
+            <div className="bg-zinc-900/30 backdrop-blur-xl border border-white/5 rounded-3xl p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-[#F5C400] rounded-full" />
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">LIVE RANKING</h2>
+                </div>
+                <span className="text-[9px] tracking-widest text-zinc-600 font-bold">TOP 5</span>
               </div>
               {ranking.length === 0 ? (
                 <p className="text-zinc-600 text-xs text-center py-4">Aguardando torcedores na disputa...</p>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
                   {ranking.map((u, i) => {
                     const isFirst = i === 0;
                     const pts = u.pontos_total ?? 0;
-                    const maxPts = ranking[0]?.pontos_total ?? 1;
-                    const pct = maxPts > 0 ? Math.max(8, (pts / maxPts) * 100) : 0;
                     return (
                       <button
                         key={u.id}
                         onClick={() => setPerfilAberto(u.id)}
-                        className="w-full flex items-center gap-3 group"
+                        className={`text-left p-3 rounded-2xl border transition-all hover:scale-[1.02] ${
+                          isFirst
+                            ? 'bg-gradient-to-br from-[#F5C400]/15 to-transparent border-[#F5C400]/40'
+                            : 'bg-black/40 border-white/5 hover:border-white/15'
+                        }`}
                       >
-                        <span className={`text-sm font-black italic w-7 ${isFirst ? 'text-[#F5C400]' : 'text-zinc-700'}`}>
-                          #0{i + 1}
-                        </span>
-                        <div className="flex-1 min-w-0 text-left">
-                          <p className="text-[11px] font-black uppercase truncate group-hover:text-[#F5C400] transition-colors">
-                            {u.apelido || u.nome || 'Torcedor'}
-                          </p>
-                          <div className="w-full bg-zinc-900 h-[2px] mt-1 rounded-full overflow-hidden">
-                            <div className="h-full transition-all" style={{
-                              width: `${pct}%`,
-                              background: isFirst ? '#F5C400' : '#52525b',
-                            }} />
-                          </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`text-xs font-black italic ${isFirst ? 'text-[#F5C400]' : 'text-zinc-700'}`}>
+                            #0{i + 1}
+                          </span>
+                          {isFirst && <span className="text-[10px]">👑</span>}
                         </div>
-                        <span className={`text-xs font-black tabular-nums ${isFirst ? 'text-[#F5C400]' : 'text-zinc-500'}`}>
+                        <p className="text-[11px] font-black uppercase truncate">
+                          {u.apelido || u.nome || 'Torcedor'}
+                        </p>
+                        <p className={`text-lg font-black tabular-nums leading-none mt-1 ${isFirst ? 'text-[#F5C400]' : 'text-white'}`}>
                           {pts}
-                        </span>
+                        </p>
+                        <p className="text-[7px] tracking-[2px] text-zinc-600 font-bold uppercase mt-0.5">PONTOS</p>
                       </button>
                     );
                   })}
                 </div>
               )}
             </div>
-          </section>
-
-          {/* ─── 4. CHAT (base, ocupa toda largura no mobile) ─── */}
-          <section className="lg:col-span-7 lg:col-start-1 lg:row-start-2">
-            <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl h-[480px] sm:h-[600px] lg:h-full lg:min-h-[480px] overflow-hidden">
-              <TigreFCChat usuarioId={meuId} />
-            </div>
-          </section>
+          </aside>
 
         </div>
 
-        {/* Aviso de login (não-bloqueante, embaixo) */}
+        {/* Aviso login (não-bloqueante) */}
         {!hydrating && !user && (
           <div className="max-w-md mx-auto w-full px-4 pb-10">
-            <div className="bg-zinc-950 border border-yellow-400/30 rounded-2xl p-4 text-center">
+            <div className="bg-zinc-950 border border-yellow-400/20 rounded-2xl p-4 text-center">
               <div className="text-2xl mb-2">🔐</div>
               <div className="text-sm font-black mb-1">Faça login pra escalar</div>
               <div className="text-zinc-400 text-xs">
@@ -321,13 +294,11 @@ export default function TigreFCPage() {
           </div>
         )}
 
-        {/* Footer */}
-        <footer className="border-t border-white/5 py-6 text-center bg-black/60">
+        <footer className="border-t border-white/5 py-6 text-center bg-black/40">
           <p className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.6em]">TIGRE FC DIGITAL</p>
         </footer>
       </div>
 
-      {/* Modal de perfil público */}
       {perfilAberto && (
         <TigreFCPerfilPublico
           targetUsuarioId={perfilAberto}
