@@ -5,16 +5,16 @@ const C = {
   gold: '#F5C400',
   cyan: '#00F3FF',
   glowGold: '0 0 20px rgba(245,196,0,0.5)',
-  // Adicionado glow específico para o Sport para dar contraste no fundo preto
-  glowSport: '0 0 25px rgba(255,255,255,0.15)', 
+  glowAvai: '0 0 25px rgba(0,103,177,0.3)', // Azul do Avaí com glow suave
 };
 
-export default function PopupTecnicoFinal() {
+export default function PopupTecnicoAvai() {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
-    const storageKey = `v9_balanced_popup`;
+    // Chave única para o confronto contra o Avaí
+    const storageKey = `v10_avai_confronto_popup`;
     if (!localStorage.getItem(storageKey)) {
       const t = setTimeout(() => {
         setVisible(true);
@@ -45,67 +45,65 @@ export default function PopupTecnicoFinal() {
         .btn-hover:hover { transform: scale(1.02); filter: brightness(1.1); transition: 0.2s; }
       `}</style>
 
-      {/* Background Blur Overlay */}
+      {/* Overlay Escuro Profundo */}
       <div onClick={close} style={{
         position: 'fixed', inset: 0, zIndex: 9998,
-        background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(12px)',
+        background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(15px)',
         opacity: closing ? 0 : 1, transition: 'opacity 0.5s'
       }} />
 
-      {/* Popup Container Vertical */}
+      {/* Container do Popup */}
       <div className="jumbo-font" style={{
         position: 'fixed', bottom: '10vh', left: '50%', zIndex: 9999,
         width: '92%', maxWidth: '400px',
         animation: 'entrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         transform: 'translateX(-50%)',
         background: '#050505',
-        borderRadius: '20px',
-        border: `1px solid ${C.gold}`,
+        borderRadius: '12px', // Bordas mais secas para o estilo Neo-Brutalista
+        border: `2px solid ${C.gold}`,
         padding: '45px 25px 35px',
         boxShadow: '0 50px 100px rgba(0,0,0,1)',
         textAlign: 'center'
       }}>
         
-        {/* Botão X de Fechamento */}
         <button onClick={close} style={{
           position: 'absolute', top: '15px', right: '15px',
           background: 'rgba(255,255,255,0.05)', border: 'none',
           color: '#fff', fontSize: '18px', width: '32px', height: '32px',
-          borderRadius: '50%', cursor: 'pointer', zIndex: 10
+          borderRadius: '4px', cursor: 'pointer', zIndex: 10
         }}>✕</button>
 
-        {/* Copy Principal */}
+        {/* Chamada Principal */}
         <div style={{ marginBottom: '30px' }}>
-          <h2 style={{ color: '#fff', fontSize: '32px', fontWeight: 900, fontStyle: 'italic', margin: 0, lineHeight: 0.9 }}>
-            VOCÊ É O <br/>
-            <span style={{ color: C.gold, fontSize: '48px', textShadow: C.glowGold }}>TÉCNICO:</span>
+          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 900, fontStyle: 'italic', margin: 0, lineHeight: 1 }}>
+            SEM <span style={{ color: C.gold }}>MOCHILA EMOCIONAL:</span>
           </h2>
-          <p style={{ color: C.cyan, fontSize: '16px', fontWeight: 900, marginTop: '8px' }}>
-            COMO VOCÊ ESCALARIA O TIGRE HOJE?
+          <p style={{ color: C.cyan, fontSize: '14px', fontWeight: 900, marginTop: '8px', letterSpacing: '1px' }}>
+            ASSUMA O COMANDO TÁTICO CONTRA O AVAÍ
           </p>
         </div>
 
-        {/* Arena de Confronto Alinhada */}
+        {/* Arena de Confronto Atualizada: Avaí vs Novorizontino */}
         <div style={{ 
           display: 'flex', alignItems: 'center', justifyContent: 'center', 
-          gap: '15px', margin: '20px 0', background: 'rgba(255,255,255,0.02)',
-          padding: '25px 15px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)'
+          gap: '15px', margin: '20px 0', background: 'rgba(255,255,255,0.03)',
+          padding: '25px 15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)'
         }}>
-          {/* Lado Sport com Blur/Glow de Contraste */}
+          {/* Lado Avaí */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ 
               width: '75px', height: '75px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              filter: `drop-shadow(${C.glowSport})` 
+              filter: `drop-shadow(${C.glowAvai})` 
             }}>
-              <img src="https://upload.wikimedia.org/wikipedia/pt/1/17/Sport_Club_do_Recife.png" 
+              <img src="https://upload.wikimedia.org/wikipedia/pt/f/f1/AvaiFC2005.png" 
                    style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '10px' }}>VISITANTE</div>
           </div>
 
-          <div style={{ fontSize: '22px', fontWeight: 900, color: 'rgba(255,255,255,0.05)' }}>VS</div>
+          <div style={{ fontSize: '22px', fontWeight: 900, color: 'rgba(255,255,255,0.1)' }}>VS</div>
 
-          {/* Lado Novorizontino com Glow Gold */}
+          {/* Lado Novorizontino */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ 
               width: '75px', height: '75px', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -118,25 +116,26 @@ export default function PopupTecnicoFinal() {
           </div>
         </div>
 
-        {/* Footer Copy */}
-        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', marginBottom: '30px', lineHeight: '1.4' }}>
-          O mercado está <strong>ABERTO</strong>. Mostre sua estratégia <br/> e conquiste o topo do ranking.
+        {/* Texto de Apoio baseado no Editorial */}
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '30px', lineHeight: '1.4', fontStyle: 'italic' }}>
+          "Subir não é opção, é reparação." <br/>
+          <strong>Escale com a cabeça fria e vença o duelo.</strong>
         </p>
 
-        {/* Botão de Ação Final */}
+        {/* Botão de Ação */}
         <a href="/tigre-fc" className="btn-hover" style={{
           display: 'block',
-          background: `linear-gradient(135deg, ${C.gold}, #D4A200)`,
+          background: C.gold,
           color: '#000',
-          padding: '22px',
-          fontSize: '19px',
+          padding: '20px',
+          fontSize: '18px',
           fontWeight: 900,
           textDecoration: 'none',
           fontStyle: 'italic',
-          borderRadius: '10px',
-          boxShadow: '0 10px 30px rgba(245,196,0,0.3)'
+          borderRadius: '4px',
+          boxShadow: `10px 10px 0px rgba(245,196,0,0.2)` // Sombra Neo-Brutalista
         }}>
-          MONTAR MINHA ESCALAÇÃO →
+          MONTAR ESCALAÇÃO AGORA →
         </a>
 
       </div>
