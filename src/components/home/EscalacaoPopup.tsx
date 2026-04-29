@@ -5,16 +5,16 @@ const C = {
   gold: '#F5C400',
   cyan: '#00F3FF',
   glowGold: '0 0 20px rgba(245,196,0,0.5)',
-  glowAvai: '0 0 25px rgba(0,103,177,0.3)', // Azul do Avaí com glow suave
+  glowAvai: '0 0 25px rgba(0,103,177,0.3)', 
 };
 
-export default function PopupTecnicoAvai() {
+export default function PopupDesafioEscalacao() {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
-    // Chave única para o confronto contra o Avaí
-    const storageKey = `v10_avai_confronto_popup`;
+    // Chave única para a versão de convocação do desafio
+    const storageKey = `v11_desafio_escalacao_tigre`;
     if (!localStorage.getItem(storageKey)) {
       const t = setTimeout(() => {
         setVisible(true);
@@ -45,27 +45,28 @@ export default function PopupTecnicoAvai() {
         .btn-hover:hover { transform: scale(1.02); filter: brightness(1.1); transition: 0.2s; }
       `}</style>
 
-      {/* Overlay Escuro Profundo */}
+      {/* Background Blur Overlay */}
       <div onClick={close} style={{
         position: 'fixed', inset: 0, zIndex: 9998,
         background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(15px)',
         opacity: closing ? 0 : 1, transition: 'opacity 0.5s'
       }} />
 
-      {/* Container do Popup */}
+      {/* Popup Container */}
       <div className="jumbo-font" style={{
         position: 'fixed', bottom: '10vh', left: '50%', zIndex: 9999,
         width: '92%', maxWidth: '400px',
         animation: 'entrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         transform: 'translateX(-50%)',
         background: '#050505',
-        borderRadius: '12px', // Bordas mais secas para o estilo Neo-Brutalista
+        borderRadius: '12px',
         border: `2px solid ${C.gold}`,
         padding: '45px 25px 35px',
         boxShadow: '0 50px 100px rgba(0,0,0,1)',
         textAlign: 'center'
       }}>
         
+        {/* Botão Fechar */}
         <button onClick={close} style={{
           position: 'absolute', top: '15px', right: '15px',
           background: 'rgba(255,255,255,0.05)', border: 'none',
@@ -73,17 +74,18 @@ export default function PopupTecnicoAvai() {
           borderRadius: '4px', cursor: 'pointer', zIndex: 10
         }}>✕</button>
 
-        {/* Chamada Principal */}
+        {/* Headline de Convocação */}
         <div style={{ marginBottom: '30px' }}>
-          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 900, fontStyle: 'italic', margin: 0, lineHeight: 1 }}>
-            SEM <span style={{ color: C.gold }}>MOCHILA EMOCIONAL:</span>
+          <h2 style={{ color: '#fff', fontSize: '32px', fontWeight: 900, fontStyle: 'italic', margin: 0, lineHeight: 0.9 }}>
+            DESAFIO <br/>
+            <span style={{ color: C.gold, fontSize: '48px', textShadow: C.glowGold }}>TIGRE FC:</span>
           </h2>
-          <p style={{ color: C.cyan, fontSize: '14px', fontWeight: 900, marginTop: '8px', letterSpacing: '1px' }}>
-            ASSUMA O COMANDO TÁTICO CONTRA O AVAÍ
+          <p style={{ color: C.cyan, fontSize: '16px', fontWeight: 900, marginTop: '8px', letterSpacing: '1px' }}>
+            QUAL É A SUA ESTRATÉGIA PARA VENCER?
           </p>
         </div>
 
-        {/* Arena de Confronto Atualizada: Avaí vs Novorizontino */}
+        {/* Escudos do Confronto */}
         <div style={{ 
           display: 'flex', alignItems: 'center', justifyContent: 'center', 
           gap: '15px', margin: '20px 0', background: 'rgba(255,255,255,0.03)',
@@ -116,26 +118,26 @@ export default function PopupTecnicoAvai() {
           </div>
         </div>
 
-        {/* Texto de Apoio baseado no Editorial */}
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '30px', lineHeight: '1.4', fontStyle: 'italic' }}>
-          "Subir não é opção, é reparação." <br/>
-          <strong>Escale com a cabeça fria e vença o duelo.</strong>
+        {/* Copy de Chamada */}
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '30px', lineHeight: '1.4' }}>
+          O mercado está <strong>ABERTO</strong>. Monte sua equipe, <br/>
+          mostre sua tática e domine o ranking.
         </p>
 
-        {/* Botão de Ação */}
-        <a href="/tigre-fc" className="btn-hover" style={{
+        {/* Link para o Desafio de Escalação */}
+        <a href="/escalacao-desafio" className="btn-hover" style={{
           display: 'block',
           background: C.gold,
           color: '#000',
-          padding: '20px',
-          fontSize: '18px',
+          padding: '22px',
+          fontSize: '19px',
           fontWeight: 900,
           textDecoration: 'none',
           fontStyle: 'italic',
           borderRadius: '4px',
-          boxShadow: `10px 10px 0px rgba(245,196,0,0.2)` // Sombra Neo-Brutalista
+          boxShadow: `0 10px 30px rgba(245,196,0,0.3)`
         }}>
-          MONTAR ESCALAÇÃO AGORA →
+          MONTAR MINHA EQUIPE →
         </a>
 
       </div>
