@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import VoltarNoticias from '@/components/layout/VoltarNoticias'; // ← NOVO
+import VoltarNoticias from '@/components/layout/VoltarNoticias';
+import ComentariosNoticia from '@/components/comentarios/ComentariosNoticia';
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -69,14 +70,8 @@ export default async function NoticiaSlugPage({ params }: Props) {
   const FALLBACK =
     'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
-  // NOTA: Trocamos <main> por <article>. O layout.tsx já tem <main>,
-  // e HTML válido permite apenas um <main> por página. <article> é
-  // semanticamente mais correto para uma notícia individual.
   return (
     <article className="min-h-screen bg-[#050505] text-white selection:bg-yellow-500 selection:text-black">
-      {/* ─── VOLTAR (acima do hero) ─── */}
-      <VoltarNoticias />
-
       {/* Hero */}
       <div className="relative w-full aspect-[21/9] max-h-[520px] overflow-hidden">
         <Image
@@ -88,6 +83,12 @@ export default async function NoticiaSlugPage({ params }: Props) {
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
+
+        {/* Voltar sobreposto */}
+        <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
+          <VoltarNoticias />
+        </div>
+
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 max-w-5xl mx-auto">
           <span className="bg-[#F5C400] text-black text-[9px] font-black px-3 py-1 uppercase tracking-tighter italic mb-4 inline-block">
             {post.categoria || 'TIGRE'}
@@ -160,6 +161,9 @@ export default async function NoticiaSlugPage({ params }: Props) {
           </Link>
         </div>
       </div>
+
+      {/* ─── COMENTÁRIOS — automático em toda matéria ─── */}
+      <ComentariosNoticia postagemId={post.id} />
 
       {/* Relacionadas */}
       {relacionadas?.length > 0 && (
