@@ -21,7 +21,8 @@ export default function LgpdBanner() {
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-4">
         <div className="flex-1">
           <p className="text-white text-xs leading-relaxed">
-            🍪 Utilizamos cookies e coletamos dados (nome e WhatsApp) para personalizar sua experiência, enviar novidades do Tigre e melhorar nosso portal. Ao continuar navegando você concorda com nossa política de privacidade e com a{' '}
+            🍪 Utilizamos cookies e coletamos dados para personalizar sua experiência e veicular anúncios relevantes. Ao continuar navegando você concorda com nossa{' '}
+            <a href="/politica-de-privacidade" className="text-yellow-500 font-bold underline hover:text-yellow-400">Política de Privacidade</a> e com a{' '}
             <span className="text-yellow-500 font-bold">Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018)</span>. Seus dados são usados exclusivamente pelo{' '}
             <span className="text-yellow-500 font-bold">Portal O Novorizontino</span>.
           </p>
