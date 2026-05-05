@@ -11,7 +11,8 @@ const LIMITE_CHARS = 300;
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
 
-  if (!body.secret || body.secret !== process.env.ADMIN_SECRET) {
+  const adminSecret = process.env.TIGRE_FC_ADMIN_SECRET || process.env.ADMIN_SECRET;
+  if (!body.secret || body.secret !== adminSecret) {
     return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 });
   }
 

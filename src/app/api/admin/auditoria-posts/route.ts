@@ -10,7 +10,8 @@ const LIMITE_CHARS = 300;
 
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret');
-  if (!secret || secret !== process.env.ADMIN_SECRET) {
+  const adminSecret = process.env.TIGRE_FC_ADMIN_SECRET || process.env.ADMIN_SECRET;
+  if (!secret || secret !== adminSecret) {
     return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 });
   }
 
