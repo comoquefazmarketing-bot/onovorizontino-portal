@@ -184,7 +184,7 @@ export default async function NoticiaSlugPage({ params }: Props) {
           <div className="mt-10 pt-6 border-t border-white/5 text-xs text-zinc-600 font-bold uppercase tracking-widest">
             Fonte:{' '}
             {post.fonte_url ? (
-              
+              <a
                 href={post.fonte_url}
                 target="_blank"
                 rel="noopener noreferrer"
