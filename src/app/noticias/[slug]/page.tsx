@@ -11,6 +11,10 @@ export const dynamicParams = true;
 
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPA_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SITE_URL = 'https://www.onovorizontino.com.br';
+
+const FALLBACK_IMAGE =
+  'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
 const headers = {
   apikey: SUPA_ANON,
@@ -26,7 +30,7 @@ async function getPost(slug: string) {
   const url = `${SUPA_URL}/rest/v1/postagens?slug=eq.${encodeURIComponent(
     slug,
   )}&select=id,titulo,slug,categoria,imagem_capa,criado_em,conteudo,resumo_ia,autor_ia,fonte_nome,fonte_url&limit=1`;
-  const res = await fetch(url, { headers, cache: 'no-store' });
+  const res = await fetch(url, { headers, next: { revalidate: 60 } });
   const data = await res.json();
   return data?.[0] ?? null;
 }
@@ -35,21 +39,67 @@ async function getRelacionadas(slug: string) {
   const url = `${SUPA_URL}/rest/v1/postagens?status=eq.published&slug=neq.${encodeURIComponent(
     slug,
   )}&select=id,titulo,slug,imagem_capa,categoria,criado_em&order=criado_em.desc&limit=3`;
-  const res = await fetch(url, { headers, cache: 'no-store' });
+  const res = await fetch(url, { headers, next: { revalidate: 60 } });
   return await res.json();
 }
 
+// ─────────────────────────────────────────────────────────────
+//  OPEN GRAPH + TWITTER CARDS COMPLETO
+// ─────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPost(slug);
-  if (!post) return { title: 'Notícia não encontrada' };
+
+  if (!post) {
+    return {
+      title: 'Notícia não encontrada | Portal O Novorizontino',
+      description: 'Esta notícia não está disponível.',
+    };
+  }
+
+  const articleUrl = `${SITE_URL}/noticias/${post.slug}`;
+  const imageUrl = post.imagem_capa || FALLBACK_IMAGE;
+  const description =
+    post.resumo_ia ?? 'Cobertura completa do Grêmio Novorizontino — O Tigre do Vale.';
+
   return {
     title: `${post.titulo} | Portal O Novorizontino`,
-    description: post.resumo_ia ?? 'Cobertura completa do Grêmio Novorizontino.',
+    description,
+    metadataBase: new URL(SITE_URL),
+    alternates: {
+      canonical: articleUrl,
+    },
+    authors: post.autor_ia ? [{ name: post.autor_ia }] : undefined,
     openGraph: {
+      type: 'article',
+      locale: 'pt_BR',
+      url: articleUrl,
+      siteName: 'O Novorizontino',
       title: post.titulo,
-      description: post.resumo_ia ?? '',
-      images: post.imagem_capa ? [{ url: post.imagem_capa }] : [],
+      description,
+      publishedTime: post.criado_em,
+      authors: post.autor_ia ? [post.autor_ia] : undefined,
+      section: post.categoria ?? 'Notícias',
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.titulo,
+          type: 'image/png',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.titulo,
+      description,
+      images: [imageUrl],
+    },
+    other: {
+      'article:published_time': post.criado_em,
+      'article:section': post.categoria ?? 'Notícias',
+      ...(post.autor_ia && { 'article:author': post.autor_ia }),
     },
   };
 }
@@ -67,15 +117,12 @@ export default async function NoticiaSlugPage({ params }: Props) {
     year: 'numeric',
   });
 
-  const FALLBACK =
-    'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
-
   return (
     <article className="min-h-screen bg-[#050505] text-white selection:bg-yellow-500 selection:text-black">
       {/* Hero */}
       <div className="relative w-full aspect-[21/9] max-h-[520px] overflow-hidden">
         <Image
-          src={post.imagem_capa || FALLBACK}
+          src={post.imagem_capa || FALLBACK_IMAGE}
           alt={post.titulo}
           fill
           priority
@@ -137,7 +184,7 @@ export default async function NoticiaSlugPage({ params }: Props) {
           <div className="mt-10 pt-6 border-t border-white/5 text-xs text-zinc-600 font-bold uppercase tracking-widest">
             Fonte:{' '}
             {post.fonte_url ? (
-              <a
+              
                 href={post.fonte_url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -162,7 +209,7 @@ export default async function NoticiaSlugPage({ params }: Props) {
         </div>
       </div>
 
-      {/* ─── COMENTÁRIOS — automático em toda matéria ─── */}
+      {/* Comentários */}
       <ComentariosNoticia postagemId={post.id} />
 
       {/* Relacionadas */}
@@ -181,7 +228,7 @@ export default async function NoticiaSlugPage({ params }: Props) {
                 >
                   <div className="relative aspect-[16/9] overflow-hidden bg-zinc-800">
                     <Image
-                      src={rel.imagem_capa || FALLBACK}
+                      src={rel.imagem_capa || FALLBACK_IMAGE}
                       alt={rel.titulo}
                       fill
                       className="object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500"
