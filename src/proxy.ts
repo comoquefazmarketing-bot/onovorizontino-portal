@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPA_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Verifica slugs removidos apenas em rotas de notícias

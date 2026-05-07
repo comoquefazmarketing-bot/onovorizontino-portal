@@ -69,13 +69,13 @@ export async function POST(req: NextRequest) {
 
   // 4. Registra slugs removidos para retornar 410 Gone
   if (slugs.length > 0) {
-    await supabase
-      .from('slugs_removidos')
-      .upsert(slugs.map((slug) => ({ slug, removido_em: new Date().toISOString() })))
-      .throwOnError()
-      .catch(() => {
-        // Tabela pode não existir ainda — ignorar, não crítico
-      });
+    try {
+      await supabase
+        .from('slugs_removidos')
+        .upsert(slugs.map((slug) => ({ slug, removido_em: new Date().toISOString() })));
+    } catch {
+      // Tabela pode não existir ainda — ignorar, não crítico
+    }
   }
 
   return NextResponse.json({
