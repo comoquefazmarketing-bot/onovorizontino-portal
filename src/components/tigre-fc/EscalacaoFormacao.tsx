@@ -10,7 +10,8 @@ import { supabase } from '@/lib/supabase';
 const BASE_STORAGE   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const STADIUM_BG     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
 const ESCUDO_NOVORIZONTINO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-const ESCUDO_DEFAULT = ESCUDO_NOVORIZONTINO;
+// Escudo genérico neutro — NÃO usar Novorizontino como fallback de adversário
+const ESCUDO_DEFAULT = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%231a1a1a'/%3E%3Cpath d='M20 5 L33 10 L33 20 C33 28 27 34 20 36 C13 34 7 28 7 20 L7 10 Z' fill='%23282828' stroke='%23444' stroke-width='1.5'/%3E%3Ctext x='20' y='24' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23555' font-family='sans-serif'%3E%3F%3C/text%3E%3C/svg%3E";
 
 const LOGOS_TIMES: Record<string, string> = {
   'novorizontino':        ESCUDO_NOVORIZONTINO,
@@ -421,6 +422,8 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const [userName, setUserName]     = useState<string>('TORCEDOR');
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [hadSaved, setHadSaved]     = useState(false);
+  const [saveError, setSaveError]   = useState<string | null>(null);
+  const [isSavingDb, setIsSavingDb] = useState(false);
 
   const [isDesktop, setIsDesktop] = useState(false);
   const [posFiltro, setPosFiltro] = useState<Posicao>('TODOS');
@@ -445,31 +448,58 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
         : new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); })
     );
 
-    Promise.all(loadAll).then(() => new Promise<void>(res => setTimeout(res, 600))).then(() => {
-      if (cancelled) return;
-      return htmlToImage.toPng(el, {
-        cacheBust: true,
-        quality: 0.98,
-        pixelRatio: 3,
-        backgroundColor: '#0a0a0a',
-        fetchRequestInit: { mode: 'cors', cache: 'no-cache' },
-        skipFonts: false,
+    // Filtro: só inclui imagens do Supabase (CORS garantido) — ignora logodownload.org etc
+    const supabaseFilter = (node: HTMLElement) => {
+      if (node instanceof HTMLImageElement) {
+        const src = node.getAttribute('src') ?? '';
+        if (!src) return false;
+        if (src.startsWith('data:')) return true;
+        if (src.startsWith('https://whoglnpvqjbaczgnebbn.supabase.co')) return true;
+        if (src.startsWith('/')) return true;
+        return false; // descarta URLs externas que não têm CORS
+      }
+      return true;
+    };
+
+    const captureOptions = {
+      cacheBust: true,
+      quality: 0.98,
+      pixelRatio: 3,
+      backgroundColor: '#0a0a0a',
+      filter: supabaseFilter,
+    };
+
+    const tryCapture = async (): Promise<string> => {
+      // Tentativa 1: com filtro CORS-safe
+      try {
+        return await htmlToImage.toPng(el, captureOptions);
+      } catch {
+        // Tentativa 2: sem filtro mas sem fontes externas
+        return await htmlToImage.toPng(el, { ...captureOptions, skipFonts: true, filter: undefined });
+      }
+    };
+
+    Promise.all(loadAll)
+      .then(() => new Promise<void>(res => setTimeout(res, 600)))
+      .then(() => { if (!cancelled) return tryCapture(); })
+      .then(dataUrl => {
+        if (cancelled || !dataUrl) return;
+        setFinalImageUri(dataUrl);
+        setTimeout(() => triggerCelebration(), 200);
+      })
+      .catch(e => {
+        if (!cancelled) {
+          console.error('[generateFinalImage] erro:', e);
+          setSaveError('Não foi possível gerar a imagem automaticamente. Use o botão abaixo para tentar novamente.');
+          setFinalImageUri('__error__'); // desbloqueiam botão de retry
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsGenerating(false);
+          setPendingGenerate(false);
+        }
       });
-    }).then(dataUrl => {
-      if (cancelled || !dataUrl) return;
-      setFinalImageUri(dataUrl);
-      setTimeout(() => triggerCelebration(), 200);
-    }).catch(e => {
-      if (!cancelled) {
-        console.error('[generateFinalImage] erro:', e);
-        alert('Erro ao gerar a imagem. Tente novamente!');
-      }
-    }).finally(() => {
-      if (!cancelled) {
-        setIsGenerating(false);
-        setPendingGenerate(false);
-      }
-    });
 
     return () => { cancelled = true; };
   }, [step, pendingGenerate]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -700,14 +730,23 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   };
 
   const saveEscalacao = async (): Promise<{ ok: boolean; reason?: string }> => {
-    if (!userId)  return { ok: false, reason: 'sem-login' };
-    if (!jogoId)  return { ok: false, reason: 'sem-jogo'  };
+    if (!jogoId) return { ok: false, reason: 'sem-jogo' };
+
+    // Re-busca o usuário se o state ainda não foi preenchido (race condition)
+    let uid = userId;
+    if (!uid) {
+      const { data: { user } } = await supabase.auth.getUser();
+      uid = user?.id ?? null;
+      if (uid) setUserId(uid);
+    }
+    if (!uid) return { ok: false, reason: 'sem-login' };
+
     const slots: Record<string, { id: number; x: number; y: number } | null> = {};
     Object.entries(slotMap).forEach(([slotId, state]) => {
       slots[slotId] = state.player ? { id: state.player.id, x: state.x, y: state.y } : null;
     });
     const payload = {
-      user_id: userId,
+      user_id: uid,
       jogo_id: Number(jogoId),
       formacao: formation,
       slots,
@@ -727,18 +766,37 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   };
 
   const generateFinalImage = async () => {
+    setSaveError(null);
     setStep('saving');
     const saveRes = await saveEscalacao();
-    if (!saveRes.ok && saveRes.reason === 'sem-login') {
-      alert('Você precisa estar logado pra salvar sua escalação no ranking. Mas vou gerar a arte do mesmo jeito!');
-    } else if (!saveRes.ok) {
-      console.warn('Erro salvando:', saveRes.reason);
+    if (!saveRes.ok) {
+      if (saveRes.reason === 'sem-login') {
+        setSaveError('Você não está logado — escalação não foi salva no ranking, mas a arte foi gerada!');
+      } else {
+        setSaveError(`Erro ao salvar no ranking: ${saveRes.reason}`);
+      }
     }
     // pendingGenerate + setStep('final') → useEffect captura quando o DOM montar
     setFinalImageUri(null);
     setIsGenerating(true);
     setPendingGenerate(true);
     setStep('final');
+  };
+
+  // Botão de salvar no ranking separado (para usar a partir do step final)
+  const handleSaveToRanking = async () => {
+    setIsSavingDb(true);
+    setSaveError(null);
+    const res = await saveEscalacao();
+    setIsSavingDb(false);
+    if (res.ok) {
+      setSaveError(null);
+      setHadSaved(true);
+    } else if (res.reason === 'sem-login') {
+      setSaveError('Faça login para salvar no ranking.');
+    } else {
+      setSaveError(`Erro: ${res.reason}`);
+    }
   };
 
   const verEscalacaoSalva = () => {
@@ -794,15 +852,24 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
   };
 
   const downloadImage = () => {
-    if (!finalImageUri) return;
+    if (!finalImageUri || finalImageUri === '__error__') return;
     const a = document.createElement('a');
     a.download = `escalacao-tigre-fc-${formation}.png`;
     a.href = finalImageUri;
     a.click();
   };
 
+  const retryGenerateImage = () => {
+    setFinalImageUri(null);
+    setSaveError(null);
+    setIsGenerating(true);
+    setPendingGenerate(true);
+  };
+
+  const canShare = !!finalImageUri && finalImageUri !== '__error__';
+
   const shareNative = async () => {
-    if (!finalImageUri) return;
+    if (!canShare) { shareTextOnly(); return; }
     const text = buildShareText();
     try {
       const blob = await (await fetch(finalImageUri)).blob();
@@ -858,6 +925,15 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
     }
     downloadImage();
     alert('📸 Imagem salva! Abre o Instagram, vai em Stories e adiciona a imagem que acabou de baixar. Cola o link nos stickers!');
+  };
+
+  const shareTextOnly = () => {
+    const text = buildShareText();
+    if (typeof navigator !== 'undefined' && (navigator as any).share) {
+      (navigator as any).share({ text, title: 'Arena Tigre FC' }).catch(() => {});
+    } else {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
   };
 
   const shareX = () => {
@@ -1430,8 +1506,25 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
           <motion.div key="final" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex-1 flex flex-col items-center justify-start p-4 bg-black overflow-auto">
 
-            <div className="text-yellow-400 text-[10px] font-black tracking-[6px] mt-2 mb-3">
-              ✓ ESCALAÇÃO SALVA NO RANKING
+            {/* Status de salvamento + erros */}
+            <div className="w-full max-w-[380px] mb-3 mt-2">
+              {hadSaved && !saveError && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-green-500/15 border border-green-500/40 rounded-xl">
+                  <span className="text-green-400 text-sm">✓</span>
+                  <span className="text-green-400 text-[10px] font-black tracking-widest">ESCALAÇÃO SALVA NO RANKING</span>
+                </div>
+              )}
+              {saveError && (
+                <div className="px-3 py-2 bg-red-500/15 border border-red-500/40 rounded-xl">
+                  <p className="text-red-400 text-[10px] font-bold leading-snug">{saveError}</p>
+                  {!hadSaved && (
+                    <button onClick={handleSaveToRanking} disabled={isSavingDb}
+                      className="mt-2 w-full py-2 bg-yellow-400 text-black text-[10px] font-black rounded-lg tracking-wider disabled:opacity-60">
+                      {isSavingDb ? 'SALVANDO...' : '↺ TENTAR SALVAR NOVAMENTE'}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* ════════════════════════════════════════════════════════════
@@ -1595,12 +1688,15 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 {/* Placar — único e dominante */}
                 <div className="absolute left-0 right-0 z-20" style={{ top: '77%' }}>
                   <div className="flex items-center justify-center gap-4">
-                    {/* Logo mandante no card final */}
-                    <img src={jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT)}
-                      alt="" className="w-10 h-10 object-contain"
-                      crossOrigin="anonymous"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
-                      style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
+                    {/* Logo mandante — só Supabase passa no canvas sem CORS */}
+                    {(() => {
+                      const src = jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : (jogoData?.adversarioLogo ?? '');
+                      const isSupabase = src.includes('supabase.co') || src.startsWith('data:');
+                      const sigla = jogoData?.isNovMandante ? 'NOV' : (jogoData?.adversarioSigla ?? jogoData?.adversarioNome?.slice(0,3).toUpperCase() ?? '?');
+                      return isSupabase
+                        ? <img src={src} alt="" className="w-10 h-10 object-contain" crossOrigin="anonymous" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
+                        : <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-600 flex items-center justify-center" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}><span className="text-[9px] font-black text-zinc-400">{sigla}</span></div>;
+                    })()}
 
                     <div className="text-4xl font-black italic tabular-nums leading-none"
                       style={{
@@ -1612,12 +1708,15 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                       {palpiteVisitante}
                     </div>
 
-                    {/* Logo visitante no card final */}
-                    <img src={jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT) : ESCUDO_NOVORIZONTINO}
-                      alt="" className="w-10 h-10 object-contain"
-                      crossOrigin="anonymous"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
-                      style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
+                    {/* Logo visitante */}
+                    {(() => {
+                      const src = jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? '') : ESCUDO_NOVORIZONTINO;
+                      const isSupabase = src.includes('supabase.co') || src.startsWith('data:');
+                      const sigla = jogoData?.isNovMandante ? (jogoData?.adversarioSigla ?? jogoData?.adversarioNome?.slice(0,3).toUpperCase() ?? '?') : 'NOV';
+                      return isSupabase
+                        ? <img src={src} alt="" className="w-10 h-10 object-contain" crossOrigin="anonymous" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
+                        : <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-600 flex items-center justify-center" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}><span className="text-[9px] font-black text-zinc-400">{sigla}</span></div>;
+                    })()}
                   </div>
                   <div className="text-center text-[8px] tracking-[5px] font-black text-white/40 mt-1.5">
                     SEU PALPITE
@@ -1655,48 +1754,84 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                   BOTÃO SALVAR — circular, glassmorphism, fora do card
                   Posição: canto inferior direito, OVERLAY do card
               ═══════════════════════════════════════════════════════════ */}
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={downloadImage}
-                disabled={!finalImageUri}
-                aria-label="Salvar imagem"
-                className="absolute bottom-3 right-3 w-12 h-12 rounded-full flex items-center justify-center disabled:opacity-40 z-30"
-                style={{
-                  background: 'rgba(20,20,20,0.55)',
-                  backdropFilter: 'blur(20px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                  border: '1px solid rgba(245,196,0,0.4)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.5), 0 0 15px rgba(245,196,0,0.2)',
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                  stroke="#F5C400" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-              </motion.button>
+              {/* Botão download sobreposto ao card */}
+              {canShare && (
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  onClick={downloadImage}
+                  aria-label="Salvar imagem"
+                  className="absolute bottom-3 right-3 w-12 h-12 rounded-full flex items-center justify-center z-30"
+                  style={{
+                    background: 'rgba(20,20,20,0.55)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    border: '1px solid rgba(245,196,0,0.4)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5), 0 0 15px rgba(245,196,0,0.2)',
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="#F5C400" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                </motion.button>
+              )}
+
+              {/* Spinner enquanto gera */}
+              {isGenerating && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-3xl z-40">
+                  <div className="flex flex-col items-center gap-3">
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                      className="w-10 h-10 border-3 border-yellow-400 border-t-transparent rounded-full" />
+                    <span className="text-yellow-400 text-[9px] font-black tracking-widest">GERANDO ARTE...</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ═══════════════════════════════════════════════════════════
-                AÇÕES SECUNDÁRIAS — fora do card, visualmente discretas
+                AÇÕES — salvar imagem + salvar ranking + compartilhar
             ═══════════════════════════════════════════════════════════ */}
-            <div className="mt-6 w-full max-w-[380px] space-y-3 px-2">
-              {/* Compartilhar nativo — 1 CTA principal */}
-              <motion.button whileTap={{ scale: 0.97 }} onClick={shareNative} disabled={!finalImageUri}
-                className="w-full py-4 font-black rounded-2xl text-sm tracking-[3px] uppercase disabled:opacity-50"
+            <div className="mt-5 w-full max-w-[380px] space-y-3 px-2">
+
+              {/* Retry quando imagem falhou */}
+              {finalImageUri === '__error__' && (
+                <button onClick={retryGenerateImage}
+                  className="w-full py-3 rounded-2xl text-xs font-black tracking-wider border border-yellow-400/40 text-yellow-400">
+                  ↺ TENTAR GERAR IMAGEM NOVAMENTE
+                </button>
+              )}
+
+              {/* Salvar imagem */}
+              <motion.button whileTap={{ scale: 0.97 }} onClick={downloadImage}
+                disabled={!canShare}
+                className="w-full py-4 font-black rounded-2xl text-sm tracking-[3px] uppercase disabled:opacity-40"
                 style={{
-                  background: 'linear-gradient(90deg, #F5C400, #fbbf24)',
+                  background: canShare ? 'linear-gradient(90deg, #F5C400, #fbbf24)' : 'rgba(245,196,0,0.2)',
                   color: '#000',
-                  boxShadow: '0 8px 24px rgba(245,196,0,0.3)',
+                  boxShadow: canShare ? '0 8px 24px rgba(245,196,0,0.3)' : 'none',
                 }}>
-                Compartilhar
+                ⬇ SALVAR IMAGEM
               </motion.button>
 
-              {/* Atalhos por rede — minimalistas */}
+              {/* Salvar escalação no ranking (explícito) */}
+              {!hadSaved && (
+                <motion.button whileTap={{ scale: 0.97 }} onClick={handleSaveToRanking} disabled={isSavingDb}
+                  className="w-full py-4 font-black rounded-2xl text-sm tracking-[3px] uppercase disabled:opacity-60"
+                  style={{
+                    background: 'rgba(0,243,255,0.12)',
+                    border: '1px solid rgba(0,243,255,0.4)',
+                    color: '#00F3FF',
+                  }}>
+                  {isSavingDb ? 'SALVANDO...' : '🏆 SALVAR NO RANKING'}
+                </motion.button>
+              )}
+
+              {/* Compartilhar */}
               <div className="grid grid-cols-3 gap-2">
-                <button onClick={shareWhatsApp} disabled={!finalImageUri}
-                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase disabled:opacity-50 transition-all hover:scale-105"
+                <button onClick={shareWhatsApp}
+                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase transition-all hover:scale-105"
                   style={{
                     background: 'rgba(37,211,102,0.12)',
                     border: '1px solid rgba(37,211,102,0.4)',
@@ -1704,8 +1839,8 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                   }}>
                   WhatsApp
                 </button>
-                <button onClick={shareInstagram} disabled={!finalImageUri}
-                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase disabled:opacity-50 transition-all hover:scale-105"
+                <button onClick={shareInstagram}
+                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase transition-all hover:scale-105"
                   style={{
                     background: 'rgba(225,48,108,0.12)',
                     border: '1px solid rgba(225,48,108,0.4)',
@@ -1724,9 +1859,9 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 </button>
               </div>
 
-              {/* Links de navegação — texto puro, sem peso visual */}
+              {/* Navegação */}
               <div className="flex items-center justify-between pt-3">
-                <button onClick={() => setStep('arena')}
+                <button onClick={() => setStep('palpite')}
                   className="text-zinc-500 hover:text-white text-[10px] font-black tracking-[2px] uppercase">
                   ← Editar
                 </button>
