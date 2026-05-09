@@ -31,9 +31,19 @@ type Step      = 'loading' | 'formation' | 'arena' | 'captain' | 'hero' | 'palpi
 
 interface EscalacaoFormacaoProps {
   jogoId?: number | string;
-  mandante?: string;
-  mandanteLogo?: string;
-  rodada?: string | number;
+}
+
+interface JogoData {
+  id: number;
+  competicao: string;
+  rodada: string;
+  data_hora: string;
+  local: string;
+  transmissao: string | null;
+  isNovMandante: boolean;
+  adversarioNome: string;
+  adversarioLogo: string | null;
+  adversarioSigla: string | null;
 }
 
 const PLAYERS_DATA: Player[] = [
@@ -335,12 +345,7 @@ function DraggableSlot({
 // COMPONENTE PRINCIPAL
 // =============================================================================
 
-export default function EscalacaoFormacao({
-  jogoId,
-  mandante = 'Avaí',
-  mandanteLogo = 'https://logodownload.org/wp-content/uploads/2017/02/avai-fc-logo-escudo.png',
-  rodada,
-}: EscalacaoFormacaoProps) {
+export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const router = useRouter();
 
   const [step, setStep]                       = useState<Step>('loading');
@@ -362,6 +367,7 @@ export default function EscalacaoFormacao({
 
   const [isDesktop, setIsDesktop] = useState(false);
   const [posFiltro, setPosFiltro] = useState<Posicao>('TODOS');
+  const [jogoData, setJogoData] = useState<JogoData | null>(null);
 
   const finalCardRef = useRef<HTMLDivElement>(null);
   const arenaRef     = useRef<HTMLDivElement>(null);
@@ -414,6 +420,43 @@ export default function EscalacaoFormacao({
             setUserAvatar(profile?.avatar_url || (meta.avatar_url as string) || null);
           }
         }
+        // Carrega dados do jogo (adversário, logo, data, local)
+        if (jogoId && !cancelled) {
+          try {
+            const { data: jogoRaw } = await supabase
+              .from('jogos')
+              .select('id, competicao, rodada, data_hora, local, transmissao, mandante_slug, visitante_slug')
+              .eq('id', Number(jogoId))
+              .maybeSingle();
+            if (jogoRaw && !cancelled) {
+              const slugs = [jogoRaw.mandante_slug, jogoRaw.visitante_slug].filter(Boolean);
+              const { data: times } = await supabase
+                .from('times_serie_b')
+                .select('nome, escudo_url, sigla, slug')
+                .in('slug', slugs);
+              const bySlug: Record<string, { nome: string; escudo_url: string | null; sigla: string | null }> = {};
+              (times || []).forEach((t: { slug: string; nome: string; escudo_url: string | null; sigla: string | null }) => { bySlug[t.slug] = t; });
+              const isNovMandante = jogoRaw.mandante_slug === 'novorizontino';
+              const advSlug = isNovMandante ? jogoRaw.visitante_slug : jogoRaw.mandante_slug;
+              const advTime = bySlug[advSlug] ?? { nome: advSlug, escudo_url: null, sigla: null };
+              if (!cancelled) setJogoData({
+                id: jogoRaw.id,
+                competicao: jogoRaw.competicao,
+                rodada: jogoRaw.rodada,
+                data_hora: jogoRaw.data_hora,
+                local: jogoRaw.local,
+                transmissao: jogoRaw.transmissao ?? null,
+                isNovMandante,
+                adversarioNome: advTime.nome || advSlug,
+                adversarioLogo: advTime.escudo_url,
+                adversarioSigla: advTime.sigla,
+              });
+            }
+          } catch (e) {
+            console.error('[jogoData] erro:', e);
+          }
+        }
+
         if (!user || !jogoId) {
           if (!cancelled) {
             setSlotMap(buildEmptySlots('4-3-3'));
@@ -621,18 +664,43 @@ export default function EscalacaoFormacao({
     setIsGenerating(false);
   };
 
+  const formatJogoInfo = () => {
+    if (!jogoData) return { diaSemana: '', dataFmt: '', horario: '', confronto: '' };
+    try {
+      const d = new Date(jogoData.data_hora);
+      const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+      const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      const hora = String(d.getHours()).padStart(2,'0');
+      const min  = String(d.getMinutes()).padStart(2,'0');
+      const confronto = jogoData.isNovMandante
+        ? `Novorizontino × ${jogoData.adversarioNome}`
+        : `${jogoData.adversarioNome} × Novorizontino`;
+      return {
+        diaSemana: dias[d.getDay()],
+        dataFmt: `${d.getDate()} de ${meses[d.getMonth()]}`,
+        horario: `${hora}h${min === '00' ? '' : min}`,
+        confronto,
+      };
+    } catch {
+      return { diaSemana: '', dataFmt: '', horario: '', confronto: '' };
+    }
+  };
+
   const buildShareText = () => {
     const cap  = selectedPlayers.find(p => p.id === captainId)?.short ?? '—';
     const hero = selectedPlayers.find(p => p.id === heroId)?.short    ?? '—';
+    const { confronto } = formatJogoInfo();
+    const placarMand = jogoData?.isNovMandante ? palpiteMandante : palpiteVisitante;
+    const placarVis  = jogoData?.isNovMandante ? palpiteVisitante : palpiteMandante;
     return (
 `🐯 ARENA TIGRE FC
 
-Acabei de escalar meu Tigrão pro ${mandante} × Novorizontino!
+Acabei de escalar meu Tigrão pro ${confronto || 'Novorizontino'}!
 🛡️ Formação: ${formation}
 ⭐ OVR do time: ${teamOvr}
 👑 Capitão: ${cap}
 🔥 Herói: ${hero}
-🎯 Palpite: ${palpiteMandante} × ${palpiteVisitante}
+🎯 Palpite: ${placarMand} × ${placarVis}
 
 DUVIDO VOCÊ ESCALAR MELHOR! 😤
 
@@ -709,7 +777,8 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
   };
 
   const shareX = () => {
-    const text = `🐯 Minha escalação pro ${mandante} × Novorizontino (${formation}) — OVR ${teamOvr} — Palpite ${palpiteMandante}×${palpiteVisitante} 🔥\nDuvido você fazer melhor! ${SHARE_BASE_URL}/${jogoId ?? ''}`;
+    const { confronto } = formatJogoInfo();
+    const text = `🐯 Minha escalação pro ${confronto || 'Novorizontino'} (${formation}) — OVR ${teamOvr} — Palpite ${palpiteMandante}×${palpiteVisitante} 🔥\nDuvido você fazer melhor! ${SHARE_BASE_URL}/${jogoId ?? ''}`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -1115,40 +1184,132 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
           </motion.div>
         )}
 
-        {step === 'palpite' && (
-          <motion.div key="palpite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950 overflow-auto">
-            <div className="text-cyan-400 text-xs font-black tracking-[6px] mb-2">ETAPA 5 DE 5</div>
-            <h1 className="text-4xl font-black mb-3">SEU PALPITE</h1>
-            <p className="text-zinc-400 mb-12 text-sm">{mandante} × Novorizontino • Série B 2026</p>
-            <div className="flex items-center gap-6 sm:gap-10 flex-wrap justify-center">
-              <div className="flex flex-col items-center">
-                <img src={mandanteLogo} alt={mandante} className="w-20 h-20 sm:w-24 sm:h-24 mb-3 object-contain" />
-                <div className="text-lg sm:text-2xl font-black">{mandante}</div>
+        {step === 'palpite' && (() => {
+          const { diaSemana, dataFmt, horario } = formatJogoInfo();
+          const mandanteNome  = jogoData?.isNovMandante ? 'Novorizontino' : (jogoData?.adversarioNome ?? '—');
+          const visitanteNome = jogoData?.isNovMandante ? (jogoData?.adversarioNome ?? '—') : 'Novorizontino';
+          const mandanteLogo  = jogoData?.isNovMandante ? ESCUDO_DEFAULT : (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT);
+          const visitanteLogo = jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT) : ESCUDO_DEFAULT;
+          return (
+            <motion.div key="palpite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="flex-1 flex flex-col items-center justify-start bg-zinc-950 overflow-auto">
+
+              {/* Hero banner do jogo */}
+              <div className="w-full relative overflow-hidden">
+                <div className="absolute inset-0">
+                  <img src={STADIUM_BG} alt="" className="w-full h-full object-cover opacity-20" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-zinc-950/80 to-zinc-950" />
+                </div>
+                <div className="relative z-10 px-5 pt-5 pb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-yellow-400 text-[10px] font-black tracking-[5px]">ETAPA 5 DE 5</div>
+                    <div className="px-2 py-0.5 bg-yellow-400/10 border border-yellow-400/30 rounded-full">
+                      <span className="text-yellow-400 text-[9px] font-black tracking-wider">
+                        {jogoData?.competicao ?? 'SÉRIE B 2026'} · R{jogoData?.rodada ?? '—'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Confronto visual */}
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Mandante */}
+                    <div className="flex-1 flex flex-col items-center gap-2">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center"
+                        style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.8))' }}>
+                        <img src={mandanteLogo} alt={mandanteNome}
+                          className="w-full h-full object-contain"
+                          onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                      </div>
+                      <div className="text-white text-[11px] sm:text-sm font-black text-center leading-tight max-w-[80px] truncate">
+                        {mandanteNome}
+                      </div>
+                      <div className="text-[9px] text-zinc-500 font-bold tracking-wider">MANDANTE</div>
+                    </div>
+
+                    {/* Centro */}
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="text-yellow-400 text-3xl sm:text-4xl font-black italic tracking-tighter">VS</div>
+                      {diaSemana && (
+                        <div className="text-center">
+                          <div className="text-white text-[11px] font-black tracking-wide">{diaSemana}, {dataFmt}</div>
+                          <div className="text-yellow-400 text-base sm:text-lg font-black">{horario}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Visitante */}
+                    <div className="flex-1 flex flex-col items-center gap-2">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center"
+                        style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.8))' }}>
+                        <img src={visitanteLogo} alt={visitanteNome}
+                          className="w-full h-full object-contain"
+                          onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                      </div>
+                      <div className="text-white text-[11px] sm:text-sm font-black text-center leading-tight max-w-[80px] truncate">
+                        {visitanteNome}
+                      </div>
+                      <div className="text-[9px] text-zinc-500 font-bold tracking-wider">VISITANTE</div>
+                    </div>
+                  </div>
+
+                  {/* Infos do jogo */}
+                  <div className="mt-3 grid grid-cols-1 gap-1.5">
+                    {jogoData?.local && (
+                      <div className="flex items-start gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/8">
+                        <span className="text-sm mt-px">📍</span>
+                        <span className="text-[10px] sm:text-xs text-zinc-300 leading-snug">{jogoData.local}</span>
+                      </div>
+                    )}
+                    {jogoData?.transmissao && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/8">
+                        <span className="text-sm">📺</span>
+                        <span className="text-[10px] sm:text-xs text-zinc-300 font-bold">{jogoData.transmissao}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-4 sm:gap-6 items-center">
-                <input type="number" min={0} value={palpiteMandante}
-                  onChange={e => setPalpiteMandante(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3" />
-                <span className="text-4xl sm:text-6xl text-yellow-400 font-black">×</span>
-                <input type="number" min={0} value={palpiteVisitante}
-                  onChange={e => setPalpiteVisitante(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3" />
+
+              {/* Palpite */}
+              <div className="flex-1 flex flex-col items-center justify-center px-5 pb-6 w-full max-w-sm">
+                <h1 className="text-2xl sm:text-3xl font-black mb-1 mt-2 text-center">SEU PALPITE</h1>
+                <p className="text-zinc-500 text-xs mb-6 text-center tracking-wider font-bold">QUAL VAI SER O PLACAR?</p>
+
+                <div className="flex items-center gap-4 sm:gap-6 w-full justify-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <img src={mandanteLogo} alt="" className="w-10 h-10 object-contain opacity-70"
+                      onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                    <input type="number" min={0} value={palpiteMandante}
+                      onChange={e => setPalpiteMandante(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3 text-white" />
+                  </div>
+                  <span className="text-3xl sm:text-5xl text-yellow-400 font-black mb-2">×</span>
+                  <div className="flex flex-col items-center gap-2">
+                    <img src={visitanteLogo} alt="" className="w-10 h-10 object-contain opacity-70"
+                      onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                    <input type="number" min={0} value={palpiteVisitante}
+                      onChange={e => setPalpiteVisitante(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3 text-white" />
+                  </div>
+                </div>
+
+                <div className="mt-3 px-4 py-2 bg-yellow-400/8 border border-yellow-400/20 rounded-xl text-center">
+                  <span className="text-yellow-400 text-[10px] font-black tracking-wider">
+                    🎯 ACERTE O PLACAR EXATO E GANHE BÔNUS DE PONTOS!
+                  </span>
+                </div>
+
+                <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }}
+                  onClick={generateFinalImage} disabled={isGenerating}
+                  className="mt-6 w-full py-5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black text-base sm:text-lg rounded-2xl shadow-[0_0_40px_rgba(251,191,36,0.4)] disabled:opacity-60 tracking-wider">
+                  {isGenerating ? 'GERANDO ARTE ÉPICA...' : 'CONFIRMAR ESCALAÇÃO 🔥'}
+                </motion.button>
+                <button onClick={() => setStep('hero')}
+                  className="mt-4 text-zinc-500 hover:text-white text-xs font-black tracking-widest">← TROCAR HERÓI</button>
               </div>
-              <div className="flex flex-col items-center">
-                <img src={ESCUDO_DEFAULT} alt="Novorizontino" className="w-20 h-20 sm:w-24 sm:h-24 mb-3 object-contain" />
-                <div className="text-lg sm:text-2xl font-black">Novorizontino</div>
-              </div>
-            </div>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              onClick={generateFinalImage} disabled={isGenerating}
-              className="mt-12 px-12 sm:px-20 py-6 sm:py-7 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black text-lg sm:text-2xl rounded-3xl shadow-[0_0_50px_#fbbf24] disabled:opacity-60 tracking-wider">
-              {isGenerating ? 'GERANDO ARTE ÉPICA...' : 'CONFIRMAR ESCALAÇÃO 🔥'}
-            </motion.button>
-            <button onClick={() => setStep('hero')}
-              className="mt-6 text-zinc-500 hover:text-white text-xs font-black tracking-widest">← TROCAR HERÓI</button>
-          </motion.div>
-        )}
+            </motion.div>
+          );
+        })()}
 
         {step === 'saving' && (
           <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -1334,8 +1495,11 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 {/* Placar — único e dominante */}
                 <div className="absolute left-0 right-0 z-20" style={{ top: '77%' }}>
                   <div className="flex items-center justify-center gap-4">
-                    <img src={mandanteLogo} alt="" className="w-10 h-10 object-contain"
+                    {/* Logo mandante no card final */}
+                    <img src={jogoData?.isNovMandante ? ESCUDO_DEFAULT : (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT)}
+                      alt="" className="w-10 h-10 object-contain"
                       crossOrigin="anonymous"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
                       style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
 
                     <div className="text-4xl font-black italic tabular-nums leading-none"
@@ -1348,8 +1512,11 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                       {palpiteVisitante}
                     </div>
 
-                    <img src={ESCUDO_DEFAULT} alt="" className="w-10 h-10 object-contain"
+                    {/* Logo visitante no card final */}
+                    <img src={jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT) : ESCUDO_DEFAULT}
+                      alt="" className="w-10 h-10 object-contain"
                       crossOrigin="anonymous"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
                       style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
                   </div>
                   <div className="text-center text-[8px] tracking-[5px] font-black text-white/40 mt-1.5">
