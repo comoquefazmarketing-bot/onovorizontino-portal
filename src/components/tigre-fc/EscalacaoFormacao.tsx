@@ -42,6 +42,21 @@ const LOGOS_TIMES: Record<string, string> = {
   'sao-bernardo':         'https://logodownload.org/wp-content/uploads/2017/02/sao-bernardo-logo-escudo.png',
 };
 
+/**
+ * Resolve o escudo do adversário.
+ * Prioridade: LOGOS_TIMES (local, sem CORS) → logo do DB → ESCUDO_DEFAULT
+ */
+function getOpponentLogo(slug?: string | null, dbLogo?: string | null): string {
+  if (slug) {
+    const key = slug.toLowerCase().trim();
+    if (LOGOS_TIMES[key]) return LOGOS_TIMES[key];
+    const partial = Object.keys(LOGOS_TIMES).find(k => key.includes(k) || k.includes(key));
+    if (partial) return LOGOS_TIMES[partial];
+  }
+  if (dbLogo?.trim()) return dbLogo.trim();
+  return ESCUDO_DEFAULT;
+}
+
 const TABLE          = 'tigre_fc_escalacoes';
 const PROFILE_TABLE  = 'tigre_fc_usuarios';
 const SHARE_BASE_URL = 'https://www.onovorizontino.com.br/tigre-fc/escalar';
@@ -432,76 +447,100 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const finalCardRef = useRef<HTMLDivElement>(null);
   const arenaRef     = useRef<HTMLDivElement>(null);
 
-  // Dispara captura de imagem quando o card final está no DOM
-  // (step='final' + pendingGenerate garante que o useEffect só age quando o card renderizou)
+  // Dispara captura de imagem quando o card final está no DOM.
+  // Estratégia: pré-fetcha imagens Supabase como blob: URLs para evitar taint de canvas por CORS.
   useEffect(() => {
     if (step !== 'final' || !pendingGenerate) return;
     const el = finalCardRef.current;
     if (!el) return;
 
     let cancelled = false;
-    // Aguarda imagens internas carregarem antes de capturar
-    const imgs = Array.from(el.querySelectorAll('img'));
-    const loadAll = imgs.map(img =>
-      img.complete
-        ? Promise.resolve()
-        : new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); })
-    );
+    const blobUrls: string[] = [];
 
-    // Filtro: só inclui imagens do Supabase (CORS garantido) — ignora logodownload.org etc
-    const supabaseFilter = (node: HTMLElement) => {
-      if (node instanceof HTMLImageElement) {
-        const src = node.getAttribute('src') ?? '';
-        if (!src) return false;
-        if (src.startsWith('data:')) return true;
-        if (src.startsWith('https://whoglnpvqjbaczgnebbn.supabase.co')) return true;
-        if (src.startsWith('/')) return true;
-        return false; // descarta URLs externas que não têm CORS
+    const capture = async (): Promise<string> => {
+      const imgs = Array.from(el.querySelectorAll<HTMLImageElement>('img'));
+
+      // 1. Aguarda carregamento visual de todas as imagens
+      await Promise.all(imgs.map(img =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); })
+      ));
+
+      // 2. Pré-fetch imagens Supabase como blob: URLs (evita canvas CORS taint)
+      const origSrcs = new Map<HTMLImageElement, string>();
+      await Promise.allSettled(imgs.map(async (img) => {
+        const src = img.getAttribute('src') ?? '';
+        if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
+        if (!src.includes('supabase.co') && !src.startsWith('/')) return;
+        try {
+          const res = await fetch(src, { mode: 'cors', credentials: 'omit' });
+          if (!res.ok) return;
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          blobUrls.push(blobUrl);
+          origSrcs.set(img, img.src);
+          img.src = blobUrl;
+        } catch { /* mantém src original */ }
+      }));
+
+      // 3. Aguarda re-render das imagens com blob URLs
+      if (origSrcs.size > 0) {
+        await new Promise<void>(res => setTimeout(res, 200));
       }
-      return true;
-    };
 
-    const captureOptions = {
-      cacheBust: true,
-      quality: 0.98,
-      pixelRatio: 3,
-      backgroundColor: '#0a0a0a',
-      filter: supabaseFilter,
-    };
-
-    const tryCapture = async (): Promise<string> => {
-      // Tentativa 1: com filtro CORS-safe
+      // 4. Captura (2 tentativas)
+      const opts = { cacheBust: true, quality: 0.95, pixelRatio: 2, backgroundColor: '#0a0a0a' };
+      let dataUrl: string;
       try {
-        return await htmlToImage.toPng(el, captureOptions);
+        dataUrl = await htmlToImage.toPng(el, opts);
       } catch {
-        // Tentativa 2: sem filtro mas sem fontes externas
-        return await htmlToImage.toPng(el, { ...captureOptions, skipFonts: true, filter: undefined });
+        dataUrl = await htmlToImage.toPng(el, {
+          ...opts,
+          skipFonts: true,
+          filter: (node: HTMLElement) => {
+            if (node instanceof HTMLImageElement) {
+              const s = node.getAttribute('src') ?? '';
+              return s.startsWith('data:') || s.startsWith('blob:') || s.includes('supabase.co');
+            }
+            return true;
+          },
+        });
+      } finally {
+        // Restaura srcs originais e revoga blob URLs
+        origSrcs.forEach((orig, img) => { img.src = orig; });
+        blobUrls.forEach(u => URL.revokeObjectURL(u));
       }
+      return dataUrl;
     };
 
-    Promise.all(loadAll)
-      .then(() => new Promise<void>(res => setTimeout(res, 600)))
-      .then(() => { if (!cancelled) return tryCapture(); })
-      .then(dataUrl => {
-        if (cancelled || !dataUrl) return;
-        setFinalImageUri(dataUrl);
-        setTimeout(() => triggerCelebration(), 200);
-      })
-      .catch(e => {
+    const timer = setTimeout(async () => {
+      if (cancelled) return;
+      try {
+        const dataUrl = await capture();
+        if (!cancelled) {
+          setFinalImageUri(dataUrl);
+          setTimeout(() => triggerCelebration(), 200);
+        }
+      } catch (e) {
         if (!cancelled) {
           console.error('[generateFinalImage] erro:', e);
-          setSaveError('Não foi possível gerar a imagem automaticamente. Use o botão abaixo para tentar novamente.');
-          setFinalImageUri('__error__'); // desbloqueiam botão de retry
+          setSaveError('Não foi possível gerar a imagem. Toque em "Tentar novamente" abaixo.');
+          setFinalImageUri('__error__');
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) {
           setIsGenerating(false);
           setPendingGenerate(false);
         }
-      });
+      }
+    }, 800);
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      blobUrls.forEach(u => URL.revokeObjectURL(u));
+    };
   }, [step, pendingGenerate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getValidPhotoUrl = useCallback((fotoPath: string) => {
@@ -1362,10 +1401,15 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
 
         {step === 'palpite' && (() => {
           const { diaSemana, dataFmt, horario } = formatJogoInfo();
-          const mandanteNome  = jogoData?.isNovMandante ? 'Novorizontino' : (jogoData?.adversarioNome ?? '—');
-          const visitanteNome = jogoData?.isNovMandante ? (jogoData?.adversarioNome ?? '—') : 'Novorizontino';
-          const mandanteLogo  = jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT);
-          const visitanteLogo = jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT) : ESCUDO_NOVORIZONTINO;
+          const advNome = jogoData?.adversarioNome
+            ?? jogoData?.adversarioSigla
+            ?? jogoData?.adversarioSlug?.replace(/-/g, ' ').toUpperCase()
+            ?? '—';
+          const mandanteNome  = jogoData?.isNovMandante ? 'Novorizontino' : advNome;
+          const visitanteNome = jogoData?.isNovMandante ? advNome : 'Novorizontino';
+          const advLogo = getOpponentLogo(jogoData?.adversarioSlug, jogoData?.adversarioLogo);
+          const mandanteLogo  = jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : advLogo;
+          const visitanteLogo = jogoData?.isNovMandante ? advLogo : ESCUDO_NOVORIZONTINO;
           return (
             <motion.div key="palpite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex flex-col items-center justify-start bg-zinc-950 overflow-auto">
@@ -1809,14 +1853,16 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 {/* Placar — único e dominante */}
                 <div className="absolute left-0 right-0 z-20" style={{ top: '77%' }}>
                   <div className="flex items-center justify-center gap-4">
-                    {/* Logo mandante — só Supabase passa no canvas sem CORS */}
+                    {/* Logo mandante */}
                     {(() => {
-                      const src = jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : (jogoData?.adversarioLogo ?? '');
-                      const isSupabase = src.includes('supabase.co') || src.startsWith('data:');
-                      const sigla = jogoData?.isNovMandante ? 'NOV' : (jogoData?.adversarioSigla ?? jogoData?.adversarioNome?.slice(0,3).toUpperCase() ?? '?');
-                      return isSupabase
-                        ? <img src={src} alt="" className="w-10 h-10 object-contain" crossOrigin="anonymous" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
-                        : <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-600 flex items-center justify-center" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}><span className="text-[9px] font-black text-zinc-400">{sigla}</span></div>;
+                      const advLogo = getOpponentLogo(jogoData?.adversarioSlug, jogoData?.adversarioLogo);
+                      const src = jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : advLogo;
+                      return (
+                        <img src={src} alt="" crossOrigin="anonymous"
+                          className="w-10 h-10 object-contain"
+                          style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
+                          onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                      );
                     })()}
 
                     <div className="text-4xl font-black italic tabular-nums leading-none"
@@ -1831,12 +1877,14 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
 
                     {/* Logo visitante */}
                     {(() => {
-                      const src = jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? '') : ESCUDO_NOVORIZONTINO;
-                      const isSupabase = src.includes('supabase.co') || src.startsWith('data:');
-                      const sigla = jogoData?.isNovMandante ? (jogoData?.adversarioSigla ?? jogoData?.adversarioNome?.slice(0,3).toUpperCase() ?? '?') : 'NOV';
-                      return isSupabase
-                        ? <img src={src} alt="" className="w-10 h-10 object-contain" crossOrigin="anonymous" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
-                        : <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-600 flex items-center justify-center" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}><span className="text-[9px] font-black text-zinc-400">{sigla}</span></div>;
+                      const advLogo = getOpponentLogo(jogoData?.adversarioSlug, jogoData?.adversarioLogo);
+                      const src = jogoData?.isNovMandante ? advLogo : ESCUDO_NOVORIZONTINO;
+                      return (
+                        <img src={src} alt="" crossOrigin="anonymous"
+                          className="w-10 h-10 object-contain"
+                          style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
+                          onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                      );
                     })()}
                   </div>
                   <div className="text-center text-[8px] tracking-[5px] font-black text-white/40 mt-1.5">
