@@ -226,6 +226,13 @@ function DraggableSlot({
   const y = useMotionValue(0);
   const draggedRef = useRef(false);
 
+  // Resetar offset de drag APÓS o React aplicar a nova posição CSS (state.x/y)
+  // Evita o flash de "slot voltando para posição antiga" antes do re-render
+  useEffect(() => {
+    x.set(0);
+    y.set(0);
+  }, [state.x, state.y]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const w = isDesktop ? SLOT_W_DESKTOP : SLOT_W_MOBILE;
   const h = isDesktop ? SLOT_H_DESKTOP : SLOT_H_MOBILE;
 
@@ -256,8 +263,6 @@ function DraggableSlot({
     <motion.div
       drag
       dragMomentum={false}
-      dragElastic={0.05}
-      dragConstraints={arenaRef}
       whileDrag={{ scale: 1.25, zIndex: 200 }}
       animate={isCaptain || isHero ? { scale: [1, 1.03, 1] } : { scale: 1 }}
       transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
@@ -273,8 +278,8 @@ function DraggableSlot({
         const rect = arenaEl.getBoundingClientRect();
         const newX = ((info.point.x - rect.left) / rect.width) * 100;
         const newY = ((info.point.y - rect.top) / rect.height) * 100;
-        x.set(0);
-        y.set(0);
+        // NÃO resetar x,y aqui — o useEffect acima faz isso após o React
+        // aplicar a nova posição CSS, evitando o flash para posição antiga
         onDragSettled(slotId, clamp(newX, 5, 95), clamp(newY, 5, 95));
       }}
       onClick={() => {
@@ -298,6 +303,7 @@ function DraggableSlot({
         background: state.player
           ? `linear-gradient(180deg, ${colors?.border ?? '#fff'}33 0%, #000 70%)`
           : 'rgba(0,0,0,0.55)',
+        touchAction: 'none',
       }}
       className="rounded-xl flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
     >
@@ -359,6 +365,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
   const [palpiteVisitante, setPalpiteVisitante] = useState(2);
   const [finalImageUri, setFinalImageUri]     = useState<string | null>(null);
   const [isGenerating, setIsGenerating]       = useState(false);
+  const [pendingGenerate, setPendingGenerate] = useState(false);
 
   const [userId, setUserId]         = useState<string | null>(null);
   const [userName, setUserName]     = useState<string>('TORCEDOR');
@@ -371,6 +378,44 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
   const finalCardRef = useRef<HTMLDivElement>(null);
   const arenaRef     = useRef<HTMLDivElement>(null);
+
+  // Dispara captura de imagem quando o card final está no DOM
+  // (step='final' + pendingGenerate garante que o useEffect só age quando o card renderizou)
+  useEffect(() => {
+    if (step !== 'final' || !pendingGenerate) return;
+    const el = finalCardRef.current;
+    if (!el) return;
+
+    let cancelled = false;
+    // Aguarda imagens internas carregarem antes de capturar
+    const imgs = Array.from(el.querySelectorAll('img'));
+    const loadAll = imgs.map(img =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); })
+    );
+
+    Promise.all(loadAll).then(() => {
+      if (cancelled) return;
+      return htmlToImage.toPng(el, { cacheBust: true, quality: 0.98, pixelRatio: 3, backgroundColor: '#0a0a0a' });
+    }).then(dataUrl => {
+      if (cancelled || !dataUrl) return;
+      setFinalImageUri(dataUrl);
+      setTimeout(() => triggerCelebration(), 200);
+    }).catch(e => {
+      if (!cancelled) {
+        console.error('[generateFinalImage] erro:', e);
+        alert('Erro ao gerar a imagem. Tente novamente!');
+      }
+    }).finally(() => {
+      if (!cancelled) {
+        setIsGenerating(false);
+        setPendingGenerate(false);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [step, pendingGenerate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getValidPhotoUrl = useCallback((fotoPath: string) => {
     if (!fotoPath) return ESCUDO_DEFAULT;
@@ -400,14 +445,10 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
         if (!cancelled && user) {
           setUserId(user.id);
           let profile: { apelido?: string | null; nome?: string | null; avatar_url?: string | null } | null = null;
-          const { data: byId } = await supabase
-            .from(PROFILE_TABLE).select('apelido, nome, avatar_url').eq('id', user.id).maybeSingle();
-          if (byId) {
-            profile = byId;
-          } else if (user.email) {
-            const { data: byEmail } = await supabase
-              .from(PROFILE_TABLE).select('apelido, nome, avatar_url').eq('email', user.email).maybeSingle();
-            if (byEmail) profile = byEmail;
+          const { data: byGoogleId } = await supabase
+            .from(PROFILE_TABLE).select('apelido, nome, avatar_url').eq('google_id', user.id).maybeSingle();
+          if (byGoogleId) {
+            profile = byGoogleId;
           }
           if (!cancelled) {
             const meta = (user.user_metadata || {}) as Record<string, unknown>;
@@ -618,50 +659,18 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     } else if (!saveRes.ok) {
       console.warn('Erro salvando:', saveRes.reason);
     }
+    // pendingGenerate + setStep('final') → useEffect captura quando o DOM montar
+    setFinalImageUri(null);
     setIsGenerating(true);
-    await new Promise(r => setTimeout(r, 100));
-    if (!finalCardRef.current) {
-      setStep('final');
-      await new Promise(r => setTimeout(r, 250));
-    }
-    if (!finalCardRef.current) {
-      setIsGenerating(false);
-      alert('Erro ao gerar imagem. Tenta de novo.');
-      return;
-    }
-    try {
-      const dataUrl = await htmlToImage.toPng(finalCardRef.current, {
-        cacheBust: true, quality: 0.98, pixelRatio: 3, backgroundColor: '#0a0a0a',
-      });
-      setFinalImageUri(dataUrl);
-      setStep('final');
-      setTimeout(() => triggerCelebration(), 200);
-    } catch (e) {
-      console.error('[EscalacaoFormacao] erro ao gerar imagem:', e);
-      alert('Erro ao gerar a imagem. Tente novamente!');
-    } finally {
-      setIsGenerating(false);
-    }
+    setPendingGenerate(true);
+    setStep('final');
   };
 
-  const verEscalacaoSalva = async () => {
-    setStep('saving');
+  const verEscalacaoSalva = () => {
+    setFinalImageUri(null);
     setIsGenerating(true);
-    await new Promise(r => setTimeout(r, 250));
+    setPendingGenerate(true);
     setStep('final');
-    await new Promise(r => setTimeout(r, 250));
-    if (finalCardRef.current) {
-      try {
-        const dataUrl = await htmlToImage.toPng(finalCardRef.current, {
-          cacheBust: true, quality: 0.98, pixelRatio: 3, backgroundColor: '#0a0a0a',
-        });
-        setFinalImageUri(dataUrl);
-        triggerCelebration();
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    setIsGenerating(false);
   };
 
   const formatJogoInfo = () => {
@@ -888,7 +897,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
             </div>
 
             {/* CAMPO */}
-            <div className="flex-1 relative bg-zinc-900 overflow-hidden" ref={arenaRef}>
+            <div className="flex-1 relative bg-zinc-900 overflow-hidden" ref={arenaRef} style={{ touchAction: 'none' }}>
               <img src={STADIUM_BG} alt="Estádio" className="absolute inset-0 w-full h-full object-cover opacity-75" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 pointer-events-none" />
 
