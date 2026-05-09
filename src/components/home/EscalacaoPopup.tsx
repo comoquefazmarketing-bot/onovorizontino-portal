@@ -251,11 +251,11 @@ function TeamBlock({ time, label, isNovo }: { time: Time; label: string; isNovo:
         />
       </div>
       <span style={{
-        fontSize:9, fontWeight:900, letterSpacing:'0.1em',
-        color: isNovo ? GOLD : 'rgba(255,255,255,0.4)',
+        fontSize:11, fontWeight:900, letterSpacing:'0.1em',
+        color: isNovo ? GOLD : 'rgba(255,255,255,0.7)',
         textAlign:'center', lineHeight:1.2,
       }}>
-        {label}
+        {time.nome}
       </span>
     </div>
   );

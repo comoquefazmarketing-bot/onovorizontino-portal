@@ -145,18 +145,12 @@ export default function TigreFCPage() {
         }
       } catch (err) { console.warn('[TigreFC]', err); }
 
+      // Usa a API que já resolve mandante.escudo_url e visitante.escudo_url
       let jogoAtivo: Jogo | null = null;
       try {
-        // Janela de 4h: não retorna jogos que já terminaram há mais de 4 horas
-        const cutoff = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
-        const { data } = await sb
-          .from('jogos')
-          .select('id, rodada, competicao, mandante_slug, visitante_slug, placar_mandante, placar_visitante, finalizado, data_hora')
-          .eq('finalizado', false)
-          .gte('data_hora', cutoff)
-          .order('data_hora', { ascending: true })
-          .limit(1);
-        jogoAtivo = data?.[0] ?? null;
+        const res = await fetch('/api/proximo-jogo');
+        const json = await res.json();
+        jogoAtivo = json?.jogos?.[0] ?? null;
       } catch (err) { console.warn('[TigreFC]', err); }
 
       if (!cancelled && jogoAtivo) setJogo(jogoAtivo);
