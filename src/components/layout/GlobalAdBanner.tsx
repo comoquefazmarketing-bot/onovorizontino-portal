@@ -12,7 +12,7 @@ const VIDEOS = [
   },
   {
     src: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR.mp4",
-    href: "https://wa.me/5517988031679?text=Olá, vi o anúncio da EliteCar no Portal O Novorizontino!",
+    href: "https://wa.me/5516996496957?text=Ol%C3%A1%20vi%20seu%20an%C3%BAncio%20no%20portal%20O%20Novorizontino%2C%20quero%20saber%20mas!",
   },
 ];
 
