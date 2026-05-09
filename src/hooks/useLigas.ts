@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { LIGA_MIN_PONTOS_CRIAR } from '@/lib/tigre-fc-pontos';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -12,6 +13,7 @@ export type UsuarioPerfil = {
   avatar_url: string | null;
   pontos_total: number;
   nivel: 'Novato' | 'Torcedor' | 'Fiel' | 'Fanático' | 'Lenda';
+  is_admin: boolean;
 };
 
 export type LigaMembro = {
@@ -40,7 +42,7 @@ export type Liga = {
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
-export const PONTOS_PARA_CRIAR_LIGA = 100;
+export const PONTOS_PARA_CRIAR_LIGA = LIGA_MIN_PONTOS_CRIAR; // 600
 /** @deprecated use PONTOS_PARA_CRIAR_LIGA */
 export const XP_PARA_CRIAR_LIGA = PONTOS_PARA_CRIAR_LIGA;
 
@@ -75,7 +77,8 @@ export function useLigas(usuarioId: string | null) {
   const [isLoading, setIsLoading]     = useState(false);
   const [error, setError]             = useState<string | null>(null);
 
-  const podeCriarLiga = (perfil?.pontos_total ?? 0) >= PONTOS_PARA_CRIAR_LIGA;
+  // Admins sempre podem criar ligas (parceiros, patrocinadores, staff)
+  const podeCriarLiga = perfil?.is_admin === true || (perfil?.pontos_total ?? 0) >= PONTOS_PARA_CRIAR_LIGA;
   const xpParaFiel    = Math.max(0, PONTOS_PARA_CRIAR_LIGA - (perfil?.pontos_total ?? 0));
 
   // ── Carrega perfil e ligas do usuário ─────────────────────────────────────
@@ -87,7 +90,7 @@ export function useLigas(usuarioId: string | null) {
     try {
       const { data: perfilData } = await supabase
         .from('tigre_fc_usuarios')
-        .select('id, nome, apelido, avatar_url, pontos_total, nivel')
+        .select('id, nome, apelido, avatar_url, pontos_total, nivel, is_admin')
         .eq('id', usuarioId)
         .single();
 
@@ -195,7 +198,7 @@ export function useLigas(usuarioId: string | null) {
         .from('tigre_fc_ligas_membros')
         .select(`
           usuario_id, pontos, jogos, acertos, entrou_em,
-          tigre_fc_usuarios ( id, nome, apelido, avatar_url, pontos_total, nivel )
+          tigre_fc_usuarios ( id, nome, apelido, avatar_url, pontos_total, nivel, is_admin )
         `)
         .eq('liga_id', ligaId)
         .order('pontos', { ascending: false })

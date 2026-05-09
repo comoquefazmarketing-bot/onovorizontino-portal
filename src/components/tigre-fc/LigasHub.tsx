@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence, Variants, useMotionValue, useSpring, useTransform, useMotionTemplate } from 'framer-motion';
 import { createBrowserClient } from '@supabase/ssr';
 import confetti from 'canvas-confetti';
 import {
@@ -91,24 +91,68 @@ function EmptyState({ onEntrar }: { onEntrar: () => void }) {
   );
 }
 
-// ─── Liga Card ────────────────────────────────────────────────────────────────
+// ─── Liga Card (com efeito holográfico ao hover) ──────────────────────────────
 
 function LigaCard({
   liga, posicao, isDono, onClick,
 }: {
   liga: Liga; posicao?: number; isDono?: boolean; onClick: () => void;
 }) {
+  const cardRef = useRef<HTMLButtonElement>(null);
+  const mouseX  = useMotionValue(50);
+  const mouseY  = useMotionValue(50);
+  const sxs     = useSpring(mouseX, { stiffness: 160, damping: 18 });
+  const sys     = useSpring(mouseY, { stiffness: 160, damping: 18 });
+  const shine   = useMotionTemplate`radial-gradient(circle at ${sxs}% ${sys}%, rgba(245,196,0,0.18) 0%, rgba(245,196,0,0.04) 40%, transparent 65%)`;
+  const rotY    = useSpring(useTransform(useMotionValue(0), [-1,1],[-5,5]), { stiffness:200, damping:20 });
+
+  const onMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!cardRef.current) return;
+    const { left, top, width, height } = cardRef.current.getBoundingClientRect();
+    mouseX.set((e.clientX - left) / width  * 100);
+    mouseY.set((e.clientY - top)  / height * 100);
+  };
+  const onLeave = () => { mouseX.set(50); mouseY.set(50); };
+
   return (
     <motion.button
+      ref={cardRef}
       variants={fadeUp}
       whileTap={{ scale: 0.97 }}
+      whileHover={{ rotateY: 1.5 }}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
       onClick={onClick}
       style={{
-        width: '100%', background: 'linear-gradient(135deg, #111 0%, #131308 100%)',
-        border: '1px solid rgba(245,196,0,0.1)', borderRadius: 18, padding: '16px 18px',
+        width: '100%',
+        background: 'linear-gradient(135deg, #111 0%, #131308 100%)',
+        border: '1px solid rgba(245,196,0,0.12)',
+        borderRadius: 18, padding: '16px 18px',
         cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14,
+        position: 'relative', overflow: 'hidden',
+        transition: 'border-color 0.25s, box-shadow 0.25s',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = 'rgba(245,196,0,0.32)';
+        e.currentTarget.style.boxShadow   = '0 8px 32px rgba(245,196,0,0.08)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = 'rgba(245,196,0,0.12)';
+        e.currentTarget.style.boxShadow   = 'none';
+        onLeave();
       }}
     >
+      {/* Holographic shine */}
+      <motion.div aria-hidden style={{
+        position: 'absolute', inset: 0, borderRadius: 'inherit',
+        background: shine, pointerEvents: 'none', zIndex: 10, mixBlendMode: 'screen',
+      }} />
+      {/* Scan lines */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, borderRadius: 'inherit', pointerEvents: 'none',
+        zIndex: 9, mixBlendMode: 'overlay', opacity: 0.04,
+        background: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.8) 0px, rgba(255,255,255,0.8) 1px, transparent 1px, transparent 4px)',
+      }} />
       <div style={{
         width: 46, height: 46, borderRadius: 14,
         background: 'linear-gradient(135deg, rgba(245,196,0,0.15), rgba(245,196,0,0.05))',
@@ -450,9 +494,14 @@ function RankingModal({
                         return (
                           <motion.button
                             key={membro.usuario_id}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.04 }}
+                            initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                            animate={{
+                              opacity: i === 0 ? 1 : Math.max(0.5, 1 - i * 0.1),
+                              x: 0,
+                              scale: i === 0 ? 1 : Math.max(0.94, 1 - i * 0.015),
+                            }}
+                            transition={{ delay: i * 0.045, type: 'spring', stiffness: 280, damping: 22 }}
+                            whileHover={{ scale: 1.01, opacity: 1 }}
                             onClick={() => onVerPerfil(membro.usuario_id)}
                             style={{
                               display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
