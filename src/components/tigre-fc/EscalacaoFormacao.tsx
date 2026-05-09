@@ -1446,42 +1446,163 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 </div>
               </div>
 
-              {/* Palpite */}
-              <div className="flex-1 flex flex-col items-center justify-center px-5 pb-6 w-full max-w-sm">
-                <h1 className="text-2xl sm:text-3xl font-black mb-1 mt-2 text-center">SEU PALPITE</h1>
-                <p className="text-zinc-500 text-xs mb-6 text-center tracking-wider font-bold">QUAL VAI SER O PLACAR?</p>
+              {/* Palpite — ScoreStepper AAA */}
+              <div className="flex-1 flex flex-col items-center justify-center px-4 pb-6 w-full max-w-sm">
 
-                <div className="flex items-center gap-4 sm:gap-6 w-full justify-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <img src={mandanteLogo} alt="" className="w-10 h-10 object-contain opacity-70"
-                      onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
-                    <input type="number" min={0} value={palpiteMandante}
-                      onChange={e => setPalpiteMandante(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3 text-white" />
-                  </div>
-                  <span className="text-3xl sm:text-5xl text-yellow-400 font-black mb-2">×</span>
-                  <div className="flex flex-col items-center gap-2">
-                    <img src={visitanteLogo} alt="" className="w-10 h-10 object-contain opacity-70"
-                      onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
-                    <input type="number" min={0} value={palpiteVisitante}
-                      onChange={e => setPalpiteVisitante(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3 text-white" />
-                  </div>
+                {/* Título */}
+                <div className="text-center mt-2 mb-5">
+                  <p className="text-[9px] font-black uppercase tracking-[0.5em] text-zinc-600">⚡ Match Predictor</p>
+                  <h1 className="text-2xl font-black italic mt-1 leading-none">SEU PALPITE</h1>
+                  <p className="text-zinc-500 text-[10px] mt-1 font-bold tracking-widest">QUAL VAI SER O PLACAR?</p>
                 </div>
 
-                <div className="mt-3 px-4 py-2 bg-yellow-400/8 border border-yellow-400/20 rounded-xl text-center">
+                {/* ScoreStepper container */}
+                <div className="w-full rounded-3xl overflow-hidden"
+                  style={{
+                    background: 'rgba(10,10,10,0.85)',
+                    border: '1.5px solid rgba(255,255,255,0.07)',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+                  }}>
+
+                  {/* Linha neon topo */}
+                  <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,196,0,0.5), transparent)' }} />
+
+                  <div className="px-4 py-6 flex items-center justify-center gap-3">
+
+                    {/* Stepper Mandante */}
+                    <div className="flex flex-col items-center gap-2 flex-1">
+                      <img src={mandanteLogo} alt={mandanteNome}
+                        className="w-14 h-14 object-contain"
+                        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }}
+                        onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                      <motion.button whileTap={{ scale: 0.82 }}
+                        onClick={() => setPalpiteMandante(v => v + 1)}
+                        className="w-10 h-10 rounded-2xl text-white font-black text-lg flex items-center justify-center"
+                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        +
+                      </motion.button>
+                      <div className="relative h-16 flex items-center justify-center overflow-hidden w-full">
+                        <AnimatePresence mode="popLayout">
+                          <motion.span key={palpiteMandante}
+                            initial={{ y: -30, opacity: 0, scale: 0.7 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            exit={{ y: 30, opacity: 0, scale: 0.7 }}
+                            transition={{ type: 'spring', damping: 14, stiffness: 300 }}
+                            className="absolute tabular-nums font-black italic leading-none text-center"
+                            style={{
+                              fontSize: 'clamp(48px, 12vw, 64px)',
+                              color: '#F5C400',
+                              textShadow: '0 0 30px rgba(245,196,0,0.5)',
+                            }}>
+                            {palpiteMandante}
+                          </motion.span>
+                        </AnimatePresence>
+                      </div>
+                      <motion.button whileTap={{ scale: 0.82 }}
+                        onClick={() => setPalpiteMandante(v => Math.max(0, v - 1))}
+                        className="w-10 h-10 rounded-2xl text-white font-black text-lg flex items-center justify-center"
+                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        −
+                      </motion.button>
+                      <span className="text-[8px] font-black tracking-widest text-zinc-600 uppercase mt-1 truncate max-w-[80px] text-center">
+                        {mandanteNome}
+                      </span>
+                    </div>
+
+                    {/* Separador */}
+                    <div className="flex flex-col items-center gap-1 pb-2">
+                      <span className="font-black italic text-zinc-700"
+                        style={{ fontSize: 'clamp(28px, 6vw, 36px)' }}>:</span>
+                    </div>
+
+                    {/* Stepper Visitante */}
+                    <div className="flex flex-col items-center gap-2 flex-1">
+                      <img src={visitanteLogo} alt={visitanteNome}
+                        className="w-14 h-14 object-contain"
+                        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }}
+                        onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                      <motion.button whileTap={{ scale: 0.82 }}
+                        onClick={() => setPalpiteVisitante(v => v + 1)}
+                        className="w-10 h-10 rounded-2xl text-white font-black text-lg flex items-center justify-center"
+                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        +
+                      </motion.button>
+                      <div className="relative h-16 flex items-center justify-center overflow-hidden w-full">
+                        <AnimatePresence mode="popLayout">
+                          <motion.span key={palpiteVisitante}
+                            initial={{ y: -30, opacity: 0, scale: 0.7 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            exit={{ y: 30, opacity: 0, scale: 0.7 }}
+                            transition={{ type: 'spring', damping: 14, stiffness: 300 }}
+                            className="absolute tabular-nums font-black italic leading-none text-center"
+                            style={{
+                              fontSize: 'clamp(48px, 12vw, 64px)',
+                              color: '#ffffff',
+                              textShadow: '0 0 20px rgba(255,255,255,0.15)',
+                            }}>
+                            {palpiteVisitante}
+                          </motion.span>
+                        </AnimatePresence>
+                      </div>
+                      <motion.button whileTap={{ scale: 0.82 }}
+                        onClick={() => setPalpiteVisitante(v => Math.max(0, v - 1))}
+                        className="w-10 h-10 rounded-2xl text-white font-black text-lg flex items-center justify-center"
+                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        −
+                      </motion.button>
+                      <span className="text-[8px] font-black tracking-widest text-zinc-600 uppercase mt-1 truncate max-w-[80px] text-center">
+                        {visitanteNome}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Indicador de resultado */}
+                  <div className="flex justify-center pb-4">
+                    <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
+                      palpiteMandante > palpiteVisitante
+                        ? 'border-green-500/40 bg-green-500/10 text-green-400'
+                        : palpiteMandante < palpiteVisitante
+                        ? 'border-red-500/40 bg-red-500/10 text-red-400'
+                        : 'border-zinc-700 bg-zinc-900 text-zinc-500'
+                    }`}>
+                      {palpiteMandante > palpiteVisitante
+                        ? `🏆 Vitória do ${mandanteNome}`
+                        : palpiteMandante < palpiteVisitante
+                        ? `💀 Vitória do ${visitanteNome}`
+                        : '🤝 Empate'}
+                    </div>
+                  </div>
+
+                  {/* Linha neon base */}
+                  <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)' }} />
+                </div>
+
+                {/* Bônus pill */}
+                <div className="mt-4 px-4 py-2 rounded-xl text-center"
+                  style={{ background: 'rgba(245,196,0,0.07)', border: '1px solid rgba(245,196,0,0.2)' }}>
                   <span className="text-yellow-400 text-[10px] font-black tracking-wider">
-                    🎯 ACERTE O PLACAR EXATO E GANHE BÔNUS DE PONTOS!
+                    🎯 ACERTE O PLACAR EXATO → +15 PONTOS BÔNUS
                   </span>
                 </div>
 
-                <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }}
+                {/* CTA */}
+                <motion.button
+                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
                   onClick={generateFinalImage} disabled={isGenerating}
-                  className="mt-6 w-full py-5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black text-base sm:text-lg rounded-2xl shadow-[0_0_40px_rgba(251,191,36,0.4)] disabled:opacity-60 tracking-wider">
-                  {isGenerating ? 'GERANDO ARTE ÉPICA...' : 'CONFIRMAR ESCALAÇÃO 🔥'}
+                  className="mt-5 w-full py-5 relative overflow-hidden rounded-2xl font-black text-sm tracking-[0.3em] uppercase disabled:opacity-50"
+                  style={{ background: 'white', color: 'black' }}>
+                  <motion.div
+                    className="absolute inset-0 -skew-x-12"
+                    style={{ background: 'linear-gradient(90deg, transparent, rgba(245,196,0,0.5), transparent)' }}
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.5 }} />
+                  <span className="relative">{isGenerating ? 'GERANDO ARTE ÉPICA...' : 'CONFIRMAR ESCALAÇÃO →'}</span>
                 </motion.button>
+
                 <button onClick={() => setStep('hero')}
-                  className="mt-4 text-zinc-500 hover:text-white text-xs font-black tracking-widest">← TROCAR HERÓI</button>
+                  className="mt-4 text-zinc-600 hover:text-white text-[10px] font-black tracking-[3px] uppercase transition-colors">
+                  ← TROCAR HERÓI
+                </button>
               </div>
             </motion.div>
           );
