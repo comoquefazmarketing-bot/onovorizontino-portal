@@ -7,11 +7,15 @@ import * as htmlToImage from 'html-to-image';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
 
+// ============================================================================
+// CONSTANTES
+// ============================================================================
+
 const BASE_STORAGE   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const STADIUM_BG     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
 const ESCUDO_DEFAULT = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
 
-// Placeholder neutro pra escudo desconhecido (SVG inline = sem CORS)
+// SVG inline para fallback final (sem CORS, sempre carrega)
 const FALLBACK_ESCUDO =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
@@ -26,6 +30,10 @@ const FALLBACK_ESCUDO =
 const TABLE          = 'tigre_fc_escalacoes';
 const PROFILE_TABLE  = 'tigre_fc_usuarios';
 const SHARE_BASE_URL = 'https://www.onovorizontino.com.br/tigre-fc/escalar';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface Player {
   id: number;
@@ -45,8 +53,140 @@ interface EscalacaoFormacaoProps {
   jogoId?: number | string;
   mandante?: string;
   mandanteLogo?: string;
+  visitante?: string;
+  visitanteLogo?: string;
   rodada?: string | number;
 }
+
+// ============================================================================
+// HELPERS GLOBAIS
+// ============================================================================
+
+/**
+ * Espera todas as <img> dentro do nó terminarem (load/error/timeout),
+ * espera as fontes carregarem e força um double-rAF pra garantir layout/paint.
+ * Sem isso, html-to-image às vezes captura antes de tudo aparecer.
+ */
+async function waitForImages(root: HTMLElement, timeoutMs = 8000): Promise<void> {
+  const imgs = Array.from(root.querySelectorAll('img'));
+
+  await Promise.all(
+    imgs.map(img => {
+      if (img.complete && img.naturalHeight > 0) return Promise.resolve();
+      return new Promise<void>(resolve => {
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          resolve();
+        };
+        img.addEventListener('load', finish, { once: true });
+        img.addEventListener('error', finish, { once: true });
+        setTimeout(finish, timeoutMs);
+      });
+    })
+  );
+
+  // Aguarda as fontes (caso ainda estejam baixando)
+  if (typeof document !== 'undefined' && (document as any).fonts?.ready) {
+    try {
+      await (document as any).fonts.ready;
+    } catch {
+      /* sem problema */
+    }
+  }
+
+  // Double rAF garante que o browser pintou
+  await new Promise<void>(resolve =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+  );
+}
+
+/**
+ * Loga erro do Supabase mostrando TODOS os campos relevantes
+ * (Postgrest retorna message, code, details, hint).
+ */
+function logSupabaseError(context: string, error: any) {
+  console.group(`%c[${context}] ERRO Supabase`, 'color:#ef4444; font-weight:bold');
+  console.error('Mensagem :', error?.message ?? '(vazio)');
+  console.error('Código   :', error?.code ?? '(vazio)');
+  console.error('Detalhes :', error?.details ?? '(vazio)');
+  console.error('Dica     :', error?.hint ?? '(vazio)');
+  console.error('Status   :', error?.status ?? '(vazio)');
+  console.error('Objeto completo:', error);
+  console.groupEnd();
+}
+
+const SLOT_W_MOBILE  = 60;
+const SLOT_H_MOBILE  = 86;
+const SLOT_W_DESKTOP = 80;
+const SLOT_H_DESKTOP = 116;
+
+const POSICOES = ['TODOS', 'GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'ATA'] as const;
+type Posicao = typeof POSICOES[number];
+
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+const getRarityColors = (ovr: number) => {
+  if (ovr >= 84) return { border: '#fbbf24', glow: 'rgba(251,191,36,0.5)', bar: 'from-amber-400 to-yellow-300' };
+  if (ovr >= 78) return { border: '#fde68a', glow: 'rgba(253,230,138,0.4)', bar: 'from-yellow-200 to-amber-200' };
+  if (ovr >= 73) return { border: '#d4d4d8', glow: 'rgba(212,212,216,0.3)', bar: 'from-zinc-300 to-zinc-400' };
+  return                  { border: '#a16207', glow: 'rgba(161,98,7,0.3)',  bar: 'from-amber-700 to-yellow-800' };
+};
+
+// ============================================================================
+// ROBUST ESCUDO — fallback chain de 3 níveis
+// ============================================================================
+
+interface RobustEscudoProps {
+  src?: string | null;
+  fallbackSrc?: string;
+  alt: string;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+/**
+ * Componente de escudo com cadeia de fallback:
+ * 1. src original (com crossOrigin)
+ * 2. fallbackSrc (se fornecido)
+ * 3. FALLBACK_ESCUDO (SVG inline, nunca falha)
+ */
+function RobustEscudo({ src, fallbackSrc, alt, className, style }: RobustEscudoProps) {
+  const initial = src && src.length > 0 ? src : (fallbackSrc || FALLBACK_ESCUDO);
+  const [currentSrc, setCurrentSrc] = useState(initial);
+  const [tier, setTier] = useState(0); // 0=original, 1=fallback, 2=svg
+
+  useEffect(() => {
+    setCurrentSrc(src && src.length > 0 ? src : (fallbackSrc || FALLBACK_ESCUDO));
+    setTier(0);
+  }, [src, fallbackSrc]);
+
+  const handleError = () => {
+    if (tier === 0 && fallbackSrc && fallbackSrc !== currentSrc) {
+      setCurrentSrc(fallbackSrc);
+      setTier(1);
+    } else if (tier <= 1 && currentSrc !== FALLBACK_ESCUDO) {
+      setCurrentSrc(FALLBACK_ESCUDO);
+      setTier(2);
+    }
+  };
+
+  return (
+    <img
+      src={currentSrc}
+      alt={alt}
+      className={className}
+      style={style}
+      crossOrigin="anonymous"
+      onError={handleError}
+    />
+  );
+}
+
+// ============================================================================
+// PLAYERS DATA
+// ============================================================================
 
 const PLAYERS_DATA: Player[] = [
   // --- GOLEIROS ---
@@ -112,43 +252,9 @@ const formationConfigs: Record<string, Record<string, SlotCoord>> = {
   '5-3-2':   { gk:{x:50,y:85}, lb:{x:12,y:52}, cb1:{x:30,y:70}, cb2:{x:50,y:73}, cb3:{x:70,y:70}, rb:{x:88,y:52}, m1:{x:50,y:48}, m2:{x:30,y:40}, m3:{x:70,y:40}, st1:{x:42,y:18}, st2:{x:58,y:18} },
 };
 
-const SLOT_W_MOBILE  = 60;
-const SLOT_H_MOBILE  = 86;
-const SLOT_W_DESKTOP = 80;
-const SLOT_H_DESKTOP = 116;
-
-const POSICOES = ['TODOS', 'GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'ATA'] as const;
-type Posicao = typeof POSICOES[number];
-
-const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-
-const getRarityColors = (ovr: number) => {
-  if (ovr >= 84) return { border: '#fbbf24', glow: 'rgba(251,191,36,0.5)', bar: 'from-amber-400 to-yellow-300' };
-  if (ovr >= 78) return { border: '#fde68a', glow: 'rgba(253,230,138,0.4)', bar: 'from-yellow-200 to-amber-200' };
-  if (ovr >= 73) return { border: '#d4d4d8', glow: 'rgba(212,212,216,0.3)', bar: 'from-zinc-300 to-zinc-400' };
-  return                  { border: '#a16207', glow: 'rgba(161,98,7,0.3)',  bar: 'from-amber-700 to-yellow-800' };
-};
-
-// Espera todas as imagens dentro de um nó terminarem (ou darem erro/timeout)
-// Sem isso, html-to-image às vezes captura o card antes das imagens carregarem.
-async function waitForImages(root: HTMLElement, timeoutMs = 6000): Promise<void> {
-  const imgs = Array.from(root.querySelectorAll('img'));
-  await Promise.all(
-    imgs.map(img => {
-      if (img.complete && img.naturalHeight > 0) return Promise.resolve();
-      return new Promise<void>(resolve => {
-        const done = () => resolve();
-        img.addEventListener('load', done, { once: true });
-        img.addEventListener('error', done, { once: true });
-        setTimeout(done, timeoutMs);
-      });
-    })
-  );
-}
-
-// =============================================================================
+// ============================================================================
 // FUT CARD — usado no mercado
-// =============================================================================
+// ============================================================================
 interface FutCardProps {
   player: Player;
   escalado: boolean;
@@ -220,9 +326,9 @@ function FutCard({ player, escalado, pending, onClick, getValidPhotoUrl }: FutCa
   );
 }
 
-// =============================================================================
+// ============================================================================
 // SLOT NO CAMPO
-// =============================================================================
+// ============================================================================
 interface DraggableSlotProps {
   slotId: string;
   state: { player: Player | null; x: number; y: number };
@@ -360,14 +466,16 @@ function DraggableSlot({
   );
 }
 
-// =============================================================================
+// ============================================================================
 // COMPONENTE PRINCIPAL
-// =============================================================================
+// ============================================================================
 
 export default function EscalacaoFormacao({
   jogoId,
-  mandante = 'Avaí',
-  mandanteLogo = 'https://logodownload.org/wp-content/uploads/2017/02/avai-fc-logo-escudo.png',
+  mandante = 'Adversário',
+  mandanteLogo = '',
+  visitante = 'Novorizontino',
+  visitanteLogo = ESCUDO_DEFAULT,
   rodada,
 }: EscalacaoFormacaoProps) {
   const router = useRouter();
@@ -383,18 +491,16 @@ export default function EscalacaoFormacao({
   const [palpiteVisitante, setPalpiteVisitante] = useState(2);
   const [finalImageUri, setFinalImageUri]     = useState<string | null>(null);
   const [isGenerating, setIsGenerating]       = useState(false);
+  const [imageError, setImageError]           = useState<string | null>(null);
 
   const [userId, setUserId]         = useState<string | null>(null);
   const [userName, setUserName]     = useState<string>('TORCEDOR');
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const [hadSaved, setHadSaved]     = useState(false);
 
   const [isDesktop, setIsDesktop] = useState(false);
   const [posFiltro, setPosFiltro] = useState<Posicao>('TODOS');
-
-  // Fallback do escudo do mandante: se a URL externa quebrar, troca pro placeholder
-  const [mandanteLogoSrc, setMandanteLogoSrc] = useState(mandanteLogo);
-  useEffect(() => { setMandanteLogoSrc(mandanteLogo); }, [mandanteLogo]);
 
   const finalCardRef = useRef<HTMLDivElement>(null);
   const arenaRef     = useRef<HTMLDivElement>(null);
@@ -404,6 +510,13 @@ export default function EscalacaoFormacao({
     const filename = fotoPath.split('/').pop() || fotoPath;
     return `${BASE_STORAGE}${encodeURIComponent(filename)}`;
   }, []);
+
+  // Reset avatar fail flag when avatar changes
+  useEffect(() => { setAvatarFailed(false); }, [userAvatar]);
+
+  // ---------------------------------------------------------------------
+  // EFFECTS
+  // ---------------------------------------------------------------------
 
   useEffect(() => {
     const update = () => setIsDesktop(window.innerWidth >= 768);
@@ -460,6 +573,7 @@ export default function EscalacaoFormacao({
           .eq('user_id', user.id).eq('jogo_id', Number(jogoId)).maybeSingle();
         if (cancelled) return;
         if (error || !data) {
+          if (error) logSupabaseError('loadExisting', error);
           setSlotMap(buildEmptySlots('4-3-3'));
           setStep('formation');
           return;
@@ -502,6 +616,10 @@ export default function EscalacaoFormacao({
     loadExisting();
     return () => { cancelled = true; };
   }, [jogoId]);
+
+  // ---------------------------------------------------------------------
+  // HANDLERS
+  // ---------------------------------------------------------------------
 
   const handleChangeFormation = (novaFormacao: string) => {
     const coords = formationConfigs[novaFormacao];
@@ -564,22 +682,32 @@ export default function EscalacaoFormacao({
     return PLAYERS_DATA.filter(p => p.pos === posFiltro);
   }, [posFiltro]);
 
-  const handleSelectCaptain = (id: number) => { setCaptainId(id); setStep('hero');    };
-  const handleSelectHero    = (id: number) => { setHeroId(id);    setStep('palpite'); };
-
   const triggerCelebration = () => {
     confetti({ particleCount: 250, spread: 100, origin: { y: 0.6 } });
     confetti({ particleCount: 180, angle: 60,  spread: 80, origin: { x: 0.1 } });
     confetti({ particleCount: 180, angle: 120, spread: 80, origin: { x: 0.9 } });
   };
 
-  const saveEscalacao = async (): Promise<{ ok: boolean; reason?: string }> => {
+  // ---------------------------------------------------------------------
+  // SAVE — com sanitização e log detalhado
+  // ---------------------------------------------------------------------
+
+  const saveEscalacao = async (): Promise<{ ok: boolean; reason?: string; error?: any }> => {
     if (!userId)  return { ok: false, reason: 'sem-login' };
     if (!jogoId)  return { ok: false, reason: 'sem-jogo'  };
+
+    // Sanitização: garante numbers finitos e arredondados
     const slots: Record<string, { id: number; x: number; y: number } | null> = {};
     Object.entries(slotMap).forEach(([slotId, state]) => {
-      slots[slotId] = state.player ? { id: state.player.id, x: state.x, y: state.y } : null;
+      if (state.player) {
+        const x = isFinite(state.x) ? Math.round(state.x * 100) / 100 : 50;
+        const y = isFinite(state.y) ? Math.round(state.y * 100) / 100 : 50;
+        slots[slotId] = { id: state.player.id, x, y };
+      } else {
+        slots[slotId] = null;
+      }
     });
+
     const payload = {
       user_id: userId,
       jogo_id: Number(jogoId),
@@ -587,70 +715,153 @@ export default function EscalacaoFormacao({
       slots,
       capitao_id: captainId,
       heroi_id: heroId,
-      palpite_mandante: palpiteMandante,
-      palpite_visitante: palpiteVisitante,
+      palpite_mandante: Math.max(0, Math.floor(Number(palpiteMandante) || 0)),
+      palpite_visitante: Math.max(0, Math.floor(Number(palpiteVisitante) || 0)),
       updated_at: new Date().toISOString(),
     };
-    const { error } = await supabase.from(TABLE).upsert(payload, { onConflict: 'user_id,jogo_id' });
-    if (error) {
-      console.error('[saveEscalacao] erro:', error);
-      return { ok: false, reason: error.message };
+
+    console.log('[saveEscalacao] Enviando payload pro Supabase:', payload);
+
+    try {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .upsert(payload, { onConflict: 'user_id,jogo_id' })
+        .select()
+        .maybeSingle();
+
+      if (error) {
+        logSupabaseError('saveEscalacao', error);
+        // Pistas comuns de 400 no Supabase
+        if (error.code === '23502') {
+          console.error('[saveEscalacao] HINT: campo NOT NULL faltando. Veja "details" acima.');
+        } else if (error.code === '23503') {
+          console.error('[saveEscalacao] HINT: violação de foreign key (user_id ou jogo_id não existem na tabela referenciada).');
+        } else if (error.code === '23505') {
+          console.error('[saveEscalacao] HINT: violação de unique constraint. onConflict pode estar errado.');
+        } else if (error.code === '42703') {
+          console.error('[saveEscalacao] HINT: coluna inexistente no payload. Veja qual coluna a "details" cita.');
+        } else if (error.code === '42501') {
+          console.error('[saveEscalacao] HINT: RLS bloqueando. Confira políticas do Supabase pra essa tabela.');
+        } else if (error.code === 'PGRST204') {
+          console.error('[saveEscalacao] HINT: schema cache desatualizado. Pode ser coluna nova/removida.');
+        }
+        return { ok: false, reason: error.message, error };
+      }
+
+      console.log('[saveEscalacao] Sucesso. Linha salva:', data);
+      setHadSaved(true);
+      return { ok: true };
+    } catch (e: any) {
+      console.error('[saveEscalacao] Exceção JS:', e);
+      return { ok: false, reason: e?.message || 'exception', error: e };
     }
-    setHadSaved(true);
-    return { ok: true };
   };
 
-  // Captura o card como PNG. Usa waitForImages pra garantir que tudo carregou.
+  // ---------------------------------------------------------------------
+  // CAPTURA DE IMAGEM — 3 retries + fallback JPEG
+  // ---------------------------------------------------------------------
+
   const captureCardAsPng = useCallback(async (): Promise<string | null> => {
-    if (!finalCardRef.current) return null;
-    try {
-      await waitForImages(finalCardRef.current);
-      // Pequeno delay extra pra garantir que estilos aplicaram
-      await new Promise(r => setTimeout(r, 80));
-      const dataUrl = await htmlToImage.toPng(finalCardRef.current, {
-        cacheBust: true,
-        quality: 0.98,
-        pixelRatio: 3,
-        backgroundColor: '#0a0a0a',
-      });
-      return dataUrl;
-    } catch (e) {
-      console.error('[captureCardAsPng] erro:', e);
+    if (!finalCardRef.current) {
+      console.error('[captureCardAsPng] finalCardRef vazio (componente ainda não renderizou)');
       return null;
     }
+    const node = finalCardRef.current;
+
+    // Pré-condição: imagens carregadas, fontes prontas, layout pintado
+    await waitForImages(node);
+
+    // 3 tentativas de PNG com delay crescente
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        console.log(`[captureCardAsPng] tentativa ${attempt}/3 (PNG)...`);
+        await new Promise(r => setTimeout(r, 200 * attempt));
+
+        const dataUrl = await htmlToImage.toPng(node, {
+          cacheBust: true,
+          pixelRatio: 3,
+          backgroundColor: '#0a0a0a',
+          skipFonts: false,
+          imagePlaceholder: FALLBACK_ESCUDO,
+        });
+
+        if (dataUrl && dataUrl.length > 5000) {
+          console.log(`[captureCardAsPng] PNG OK (${dataUrl.length} chars)`);
+          return dataUrl;
+        }
+        console.warn(`[captureCardAsPng] tentativa ${attempt} retornou data URL muito curto:`, dataUrl?.slice(0, 100));
+      } catch (e) {
+        console.error(`[captureCardAsPng] tentativa ${attempt} (PNG) falhou:`, e);
+      }
+    }
+
+    // Fallback final: JPEG com pixelRatio menor
+    try {
+      console.log('[captureCardAsPng] Fallback: tentando JPEG...');
+      await new Promise(r => setTimeout(r, 400));
+      const dataUrl = await htmlToImage.toJpeg(node, {
+        cacheBust: true,
+        quality: 0.95,
+        pixelRatio: 2,
+        backgroundColor: '#0a0a0a',
+        imagePlaceholder: FALLBACK_ESCUDO,
+      });
+      if (dataUrl && dataUrl.length > 5000) {
+        console.log(`[captureCardAsPng] JPEG OK (${dataUrl.length} chars)`);
+        return dataUrl;
+      }
+    } catch (e) {
+      console.error('[captureCardAsPng] JPEG fallback também falhou:', e);
+    }
+
+    return null;
   }, []);
 
-  // Garante que finalImageUri existe. Se já tem, retorna.
-  // Se não tem, tenta gerar agora. Usado pelos botões pra que nunca fiquem sem imagem.
+  /**
+   * Garante que finalImageUri existe.
+   * Se não tem, tenta gerar agora. Usado pelos botões pra que sempre funcionem.
+   */
   const ensureFinalImage = useCallback(async (): Promise<string | null> => {
     if (finalImageUri) return finalImageUri;
     setIsGenerating(true);
-    const uri = await captureCardAsPng();
-    setIsGenerating(false);
-    if (uri) setFinalImageUri(uri);
-    return uri;
-  }, [finalImageUri, captureCardAsPng]);
-
-  const generateFinalImage = async () => {
-    setStep('saving');
-    const saveRes = await saveEscalacao();
-    if (!saveRes.ok && saveRes.reason === 'sem-login') {
-      alert('Você precisa estar logado pra salvar sua escalação no ranking. Mas vou gerar a arte do mesmo jeito!');
-    } else if (!saveRes.ok) {
-      console.warn('Erro salvando:', saveRes.reason);
-    }
-    // Vai pro 'final' antes de capturar pra garantir que o card existe no DOM
-    setStep('final');
-    setIsGenerating(true);
-    // Espera o React renderizar o card
-    await new Promise(r => setTimeout(r, 400));
+    setImageError(null);
     const uri = await captureCardAsPng();
     setIsGenerating(false);
     if (uri) {
       setFinalImageUri(uri);
+      return uri;
+    }
+    setImageError('Não foi possível gerar a imagem agora.');
+    return null;
+  }, [finalImageUri, captureCardAsPng]);
+
+  const generateFinalImage = async () => {
+    setStep('saving');
+    setImageError(null);
+
+    const saveRes = await saveEscalacao();
+    if (!saveRes.ok && saveRes.reason === 'sem-login') {
+      alert('Você precisa estar logado pra salvar sua escalação no ranking. Mas vou gerar a arte do mesmo jeito!');
+    } else if (!saveRes.ok) {
+      console.warn('[generateFinalImage] Salvar falhou, mas seguindo com a imagem.');
+    }
+
+    // Vai pro 'final' antes de capturar pra garantir que o card existe no DOM
+    setStep('final');
+    setIsGenerating(true);
+
+    // Espera o React renderizar o card
+    await new Promise(r => setTimeout(r, 500));
+
+    const uri = await captureCardAsPng();
+    setIsGenerating(false);
+
+    if (uri) {
+      setFinalImageUri(uri);
       setTimeout(() => triggerCelebration(), 200);
     } else {
-      // Mesmo sem imagem, deixa o user no card. Os botões vão tentar gerar de novo.
+      setImageError('Falha ao gerar a imagem. Toca no botão de baixar pra tentar de novo.');
+      // Mesmo sem imagem, deixa no 'final' — botões vão tentar de novo on-demand
       setTimeout(() => triggerCelebration(), 200);
     }
   };
@@ -658,16 +869,23 @@ export default function EscalacaoFormacao({
   const verEscalacaoSalva = async () => {
     setStep('saving');
     setIsGenerating(true);
+    setImageError(null);
     await new Promise(r => setTimeout(r, 250));
     setStep('final');
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 500));
     const uri = await captureCardAsPng();
     setIsGenerating(false);
     if (uri) {
       setFinalImageUri(uri);
       triggerCelebration();
+    } else {
+      setImageError('Falha ao gerar a imagem.');
     }
   };
+
+  // ---------------------------------------------------------------------
+  // SHARE
+  // ---------------------------------------------------------------------
 
   const buildShareText = () => {
     const cap  = selectedPlayers.find(p => p.id === captainId)?.short ?? '—';
@@ -675,7 +893,7 @@ export default function EscalacaoFormacao({
     return (
 `🐯 ARENA TIGRE FC
 
-Acabei de escalar meu Tigrão pro ${mandante} × Novorizontino!
+Acabei de escalar meu Tigrão pro ${mandante} × ${visitante}!
 🛡️ Formação: ${formation}
 ⭐ OVR do time: ${teamOvr}
 👑 Capitão: ${cap}
@@ -689,23 +907,28 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
     );
   };
 
-  const downloadImage = async () => {
-    const uri = await ensureFinalImage();
-    if (!uri) {
-      alert('Não foi possível gerar a imagem. Tenta recarregar a página.');
-      return;
-    }
+  const downloadFromUri = (uri: string) => {
     const a = document.createElement('a');
     a.download = `escalacao-tigre-fc-${formation}.png`;
     a.href = uri;
     a.click();
   };
 
+  const downloadImage = async () => {
+    const uri = await ensureFinalImage();
+    if (!uri) {
+      alert('Não foi possível gerar a imagem. Tenta recarregar a página e voltar pro card.');
+      return;
+    }
+    downloadFromUri(uri);
+  };
+
   const shareNative = async () => {
     const text = buildShareText();
     const uri = await ensureFinalImage();
+
     if (!uri) {
-      // Sem imagem? Compartilha texto puro mesmo assim
+      // Sem imagem: compartilha texto puro
       try {
         if (typeof navigator !== 'undefined' && (navigator as any).share) {
           await (navigator as any).share({ title: 'Minha escalação - Arena Tigre FC', text });
@@ -715,6 +938,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
       return;
     }
+
     try {
       const blob = await (await fetch(uri)).blob();
       const file = new File([blob], `escalacao-tigre-fc-${formation}.png`, { type: 'image/png' });
@@ -723,19 +947,13 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
         return;
       }
       // Fallback: baixa + abre WhatsApp
-      const a = document.createElement('a');
-      a.download = `escalacao-tigre-fc-${formation}.png`;
-      a.href = uri;
-      a.click();
+      downloadFromUri(uri);
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     } catch (e) {
       const err = e as Error;
       if (err.name !== 'AbortError') {
         console.error('[shareNative] erro:', e);
-        const a = document.createElement('a');
-        a.download = `escalacao-tigre-fc-${formation}.png`;
-        a.href = uri;
-        a.click();
+        downloadFromUri(uri);
       }
     }
   };
@@ -743,6 +961,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
   const shareWhatsApp = async () => {
     const text = buildShareText();
     const uri = await ensureFinalImage();
+
     if (uri && typeof navigator !== 'undefined' && (navigator as any).canShare) {
       try {
         const blob = await (await fetch(uri)).blob();
@@ -757,17 +976,13 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
         console.error(e);
       }
     }
-    if (uri) {
-      const a = document.createElement('a');
-      a.download = `escalacao-tigre-fc-${formation}.png`;
-      a.href = uri;
-      a.click();
-    }
+    if (uri) downloadFromUri(uri);
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const shareInstagram = async () => {
     const uri = await ensureFinalImage();
+
     if (uri && typeof navigator !== 'undefined' && (navigator as any).canShare) {
       try {
         const blob = await (await fetch(uri)).blob();
@@ -783,10 +998,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
       }
     }
     if (uri) {
-      const a = document.createElement('a');
-      a.download = `escalacao-tigre-fc-${formation}.png`;
-      a.href = uri;
-      a.click();
+      downloadFromUri(uri);
       alert('📸 Imagem salva! Abre o Instagram, vai em Stories e adiciona a imagem que acabou de baixar. Cola o link nos stickers!');
     } else {
       alert('Não foi possível gerar a imagem agora. Tenta recarregar a página.');
@@ -794,11 +1006,15 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
   };
 
   const shareX = () => {
-    const text = `🐯 Minha escalação pro ${mandante} × Novorizontino (${formation}) — OVR ${teamOvr} — Palpite ${palpiteMandante}×${palpiteVisitante} 🔥\nDuvido você fazer melhor! ${SHARE_BASE_URL}/${jogoId ?? ''}`;
+    const text = `🐯 Minha escalação pro ${mandante} × ${visitante} (${formation}) — OVR ${teamOvr} — Palpite ${palpiteMandante}×${palpiteVisitante} 🔥\nDuvido você fazer melhor! ${SHARE_BASE_URL}/${jogoId ?? ''}`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const finalizarEVoltar = () => router.push('/tigre-fc');
+
+  // ---------------------------------------------------------------------
+  // RENDER
+  // ---------------------------------------------------------------------
 
   return (
     <div className="fixed inset-0 bg-black text-white font-sans antialiased overflow-hidden flex flex-col select-none">
@@ -1203,17 +1419,20 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
             className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950 overflow-auto">
             <div className="text-cyan-400 text-xs font-black tracking-[6px] mb-2">ETAPA 5 DE 5</div>
             <h1 className="text-4xl font-black mb-3">SEU PALPITE</h1>
-            <p className="text-zinc-400 mb-12 text-sm">{mandante} × Novorizontino • Série B 2026</p>
+            <p className="text-zinc-400 mb-12 text-sm">{mandante} × {visitante} • Série B 2026</p>
+
             <div className="flex items-center gap-6 sm:gap-10 flex-wrap justify-center">
+              {/* MANDANTE */}
               <div className="flex flex-col items-center">
-                <img src={mandanteLogoSrc} alt={mandante}
+                <RobustEscudo
+                  src={mandanteLogo}
+                  fallbackSrc={FALLBACK_ESCUDO}
+                  alt={mandante}
                   className="w-20 h-20 sm:w-24 sm:h-24 mb-3 object-contain"
-                  onError={(e) => {
-                    const t = e.currentTarget as HTMLImageElement;
-                    if (t.src !== FALLBACK_ESCUDO) t.src = FALLBACK_ESCUDO;
-                  }} />
-                <div className="text-lg sm:text-2xl font-black">{mandante}</div>
+                />
+                <div className="text-lg sm:text-2xl font-black text-center max-w-[140px] truncate">{mandante}</div>
               </div>
+
               <div className="flex gap-4 sm:gap-6 items-center">
                 <input type="number" min={0} value={palpiteMandante}
                   onChange={e => setPalpiteMandante(Math.max(0, parseInt(e.target.value) || 0))}
@@ -1223,11 +1442,19 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                   onChange={e => setPalpiteVisitante(Math.max(0, parseInt(e.target.value) || 0))}
                   className="w-20 sm:w-24 bg-zinc-900 text-center rounded-2xl border-2 border-yellow-500 focus:border-yellow-400 text-5xl sm:text-6xl font-black outline-none py-3" />
               </div>
+
+              {/* VISITANTE */}
               <div className="flex flex-col items-center">
-                <img src={ESCUDO_DEFAULT} alt="Novorizontino" className="w-20 h-20 sm:w-24 sm:h-24 mb-3 object-contain" />
-                <div className="text-lg sm:text-2xl font-black">Novorizontino</div>
+                <RobustEscudo
+                  src={visitanteLogo}
+                  fallbackSrc={ESCUDO_DEFAULT}
+                  alt={visitante}
+                  className="w-20 h-20 sm:w-24 sm:h-24 mb-3 object-contain"
+                />
+                <div className="text-lg sm:text-2xl font-black text-center max-w-[140px] truncate">{visitante}</div>
               </div>
             </div>
+
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               onClick={generateFinalImage} disabled={isGenerating}
               className="mt-12 px-12 sm:px-20 py-6 sm:py-7 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black text-lg sm:text-2xl rounded-3xl shadow-[0_0_50px_#fbbf24] disabled:opacity-60 tracking-wider">
@@ -1271,7 +1498,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                   boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(245,196,0,0.2)',
                 }}>
 
-                {/* BG: estádio — AGORA COM crossOrigin pra não bloquear o html-to-image */}
+                {/* BG: estádio com crossOrigin */}
                 <img src={STADIUM_BG} alt=""
                   crossOrigin="anonymous"
                   className="absolute inset-0 w-full h-full object-cover"
@@ -1295,14 +1522,14 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 <div className="absolute top-0 left-0 right-0 px-5 pt-5 z-20">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2.5">
-                      {userAvatar && (
+                      {userAvatar && !avatarFailed && (
                         <img src={userAvatar} alt={userName} crossOrigin="anonymous"
                           className="w-10 h-10 rounded-full object-cover"
                           style={{
                             border: '2px solid #F5C400',
                             boxShadow: '0 0 12px rgba(245,196,0,0.5)',
                           }}
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                          onError={() => setAvatarFailed(true)} />
                       )}
                       <div className="leading-none">
                         <div className="text-[9px] font-black tracking-[3px] text-[#F5C400]">⚡ TIGRE FC</div>
@@ -1405,16 +1632,16 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                     background: 'linear-gradient(90deg, transparent, rgba(245,196,0,0.4), transparent)',
                   }} />
 
-                {/* Placar */}
+                {/* PLACAR — agora com RobustEscudo nos DOIS lados */}
                 <div className="absolute left-0 right-0 z-20" style={{ top: '77%' }}>
                   <div className="flex items-center justify-center gap-4">
-                    <img src={mandanteLogoSrc} alt="" className="w-10 h-10 object-contain"
-                      crossOrigin="anonymous"
+                    <RobustEscudo
+                      src={mandanteLogo}
+                      fallbackSrc={FALLBACK_ESCUDO}
+                      alt={mandante}
+                      className="w-10 h-10 object-contain"
                       style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
-                      onError={(e) => {
-                        const t = e.currentTarget as HTMLImageElement;
-                        if (t.src !== FALLBACK_ESCUDO) t.src = FALLBACK_ESCUDO;
-                      }} />
+                    />
 
                     <div className="text-4xl font-black italic tabular-nums leading-none"
                       style={{
@@ -1426,9 +1653,13 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                       {palpiteVisitante}
                     </div>
 
-                    <img src={ESCUDO_DEFAULT} alt="" className="w-10 h-10 object-contain"
-                      crossOrigin="anonymous"
-                      style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }} />
+                    <RobustEscudo
+                      src={visitanteLogo}
+                      fallbackSrc={ESCUDO_DEFAULT}
+                      alt={visitante}
+                      className="w-10 h-10 object-contain"
+                      style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
+                    />
                   </div>
                   <div className="text-center text-[8px] tracking-[5px] font-black text-white/40 mt-1.5">
                     SEU PALPITE
@@ -1461,7 +1692,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 </div>
               </div>
 
-              {/* BOTÃO SALVAR — agora gera on-demand se ainda não tiver imagem */}
+              {/* Botão de download circular */}
               <motion.button
                 whileTap={{ scale: 0.92 }}
                 onClick={downloadImage}
@@ -1493,7 +1724,16 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
               </motion.button>
             </div>
 
-            {/* AÇÕES SECUNDÁRIAS — agora SEM disabled em finalImageUri */}
+            {/* Aviso de erro de imagem (se houver) */}
+            {imageError && !isGenerating && (
+              <div className="mt-4 w-full max-w-[380px] px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
+                <p className="text-red-300 text-[11px] text-center font-bold">
+                  ⚠️ {imageError} Toca em qualquer botão de compartilhar pra tentar de novo.
+                </p>
+              </div>
+            )}
+
+            {/* AÇÕES */}
             <div className="mt-6 w-full max-w-[380px] space-y-3 px-2">
               <motion.button whileTap={{ scale: 0.97 }} onClick={shareNative} disabled={isGenerating}
                 className="w-full py-4 font-black rounded-2xl text-sm tracking-[3px] uppercase disabled:opacity-50"
