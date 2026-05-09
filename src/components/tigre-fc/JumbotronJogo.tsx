@@ -101,12 +101,20 @@ const normalizarCompeticao = (raw?: string | null): string => {
 // ════════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ════════════════════════════════════════════════════════════════════════════
+export type Time = {
+  nome?: string | null;
+  escudo_url?: string | null;
+  sigla?: string | null;
+};
+
 export type Jogo = {
   id?: number | null;
   rodada?: number | string | null;
   competicao?: string | null;
   mandante_slug?: string | null;
   visitante_slug?: string | null;
+  mandante?: Time | null;
+  visitante?: Time | null;
   placar_mandante?: number | null;
   placar_visitante?: number | null;
   finalizado?: boolean | null;
@@ -198,11 +206,15 @@ export default function JumbotronJogo({
   // ─── SEM OVERRIDE DE COMPETIÇÃO — usa o que vem do banco ───
   const competicaoDisplay = normalizarCompeticao(competicaoBruta);
 
-  // ─── ESCUDO DO AVAÍ: continua usando a versão oficial mesmo se vier outra URL ───
-  const mandanteLogo  = mandanteSlug === 'avai' ? ESCUDO_AVAI_OFICIAL : slugToLogo(mandanteSlug);
-  const visitanteLogo = visitanteSlug === 'avai' ? ESCUDO_AVAI_OFICIAL : slugToLogo(visitanteSlug);
-  const mandanteNome  = slugToNome(mandanteSlug);
-  const visitanteNome = slugToNome(visitanteSlug);
+  // ─── ESCUDO: prioriza escudo_url do banco, fallback para mapa local ───
+  const mandanteLogo  = (safeJogo.mandante?.escudo_url && safeJogo.mandante.escudo_url !== '')
+    ? safeJogo.mandante.escudo_url
+    : (mandanteSlug === 'avai' ? ESCUDO_AVAI_OFICIAL : slugToLogo(mandanteSlug));
+  const visitanteLogo = (safeJogo.visitante?.escudo_url && safeJogo.visitante.escudo_url !== '')
+    ? safeJogo.visitante.escudo_url
+    : (visitanteSlug === 'avai' ? ESCUDO_AVAI_OFICIAL : slugToLogo(visitanteSlug));
+  const mandanteNome  = safeJogo.mandante?.nome  || slugToNome(mandanteSlug);
+  const visitanteNome = safeJogo.visitante?.nome || slugToNome(visitanteSlug);
 
   const effectiveCapitao = capitaoNome ?? stats?.capitao?.nome ?? null;
   const effectiveHeroi   = heroiNome   ?? stats?.heroi?.nome   ?? null;
