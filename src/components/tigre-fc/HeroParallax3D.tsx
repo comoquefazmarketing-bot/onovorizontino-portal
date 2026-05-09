@@ -15,7 +15,7 @@
  */
 
 import { useRef, useCallback } from 'react';
-import dynamic from 'next/dynamic';
+import StadiumScene from './effects/StadiumScene';
 import {
   motion,
   useMotionValue,
@@ -23,11 +23,6 @@ import {
   useTransform,
   useScroll,
 } from 'framer-motion';
-
-const StadiumScene = dynamic(
-  () => import('./effects/StadiumScene'),
-  { ssr: false, loading: () => null }
-);
 
 const GOLD     = '#F5C400';
 const CYAN     = '#00F3FF';
