@@ -39,7 +39,6 @@ export default function GlobalAdBanner() {
     return () => clearInterval(timer);
   }, []);
 
-  // Força play no vídeo ativo
   useEffect(() => {
     const key = `${slot}-${isMobile ? 'mobile' : 'desktop'}`;
     const video = videoRefs.current[key];
@@ -75,7 +74,7 @@ export default function GlobalAdBanner() {
             const src = isMobile ? data.mobileSrc : data.desktopSrc;
             const key = `${s}-${isMobile ? 'mobile' : 'desktop'}`;
             return (
-              
+              <a 
                 key={s}
                 href={data.href}
                 target="_blank"
@@ -102,7 +101,7 @@ export default function GlobalAdBanner() {
           })}
 
           {/* ── CTA Anuncie ── */}
-          
+          <a
             href="https://wa.me/5517988031679?text=Olá Felipe, vi o Portal O Novorizontino e quero anunciar para os torcedores do Tigre!"
             target="_blank"
             rel="noopener noreferrer"
