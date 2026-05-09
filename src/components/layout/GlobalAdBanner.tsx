@@ -1,143 +1,157 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-const VIDEOS = [
-  {
-    src: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/sign/imagens-portal/Encontre%20o%20lugar%20ideal%20(1280%20x%20100%20px)%20(1).mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83YWRmNjZiNC02ZTNlLTRmYjQtOTk0ZC05YzFkYjNiYTQ0YzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZW5zLXBvcnRhbC9FbmNvbnRyZSBvIGx1Z2FyIGlkZWFsICgxMjgwIHggMTAwIHB4KSAoMSkubXA0IiwiaWF0IjoxNzc0NjM2MzE2LCJleHAiOjE4MDYxNzIzMTZ9.-6sjQURNz8kHVAaFg0CW6Ti0jltdiWF48v4bcVkGOMg",
-    href: "https://www.borala.app.br/",
-  },
-  {
-    src: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/sign/imagens-portal/Encontre%20o%20lugar%20ideal%20(1280%20x%20100%20px).mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83YWRmNjZiNC02ZTNlLTRmYjQtOTk0ZC05YzFkYjNiYTQ0YzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZW5zLXBvcnRhbC9FbmNvbnRyZSBvIGx1Z2FyIGlkZWFsICgxMjgwIHggMTAwIHB4KS5tcDQiLCJpYXQiOjE3NzQ2MzYzMjcsImV4cCI6MTgwNjE3MjMyN30.GN2Uyw4zYVzJq0Bd5uNF3X19ljiqp80-WltP-X27q5U",
-    href: "https://www.borala.app.br/",
-  },
-  {
-    src: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR.mp4",
-    href: "https://wa.me/5516996496957?text=Ol%C3%A1%20vi%20seu%20an%C3%BAncio%20no%20portal%20O%20Novorizontino%2C%20quero%20saber%20mas!",
-  },
-];
+const BORALA_MOBILE  = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/BORALA%20MOBILE%20(320%20x%20100%20px).mp4";
+const BORALA_MOBILE2 = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/BORALA%20MOBILE%202%20(320%20x%20100%20px).mp4";
+const BORALA_DESKTOP = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/BORALA%20DESKTOP%20(1280%20x%20100%20px).mp4";
+const BORALA_DESKTOP2= "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/BORALA%20DESKTOP%202%20(1280%20x%20100%20px).mp4";
+const JG_MOBILE      = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JG%20MOBILE%20(320%20x%20100%20px)%20(1).mp4";
+const JG_DESKTOP     = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JG%20SNEAKERS(1280%20x%20100%20px).mp4";
+const JG_WA          = `https://wa.me/5517992659293?text=${encodeURIComponent('Oi! Vi o anúncio da JG Sneakers no Portal O Novorizontino e quero saber mais! 🐯👟')}`;
+const ELITECAR_SRC   = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR.mp4";
+const ELITECAR_WA    = `https://wa.me/5516996496957?text=${encodeURIComponent('Olá vi seu anúncio no portal O Novorizontino, quero saber mas!')}`;
 
-// Sequência: video0 → video1 → video2 → CTA → video0 → ...
-// Cada slot dura 8s, CTA dura 15s
-const SEQUENCE = [0, 1, 2, 'cta'] as const;
-type Slot = 0 | 1 | 2 | 'cta';
-const DURATIONS: Record<string, number> = { '0': 8000, '1': 8000, '2': 8000, 'cta': 15000 };
+type Slot = 'borala' | 'borala2' | 'jg' | 'elitecar' | 'cta';
+const SEQUENCE: Slot[] = ['borala', 'borala2', 'jg', 'elitecar', 'cta'];
+const DURATION = 10000;
 
 export default function GlobalAdBanner() {
-  const [slot, setSlot] = useState<Slot>(0);
+  const [slot, setSlot] = useState<Slot>('borala');
+  const [isMobile, setIsMobile] = useState(false);
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
-    const advance = (current: Slot) => {
-      const idx = SEQUENCE.indexOf(current);
-      const next = SEQUENCE[(idx + 1) % SEQUENCE.length];
-      const timer = setTimeout(() => {
-        setSlot(next);
-        advance(next);
-      }, DURATIONS[String(current)]);
-      return timer;
-    };
-    const timer = advance(slot);
-    return () => clearTimeout(timer);
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  return (
-    <div className="w-full bg-black border-b border-zinc-900">
-      <div className="max-w-7xl mx-auto px-4 py-2">
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSlot(prev => {
+        const idx = SEQUENCE.indexOf(prev);
+        return SEQUENCE[(idx + 1) % SEQUENCE.length];
+      });
+    }, DURATION);
+    return () => clearInterval(timer);
+  }, []);
 
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600 text-center mb-1">
+  // Força play no vídeo ativo
+  useEffect(() => {
+    const key = `${slot}-${isMobile ? 'mobile' : 'desktop'}`;
+    const video = videoRefs.current[key];
+    if (video) {
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }
+  }, [slot, isMobile]);
+
+  const height = isMobile ? 160 : 100;
+
+  const slotData: Record<Slot, { href: string; mobileSrc: string; desktopSrc: string } | null> = {
+    borala:   { href: 'https://www.borala.app.br/', mobileSrc: BORALA_MOBILE,  desktopSrc: BORALA_DESKTOP  },
+    borala2:  { href: 'https://www.borala.app.br/', mobileSrc: BORALA_MOBILE2, desktopSrc: BORALA_DESKTOP2 },
+    jg:       { href: JG_WA,                        mobileSrc: JG_MOBILE,      desktopSrc: JG_DESKTOP      },
+    elitecar: { href: ELITECAR_WA,                  mobileSrc: ELITECAR_SRC,   desktopSrc: ELITECAR_SRC    },
+    cta:      null,
+  };
+
+  return (
+    <div style={{ width: '100%', background: '#000', borderBottom: '1px solid #18181b' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '8px 16px' }}>
+
+        <p style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3em', color: '#3f3f46', textAlign: 'center', marginBottom: 4 }}>
           PUBLICIDADE
         </p>
 
-        <div className="relative w-full overflow-hidden rounded-sm" style={{ height: '100px' }}>
+        <div style={{ position: 'relative', width: '100%', overflow: 'hidden', borderRadius: 4, height }}>
 
-          {/* ── VÍDEO 1 — BoraLá ── */}
-          {VIDEOS.map((video, i) => (
-            <a
-              key={i}
-              href={video.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute inset-0 group cursor-pointer transition-opacity duration-700"
-              style={{
-                opacity: slot === i ? 1 : 0,
-                pointerEvents: slot === i ? 'auto' : 'none',
-              }}
-            >
-              <video
-                src={video.src}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
-            </a>
-          ))}
+          {/* ── Slots de vídeo ── */}
+          {(Object.keys(slotData) as Slot[]).filter(s => slotData[s] !== null).map(s => {
+            const data = slotData[s]!;
+            const src = isMobile ? data.mobileSrc : data.desktopSrc;
+            const key = `${s}-${isMobile ? 'mobile' : 'desktop'}`;
+            return (
+              <a
+                key={s}
+                href={data.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  position: 'absolute', inset: 0,
+                  opacity: slot === s ? 1 : 0,
+                  pointerEvents: slot === s ? 'auto' : 'none',
+                  transition: 'opacity 0.7s ease',
+                  display: 'block',
+                }}
+              >
+                <video
+                  ref={el => { videoRefs.current[key] = el; }}
+                  src={src}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              </a>
+            );
+          })}
 
-          {/* ── CTA CRIATIVO ── */}
+          {/* ── CTA Anuncie ── */}
           <a
             href="https://wa.me/5517988031679?text=Olá Felipe, vi o Portal O Novorizontino e quero anunciar para os torcedores do Tigre!"
             target="_blank"
             rel="noopener noreferrer"
-            className="absolute inset-0 cursor-pointer group transition-opacity duration-700 overflow-hidden"
             style={{
+              position: 'absolute', inset: 0,
               opacity: slot === 'cta' ? 1 : 0,
               pointerEvents: slot === 'cta' ? 'auto' : 'none',
-              background: 'linear-gradient(135deg, #0a0a0a 0%, #111 40%, #1a1400 100%)',
+              transition: 'opacity 0.7s ease',
+              background: 'linear-gradient(135deg,#0a0a0a 0%,#111 40%,#1a1400 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0 32px',
+              overflow: 'hidden',
             }}
           >
-            {/* Efeito de brilho animado */}
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                background: 'repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(245,196,0,0.15) 40px, rgba(245,196,0,0.15) 41px)',
-              }}
-            />
-
-            {/* Conteúdo */}
-            <div className="relative z-10 flex items-center justify-between h-full px-8 md:px-16">
-
-              {/* Esquerda — texto */}
-              <div className="flex items-center gap-5">
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-yellow-500 text-2xl">🟡</span>
-                  <span className="text-black text-2xl">⚫</span>
-                </div>
-                <div>
-                  <p
-                    className="font-black italic uppercase leading-none text-white"
-                    style={{ fontSize: 'clamp(1rem, 2.5vw, 1.6rem)', letterSpacing: '-0.02em' }}
-                  >
-                    SUA MARCA NO{' '}
-                    <span className="text-yellow-500">CORAÇÃO DO TIGRE</span>
-                  </p>
-                  <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.25em] mt-1">
-                    Alcance milhares de torcedores apaixonados de Novo Horizonte
-                  </p>
-                </div>
+            <div style={{ position: 'absolute', inset: 0, opacity: 0.2, background: 'repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(245,196,0,0.15) 40px,rgba(245,196,0,0.15) 41px)' }} />
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <span style={{ fontSize: 18 }}>🟡</span>
+                <span style={{ fontSize: 18 }}>⚫</span>
               </div>
-
-              {/* Direita — CTA */}
-              <div className="hidden md:flex items-center gap-4 flex-shrink-0">
-                <div className="text-right">
-                  <p className="text-zinc-500 text-[9px] uppercase tracking-widest">Departamento Comercial</p>
-                  <p className="text-white font-black text-sm uppercase tracking-widest">Felipe Makarios</p>
-                  <p className="text-yellow-500 text-[10px] font-bold">(17) 98803-1679</p>
-                </div>
-                <div className="bg-yellow-500 group-hover:bg-white transition-all duration-300 px-6 py-3 flex items-center gap-2">
-                  <span className="text-black font-black text-[10px] uppercase tracking-widest whitespace-nowrap">
-                    QUERO ANUNCIAR
-                  </span>
-                  <span className="text-black font-black transition-transform group-hover:translate-x-1 duration-300">→</span>
-                </div>
+              <div>
+                <p style={{ fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', color: '#fff', fontSize: 'clamp(0.9rem,2.5vw,1.5rem)', letterSpacing: '-0.02em', lineHeight: 1, margin: 0 }}>
+                  SUA MARCA NO <span style={{ color: '#F5C400' }}>CORAÇÃO DO TIGRE</span>
+                </p>
+                <p style={{ color: '#71717a', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: 4 }}>
+                  Alcance milhares de torcedores de Novo Horizonte
+                </p>
               </div>
-
             </div>
-
-            {/* Borda amarela lateral */}
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500" />
-            <div className="absolute right-0 top-0 bottom-0 w-1 bg-yellow-500" />
+            {!isMobile && (
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ color: '#52525b', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Comercial</p>
+                  <p style={{ color: '#fff', fontWeight: 900, fontSize: 13, textTransform: 'uppercase', margin: 0 }}>Felipe Makarios</p>
+                  <p style={{ color: '#F5C400', fontSize: 10, fontWeight: 700, margin: 0 }}>(17) 98803-1679</p>
+                </div>
+                <div style={{ background: '#F5C400', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ color: '#000', fontWeight: 900, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>QUERO ANUNCIAR →</span>
+                </div>
+              </div>
+            )}
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: '#F5C400' }} />
+            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 4, background: '#F5C400' }} />
           </a>
+
+          {/* Indicadores */}
+          <div style={{ position: 'absolute', bottom: 6, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 6, zIndex: 20, pointerEvents: 'none' }}>
+            {SEQUENCE.map(s => (
+              <div key={s} style={{ borderRadius: 9999, transition: 'all 0.5s', height: 4, width: slot === s ? 16 : 4, background: slot === s ? '#F5C400' : 'rgba(255,255,255,0.25)' }} />
+            ))}
+          </div>
 
         </div>
       </div>
