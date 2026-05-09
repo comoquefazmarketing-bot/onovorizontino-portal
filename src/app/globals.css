@@ -133,3 +133,151 @@
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
 }
+
+/* ============================================================
+   TIGRE FC AAA — Efeitos globais videogame premium
+   ============================================================ */
+
+/* Botões globais AAA */
+.btn-aaa {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+.btn-aaa:active { transform: translateY(2px) scale(0.97); }
+.btn-aaa::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  animation: aaaBtnShine 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes aaaBtnShine {
+  0%   { left: -100%; opacity: 0; }
+  20%  { opacity: 1; }
+  60%  { left: 120%; opacity: 0; }
+  100% { left: 120%; }
+}
+
+/* Card hover premium global */
+.card-aaa {
+  transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s;
+}
+.card-aaa:hover {
+  transform: translateY(-4px) scale(1.015);
+}
+
+/* Glow text dourado */
+.text-glow-gold {
+  text-shadow: 0 0 20px rgba(245,196,0,0.7), 0 0 40px rgba(245,196,0,0.3);
+}
+.text-glow-cyan {
+  text-shadow: 0 0 20px rgba(0,243,255,0.7), 0 0 40px rgba(0,243,255,0.3);
+}
+
+/* Borda animada premium */
+.border-aaa {
+  position: relative;
+}
+.border-aaa::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #F5C400, transparent 50%, #00F3FF);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: borderRotate 4s linear infinite;
+}
+@keyframes borderRotate {
+  from { filter: hue-rotate(0deg); }
+  to   { filter: hue-rotate(360deg); }
+}
+
+/* Scan line tela inteira */
+.aaa-scanline {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.015) 3px,
+    rgba(0,0,0,0.015) 4px
+  );
+}
+
+/* Noise texture overlay */
+.aaa-noise {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Entrada épica */
+@keyframes aaaSlideUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes aaaFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes aaaScaleIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Screen shake (on-demand via JS class) */
+@keyframes screenShake {
+  0%,100% { transform: translate(0, 0) rotate(0deg); }
+  10%     { transform: translate(-3px, -2px) rotate(-0.5deg); }
+  20%     { transform: translate(3px, 2px) rotate(0.5deg); }
+  30%     { transform: translate(-2px, 3px) rotate(-0.3deg); }
+  40%     { transform: translate(2px, -3px) rotate(0.3deg); }
+  50%     { transform: translate(-3px, 2px) rotate(-0.5deg); }
+  60%     { transform: translate(3px, -2px) rotate(0.5deg); }
+  70%     { transform: translate(-2px, -3px) rotate(-0.3deg); }
+  80%     { transform: translate(2px, 3px) rotate(0.3deg); }
+  90%     { transform: translate(-2px, 2px) rotate(-0.2deg); }
+}
+
+/* Modal entrada 3D */
+@keyframes modalEnter3D {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateX(8deg) translateY(40px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0deg) translateY(0) scale(1);
+  }
+}
+.modal-aaa-enter {
+  animation: modalEnter3D 0.4s cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+/* Pulse gold — usado em badges e stats de destaque */
+@keyframes aaaPulseGold {
+  0%,100% { box-shadow: 0 0 0 0 rgba(245,196,0,0.4); }
+  50%     { box-shadow: 0 0 0 8px rgba(245,196,0,0); }
+}
+.pulse-gold { animation: aaaPulseGold 2s ease-in-out infinite; }
+
+/* Typing cursor */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.cursor-blink::after {
+  content: '|';
+  animation: blink 1s step-end infinite;
+  color: #F5C400;
+}
