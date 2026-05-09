@@ -997,7 +997,7 @@ export default function LigasHub({ usuarioId, initialCode }: LigasHubProps) {
                       Recurso bloqueado
                     </div>
                     <p style={{ fontSize: 13, color: '#444', lineHeight: 1.7, marginBottom: 24 }}>
-                      Para criar uma liga, você precisa<br />ter pelo menos <strong style={{ color: '#F5C400' }}>100 pontos</strong>.
+                      Para criar uma liga, você precisa<br />ter pelo menos <strong style={{ color: '#F5C400' }}>{PONTOS_PARA_CRIAR_LIGA} pontos</strong>.
                     </p>
                     {perfil && <XPProgressBar pts={perfil.pontos_total} />}
                     <div style={{ fontSize: 12, color: '#333', fontWeight: 700 }}>

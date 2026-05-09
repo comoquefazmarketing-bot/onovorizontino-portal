@@ -9,7 +9,37 @@ import { supabase } from '@/lib/supabase';
 
 const BASE_STORAGE   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const STADIUM_BG     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
-const ESCUDO_DEFAULT = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+const ESCUDO_NOVORIZONTINO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+const ESCUDO_DEFAULT = ESCUDO_NOVORIZONTINO;
+
+const LOGOS_TIMES: Record<string, string> = {
+  'novorizontino':        ESCUDO_NOVORIZONTINO,
+  'gremio-novorizontino': ESCUDO_NOVORIZONTINO,
+  'avai':                 'https://logodownload.org/wp-content/uploads/2017/02/avai-fc-logo-escudo.png',
+  'criciuma':             'https://logodownload.org/wp-content/uploads/2018/06/criciuma-logo-escudo-1.png',
+  'vila-nova':            'https://logodownload.org/wp-content/uploads/2017/02/vila-nova-logo-escudo.png',
+  'ponte-preta':          'https://logodownload.org/wp-content/uploads/2017/02/ponte-preta-logo-escudo.png',
+  'athletico-pr':         'https://logodownload.org/wp-content/uploads/2017/02/athletico-pr-logo-escudo.png',
+  'goias':                'https://logodownload.org/wp-content/uploads/2017/02/goias-logo-escudo.png',
+  'coritiba':             'https://logodownload.org/wp-content/uploads/2017/02/coritiba-logo-escudo.png',
+  'cuiaba':               'https://logodownload.org/wp-content/uploads/2017/02/cuiaba-logo-escudo.png',
+  'chapecoense':          'https://logodownload.org/wp-content/uploads/2017/02/chapecoense-logo-escudo.png',
+  'paysandu':             'https://logodownload.org/wp-content/uploads/2017/02/paysandu-logo-escudo.png',
+  'remo':                 'https://logodownload.org/wp-content/uploads/2017/02/remo-logo-escudo.png',
+  'amazonas':             'https://logodownload.org/wp-content/uploads/2017/02/amazonas-fc-logo-escudo.png',
+  'operario-pr':          'https://logodownload.org/wp-content/uploads/2017/02/operario-pr-logo-escudo.png',
+  'volta-redonda':        'https://logodownload.org/wp-content/uploads/2017/02/volta-redonda-logo-escudo.png',
+  'crb':                  'https://logodownload.org/wp-content/uploads/2017/02/crb-logo-escudo.png',
+  'america-mg':           'https://logodownload.org/wp-content/uploads/2017/02/america-mg-logo-escudo.png',
+  'athletic-mg':          'https://logodownload.org/wp-content/uploads/2017/02/athletic-club-mg-logo-escudo.png',
+  'athletic':             'https://logodownload.org/wp-content/uploads/2017/02/athletic-club-mg-logo-escudo.png',
+  'botafogo-sp':          'https://logodownload.org/wp-content/uploads/2017/02/botafogo-sp-logo-escudo.png',
+  'sport':                'https://logodownload.org/wp-content/uploads/2017/02/sport-logo-escudo.png',
+  'londrina':             'https://logodownload.org/wp-content/uploads/2017/02/londrina-logo-escudo.png',
+  'juventude':            'https://logodownload.org/wp-content/uploads/2017/02/juventude-logo-escudo.png',
+  'ceara':                'https://logodownload.org/wp-content/uploads/2017/02/ceara-logo-escudo.png',
+  'sao-bernardo':         'https://logodownload.org/wp-content/uploads/2017/02/sao-bernardo-logo-escudo.png',
+};
 
 const TABLE          = 'tigre_fc_escalacoes';
 const PROFILE_TABLE  = 'tigre_fc_usuarios';
@@ -42,8 +72,9 @@ interface JogoData {
   transmissao: string | null;
   isNovMandante: boolean;
   adversarioNome: string;
-  adversarioLogo: string | null;
+  adversarioLogo: string;
   adversarioSigla: string | null;
+  adversarioSlug: string;
 }
 
 const PLAYERS_DATA: Player[] = [
@@ -65,9 +96,9 @@ const PLAYERS_DATA: Player[] = [
   { id: 103, name: 'Antony Gustavo',    short: 'ANTONY',     num: 38, pos: 'ZAG', foto: 'ANTONY.jpg.webp',          ovr: 70 },
   { id: 104, name: 'Kauã Rocha',        short: 'ALEMÃO',     num: 21, pos: 'ZAG', foto: 'ALEMAO.jpg.webp',           ovr: 72 },
   
-  { id: 9,  name: 'Sander Bortolotto',  short: 'SANDER',     num: 36, pos: 'LAT', foto: 'SANDER.jpg.webp',           ovr: 81 },
+  { id: 9,  name: 'Sander Bortolotto',  short: 'SANDER',     num: 36, pos: 'LAT', foto: 'SANDER (1).jpg',             ovr: 81 },
   { id: 28, name: 'Maykon Jesus',       short: 'MAYKON',     num: 66, pos: 'LAT', foto: 'MAYKON-JESUS.jpg.webp',     ovr: 78 },
-  { id: 27, name: 'Nilson Castrillón',  short: 'CASTRILLÓN', num: 20, pos: 'LAT', foto: 'NILSON-CASTRILLON.jpg.webp', ovr: 77 },
+  { id: 27, name: 'Nilson Castrillón',  short: 'CASTRILLÓN', num: 20, pos: 'LAT', foto: 'CASTRILLON.jpg.webp',       ovr: 77 },
   { id: 75, name: 'Jhilmar Lora',       short: 'LORA',       num: 2,  pos: 'LAT', foto: 'LORA.jpg.webp',             ovr: 74 },
   { id: 105, name: 'Carlos Roberto',    short: 'ESQUERDA',   num: 26, pos: 'LAT', foto: 'CARLOS-ESQUERDA.jpg.webp',  ovr: 71 },
 
@@ -85,8 +116,8 @@ const PLAYERS_DATA: Player[] = [
   { id: 13, name: 'Diego Galo',         short: 'D. GALO',    num: 19, pos: 'MEI', foto: 'DIEGO-GALO.jpg.webp',       ovr: 75 },
   { id: 107, name: 'Gabriel Correia',   short: 'G. CORREIA', num: 14, pos: 'MEI', foto: 'GABRIEL-CORREIA.jpg.webp',  ovr: 72 },
   { id: 108, name: 'Luiz Gabriel',      short: 'L. GABRIEL', num: 23, pos: 'MEI', foto: 'LUIZ-GABRIEL.jpg.webp',     ovr: 70 },
-  { id: 109, name: 'Hector Bianchi',    short: 'HECTOR',     num: 32, pos: 'MEI', foto: 'HECTOR-BIANCHI.jpg.webp',   ovr: 73 },
-  { id: 110, name: 'Miguel Contiero',   short: 'CONTIERO',   num: 35, pos: 'MEI', foto: 'MIGUEL-CONTIERO.jpg.webp',  ovr: 69 },
+  { id: 109, name: 'Hector Bianchi',    short: 'HECTOR',     num: 32, pos: 'MEI', foto: 'HECTOR-BIACHI.jpg.webp',    ovr: 73 },
+  { id: 110, name: 'Miguel Contiero',   short: 'CONTIERO',   num: 35, pos: 'MEI', foto: 'MIGUEL CONTIERO.webp',      ovr: 69 },
   { id: 111, name: 'Edson Junior',      short: 'NOGUEIRA',   num: 37, pos: 'MEI', foto: 'NOGUEIRA.jpg.webp',         ovr: 68 },
 
   // --- ATACANTES ---
@@ -414,9 +445,16 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
         : new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); })
     );
 
-    Promise.all(loadAll).then(() => {
+    Promise.all(loadAll).then(() => new Promise<void>(res => setTimeout(res, 600))).then(() => {
       if (cancelled) return;
-      return htmlToImage.toPng(el, { cacheBust: true, quality: 0.98, pixelRatio: 3, backgroundColor: '#0a0a0a' });
+      return htmlToImage.toPng(el, {
+        cacheBust: true,
+        quality: 0.98,
+        pixelRatio: 3,
+        backgroundColor: '#0a0a0a',
+        fetchRequestInit: { mode: 'cors', cache: 'no-cache' },
+        skipFonts: false,
+      });
     }).then(dataUrl => {
       if (cancelled || !dataUrl) return;
       setFinalImageUri(dataUrl);
@@ -508,8 +546,9 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
                 transmissao: jogoRaw.transmissao ?? null,
                 isNovMandante,
                 adversarioNome: advTime.nome || advSlug,
-                adversarioLogo: advTime.escudo_url,
+                adversarioLogo: advTime.escudo_url || LOGOS_TIMES[advSlug] || ESCUDO_DEFAULT,
                 adversarioSigla: advTime.sigla,
+                adversarioSlug: advSlug,
               });
             }
           } catch (e) {
@@ -1249,8 +1288,8 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
           const { diaSemana, dataFmt, horario } = formatJogoInfo();
           const mandanteNome  = jogoData?.isNovMandante ? 'Novorizontino' : (jogoData?.adversarioNome ?? '—');
           const visitanteNome = jogoData?.isNovMandante ? (jogoData?.adversarioNome ?? '—') : 'Novorizontino';
-          const mandanteLogo  = jogoData?.isNovMandante ? ESCUDO_DEFAULT : (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT);
-          const visitanteLogo = jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT) : ESCUDO_DEFAULT;
+          const mandanteLogo  = jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT);
+          const visitanteLogo = jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT) : ESCUDO_NOVORIZONTINO;
           return (
             <motion.div key="palpite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex flex-col items-center justify-start bg-zinc-950 overflow-auto">
@@ -1557,7 +1596,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 <div className="absolute left-0 right-0 z-20" style={{ top: '77%' }}>
                   <div className="flex items-center justify-center gap-4">
                     {/* Logo mandante no card final */}
-                    <img src={jogoData?.isNovMandante ? ESCUDO_DEFAULT : (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT)}
+                    <img src={jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT)}
                       alt="" className="w-10 h-10 object-contain"
                       crossOrigin="anonymous"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
@@ -1574,7 +1613,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                     </div>
 
                     {/* Logo visitante no card final */}
-                    <img src={jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT) : ESCUDO_DEFAULT}
+                    <img src={jogoData?.isNovMandante ? (jogoData?.adversarioLogo ?? ESCUDO_DEFAULT) : ESCUDO_NOVORIZONTINO}
                       alt="" className="w-10 h-10 object-contain"
                       crossOrigin="anonymous"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }}
