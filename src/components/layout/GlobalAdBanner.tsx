@@ -10,13 +10,17 @@ const VIDEOS = [
     src: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/sign/imagens-portal/Encontre%20o%20lugar%20ideal%20(1280%20x%20100%20px).mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83YWRmNjZiNC02ZTNlLTRmYjQtOTk0ZC05YzFkYjNiYTQ0YzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZW5zLXBvcnRhbC9FbmNvbnRyZSBvIGx1Z2FyIGlkZWFsICgxMjgwIHggMTAwIHB4KS5tcDQiLCJpYXQiOjE3NzQ2MzYzMjcsImV4cCI6MTgwNjE3MjMyN30.GN2Uyw4zYVzJq0Bd5uNF3X19ljiqp80-WltP-X27q5U",
     href: "https://www.borala.app.br/",
   },
+  {
+    src: "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR.mp4",
+    href: "https://wa.me/5517988031679?text=Olá, vi o anúncio da EliteCar no Portal O Novorizontino!",
+  },
 ];
 
-// Sequência: video0 → video1 → CTA → video0 → ...
-// Cada slot dura 8s, CTA dura 5s
-const SEQUENCE = [0, 1, 'cta'] as const;
-type Slot = 0 | 1 | 'cta';
-const DURATIONS: Record<string, number> = { '0': 8000, '1': 8000, 'cta': 15000 };
+// Sequência: video0 → video1 → video2 → CTA → video0 → ...
+// Cada slot dura 8s, CTA dura 15s
+const SEQUENCE = [0, 1, 2, 'cta'] as const;
+type Slot = 0 | 1 | 2 | 'cta';
+const DURATIONS: Record<string, number> = { '0': 8000, '1': 8000, '2': 8000, 'cta': 15000 };
 
 export default function GlobalAdBanner() {
   const [slot, setSlot] = useState<Slot>(0);
