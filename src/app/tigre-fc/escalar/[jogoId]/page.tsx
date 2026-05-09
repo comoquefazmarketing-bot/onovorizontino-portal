@@ -1,42 +1,72 @@
 // src/app/tigre-fc/escalar/[jogoId]/page.tsx
 // Rota de escalação — Next.js 15 (params é Promise)
+// Busca jogo + times direto do Supabase. Cadastrou novo jogo no banco? Funciona.
 import EscalacaoFormacao from '@/components/tigre-fc/EscalacaoFormacao';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   params: Promise<{ jogoId: string }>;
 }
 
-// Mapeamento manual dos próximos jogos.
-// Quando tiver tabela de jogos no Supabase, troca pela Solução B.
-const JOGOS: Record<string, { mandante: string; mandanteLogo: string; rodada?: string }> = {
-  '13': {
-    mandante: 'Botafogo SP',
-    mandanteLogo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Botafogo-SP.svg/640px-Botafogo-SP.svg.png',
-    rodada: '37ª Rodada',
-  },
-  // adicione os outros jogos aqui:
-  // '14': { mandante: 'Coritiba', mandanteLogo: '...', rodada: '38ª Rodada' },
-  // '15': { mandante: 'Avaí', mandanteLogo: '...', rodada: '39ª Rodada' },
-};
-
-const ESCUDO_GENERICO =
+const ESCUDO_NOVORIZONTINO =
   'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+
+interface TimeRow {
+  id: number;
+  nome: string;
+  escudo_url: string | null;
+}
 
 export default async function EscalacaoPage({ params }: Props) {
   const { jogoId } = await params;
-  const jogo = JOGOS[jogoId] ?? {
-    mandante: 'Adversário',
-    mandanteLogo: ESCUDO_GENERICO,
-    rodada: undefined,
-  };
+  const numericId = Number(jogoId);
+
+  // 1) Busca o jogo
+  const { data: jogo, error: errJogo } = await supabase
+    .from('jogos')
+    .select('id, mandante_id, visitante_id, rodada, competicao')
+    .eq('id', numericId)
+    .maybeSingle();
+
+  if (errJogo) {
+    console.error('[EscalacaoPage] erro ao buscar jogo:', errJogo);
+  }
+
+  // 2) Busca os dois times de uma vez
+  let mandante: TimeRow | null = null;
+  let visitante: TimeRow | null = null;
+
+  if (jogo) {
+    const ids = [jogo.mandante_id, jogo.visitante_id].filter(
+      (v): v is number => typeof v === 'number'
+    );
+
+    if (ids.length > 0) {
+      const { data: times, error: errTimes } = await supabase
+        .from('times_serie_b')
+        .select('id, nome, escudo_url')
+        .in('id', ids);
+
+      if (errTimes) {
+        console.error('[EscalacaoPage] erro ao buscar times:', errTimes);
+      }
+
+      if (times) {
+        mandante  = times.find(t => t.id === jogo.mandante_id)  ?? null;
+        visitante = times.find(t => t.id === jogo.visitante_id) ?? null;
+      }
+    }
+  }
 
   return (
     <main className="min-h-screen bg-black overflow-hidden">
       <EscalacaoFormacao
         jogoId={jogoId}
-        mandante={jogo.mandante}
-        mandanteLogo={jogo.mandanteLogo}
-        rodada={jogo.rodada}
+        mandante={mandante?.nome ?? 'Mandante'}
+        mandanteLogo={mandante?.escudo_url ?? ESCUDO_NOVORIZONTINO}
+        visitante={visitante?.nome ?? 'Visitante'}
+        visitanteLogo={visitante?.escudo_url ?? ESCUDO_NOVORIZONTINO}
+        rodada={jogo?.rodada}
       />
     </main>
   );
