@@ -9,8 +9,8 @@ const JG_MOBILE      = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/obje
 const JG_DESKTOP     = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JG%20SNEAKERS(1280%20x%20100%20px).mp4";
 const JG_WA          = `https://wa.me/5517992659293?text=${encodeURIComponent('Oi! Vi o anuncio da JG Sneakers no Portal O Novorizontino e quero saber mais!')}`;
 
-const ELITECAR_MOBILE  = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR%20(320%20x%20100%20px).mp4";
-const ELITECAR_DESKTOP = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR.mp4";
+const ELITECAR_MOBILE  = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR%20(320%20x%20100%20px)%20(1).mp4";
+const ELITECAR_DESKTOP = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR%20(1).mp4";
 const ELITECAR_WA      = `https://wa.me/5516996496957?text=${encodeURIComponent('Ola vi seu anuncio no portal O Novorizontino, quero saber mais!')}`;
 
 type Slot = 'borala' | 'borala2' | 'jg' | 'elitecar' | 'cta';
