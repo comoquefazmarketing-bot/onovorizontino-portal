@@ -17,6 +17,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
   const [meuId, setMeuId] = useState<string | null>(null);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
   const [mercadoFechado, setMercadoFechado] = useState(false);
+  const [sofaEventId, setSofaEventId] = useState<number | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -29,33 +30,40 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
         if (u) setMeuId(u.id);
       }
 
-      // Busca o jogo via API ou define o fallback para a 7ª Rodada
+      // Busca o jogo via API ou define o fallback para a 8ª Rodada
       const resJogo = await fetch('/api/proximo-jogo').then(r => r.json()).catch(() => null);
       if (resJogo?.jogos?.length > 0) {
         setJogo(resJogo.jogos[0]);
       } else {
         setJogo({
-          idx: 11,
-          id: 12,
-          data_hora: '2026-05-03T21:00:00+00:00',
+          id: 13,
+          data_hora: '2026-05-11T22:00:00+00:00',
           competicao: 'Série B 2026',
-          rodada: '7',
-          local: 'Estádio da Ressacada — Florianópolis, SC',
+          rodada: '8',
+          local: 'Estádio Dr. Jorge Ismael de Biasi — Novo Horizonte, SP',
           transmissao: 'ESPN · Disney+',
-          mandante: { 
-            nome: 'Avaí', 
-            escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20AVAI.png',
-            sigla: 'AVA' 
+          mandante_slug: 'novorizontino',
+          visitante_slug: 'botafogo-sp',
+          mandante: {
+            nome: 'Novorizontino',
+            escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png',
+            sigla: 'NOV'
           },
-          visitante: { 
-            nome: 'Novorizontino', 
-            escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png', 
-            sigla: 'NOV' 
+          visitante: {
+            nome: 'Botafogo-SP',
+            escudo_url: 'https://logodownload.org/wp-content/uploads/2017/02/botafogo-sp-logo-escudo.png',
+            sigla: 'BOT-SP'
           },
           ativo: true,
           finalizado: false
         });
       }
+
+      // Busca o SofaScore ID do próximo jogo para o widget de escalação
+      fetch('/api/tigre-fc/sofascore-proximo-jogo')
+        .then(r => r.json())
+        .then(d => { if (d?.eventId) setSofaEventId(d.eventId); })
+        .catch(() => {});
 
       const { data: resRank } = await sb.from('tigre_fc_usuarios').select('id, nome, apelido, avatar_url, pontos_total').order('pontos_total', { ascending: false }).limit(10);
       if (resRank) setRanking(resRank);
@@ -96,31 +104,27 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             mercadoFechado={mercadoFechado} 
             stats={{
               ranking: ranking.map(u => ({ nome: u.nome, apelido: u.apelido, pontos: u.pontos_total ?? 0 })),
-              capitao: { nome: 'CÉSAR', pts: 6.9 }, 
-              heroi: { nome: 'DANTAS', pts: 7.1 },
-              posicao: 9, 
-              golsSofridos: 0, 
-              mediaSofaTime: 6.95, 
-              mvp: { nome: 'Dantas', media: 7.1 }, 
               participantes: ranking.length
-            } as any} 
+            } as any}
           />
         )}
 
-        <section className="space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-xl font-black italic uppercase text-yellow-500 tracking-tight shadow-text">Quadro Tático (SofaScore)</h3>
-          </div>
-          <div className="rounded-[32px] overflow-hidden border border-white/10 bg-black shadow-2xl">
-            <iframe 
-              id="sofa-lineups-embed-15526043" 
-              src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526043&widgetTheme=dark" 
-              className="w-full h-[600px] md:h-[786px]"
-              frameBorder="0" 
-              scrolling="no"
-            />
-          </div>
-        </section>
+        {sofaEventId && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-xl font-black italic uppercase text-yellow-500 tracking-tight shadow-text">Quadro Tático (SofaScore)</h3>
+            </div>
+            <div className="rounded-[32px] overflow-hidden border border-white/10 bg-black shadow-2xl">
+              <iframe
+                id={`sofa-lineups-embed-${sofaEventId}`}
+                src={`https://widgets.sofascore.com/pt-BR/embed/lineups?id=${sofaEventId}&widgetTheme=dark`}
+                className="w-full h-[600px] md:h-[786px]"
+                frameBorder="0"
+                scrolling="no"
+              />
+            </div>
+          </section>
+        )}
 
         <section>
           <h3 className="text-2xl font-black italic uppercase mb-6 shadow-text">Classificação Geral</h3>

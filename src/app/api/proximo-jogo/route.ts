@@ -18,16 +18,19 @@ const headers = {
 
 export async function GET() {
   try {
-    // ── 1. Busca jogo ativo ───────────────────────────────────
-    const jogoUrl = `${SUPABASE_URL}/rest/v1/jogos?select=id,competicao,rodada,data_hora,local,ativo,finalizado,mandante_slug,visitante_slug,mandante_id,visitante_id,placar_mandante,placar_visitante&ativo=eq.true&finalizado=eq.false&order=data_hora.asc&limit=1`;
+    // ── 1. Busca o próximo jogo ativo ainda não finalizado ────────────────────
+    // Janela: não exibe jogos com mais de 4 horas no passado (jogo acontecendo ou futuro)
+    const cutoff = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+
+    const jogoUrl = `${SUPABASE_URL}/rest/v1/jogos?select=id,competicao,rodada,data_hora,local,transmissao,ativo,finalizado,mandante_slug,visitante_slug,mandante_id,visitante_id,placar_mandante,placar_visitante&ativo=eq.true&finalizado=eq.false&data_hora=gte.${encodeURIComponent(cutoff)}&order=data_hora.asc&limit=1`;
 
     let res = await fetch(jogoUrl, { headers, cache: 'no-store' });
     let jogos: any[] = await res.json();
 
-    // fallback: próximo por data
+    // fallback: próximo por data, independente de ativo
     if (!jogos || jogos.length === 0) {
       const now = new Date().toISOString();
-      const fallbackUrl = `${SUPABASE_URL}/rest/v1/jogos?select=id,competicao,rodada,data_hora,local,ativo,finalizado,mandante_slug,visitante_slug,mandante_id,visitante_id,placar_mandante,placar_visitante&finalizado=eq.false&data_hora=gte.${encodeURIComponent(now)}&order=data_hora.asc&limit=1`;
+      const fallbackUrl = `${SUPABASE_URL}/rest/v1/jogos?select=id,competicao,rodada,data_hora,local,transmissao,ativo,finalizado,mandante_slug,visitante_slug,mandante_id,visitante_id,placar_mandante,placar_visitante&finalizado=eq.false&data_hora=gte.${encodeURIComponent(now)}&order=data_hora.asc&limit=1`;
       res = await fetch(fallbackUrl, { headers, cache: 'no-store' });
       jogos = await res.json();
     }

@@ -45,15 +45,15 @@ type UsuarioRanking = {
 };
 
 const FALLBACK_JOGO: Jogo = {
-  id: 12,
-  rodada: 7,
-  competicao: 'COPA SUL-SUDESTE',
-  mandante_slug: 'avai',
-  visitante_slug: 'novorizontino',
+  id: 13,
+  rodada: 8,
+  competicao: 'Série B 2026',
+  mandante_slug: 'novorizontino',
+  visitante_slug: 'botafogo-sp',
   placar_mandante: null,
   placar_visitante: null,
   finalizado: false,
-  data_jogo: '2026-05-03T21:00:00+00:00',
+  data_jogo: '2026-05-11T22:00:00+00:00',
 };
 
 const PLAYER_NAMES: Record<number, string> = {
@@ -147,10 +147,15 @@ export default function TigreFCPage() {
 
       let jogoAtivo: Jogo | null = null;
       try {
+        // Janela de 4h: não retorna jogos que já terminaram há mais de 4 horas
+        const cutoff = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
         const { data } = await sb
           .from('jogos')
-          .select('id, rodada, competicao, mandante_slug, visitante_slug, placar_mandante, placar_visitante, finalizado')
-          .eq('finalizado', false).order('rodada', { ascending: true }).limit(1);
+          .select('id, rodada, competicao, mandante_slug, visitante_slug, placar_mandante, placar_visitante, finalizado, data_hora')
+          .eq('finalizado', false)
+          .gte('data_hora', cutoff)
+          .order('data_hora', { ascending: true })
+          .limit(1);
         jogoAtivo = data?.[0] ?? null;
       } catch (err) { console.warn('[TigreFC]', err); }
 
@@ -195,7 +200,7 @@ export default function TigreFCPage() {
     ? (PLAYER_NAMES[escalacao.heroi_id] ?? '---') : null;
 
   const handleEscalar = () => {
-    const targetId = jogo.id ?? FALLBACK_JOGO.id ?? 12;
+    const targetId = jogo.id ?? FALLBACK_JOGO.id ?? 13;
     router.push(`/tigre-fc/escalar/${targetId}`);
   };
 
