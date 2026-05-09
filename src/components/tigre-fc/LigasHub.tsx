@@ -121,7 +121,15 @@ function LigaCard({
       whileTap={{ scale: 0.97 }}
       whileHover={{ rotateY: 1.5 }}
       onMouseMove={onMove}
-      onMouseLeave={onLeave}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = 'rgba(245,196,0,0.32)';
+        e.currentTarget.style.boxShadow   = '0 8px 32px rgba(245,196,0,0.08)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = 'rgba(245,196,0,0.12)';
+        e.currentTarget.style.boxShadow   = 'none';
+        onLeave();
+      }}
       onClick={onClick}
       style={{
         width: '100%',
@@ -131,15 +139,6 @@ function LigaCard({
         cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14,
         position: 'relative', overflow: 'hidden',
         transition: 'border-color 0.25s, box-shadow 0.25s',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = 'rgba(245,196,0,0.32)';
-        e.currentTarget.style.boxShadow   = '0 8px 32px rgba(245,196,0,0.08)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = 'rgba(245,196,0,0.12)';
-        e.currentTarget.style.boxShadow   = 'none';
-        onLeave();
       }}
     >
       {/* Holographic shine */}
