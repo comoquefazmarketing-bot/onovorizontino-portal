@@ -13,7 +13,8 @@ const ESCUDO_NOVORIZONTINO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v
 // Escudo genérico neutro — NÃO usar Novorizontino como fallback de adversário
 const ESCUDO_DEFAULT = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%231a1a1a'/%3E%3Cpath d='M20 5 L33 10 L33 20 C33 28 27 34 20 36 C13 34 7 28 7 20 L7 10 Z' fill='%23282828' stroke='%23444' stroke-width='1.5'/%3E%3Ctext x='20' y='24' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23555' font-family='sans-serif'%3E%3F%3C/text%3E%3C/svg%3E";
 
-const LOGOS_TIMES: Record<string, string> = {
+// ─── Logos e nomes — mesma fonte do JumbotronJogo ───────────────────────────
+const LOGOS: Record<string, string> = {
   'novorizontino':        ESCUDO_NOVORIZONTINO,
   'gremio-novorizontino': ESCUDO_NOVORIZONTINO,
   'avai':                 'https://logodownload.org/wp-content/uploads/2017/02/avai-fc-logo-escudo.png',
@@ -40,22 +41,66 @@ const LOGOS_TIMES: Record<string, string> = {
   'juventude':            'https://logodownload.org/wp-content/uploads/2017/02/juventude-logo-escudo.png',
   'ceara':                'https://logodownload.org/wp-content/uploads/2017/02/ceara-logo-escudo.png',
   'sao-bernardo':         'https://logodownload.org/wp-content/uploads/2017/02/sao-bernardo-logo-escudo.png',
+  'santos':               'https://logodownload.org/wp-content/uploads/2017/02/santos-logo-escudo.png',
+  'guarani':              'https://logodownload.org/wp-content/uploads/2017/02/guarani-logo-escudo.png',
+  'ituano':               'https://logodownload.org/wp-content/uploads/2018/07/ituano-logo-escudo.png',
+  'mirassol':             'https://logodownload.org/wp-content/uploads/2017/02/mirassol-logo-escudo.png',
+  'csa':                  'https://logodownload.org/wp-content/uploads/2017/02/csa-logo-escudo.png',
+  'figueirense':          'https://logodownload.org/wp-content/uploads/2017/02/figueirense-logo-escudo.png',
 };
 
-/**
- * Resolve o escudo do adversário.
- * Prioridade: LOGOS_TIMES (local, sem CORS) → logo do DB → ESCUDO_DEFAULT
- */
-function getOpponentLogo(slug?: string | null, dbLogo?: string | null): string {
-  if (slug) {
-    const key = slug.toLowerCase().trim();
-    if (LOGOS_TIMES[key]) return LOGOS_TIMES[key];
-    const partial = Object.keys(LOGOS_TIMES).find(k => key.includes(k) || k.includes(key));
-    if (partial) return LOGOS_TIMES[partial];
-  }
-  if (dbLogo?.trim()) return dbLogo.trim();
-  return ESCUDO_DEFAULT;
-}
+const NOMES: Record<string, string> = {
+  'novorizontino':        'Novorizontino',
+  'gremio-novorizontino': 'Novorizontino',
+  'avai':                 'Avaí',
+  'criciuma':             'Criciúma',
+  'vila-nova':            'Vila Nova',
+  'ponte-preta':          'Ponte Preta',
+  'athletico-pr':         'Athletico',
+  'goias':                'Goiás',
+  'coritiba':             'Coritiba',
+  'cuiaba':               'Cuiabá',
+  'chapecoense':          'Chapecoense',
+  'paysandu':             'Paysandu',
+  'remo':                 'Remo',
+  'amazonas':             'Amazonas',
+  'operario-pr':          'Operário',
+  'volta-redonda':        'Volta Redonda',
+  'crb':                  'CRB',
+  'america-mg':           'América-MG',
+  'athletic-mg':          'Athletic',
+  'athletic':             'Athletic',
+  'botafogo-sp':          'Botafogo-SP',
+  'sport':                'Sport',
+  'londrina':             'Londrina',
+  'juventude':            'Juventude',
+  'ceara':                'Ceará',
+  'sao-bernardo':         'São Bernardo',
+  'santos':               'Santos',
+  'guarani':              'Guarani',
+  'ituano':               'Ituano',
+  'mirassol':             'Mirassol',
+  'csa':                  'CSA',
+  'figueirense':          'Figueirense',
+};
+
+/** Resolve logo pelo slug — mesma lógica do JumbotronJogo */
+const slugToLogo = (slug?: string | null): string => {
+  if (!slug) return ESCUDO_DEFAULT;
+  const key = slug.toLowerCase().trim();
+  if (LOGOS[key]) return LOGOS[key];
+  const partial = Object.keys(LOGOS).find(k => key.includes(k) || k.includes(key));
+  return partial ? LOGOS[partial] : ESCUDO_DEFAULT;
+};
+
+/** Resolve nome de exibição pelo slug */
+const slugToNome = (slug?: string | null): string => {
+  if (!slug) return '—';
+  const key = slug.toLowerCase().trim();
+  if (NOMES[key]) return NOMES[key];
+  return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 const TABLE          = 'tigre_fc_escalacoes';
 const PROFILE_TABLE  = 'tigre_fc_usuarios';
@@ -77,6 +122,9 @@ type Step      = 'loading' | 'formation' | 'arena' | 'captain' | 'hero' | 'palpi
 
 interface EscalacaoFormacaoProps {
   jogoId?: number | string;
+  /** Slugs passados via SSR pelo page.tsx para evitar flash no carregamento */
+  mandanteSlug?: string;
+  visitanteSlug?: string;
 }
 
 interface JogoData {
@@ -86,11 +134,8 @@ interface JogoData {
   data_hora: string;
   local: string;
   transmissao: string | null;
-  isNovMandante: boolean;
-  adversarioNome: string;
-  adversarioLogo: string;
-  adversarioSigla: string | null;
-  adversarioSlug: string;
+  mandanteSlug: string;
+  visitanteSlug: string;
 }
 
 const PLAYERS_DATA: Player[] = [
@@ -417,7 +462,7 @@ function DraggableSlot({
 // COMPONENTE PRINCIPAL
 // =============================================================================
 
-export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
+export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSlug, visitanteSlug: propVisitanteSlug }: EscalacaoFormacaoProps) {
   const router = useRouter();
 
   const [step, setStep]                       = useState<Step>('loading');
@@ -587,7 +632,21 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
             setUserAvatar(profile?.avatar_url || (meta.avatar_url as string) || null);
           }
         }
-        // Carrega dados do jogo (adversário, logo, data, local)
+        // Se slugs foram passados via props SSR, inicializa imediatamente (evita flash)
+        if (propMandanteSlug && propVisitanteSlug && jogoId && !cancelled) {
+          setJogoData(prev => prev ?? {
+            id: Number(jogoId),
+            competicao: '',
+            rodada: '',
+            data_hora: '',
+            local: '',
+            transmissao: null,
+            mandanteSlug: propMandanteSlug,
+            visitanteSlug: propVisitanteSlug,
+          });
+        }
+
+        // Carrega dados completos do jogo do banco
         if (jogoId && !cancelled) {
           try {
             const { data: jogoRaw } = await supabase
@@ -596,28 +655,15 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
               .eq('id', Number(jogoId))
               .maybeSingle();
             if (jogoRaw && !cancelled) {
-              const slugs = [jogoRaw.mandante_slug, jogoRaw.visitante_slug].filter(Boolean);
-              const { data: times } = await supabase
-                .from('times_serie_b')
-                .select('nome, escudo_url, sigla, slug')
-                .in('slug', slugs);
-              const bySlug: Record<string, { nome: string; escudo_url: string | null; sigla: string | null }> = {};
-              (times || []).forEach((t: { slug: string; nome: string; escudo_url: string | null; sigla: string | null }) => { bySlug[t.slug] = t; });
-              const isNovMandante = jogoRaw.mandante_slug === 'novorizontino';
-              const advSlug = isNovMandante ? jogoRaw.visitante_slug : jogoRaw.mandante_slug;
-              const advTime = bySlug[advSlug] ?? { nome: advSlug, escudo_url: null, sigla: null };
-              if (!cancelled) setJogoData({
+              setJogoData({
                 id: jogoRaw.id,
-                competicao: jogoRaw.competicao,
-                rodada: jogoRaw.rodada,
-                data_hora: jogoRaw.data_hora,
-                local: jogoRaw.local,
+                competicao: jogoRaw.competicao ?? '',
+                rodada: jogoRaw.rodada ?? '',
+                data_hora: jogoRaw.data_hora ?? '',
+                local: jogoRaw.local ?? '',
                 transmissao: jogoRaw.transmissao ?? null,
-                isNovMandante,
-                adversarioNome: advTime.nome || advSlug,
-                adversarioLogo: advTime.escudo_url || LOGOS_TIMES[advSlug] || ESCUDO_DEFAULT,
-                adversarioSigla: advTime.sigla,
-                adversarioSlug: advSlug,
+                mandanteSlug: jogoRaw.mandante_slug ?? 'novorizontino',
+                visitanteSlug: jogoRaw.visitante_slug ?? '',
               });
             }
           } catch (e) {
@@ -853,9 +899,7 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
       const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
       const hora = String(d.getHours()).padStart(2,'0');
       const min  = String(d.getMinutes()).padStart(2,'0');
-      const confronto = jogoData.isNovMandante
-        ? `Novorizontino × ${jogoData.adversarioNome}`
-        : `${jogoData.adversarioNome} × Novorizontino`;
+      const confronto = `${slugToNome(jogoData.mandanteSlug)} × ${slugToNome(jogoData.visitanteSlug)}`;
       return {
         diaSemana: dias[d.getDay()],
         dataFmt: `${d.getDate()} de ${meses[d.getMonth()]}`,
@@ -871,8 +915,8 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
     const cap  = selectedPlayers.find(p => p.id === captainId)?.short ?? '—';
     const hero = selectedPlayers.find(p => p.id === heroId)?.short    ?? '—';
     const { confronto } = formatJogoInfo();
-    const placarMand = jogoData?.isNovMandante ? palpiteMandante : palpiteVisitante;
-    const placarVis  = jogoData?.isNovMandante ? palpiteVisitante : palpiteMandante;
+    const placarMand = palpiteMandante;
+    const placarVis  = palpiteVisitante;
     return (
 `🐯 ARENA TIGRE FC
 
@@ -1401,15 +1445,10 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
 
         {step === 'palpite' && (() => {
           const { diaSemana, dataFmt, horario } = formatJogoInfo();
-          const advNome = jogoData?.adversarioNome
-            ?? jogoData?.adversarioSigla
-            ?? jogoData?.adversarioSlug?.replace(/-/g, ' ').toUpperCase()
-            ?? '—';
-          const mandanteNome  = jogoData?.isNovMandante ? 'Novorizontino' : advNome;
-          const visitanteNome = jogoData?.isNovMandante ? advNome : 'Novorizontino';
-          const advLogo = getOpponentLogo(jogoData?.adversarioSlug, jogoData?.adversarioLogo);
-          const mandanteLogo  = jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : advLogo;
-          const visitanteLogo = jogoData?.isNovMandante ? advLogo : ESCUDO_NOVORIZONTINO;
+          const mandanteNome  = slugToNome(jogoData?.mandanteSlug);
+          const visitanteNome = slugToNome(jogoData?.visitanteSlug);
+          const mandanteLogo  = slugToLogo(jogoData?.mandanteSlug);
+          const visitanteLogo = slugToLogo(jogoData?.visitanteSlug);
           return (
             <motion.div key="palpite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex flex-col items-center justify-start bg-zinc-950 overflow-auto">
@@ -1854,16 +1893,10 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 <div className="absolute left-0 right-0 z-20" style={{ top: '77%' }}>
                   <div className="flex items-center justify-center gap-4">
                     {/* Logo mandante */}
-                    {(() => {
-                      const advLogo = getOpponentLogo(jogoData?.adversarioSlug, jogoData?.adversarioLogo);
-                      const src = jogoData?.isNovMandante ? ESCUDO_NOVORIZONTINO : advLogo;
-                      return (
-                        <img src={src} alt="" crossOrigin="anonymous"
-                          className="w-10 h-10 object-contain"
-                          style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
-                          onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
-                      );
-                    })()}
+                    <img src={slugToLogo(jogoData?.mandanteSlug)} alt="" crossOrigin="anonymous"
+                      className="w-10 h-10 object-contain"
+                      style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
+                      onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
 
                     <div className="text-4xl font-black italic tabular-nums leading-none"
                       style={{
@@ -1876,16 +1909,10 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                     </div>
 
                     {/* Logo visitante */}
-                    {(() => {
-                      const advLogo = getOpponentLogo(jogoData?.adversarioSlug, jogoData?.adversarioLogo);
-                      const src = jogoData?.isNovMandante ? advLogo : ESCUDO_NOVORIZONTINO;
-                      return (
-                        <img src={src} alt="" crossOrigin="anonymous"
-                          className="w-10 h-10 object-contain"
-                          style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
-                          onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
-                      );
-                    })()}
+                    <img src={slugToLogo(jogoData?.visitanteSlug)} alt="" crossOrigin="anonymous"
+                      className="w-10 h-10 object-contain"
+                      style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
+                      onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
                   </div>
                   <div className="text-center text-[8px] tracking-[5px] font-black text-white/40 mt-1.5">
                     SEU PALPITE
