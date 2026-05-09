@@ -101,10 +101,15 @@ export default function TigreFCChat({ usuarioId }: Props) {
   const [meuNivel,  setMeuNivel]  = useState<typeof PATENTES[number] | null>(null);
   const [meuUser,   setMeuUser]   = useState<{ google_id: string; nivel: string; nivel_numerico: number } | null>(null);
   const bottomRef   = useRef<HTMLDivElement>(null);
+  const msgsRef     = useRef<HTMLDivElement>(null);
   const inputRef    = useRef<HTMLInputElement>(null);
 
   const scrollBottom = useCallback(() => {
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    // Rola APENAS o container do chat, não a página inteira
+    setTimeout(() => {
+      const c = msgsRef.current;
+      if (c) c.scrollTop = c.scrollHeight;
+    }, 50);
   }, []);
 
   // ── Carrega sessão e perfil ───────────────────────────
@@ -278,7 +283,7 @@ export default function TigreFCChat({ usuarioId }: Props) {
       </div>
 
       {/* Mensagens */}
-      <div style={{
+      <div ref={msgsRef} style={{
         flex:1, overflowY:'auto', padding:'10px 12px',
         display:'flex', flexDirection:'column', gap:10,
         scrollbarWidth:'none',
@@ -355,7 +360,7 @@ export default function TigreFCChat({ usuarioId }: Props) {
             textAlign:'center', fontSize:11, color:'rgba(255,255,255,0.25)',
             padding:'6px', letterSpacing:'0.1em',
           }}>
-            <a href="/login" style={{color:C.gold,textDecoration:'none',textShadow:C.glowGold}}>
+            <a href="/tigre-fc/perfil" style={{color:C.gold,textDecoration:'none',textShadow:C.glowGold}}>
               Entre com Google
             </a>
             {' '}para participar do vestiário

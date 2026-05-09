@@ -6,6 +6,7 @@ import Link from 'next/link';
 // Importando o novo componente que o Claude sugeriu (Certifique-se de criar este arquivo)
 // Se ainda não criou, o código abaixo mantém a lógica integrada mas organizada
 import TigreFCPerfilXP from '@/components/tigre-fc/TigreFCPerfilXP';
+import TigreFCLogin from '@/components/tigre-fc/TigreFCLogin';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,16 +75,7 @@ export default function TigreFCPerfil() {
     </main>
   );
 
-  if (!usuario) return (
-    <main style={{ minHeight:'100vh', background:'#080808', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:24, textAlign:'center' }}>
-      <img src={LOGO} style={{ width:80, marginBottom:24 }} />
-      <div style={{ fontSize:22, fontWeight:900, color:'#fff', marginBottom:8 }}>VOCÊ AINDA NÃO ENTROU NO JOGO</div>
-      <p style={{ fontSize:14, color:'#555', marginBottom:32, maxWidth:300 }}>Faça login para salvar sua escalação e subir no ranking!</p>
-      <Link href="/tigre-fc" style={{ background:'#F5C400', color:'#111', fontWeight:900, fontSize:14, padding:'16px 32px', borderRadius:12, textDecoration:'none', textTransform:'uppercase', letterSpacing:1, boxShadow:'0 4px 15px rgba(245, 196, 0, 0.3)' }}>
-        Entrar no Tigre FC
-      </Link>
-    </main>
-  );
+  if (!usuario) return <TigreFCLogin jogoId={0} onSuccess={() => window.location.reload()} />;
 
   const totalRodadas = historico.length;
   const mediaRodada = totalRodadas ? Math.round(historico.reduce((s,h) => s + h.pts_total, 0) / totalRodadas) : 0;

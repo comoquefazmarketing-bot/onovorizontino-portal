@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import * as htmlToImage from 'html-to-image';
@@ -226,15 +226,34 @@ function DraggableSlot({
   const y = useMotionValue(0);
   const draggedRef = useRef(false);
 
-  // Resetar offset de drag APÓS o React aplicar a nova posição CSS (state.x/y)
-  // Evita o flash de "slot voltando para posição antiga" antes do re-render
-  useEffect(() => {
-    x.set(0);
-    y.set(0);
-  }, [state.x, state.y]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const w = isDesktop ? SLOT_W_DESKTOP : SLOT_W_MOBILE;
   const h = isDesktop ? SLOT_H_DESKTOP : SLOT_H_MOBILE;
+
+  // Posicionamento pixel-based via useLayoutEffect.
+  // Converte state.x/state.y (%) para pixels ANTES do browser pintar —
+  // elimina o flash de "slot voltando para posição antiga" do approach anterior.
+  useLayoutEffect(() => {
+    const arena = arenaRef.current;
+    if (!arena) return;
+    const rect = arena.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    x.set((state.x / 100) * rect.width  - w / 2);
+    y.set((state.y / 100) * rect.height - h / 2);
+  }, [state.x, state.y, w, h]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Atualiza posição quando a arena redimensiona (rotação, resize)
+  useEffect(() => {
+    const arena = arenaRef.current;
+    if (!arena) return;
+    const obs = new ResizeObserver(() => {
+      const rect = arena.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      x.set((state.x / 100) * rect.width  - w / 2);
+      y.set((state.y / 100) * rect.height - h / 2);
+    });
+    obs.observe(arena);
+    return () => obs.disconnect();
+  }, [state.x, state.y, w, h]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const ovr = state.player?.ovr ?? 75;
   const colors = state.player ? getRarityColors(ovr) : null;
@@ -272,15 +291,17 @@ function DraggableSlot({
           draggedRef.current = true;
         }
       }}
-      onDragEnd={(_, info) => {
-        const arenaEl = arenaRef.current;
-        if (!arenaEl) return;
-        const rect = arenaEl.getBoundingClientRect();
-        const newX = ((info.point.x - rect.left) / rect.width) * 100;
-        const newY = ((info.point.y - rect.top) / rect.height) * 100;
-        // NÃO resetar x,y aqui — o useEffect acima faz isso após o React
-        // aplicar a nova posição CSS, evitando o flash para posição antiga
-        onDragSettled(slotId, clamp(newX, 5, 95), clamp(newY, 5, 95));
+      onDragEnd={() => {
+        const arena = arenaRef.current;
+        if (!arena) return;
+        const rect = arena.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        // x.get()/y.get() = pixels do canto superior-esquerdo do card
+        // Convert para % do centro do card na arena
+        const newX = clamp(((x.get() + w / 2) / rect.width)  * 100, 5, 95);
+        const newY = clamp(((y.get() + h / 2) / rect.height) * 100, 5, 95);
+        onDragSettled(slotId, newX, newY);
+        // useLayoutEffect re-sincroniza x,y após o React atualizar state
       }}
       onClick={() => {
         if (draggedRef.current) {
@@ -292,12 +313,10 @@ function DraggableSlot({
       style={{
         x, y,
         position: 'absolute',
-        left: `${state.x}%`,
-        top: `${state.y}%`,
+        left: 0,
+        top: 0,
         width: w,
         height: h,
-        marginLeft: -w / 2,
-        marginTop: -h / 2,
         border: `2px solid ${borderColor}`,
         boxShadow,
         background: state.player
@@ -584,11 +603,28 @@ export default function EscalacaoFormacao({ jogoId }: EscalacaoFormacaoProps) {
 
   const handleSlotClick = (slotId: string) => {
     if (pendingPlayer) {
+      // Coloca o pendingPlayer no slot (substituindo quem estiver lá)
       setSlotMap(prev => ({ ...prev, [slotId]: { ...prev[slotId], player: pendingPlayer } }));
       setPendingPlayer(null);
-    } else {
-      setActiveSlot(slotId === activeSlot ? null : slotId);
+      setActiveSlot(null);
+      return;
     }
+    if (activeSlot && activeSlot !== slotId) {
+      // Dois slots selecionados → SWAP entre eles (funciona mesmo com um vazio)
+      setSlotMap(prev => {
+        const pA = prev[activeSlot]?.player ?? null;
+        const pB = prev[slotId]?.player ?? null;
+        return {
+          ...prev,
+          [activeSlot]: { ...prev[activeSlot], player: pB },
+          [slotId]:     { ...prev[slotId],     player: pA },
+        };
+      });
+      setActiveSlot(null);
+      return;
+    }
+    // Nenhum ativo → ativa este (ou desativa se clicar no mesmo)
+    setActiveSlot(slotId === activeSlot ? null : slotId);
   };
 
   const handleSlotDragSettled = useCallback((slotId: string, newX: number, newY: number) => {
@@ -919,9 +955,25 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 </button>
               </div>
 
-              <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 px-3 py-1 bg-cyan-500/10 backdrop-blur rounded-full border border-cyan-400/30 hidden sm:block">
-                <span className="text-cyan-300 text-[9px] md:text-[10px] font-black tracking-wider">
-                  ✋ ARRASTE OS JOGADORES PRA POSIÇÃO IDEAL
+              {/* Dica contextual — muda conforme o estado */}
+              <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 px-3 py-1 backdrop-blur rounded-full border hidden sm:flex items-center gap-1.5"
+                style={{
+                  background: activeSlot
+                    ? 'rgba(250,204,21,0.12)'
+                    : pendingPlayer
+                      ? 'rgba(34,211,238,0.10)'
+                      : 'rgba(34,211,238,0.08)',
+                  borderColor: activeSlot
+                    ? 'rgba(250,204,21,0.4)'
+                    : 'rgba(34,211,238,0.3)',
+                }}>
+                <span className="text-[9px] md:text-[10px] font-black tracking-wider"
+                  style={{ color: activeSlot ? '#facc15' : '#67e8f9' }}>
+                  {activeSlot
+                    ? '⇄ TOQUE OUTRO SLOT PARA TROCAR'
+                    : pendingPlayer
+                      ? '👆 TOQUE UM SLOT PARA ESCALAR'
+                      : '✋ ARRASTE • TOQUE PARA TROCAR'}
                 </span>
               </div>
 
