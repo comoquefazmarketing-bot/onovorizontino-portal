@@ -9,8 +9,12 @@ const JG_MOBILE      = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/obje
 const JG_DESKTOP     = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JG%20SNEAKERS(1280%20x%20100%20px).mp4";
 const JG_WA          = `https://wa.me/5517992659293?text=${encodeURIComponent('Oi! Vi o anúncio da JG Sneakers no Portal O Novorizontino e quero saber mais! 🐯👟')}`;
 
-type Slot = 'borala' | 'borala2' | 'jg' | 'cta';
-const SEQUENCE: Slot[] = ['borala', 'borala2', 'jg', 'cta'];
+const ELITECAR_MOBILE  = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR%20(320%20x%20100%20px).mp4";
+const ELITECAR_DESKTOP = "https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ELITECAR.mp4";
+const ELITECAR_WA      = `https://wa.me/5516996496957?text=${encodeURIComponent('Olá vi seu anúncio no portal O Novorizontino, quero saber mais!')}`;
+
+type Slot = 'borala' | 'borala2' | 'jg' | 'elitecar' | 'cta';
+const SEQUENCE: Slot[] = ['borala', 'borala2', 'jg', 'elitecar', 'cta'];
 const DURATION = 10000;
 
 export default function GlobalAdBanner() {
@@ -48,10 +52,11 @@ export default function GlobalAdBanner() {
   const height = isMobile ? 160 : 100;
 
   const slotData: Record<Slot, { href: string; mobileSrc: string; desktopSrc: string } | null> = {
-    borala:  { href: 'https://www.borala.app.br/', mobileSrc: BORALA_MOBILE,  desktopSrc: BORALA_DESKTOP  },
-    borala2: { href: 'https://www.borala.app.br/', mobileSrc: BORALA_MOBILE2, desktopSrc: BORALA_DESKTOP2 },
-    jg:      { href: JG_WA,                        mobileSrc: JG_MOBILE,      desktopSrc: JG_DESKTOP },
-    cta:     null,
+    borala:   { href: 'https://www.borala.app.br/', mobileSrc: BORALA_MOBILE,   desktopSrc: BORALA_DESKTOP  },
+    borala2:  { href: 'https://www.borala.app.br/', mobileSrc: BORALA_MOBILE2,  desktopSrc: BORALA_DESKTOP2 },
+    jg:       { href: JG_WA,                        mobileSrc: JG_MOBILE,       desktopSrc: JG_DESKTOP },
+    elitecar: { href: ELITECAR_WA,                  mobileSrc: ELITECAR_MOBILE, desktopSrc: ELITECAR_DESKTOP },
+    cta:      null,
   };
 
   return (
@@ -70,7 +75,7 @@ export default function GlobalAdBanner() {
             const src = isMobile ? data.mobileSrc : data.desktopSrc;
             const key = `${s}-${isMobile ? 'mobile' : 'desktop'}`;
             return (
-              <a
+              
                 key={s}
                 href={data.href}
                 target="_blank"
@@ -97,7 +102,7 @@ export default function GlobalAdBanner() {
           })}
 
           {/* ── CTA Anuncie ── */}
-          <a
+          
             href="https://wa.me/5517988031679?text=Olá Felipe, vi o Portal O Novorizontino e quero anunciar para os torcedores do Tigre!"
             target="_blank"
             rel="noopener noreferrer"
