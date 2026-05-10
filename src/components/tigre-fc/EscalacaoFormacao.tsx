@@ -531,23 +531,31 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
 
       if (origSrcs.size > 0) await new Promise<void>(r => setTimeout(r, 120));
 
-      const opts = {
-        cacheBust: true, quality: 0.95, pixelRatio: 2,
-        backgroundColor: '#0a0a0a', skipFonts: true,
-        // Exclui imagens externas sem CORS do canvas (evita SecurityError)
-        filter: (node: HTMLElement) => {
-          if (node instanceof HTMLImageElement) {
-            const s = node.getAttribute('src') ?? '';
-            return s.startsWith('data:') || s.startsWith('blob:') || s.includes('supabase.co');
-          }
-          return true;
-        },
+      // pixelRatio 2 = boa qualidade sem estouro de memória em mobile
+      const filter = (node: HTMLElement) => {
+        if (node instanceof HTMLImageElement) {
+          const s = node.getAttribute('src') ?? '';
+          // Inclui apenas data:, blob: e imagens Supabase (sem CORS externo no canvas)
+          return s.startsWith('data:') || s.startsWith('blob:') || s.includes('supabase.co');
+        }
+        return true;
       };
 
-      const dataUrl = await htmlToImage.toPng(el, opts);
+      const opts = {
+        cacheBust: true, quality: 0.95, pixelRatio: 2,
+        backgroundColor: '#0a0a0a', skipFonts: true, filter,
+      };
+
+      let dataUrl: string;
+      try {
+        dataUrl = await htmlToImage.toPng(el, opts);
+      } catch (e1) {
+        console.warn('[captureCard] toPng falhou, tentando pixelRatio 1:', e1);
+        dataUrl = await htmlToImage.toPng(el, { ...opts, pixelRatio: 1 });
+      }
       return dataUrl;
     } catch (e) {
-      console.error('[captureCard] erro:', e);
+      console.error('[captureCard] erro final:', e);
       return null;
     } finally {
       origSrcs.forEach((orig, img) => { img.src = orig; });
@@ -906,8 +914,16 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
         const a = document.createElement('a');
         a.download = `tigre-fc-escalacao-${formation}.png`;
         a.href = uri;
+        // Append to body required for Firefox compatibility
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+      } else {
+        alert('Não foi possível gerar a imagem. Tente novamente.');
       }
+    } catch (e) {
+      console.error('[downloadImage] erro:', e);
+      alert('Erro ao gerar imagem. Tente novamente.');
     } finally {
       setIsGenerating(false);
     }
@@ -1397,10 +1413,13 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
 
         {step === 'palpite' && (() => {
           const { diaSemana, dataFmt, horario } = formatJogoInfo();
-          const mandanteNome  = slugToNome(jogoData?.mandanteSlug);
-          const visitanteNome = slugToNome(jogoData?.visitanteSlug);
-          const mandanteLogo  = slugToLogo(jogoData?.mandanteSlug);
-          const visitanteLogo = slugToLogo(jogoData?.visitanteSlug);
+          // Fallback para props SSR quando jogoData ainda não carregou
+          const mandSlug      = jogoData?.mandanteSlug  ?? propMandanteSlug;
+          const visitSlug     = jogoData?.visitanteSlug ?? propVisitanteSlug;
+          const mandanteNome  = slugToNome(mandSlug);
+          const visitanteNome = slugToNome(visitSlug);
+          const mandanteLogo  = slugToLogo(mandSlug);
+          const visitanteLogo = slugToLogo(visitSlug);
           return (
             <motion.div key="palpite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex flex-col items-center justify-start bg-zinc-950 overflow-auto">
@@ -1673,12 +1692,6 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
               {saveError && (
                 <div className="px-3 py-2 bg-red-500/15 border border-red-500/40 rounded-xl">
                   <p className="text-red-400 text-[10px] font-bold leading-snug">{saveError}</p>
-                  {!hadSaved && (
-                    <button onClick={handleSaveToRanking} disabled={isSavingDb}
-                      className="mt-2 w-full py-2 bg-yellow-400 text-black text-[10px] font-black rounded-lg tracking-wider disabled:opacity-60">
-                      {isSavingDb ? 'SALVANDO...' : '↺ TENTAR SALVAR NOVAMENTE'}
-                    </button>
-                  )}
                 </div>
               )}
             </div>
@@ -1844,8 +1857,8 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 {/* Placar — único e dominante */}
                 <div className="absolute left-0 right-0 z-20" style={{ top: '77%' }}>
                   <div className="flex items-center justify-center gap-4">
-                    {/* Logo mandante */}
-                    <img src={slugToLogo(jogoData?.mandanteSlug)} alt=""
+                    {/* Logo mandante — fallback para prop SSR quando jogoData ainda é null */}
+                    <img src={slugToLogo(jogoData?.mandanteSlug ?? propMandanteSlug)} alt=""
                       className="w-10 h-10 object-contain"
                       style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
                       onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
@@ -1861,7 +1874,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                     </div>
 
                     {/* Logo visitante */}
-                    <img src={slugToLogo(jogoData?.visitanteSlug)} alt=""
+                    <img src={slugToLogo(jogoData?.visitanteSlug ?? propVisitanteSlug)} alt=""
                       className="w-10 h-10 object-contain"
                       style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
                       onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
