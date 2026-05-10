@@ -476,7 +476,6 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
   const [palpiteVisitante, setPalpiteVisitante] = useState(2);
   const [finalImageUri, setFinalImageUri]     = useState<string | null>(null);
   const [isGenerating, setIsGenerating]       = useState(false);
-  const [pendingGenerate, setPendingGenerate] = useState(false);
 
   const [userId, setUserId]         = useState<string | null>(null);
   const [userName, setUserName]     = useState<string>('TORCEDOR');
@@ -492,138 +491,69 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
   const finalCardRef = useRef<HTMLDivElement>(null);
   const arenaRef     = useRef<HTMLDivElement>(null);
 
-  // ─── Captura do card final ────────────────────────────────────────────────
-  // Estratégia:
-  //   1. skipFonts:true desde a tentativa 1 (fonte externa = trava sem timeout)
-  //   2. Timeout por imagem (3 s) — nunca fica esperando infinitamente
-  //   3. Pré-fetch Supabase → blob: URLs (evita canvas CORS taint)
-  //   4. Timeout global de 25 s — garante que o spinner sempre para
-  useEffect(() => {
-    if (step !== 'final' || !pendingGenerate) return;
+  // ─── captureCard: captura on-demand (chamado ao clicar em Salvar/Compartilhar) ──
+  // Pré-fetcha imagens Supabase como blob: URLs → evita canvas CORS taint.
+  // skipFonts: true → sem travamento por fontes externas.
+  // Logos de sites externos (logodownload.org) são excluídos do canvas via filter
+  // (sem CORS deles), mas aparecem normalmente na tela — comportamento esperado.
+  const captureCard = useCallback(async (): Promise<string | null> => {
     const el = finalCardRef.current;
-    if (!el) return;
+    if (!el) return null;
 
-    let cancelled = false;
     const blobUrls: string[] = [];
+    const origSrcs = new Map<HTMLImageElement, string>();
 
-    const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
-      Promise.race([p, new Promise<T>(res => setTimeout(() => res(fallback), ms))]);
+    const race = <T,>(p: Promise<T>, ms: number): Promise<T | null> =>
+      Promise.race([p, new Promise<null>(r => setTimeout(() => r(null), ms))]) as Promise<T | null>;
 
-    const capture = async (): Promise<string> => {
+    try {
       const imgs = Array.from(el.querySelectorAll<HTMLImageElement>('img'));
 
-      // 1. Aguarda carregamento com timeout de 3 s por imagem
+      // Aguarda carregamento visual (max 3 s por imagem)
       await Promise.all(imgs.map(img =>
         img.complete ? Promise.resolve() :
-        withTimeout(
-          new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); }),
-          3000, undefined as unknown as void
-        )
+        race(new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); }), 3000)
       ));
 
-      // 2. Pré-fetch imagens Supabase como blob: URLs
-      const origSrcs = new Map<HTMLImageElement, string>();
+      // Pré-fetch Supabase → blob: URLs (garante acesso ao canvas sem CORS taint)
       await Promise.allSettled(imgs.map(async (img) => {
         const src = img.getAttribute('src') ?? '';
         if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
         if (!src.includes('supabase.co') && !src.startsWith('/')) return;
-        try {
-          const res = await withTimeout(
-            fetch(src, { mode: 'cors', credentials: 'omit' }),
-            5000,
-            null as unknown as Response
-          );
-          if (!res?.ok) return;
-          const blob = await res.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          blobUrls.push(blobUrl);
-          origSrcs.set(img, img.src);
-          img.src = blobUrl;
-        } catch { /* mantém src original */ }
+        const res = await race(fetch(src, { mode: 'cors', credentials: 'omit' }), 5000);
+        if (!res?.ok) return;
+        const blob = await (res as Response).blob();
+        const blobUrl = URL.createObjectURL(blob);
+        blobUrls.push(blobUrl);
+        origSrcs.set(img, img.src);
+        img.src = blobUrl;
       }));
 
-      if (origSrcs.size > 0) {
-        await new Promise<void>(res => setTimeout(res, 150));
-      }
+      if (origSrcs.size > 0) await new Promise<void>(r => setTimeout(r, 120));
 
-      // 3. Captura — sempre skipFonts para evitar trava em fontes externas
-      const baseOpts = {
-        cacheBust: true,
-        quality:   0.95,
-        pixelRatio: 2,
-        backgroundColor: '#0a0a0a',
-        skipFonts: true,
+      const opts = {
+        cacheBust: true, quality: 0.95, pixelRatio: 2,
+        backgroundColor: '#0a0a0a', skipFonts: true,
+        // Exclui imagens externas sem CORS do canvas (evita SecurityError)
+        filter: (node: HTMLElement) => {
+          if (node instanceof HTMLImageElement) {
+            const s = node.getAttribute('src') ?? '';
+            return s.startsWith('data:') || s.startsWith('blob:') || s.includes('supabase.co');
+          }
+          return true;
+        },
       };
 
-      let dataUrl: string;
-      try {
-        dataUrl = await htmlToImage.toPng(el, baseOpts);
-      } catch {
-        // Tentativa 2: filtra imagens não-blob/data
-        dataUrl = await htmlToImage.toPng(el, {
-          ...baseOpts,
-          filter: (node: HTMLElement) => {
-            if (node instanceof HTMLImageElement) {
-              const s = node.getAttribute('src') ?? '';
-              return s.startsWith('data:') || s.startsWith('blob:') || s.includes('supabase.co');
-            }
-            return true;
-          },
-        });
-      } finally {
-        origSrcs.forEach((orig, img) => { img.src = orig; });
-        blobUrls.forEach(u => URL.revokeObjectURL(u));
-      }
+      const dataUrl = await htmlToImage.toPng(el, opts);
       return dataUrl;
-    };
-
-    // Timeout global de 25 s — garante que o spinner sempre para
-    const GLOBAL_TIMEOUT = 25_000;
-    let globalTimer: ReturnType<typeof setTimeout>;
-
-    const run = async () => {
-      globalTimer = setTimeout(() => {
-        if (!cancelled) {
-          cancelled = true;
-          setSaveError('Geração de imagem demorou demais. Tente novamente.');
-          setFinalImageUri('__error__');
-          setIsGenerating(false);
-          setPendingGenerate(false);
-        }
-      }, GLOBAL_TIMEOUT);
-
-      try {
-        const dataUrl = await capture();
-        clearTimeout(globalTimer);
-        if (!cancelled) {
-          setFinalImageUri(dataUrl);
-          setTimeout(() => triggerCelebration(), 200);
-        }
-      } catch (e) {
-        clearTimeout(globalTimer);
-        if (!cancelled) {
-          console.error('[generateFinalImage] erro:', e);
-          setSaveError('Não foi possível gerar a imagem. Tente novamente.');
-          setFinalImageUri('__error__');
-        }
-      } finally {
-        if (!cancelled) {
-          setIsGenerating(false);
-          setPendingGenerate(false);
-        }
-      }
-    };
-
-    // 800 ms de delay para o DOM renderizar completamente
-    const startTimer = setTimeout(run, 800);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(startTimer);
-      clearTimeout(globalTimer!);
+    } catch (e) {
+      console.error('[captureCard] erro:', e);
+      return null;
+    } finally {
+      origSrcs.forEach((orig, img) => { img.src = orig; });
       blobUrls.forEach(u => URL.revokeObjectURL(u));
-    };
-  }, [step, pendingGenerate]); // eslint-disable-line react-hooks/exhaustive-deps
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getValidPhotoUrl = useCallback((fotoPath: string) => {
     if (!fotoPath) return ESCUDO_DEFAULT;
@@ -893,18 +823,13 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
     setSaveError(null);
     setStep('saving');
     const saveRes = await saveEscalacao();
-    if (!saveRes.ok) {
-      if (saveRes.reason === 'sem-login') {
-        setSaveError('Você não está logado — escalação não foi salva no ranking, mas a arte foi gerada!');
-      } else {
-        setSaveError(`Erro ao salvar no ranking: ${saveRes.reason}`);
-      }
+    if (!saveRes.ok && saveRes.reason !== 'sem-login' && saveRes.reason !== 'sem-capitao-ou-heroi') {
+      setSaveError(`Erro ao salvar no ranking: ${saveRes.reason}`);
     }
-    // pendingGenerate + setStep('final') → useEffect captura quando o DOM montar
+    // Vai direto para o card final — sem geração automática de imagem
     setFinalImageUri(null);
-    setIsGenerating(true);
-    setPendingGenerate(true);
     setStep('final');
+    triggerCelebration();
   };
 
   // Botão de salvar no ranking separado (para usar a partir do step final)
@@ -925,8 +850,6 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
 
   const verEscalacaoSalva = () => {
     setFinalImageUri(null);
-    setIsGenerating(true);
-    setPendingGenerate(true);
     setStep('final');
   };
 
@@ -973,98 +896,70 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
     );
   };
 
+  // downloadImage: captura on-demand se ainda não há cache, depois baixa
   const downloadImage = async () => {
-    // Se a URI ainda não está disponível, tenta capturar agora
-    let uri = (finalImageUri && finalImageUri !== '__error__') ? finalImageUri : null;
-
-    if (!uri && finalCardRef.current && !isGenerating) {
-      setIsGenerating(true);
-      try {
-        uri = await htmlToImage.toPng(finalCardRef.current, {
-          cacheBust: true, quality: 0.95, pixelRatio: 2,
-          backgroundColor: '#0a0a0a', skipFonts: true,
-        });
-        setFinalImageUri(uri);
-      } catch (e) {
-        console.error('[downloadImage] erro na captura:', e);
-      } finally {
-        setIsGenerating(false);
-      }
-    }
-
-    if (!uri) return;
-    const a = document.createElement('a');
-    a.download = `escalacao-tigre-fc-${formation}.png`;
-    a.href = uri;
-    a.click();
-  };
-
-  const retryGenerateImage = () => {
-    setFinalImageUri(null);
-    setSaveError(null);
     setIsGenerating(true);
-    setPendingGenerate(true);
+    try {
+      let uri = finalImageUri ?? await captureCard();
+      if (uri) {
+        setFinalImageUri(uri);
+        const a = document.createElement('a');
+        a.download = `tigre-fc-escalacao-${formation}.png`;
+        a.href = uri;
+        a.click();
+      }
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  const canShare = !!finalImageUri && finalImageUri !== '__error__';
+  const canShare = true; // botões sempre ativos — captura on-demand
 
-  const shareNative = async () => {
-    if (!canShare) { shareTextOnly(); return; }
-    const text = buildShareText();
-    try {
-      const blob = await (await fetch(finalImageUri)).blob();
-      const file = new File([blob], `escalacao-tigre-fc-${formation}.png`, { type: 'image/png' });
-      if (typeof navigator !== 'undefined' && (navigator as any).canShare?.({ files: [file] })) {
-        await (navigator as any).share({ files: [file], title: 'Minha escalação - Arena Tigre FC', text });
-        return;
-      }
-      downloadImage();
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-    } catch (e) {
-      const err = e as Error;
-      if (err.name !== 'AbortError') {
-        console.error('[shareNative] erro:', e);
-        downloadImage();
-      }
-    }
+  // Helper: garante URI capturada antes de compartilhar
+  const ensureUri = async (): Promise<string | null> => {
+    if (finalImageUri) return finalImageUri;
+    setIsGenerating(true);
+    const uri = await captureCard();
+    setIsGenerating(false);
+    if (uri) setFinalImageUri(uri);
+    return uri;
   };
 
   const shareWhatsApp = async () => {
-    if (finalImageUri && typeof navigator !== 'undefined' && (navigator as any).canShare) {
+    const text = buildShareText();
+    const uri = await ensureUri();
+    if (uri && typeof navigator !== 'undefined' && (navigator as any).canShare) {
       try {
-        const blob = await (await fetch(finalImageUri)).blob();
-        const file = new File([blob], `escalacao-tigre-fc-${formation}.png`, { type: 'image/png' });
+        const blob = await fetch(uri).then(r => r.blob());
+        const file = new File([blob], `tigre-fc-escalacao.png`, { type: 'image/png' });
         if ((navigator as any).canShare({ files: [file] })) {
-          await (navigator as any).share({ files: [file], text: buildShareText(), title: 'Arena Tigre FC' });
+          await (navigator as any).share({ files: [file], text, title: 'Arena Tigre FC' });
           return;
         }
       } catch (e) {
-        const err = e as Error;
-        if (err.name === 'AbortError') return;
-        console.error(e);
+        if ((e as Error).name === 'AbortError') return;
       }
     }
-    downloadImage();
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(buildShareText())}`, '_blank');
+    if (uri) downloadImage();
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const shareInstagram = async () => {
-    if (finalImageUri && typeof navigator !== 'undefined' && (navigator as any).canShare) {
+    const uri = await ensureUri();
+    if (uri && typeof navigator !== 'undefined' && (navigator as any).canShare) {
       try {
-        const blob = await (await fetch(finalImageUri)).blob();
-        const file = new File([blob], `escalacao-tigre-fc-${formation}.png`, { type: 'image/png' });
+        const blob = await fetch(uri).then(r => r.blob());
+        const file = new File([blob], `tigre-fc-escalacao.png`, { type: 'image/png' });
         if ((navigator as any).canShare({ files: [file] })) {
           await (navigator as any).share({ files: [file], title: 'Arena Tigre FC', text: 'Duvido você escalar melhor! 🐯' });
           return;
         }
       } catch (e) {
-        const err = e as Error;
-        if (err.name === 'AbortError') return;
-        console.error(e);
+        if ((e as Error).name === 'AbortError') return;
       }
     }
-    downloadImage();
-    alert('📸 Imagem salva! Abre o Instagram, vai em Stories e adiciona a imagem que acabou de baixar. Cola o link nos stickers!');
+    if (uri) downloadImage();
+    else alert('📸 Tira um screenshot da tela e posta no Instagram Stories!');
   };
 
   const shareTextOnly = () => {
@@ -2007,40 +1902,32 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                   BOTÃO SALVAR — circular, glassmorphism, fora do card
                   Posição: canto inferior direito, OVERLAY do card
               ═══════════════════════════════════════════════════════════ */}
-              {/* Botão download sobreposto ao card */}
-              {canShare && (
-                <motion.button
-                  whileTap={{ scale: 0.92 }}
-                  onClick={downloadImage}
-                  aria-label="Salvar imagem"
-                  className="absolute bottom-3 right-3 w-12 h-12 rounded-full flex items-center justify-center z-30"
-                  style={{
-                    background: 'rgba(20,20,20,0.55)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    border: '1px solid rgba(245,196,0,0.4)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.5), 0 0 15px rgba(245,196,0,0.2)',
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="#F5C400" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                </motion.button>
-              )}
-
-              {/* Spinner enquanto gera */}
-              {isGenerating && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-3xl z-40">
-                  <div className="flex flex-col items-center gap-3">
-                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-                      className="w-10 h-10 border-3 border-yellow-400 border-t-transparent rounded-full" />
-                    <span className="text-yellow-400 text-[9px] font-black tracking-widest">GERANDO ARTE...</span>
-                  </div>
-                </div>
-              )}
+              {/* Botão download flutuante — sempre visível */}
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                onClick={downloadImage}
+                disabled={isGenerating}
+                aria-label="Salvar imagem"
+                className="absolute bottom-3 right-3 w-12 h-12 rounded-full flex items-center justify-center z-30 disabled:opacity-60"
+                style={{
+                  background: 'rgba(20,20,20,0.7)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(245,196,0,0.5)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5), 0 0 15px rgba(245,196,0,0.3)',
+                }}
+              >
+                {isGenerating
+                  ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      className="w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full" />
+                  : <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                      stroke="#F5C400" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                }
+              </motion.button>
             </div>
 
             {/* ═══════════════════════════════════════════════════════════
@@ -2048,24 +1935,21 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
             ═══════════════════════════════════════════════════════════ */}
             <div className="mt-5 w-full max-w-[380px] space-y-3 px-2">
 
-              {/* Retry quando imagem falhou */}
-              {finalImageUri === '__error__' && (
-                <button onClick={retryGenerateImage}
-                  className="w-full py-3 rounded-2xl text-xs font-black tracking-wider border border-yellow-400/40 text-yellow-400">
-                  ↺ TENTAR GERAR IMAGEM NOVAMENTE
-                </button>
-              )}
-
-              {/* Salvar imagem */}
+              {/* 💾 Salvar imagem — sempre ativo, captura on-demand */}
               <motion.button whileTap={{ scale: 0.97 }} onClick={downloadImage}
-                disabled={!canShare}
-                className="w-full py-4 font-black rounded-2xl text-sm tracking-[3px] uppercase disabled:opacity-40"
+                disabled={isGenerating}
+                className="w-full py-4 font-black rounded-2xl text-sm tracking-[3px] uppercase disabled:opacity-60 flex items-center justify-center gap-2"
                 style={{
-                  background: canShare ? 'linear-gradient(90deg, #F5C400, #fbbf24)' : 'rgba(245,196,0,0.2)',
+                  background: 'linear-gradient(90deg, #F5C400, #fbbf24)',
                   color: '#000',
-                  boxShadow: canShare ? '0 8px 24px rgba(245,196,0,0.3)' : 'none',
+                  boxShadow: '0 8px 24px rgba(245,196,0,0.3)',
                 }}>
-                ⬇ SALVAR IMAGEM
+                {isGenerating
+                  ? <><motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      className="inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-full" />
+                    GERANDO...</>
+                  : '💾 SALVAR IMAGEM'
+                }
               </motion.button>
 
               {/* Salvar escalação no ranking (explícito) */}
