@@ -1,20 +1,39 @@
-'use client';
-
+// src/app/tigre-fc/escalar/[jogoId]/page.tsx
+import { createClient } from '@supabase/supabase-js';
 import EscalacaoFormacao from '@/components/tigre-fc/EscalacaoFormacao';
 
-const ESCUDO_NOVORIZONTINO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
-const ESCUDO_BOTAFOGO_SP = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Botafogo_sp.svg';
+interface Props {
+  params: Promise<{ jogoId: string }>;
+}
 
-export default function EscalarJogoPage() {
-  // IGNORA completamente o ID da URL e FORÇA o jogo 13
+export default async function EscalacaoPage({ params }: Props) {
+  const { jogoId } = await params;
+
+  // Busca slugs server-side para evitar flash de escudo errado no client
+  let mandanteSlug: string | undefined;
+  let visitanteSlug: string | undefined;
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const client = createClient(supabaseUrl, supabaseKey);
+    const { data } = await client
+      .from('jogos')
+      .select('mandante_slug, visitante_slug')
+      .eq('id', Number(jogoId))
+      .maybeSingle();
+    if (data) {
+      mandanteSlug = data.mandante_slug ?? undefined;
+      visitanteSlug = data.visitante_slug ?? undefined;
+    }
+  } catch { /* fallback: component faz o fetch client-side */ }
+
   return (
-    <EscalacaoFormacao
-      jogoId={13}
-      mandante="Novorizontino"
-      mandanteLogo={ESCUDO_NOVORIZONTINO}
-      visitanteLogo={ESCUDO_BOTAFOGO_SP}
-      mandanteNome="Novorizontino"
-      rodada={8}
-    />
+    <main className="min-h-screen bg-black overflow-hidden">
+      <EscalacaoFormacao
+        jogoId={jogoId}
+        mandanteSlug={mandanteSlug}
+        visitanteSlug={visitanteSlug}
+      />
+    </main>
   );
 }
