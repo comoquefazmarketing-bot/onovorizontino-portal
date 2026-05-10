@@ -632,19 +632,9 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
             setUserAvatar(profile?.avatar_url || (meta.avatar_url as string) || null);
           }
         }
-        // Se slugs foram passados via props SSR, inicializa imediatamente (evita flash)
-        if (propMandanteSlug && propVisitanteSlug && jogoId && !cancelled) {
-          setJogoData(prev => prev ?? {
-            id: Number(jogoId),
-            competicao: '',
-            rodada: '',
-            data_hora: '',
-            local: '',
-            transmissao: null,
-            mandanteSlug: propMandanteSlug,
-            visitanteSlug: propVisitanteSlug,
-          });
-        }
+        // mandante_slug capturado localmente para uso no mapeamento do palpite
+        // (o state jogoData pode não ter propagado ainda quando lemos a escalação)
+        let mandanteSlugLocal: string = propMandanteSlug ?? 'novorizontino';
 
         // Carrega dados completos do jogo do banco
         if (jogoId && !cancelled) {
@@ -655,6 +645,7 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
               .eq('id', Number(jogoId))
               .maybeSingle();
             if (jogoRaw && !cancelled) {
+              mandanteSlugLocal = jogoRaw.mandante_slug ?? 'novorizontino';
               setJogoData({
                 id: jogoRaw.id,
                 competicao: jogoRaw.competicao ?? '',
@@ -678,20 +669,24 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
           }
           return;
         }
+
         const { data, error } = await supabase
           .from(TABLE)
-          .select('formacao, slots, capitao_id, heroi_id, palpite_mandante, palpite_visitante')
-          .eq('user_id', user.id).eq('jogo_id', Number(jogoId)).maybeSingle();
+          .select('formacao, lineup, capitao_id, heroi_id, palpite_tigre, palpite_adv')
+          .eq('usuario_id', user.id).eq('jogo_id', Number(jogoId)).maybeSingle();
         if (cancelled) return;
         if (error || !data) {
           setSlotMap(buildEmptySlots('4-3-3'));
           setStep('formation');
           return;
         }
+        // palpite_tigre = placar do Novorizontino; palpite_adv = adversário
+        // independe de quem é mandante/visitante no jogo
+        const isNovMand = mandanteSlugLocal === 'novorizontino';
         const formacao = data.formacao || '4-3-3';
         const coords   = formationConfigs[formacao] ?? formationConfigs['4-3-3'];
         const restored: SlotMap = {};
-        const slotsJson = (data.slots ?? {}) as Record<string, number | { id: number; x?: number; y?: number } | null>;
+        const slotsJson = (data.lineup ?? {}) as Record<string, number | { id: number; x?: number; y?: number } | null>;
         Object.entries(coords).forEach(([slotId, c]) => {
           const raw = slotsJson[slotId];
           let pid: number | null = null;
@@ -711,8 +706,9 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
         setSlotMap(restored);
         setCaptainId(data.capitao_id ?? null);
         setHeroId(data.heroi_id ?? null);
-        setPalpiteMandante(data.palpite_mandante ?? 1);
-        setPalpiteVisitante(data.palpite_visitante ?? 2);
+        // palpite_tigre = Novorizontino; palpite_adv = adversário — independe de mandante/visitante
+        setPalpiteMandante(isNovMand ? (data.palpite_tigre ?? 1) : (data.palpite_adv ?? 0));
+        setPalpiteVisitante(isNovMand ? (data.palpite_adv ?? 0) : (data.palpite_tigre ?? 1));
         setHadSaved(true);
         setStep('arena');
       } catch (e) {
@@ -826,24 +822,30 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
     }
     if (!uid) return { ok: false, reason: 'sem-login' };
 
-    const slots: Record<string, { id: number; x: number; y: number } | null> = {};
+    // capitao_id e heroi_id são NOT NULL no schema — garante valor antes de salvar
+    if (!captainId || !heroId) return { ok: false, reason: 'sem-capitao-ou-heroi' };
+
+    const lineup: Record<string, { id: number; x: number; y: number } | null> = {};
     Object.entries(slotMap).forEach(([slotId, state]) => {
-      slots[slotId] = state.player ? { id: state.player.id, x: state.x, y: state.y } : null;
+      lineup[slotId] = state.player ? { id: state.player.id, x: state.x, y: state.y } : null;
     });
+
+    // palpite_tigre = Novorizontino, palpite_adv = adversário (independe de mandante/visitante)
+    const isNovMand = (jogoData?.mandanteSlug ?? 'novorizontino') === 'novorizontino';
     const payload = {
-      user_id: uid,
+      usuario_id: uid,
       jogo_id: Number(jogoId),
       formacao: formation,
-      slots,
+      lineup,
       capitao_id: captainId,
       heroi_id: heroId,
-      palpite_mandante: palpiteMandante,
-      palpite_visitante: palpiteVisitante,
+      palpite_tigre: isNovMand ? palpiteMandante : palpiteVisitante,
+      palpite_adv:   isNovMand ? palpiteVisitante : palpiteMandante,
       updated_at: new Date().toISOString(),
     };
-    const { error } = await supabase.from(TABLE).upsert(payload, { onConflict: 'user_id,jogo_id' });
+    const { error } = await supabase.from(TABLE).upsert(payload, { onConflict: 'usuario_id,jogo_id' });
     if (error) {
-      console.error('[saveEscalacao] erro:', error);
+      console.error('[saveEscalacao] erro Supabase:', { msg: error.message, code: error.code, details: error.details, hint: error.hint });
       return { ok: false, reason: error.message };
     }
     setHadSaved(true);
