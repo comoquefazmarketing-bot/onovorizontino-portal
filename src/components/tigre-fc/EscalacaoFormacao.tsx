@@ -1845,7 +1845,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 <div className="absolute left-0 right-0 z-20" style={{ top: '77%' }}>
                   <div className="flex items-center justify-center gap-4">
                     {/* Logo mandante */}
-                    <img src={slugToLogo(jogoData?.mandanteSlug)} alt="" crossOrigin="anonymous"
+                    <img src={slugToLogo(jogoData?.mandanteSlug)} alt=""
                       className="w-10 h-10 object-contain"
                       style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
                       onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
@@ -1861,7 +1861,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                     </div>
 
                     {/* Logo visitante */}
-                    <img src={slugToLogo(jogoData?.visitanteSlug)} alt="" crossOrigin="anonymous"
+                    <img src={slugToLogo(jogoData?.visitanteSlug)} alt=""
                       className="w-10 h-10 object-contain"
                       style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))' }}
                       onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
