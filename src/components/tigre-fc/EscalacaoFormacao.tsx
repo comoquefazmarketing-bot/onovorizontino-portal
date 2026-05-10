@@ -492,8 +492,12 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
   const finalCardRef = useRef<HTMLDivElement>(null);
   const arenaRef     = useRef<HTMLDivElement>(null);
 
-  // Dispara captura de imagem quando o card final está no DOM.
-  // Estratégia: pré-fetcha imagens Supabase como blob: URLs para evitar taint de canvas por CORS.
+  // ─── Captura do card final ────────────────────────────────────────────────
+  // Estratégia:
+  //   1. skipFonts:true desde a tentativa 1 (fonte externa = trava sem timeout)
+  //   2. Timeout por imagem (3 s) — nunca fica esperando infinitamente
+  //   3. Pré-fetch Supabase → blob: URLs (evita canvas CORS taint)
+  //   4. Timeout global de 25 s — garante que o spinner sempre para
   useEffect(() => {
     if (step !== 'final' || !pendingGenerate) return;
     const el = finalCardRef.current;
@@ -502,25 +506,34 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
     let cancelled = false;
     const blobUrls: string[] = [];
 
+    const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
+      Promise.race([p, new Promise<T>(res => setTimeout(() => res(fallback), ms))]);
+
     const capture = async (): Promise<string> => {
       const imgs = Array.from(el.querySelectorAll<HTMLImageElement>('img'));
 
-      // 1. Aguarda carregamento visual de todas as imagens
+      // 1. Aguarda carregamento com timeout de 3 s por imagem
       await Promise.all(imgs.map(img =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); })
+        img.complete ? Promise.resolve() :
+        withTimeout(
+          new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); }),
+          3000, undefined as unknown as void
+        )
       ));
 
-      // 2. Pré-fetch imagens Supabase como blob: URLs (evita canvas CORS taint)
+      // 2. Pré-fetch imagens Supabase como blob: URLs
       const origSrcs = new Map<HTMLImageElement, string>();
       await Promise.allSettled(imgs.map(async (img) => {
         const src = img.getAttribute('src') ?? '';
         if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
         if (!src.includes('supabase.co') && !src.startsWith('/')) return;
         try {
-          const res = await fetch(src, { mode: 'cors', credentials: 'omit' });
-          if (!res.ok) return;
+          const res = await withTimeout(
+            fetch(src, { mode: 'cors', credentials: 'omit' }),
+            5000,
+            null as unknown as Response
+          );
+          if (!res?.ok) return;
           const blob = await res.blob();
           const blobUrl = URL.createObjectURL(blob);
           blobUrls.push(blobUrl);
@@ -529,20 +542,26 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
         } catch { /* mantém src original */ }
       }));
 
-      // 3. Aguarda re-render das imagens com blob URLs
       if (origSrcs.size > 0) {
-        await new Promise<void>(res => setTimeout(res, 200));
+        await new Promise<void>(res => setTimeout(res, 150));
       }
 
-      // 4. Captura (2 tentativas)
-      const opts = { cacheBust: true, quality: 0.95, pixelRatio: 2, backgroundColor: '#0a0a0a' };
+      // 3. Captura — sempre skipFonts para evitar trava em fontes externas
+      const baseOpts = {
+        cacheBust: true,
+        quality:   0.95,
+        pixelRatio: 2,
+        backgroundColor: '#0a0a0a',
+        skipFonts: true,
+      };
+
       let dataUrl: string;
       try {
-        dataUrl = await htmlToImage.toPng(el, opts);
+        dataUrl = await htmlToImage.toPng(el, baseOpts);
       } catch {
+        // Tentativa 2: filtra imagens não-blob/data
         dataUrl = await htmlToImage.toPng(el, {
-          ...opts,
-          skipFonts: true,
+          ...baseOpts,
           filter: (node: HTMLElement) => {
             if (node instanceof HTMLImageElement) {
               const s = node.getAttribute('src') ?? '';
@@ -552,25 +571,39 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
           },
         });
       } finally {
-        // Restaura srcs originais e revoga blob URLs
         origSrcs.forEach((orig, img) => { img.src = orig; });
         blobUrls.forEach(u => URL.revokeObjectURL(u));
       }
       return dataUrl;
     };
 
-    const timer = setTimeout(async () => {
-      if (cancelled) return;
+    // Timeout global de 25 s — garante que o spinner sempre para
+    const GLOBAL_TIMEOUT = 25_000;
+    let globalTimer: ReturnType<typeof setTimeout>;
+
+    const run = async () => {
+      globalTimer = setTimeout(() => {
+        if (!cancelled) {
+          cancelled = true;
+          setSaveError('Geração de imagem demorou demais. Tente novamente.');
+          setFinalImageUri('__error__');
+          setIsGenerating(false);
+          setPendingGenerate(false);
+        }
+      }, GLOBAL_TIMEOUT);
+
       try {
         const dataUrl = await capture();
+        clearTimeout(globalTimer);
         if (!cancelled) {
           setFinalImageUri(dataUrl);
           setTimeout(() => triggerCelebration(), 200);
         }
       } catch (e) {
+        clearTimeout(globalTimer);
         if (!cancelled) {
           console.error('[generateFinalImage] erro:', e);
-          setSaveError('Não foi possível gerar a imagem. Toque em "Tentar novamente" abaixo.');
+          setSaveError('Não foi possível gerar a imagem. Tente novamente.');
           setFinalImageUri('__error__');
         }
       } finally {
@@ -579,11 +612,15 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
           setPendingGenerate(false);
         }
       }
-    }, 800);
+    };
+
+    // 800 ms de delay para o DOM renderizar completamente
+    const startTimer = setTimeout(run, 800);
 
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      clearTimeout(startTimer);
+      clearTimeout(globalTimer!);
       blobUrls.forEach(u => URL.revokeObjectURL(u));
     };
   }, [step, pendingGenerate]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -936,11 +973,29 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
     );
   };
 
-  const downloadImage = () => {
-    if (!finalImageUri || finalImageUri === '__error__') return;
+  const downloadImage = async () => {
+    // Se a URI ainda não está disponível, tenta capturar agora
+    let uri = (finalImageUri && finalImageUri !== '__error__') ? finalImageUri : null;
+
+    if (!uri && finalCardRef.current && !isGenerating) {
+      setIsGenerating(true);
+      try {
+        uri = await htmlToImage.toPng(finalCardRef.current, {
+          cacheBust: true, quality: 0.95, pixelRatio: 2,
+          backgroundColor: '#0a0a0a', skipFonts: true,
+        });
+        setFinalImageUri(uri);
+      } catch (e) {
+        console.error('[downloadImage] erro na captura:', e);
+      } finally {
+        setIsGenerating(false);
+      }
+    }
+
+    if (!uri) return;
     const a = document.createElement('a');
     a.download = `escalacao-tigre-fc-${formation}.png`;
-    a.href = finalImageUri;
+    a.href = uri;
     a.click();
   };
 
