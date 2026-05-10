@@ -200,7 +200,14 @@ function DraggableSlot({ slotId, state, arenaRef, isActive, hasPending, isDeskto
   );
 }
 
-export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = JOGO_ATUAL.mandante_nome, mandanteLogo = ESCUDO_DEFAULT, visitanteLogo = JOGO_ATUAL.visitante_logo, mandanteNome = JOGO_ATUAL.mandante_nome, rodada = 8 }: EscalacaoFormacaoProps) {
+export default function EscalacaoFormacao({ 
+  jogoId = JOGO_ATUAL.id, 
+  mandante = JOGO_ATUAL.mandante_nome, 
+  mandanteLogo = ESCUDO_DEFAULT, 
+  visitanteLogo = JOGO_ATUAL.visitante_logo, 
+  mandanteNome = JOGO_ATUAL.mandante_nome, 
+  rodada = 8 
+}: EscalacaoFormacaoProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('loading');
   const [userId, setUserId] = useState<string | null>(null);
@@ -217,14 +224,26 @@ export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = J
   const [hadSaved, setHadSaved] = useState(false);
   const [finalImageUri, setFinalImageUri] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const arenaRef = useRef<HTMLDivElement>(null);
   const finalCardRef = useRef<HTMLDivElement>(null);
 
-  const getValidPhotoUrl = (foto: string) => (foto ? `${BASE_STORAGE}${foto}` : '/img/player-placeholder.png');
+  const getValidPhotoUrl = (foto: string) => {
+    if (!foto) return '/img/player-placeholder.png';
+    if (imageErrors[foto]) return ESCUDO_DEFAULT;
+    return `${BASE_STORAGE}${foto}`;
+  };
+
+  const handleImageError = (url: string) => {
+    if (!imageErrors[url]) {
+      setImageErrors(prev => ({ ...prev, [url]: true }));
+    }
+  };
 
   useEffect(() => {
     const checkSize = () => setIsDesktop(window.innerWidth >= 768);
-    checkSize(); window.addEventListener('resize', checkSize);
+    checkSize(); 
+    window.addEventListener('resize', checkSize);
     return () => window.removeEventListener('resize', checkSize);
   }, []);
 
@@ -232,7 +251,10 @@ export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = J
     let cancelled = false;
     async function loadExisting() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user || cancelled) { setStep('formation'); return; }
+      if (!user || cancelled) { 
+        setStep('formation'); 
+        return; 
+      }
       setUserId(user.id);
       const { data, error } = await supabase.from(TABLE).select('*').eq('usuario_id', user.id).eq('jogo_id', Number(jogoId)).maybeSingle();
       if (data && !cancelled) {
@@ -250,36 +272,60 @@ export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = J
           const player = dbData ? PLAYERS_DATA.find(p => p.id === dbData.id) || null : null;
           reconstructed[slotId] = { player, x: dbData?.x ?? coord.x, y: dbData?.y ?? coord.y };
         });
-        setSlotMap(reconstructed); setStep('arena');
+        setSlotMap(reconstructed); 
+        setStep('arena');
       } else {
         setStep('formation');
       }
     }
-    loadExisting(); return () => { cancelled = true; };
+    loadExisting(); 
+    return () => { cancelled = true; };
   }, [jogoId]);
 
   const handleChangeFormation = (f: string) => {
     const coords = formationConfigs[f];
     const playersAtuais = Object.values(slotMap).map(s => s.player).filter((p): p is Player => p !== null);
     const novo: SlotMap = {};
-    Object.entries(coords).forEach(([id, c]) => { novo[id] = { player: null, x: c.x, y: c.y }; });
+    Object.entries(coords).forEach(([id, c]) => { 
+      novo[id] = { player: null, x: c.x, y: c.y }; 
+    });
     const queue = [...playersAtuais];
-    Object.keys(novo).forEach(slotId => { if (queue.length > 0) novo[slotId].player = queue.shift()!; });
-    setFormation(f); setSlotMap(novo); setStep('arena');
+    Object.keys(novo).forEach(slotId => { 
+      if (queue.length > 0) novo[slotId].player = queue.shift()!; 
+    });
+    setFormation(f); 
+    setSlotMap(novo); 
+    setStep('arena');
   };
 
   const handlePlayerSelection = (player: Player) => {
     const slotComEle = Object.entries(slotMap).find(([, s]) => s.player?.id === player.id);
-    if (slotComEle) { setSlotMap(prev => ({ ...prev, [slotComEle[0]]: { ...prev[slotComEle[0]], player: null } })); return; }
-    if (activeSlot) { setSlotMap(prev => ({ ...prev, [activeSlot]: { ...prev[activeSlot], player } })); setActiveSlot(null); } else { setPendingPlayer(player); }
+    if (slotComEle) { 
+      setSlotMap(prev => ({ ...prev, [slotComEle[0]]: { ...prev[slotComEle[0]], player: null } })); 
+      return; 
+    }
+    if (activeSlot) { 
+      setSlotMap(prev => ({ ...prev, [activeSlot]: { ...prev[activeSlot], player } })); 
+      setActiveSlot(null); 
+    } else { 
+      setPendingPlayer(player); 
+    }
   };
 
   const handleSlotClick = (slotId: string) => {
-    if (pendingPlayer) { setSlotMap(prev => ({ ...prev, [slotId]: { ...prev[slotId], player: pendingPlayer } })); setPendingPlayer(null); } else { setActiveSlot(slotId === activeSlot ? null : slotId); }
+    if (pendingPlayer) { 
+      setSlotMap(prev => ({ ...prev, [slotId]: { ...prev[slotId], player: pendingPlayer } })); 
+      setPendingPlayer(null); 
+    } else { 
+      setActiveSlot(slotId === activeSlot ? null : slotId); 
+    }
   };
 
   const handleSlotDragSettled = useCallback((slotId: string, newX: number, newY: number) => {
-    setSlotMap(prev => { if (!prev[slotId]) return prev; return { ...prev, [slotId]: { ...prev[slotId], x: newX, y: newY } }; });
+    setSlotMap(prev => { 
+      if (!prev[slotId]) return prev; 
+      return { ...prev, [slotId]: { ...prev[slotId], x: newX, y: newY } }; 
+    });
   }, []);
 
   const selectedPlayers = Object.values(slotMap).map(s => s.player).filter((p): p is Player => p !== null);
@@ -289,16 +335,25 @@ export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = J
     return Math.round(total / selectedPlayers.length);
   }, [selectedPlayers]);
 
-  const filteredPlayers = useMemo(() => (posFiltro === 'TODOS' ? PLAYERS_DATA : PLAYERS_DATA.filter(p => p.pos === posFiltro)), [posFiltro]);
+  const filteredPlayers = useMemo(() => 
+    (posFiltro === 'TODOS' ? PLAYERS_DATA : PLAYERS_DATA.filter(p => p.pos === posFiltro)), 
+    [posFiltro]
+  );
 
   const saveEscalacao = async () => {
     if (!userId || !jogoId) return { ok: false };
     const slots: Record<string, any> = {};
-    Object.entries(slotMap).forEach(([id, s]) => { slots[id] = s.player ? { id: s.player.id, x: s.x, y: s.y } : null; });
+    Object.entries(slotMap).forEach(([id, s]) => { 
+      slots[id] = s.player ? { id: s.player.id, x: s.x, y: s.y } : null; 
+    });
     const eMandante = mandanteNome?.toLowerCase().includes('novorizontino');
     const payload = {
-      usuario_id: userId, jogo_id: Number(jogoId), formacao: formation, lineup: slots,
-      capitao_id: captainId, heroi_id: heroId,
+      usuario_id: userId, 
+      jogo_id: Number(jogoId), 
+      formacao: formation, 
+      lineup: slots,
+      capitao_id: captainId, 
+      heroi_id: heroId,
       palpite_tigre: eMandante ? palpiteMandante : palpiteVisitante,
       palpite_adv: eMandante ? palpiteVisitante : palpiteMandante,
       updated_at: new Date().toISOString(),
@@ -311,26 +366,103 @@ export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = J
   const captureCardAsPng = useCallback(async () => {
     if (!finalCardRef.current) return null;
     try {
+      // Aguarda imagens carregarem completamente
       await waitForImages(finalCardRef.current);
-      await new Promise(r => setTimeout(r, 150));
-      return await htmlToImage.toPng(finalCardRef.current, { cacheBust: true, quality: 0.98, pixelRatio: 3, backgroundColor: '#0a0a0a' });
-    } catch { return null; }
-  }, []);
+      await new Promise(r => setTimeout(r, 300));
+      
+      // Tenta capturar com fallback em caso de erro
+      const dataUrl = await htmlToImage.toPng(finalCardRef.current, { 
+        cacheBust: true, 
+        quality: 0.95, 
+        pixelRatio: 2.5, 
+        backgroundColor: '#0a0a0a',
+        skipAutoScale: false,
+        filter: (node) => {
+          // Filtra imagens com erro para não quebrar a captura
+          if (node instanceof HTMLImageElement && imageErrors[node.src]) {
+            return false;
+          }
+          return true;
+        }
+      });
+      return dataUrl;
+    } catch (error) {
+      console.error("Erro na captura da imagem:", error);
+      return null;
+    }
+  }, [imageErrors]);
+
+  const downloadImage = (uri: string) => {
+    const link = document.createElement('a');
+    link.download = `tigre-fc-escalacao-${Date.now()}.png`;
+    link.href = uri;
+    link.click();
+  };
+
+  const shareImage = async (uri: string) => {
+    try {
+      // Converte URI para blob
+      const res = await fetch(uri);
+      const blob = await res.blob();
+      const file = new File([blob], "tigre-fc-escalacao.png", { type: "image/png" });
+      
+      // Tenta compartilhar via Web Share API
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Minha Escalação Tigre FC',
+          text: `🐯 Minha escalação para ${mandante} vs ${JOGO_ATUAL.visitante_nome}! OVR: ${teamOvr} | Palpite: ${palpiteMandante} x ${palpiteVisitante}`,
+          files: [file]
+        });
+      } else {
+        // Fallback: baixa a imagem e abre o WhatsApp com texto
+        downloadImage(uri);
+        const text = `🐯 ARENA TIGRE FC\nEscalei meu time pro jogo ${mandante} × ${JOGO_ATUAL.visitante_nome}!\nOVR: ${teamOvr}\nPalpite: ${palpiteMandante} × ${palpiteVisitante}\n\nMonte o seu: ${SHARE_BASE_URL}/${jogoId}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        alert("A imagem foi baixada. Envie-a manualmente no WhatsApp junto com o texto.");
+      }
+    } catch (error) {
+      console.error("Erro ao compartilhar:", error);
+      downloadImage(uri);
+      alert("Não foi possível compartilhar automaticamente. A imagem foi baixada.");
+    }
+  };
 
   const generateFinalImage = async () => {
-    setStep('saving'); await saveEscalacao(); setStep('final'); setIsGenerating(true);
-    await new Promise(r => setTimeout(r, 500));
-    const uri = await captureCardAsPng();
-    setIsGenerating(false); if (uri) setFinalImageUri(uri);
-    confetti({ particleCount: 200, spread: 70 });
+    setStep('saving'); 
+    await saveEscalacao(); 
+    setStep('final'); 
+    setIsGenerating(true);
+    
+    // Múltiplas tentativas para garantir captura
+    let uri = null;
+    for (let i = 0; i < 3; i++) {
+      await new Promise(r => setTimeout(r, 500 + (i * 200)));
+      uri = await captureCardAsPng();
+      if (uri) break;
+    }
+    
+    setIsGenerating(false); 
+    if (uri) {
+      setFinalImageUri(uri);
+      confetti({ particleCount: 200, spread: 70 });
+    } else {
+      alert("Não foi possível gerar a imagem. Tente novamente.");
+    }
   };
 
-  const shareWhatsApp = () => {
-    const text = `🐯 ARENA TIGRE FC\nEscalei meu time pro jogo ${mandante} × ${visitanteNome}!\nOVR: ${teamOvr}\nPalpite: ${palpiteMandante} × ${palpiteVisitante}\n\nMonte o seu: ${SHARE_BASE_URL}/${jogoId}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  const handleShare = () => {
+    if (finalImageUri) {
+      shareImage(finalImageUri);
+    } else {
+      alert("Gerando imagem, aguarde...");
+    }
   };
 
-  if (step === 'loading') return <div className="h-screen bg-black flex items-center justify-center text-yellow-400 font-black italic">CARREGANDO...</div>;
+  if (step === 'loading') return (
+    <div className="h-screen bg-black flex items-center justify-center text-yellow-400 font-black italic">
+      CARREGANDO...
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden flex flex-col select-none">
@@ -340,7 +472,12 @@ export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = J
             <h1 className="text-3xl font-black italic text-yellow-500 mb-10 uppercase">ESCOLHA A TÁTICA</h1>
             <div className="grid grid-cols-2 gap-4 w-full max-w-md">
               {Object.keys(formationConfigs).map(f => (
-                <button key={f} onClick={() => handleChangeFormation(f)} className={`py-8 border-2 rounded-3xl font-black text-2xl italic ${formation === f ? 'border-yellow-400 bg-yellow-500/10 text-yellow-400' : 'bg-zinc-900 border-white/10'}`}>{f}</button>
+                <button key={f} onClick={() => handleChangeFormation(f)} 
+                  className={`py-8 border-2 rounded-3xl font-black text-2xl italic ${
+                    formation === f ? 'border-yellow-400 bg-yellow-500/10 text-yellow-400' : 'bg-zinc-900 border-white/10'
+                  }`}>
+                  {f}
+                </button>
               ))}
             </div>
           </motion.div>
@@ -352,22 +489,59 @@ export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = J
               <div className="p-3 border-b border-white/10">
                 <h3 className="text-yellow-400 font-black text-sm italic mb-2">MERCADO</h3>
                 <div className="grid grid-cols-4 gap-1">
-                  {POSICOES.map(p => <button key={p} onClick={() => setPosFiltro(p)} className={`text-[8px] font-black py-1 rounded ${posFiltro === p ? 'bg-yellow-400 text-black' : 'bg-zinc-900 text-zinc-500'}`}>{p === 'TODOS' ? 'ALL' : p}</button>)}
+                  {POSICOES.map(p => (
+                    <button key={p} onClick={() => setPosFiltro(p)} 
+                      className={`text-[8px] font-black py-1 rounded ${
+                        posFiltro === p ? 'bg-yellow-400 text-black' : 'bg-zinc-900 text-zinc-500'
+                      }`}>
+                      {p === 'TODOS' ? 'ALL' : p}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-2">
                 <div className="grid grid-cols-3 gap-1.5">
-                  {filteredPlayers.map(p => <FutCard key={p.id} player={p} escalado={selectedPlayers.some(sp => sp.id === p.id)} pending={pendingPlayer?.id === p.id} onClick={() => handlePlayerSelection(p)} getValidPhotoUrl={getValidPhotoUrl} />)}
+                  {filteredPlayers.map(p => (
+                    <FutCard 
+                      key={p.id} 
+                      player={p} 
+                      escalado={selectedPlayers.some(sp => sp.id === p.id)} 
+                      pending={pendingPlayer?.id === p.id} 
+                      onClick={() => handlePlayerSelection(p)} 
+                      getValidPhotoUrl={getValidPhotoUrl} 
+                    />
+                  ))}
                 </div>
               </div>
             </div>
             <div className="flex-1 relative bg-zinc-900" ref={arenaRef}>
               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="" />
               <div className="absolute inset-0">
-                {Object.entries(slotMap).map(([id, s]) => <DraggableSlot key={id} slotId={id} state={s} arenaRef={arenaRef} isActive={activeSlot === id} hasPending={!!pendingPlayer} isDesktop={isDesktop} isCaptain={captainId === s.player?.id} isHero={heroId === s.player?.id} onDragSettled={handleSlotDragSettled} onClick={handleSlotClick} getValidPhotoUrl={getValidPhotoUrl} />)}
+                {Object.entries(slotMap).map(([id, s]) => (
+                  <DraggableSlot 
+                    key={id} 
+                    slotId={id} 
+                    state={s} 
+                    arenaRef={arenaRef} 
+                    isActive={activeSlot === id} 
+                    hasPending={!!pendingPlayer} 
+                    isDesktop={isDesktop} 
+                    isCaptain={captainId === s.player?.id} 
+                    isHero={heroId === s.player?.id} 
+                    onDragSettled={handleSlotDragSettled} 
+                    onClick={handleSlotClick} 
+                    getValidPhotoUrl={getValidPhotoUrl} 
+                  />
+                ))}
               </div>
               <div className="absolute bottom-4 left-4 right-4 flex gap-2">
-                <button onClick={() => selectedPlayers.length === 11 ? setStep('captain') : alert('Escale 11 jogadores')} className={`flex-1 py-4 rounded-2xl font-black italic ${selectedPlayers.length === 11 ? 'bg-yellow-400 text-black' : 'bg-zinc-800 text-zinc-500'}`}>PRÓXIMO PASSO →</button>
+                <button 
+                  onClick={() => selectedPlayers.length === 11 ? setStep('captain') : alert('Escale 11 jogadores')} 
+                  className={`flex-1 py-4 rounded-2xl font-black italic ${
+                    selectedPlayers.length === 11 ? 'bg-yellow-400 text-black' : 'bg-zinc-800 text-zinc-500'
+                  }`}>
+                  PRÓXIMO PASSO →
+                </button>
               </div>
             </div>
           </div>
@@ -375,11 +549,26 @@ export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = J
 
         {(step === 'captain' || step === 'hero') && (
           <div className="flex-1 flex flex-col items-center justify-center p-6 bg-black">
-            <h2 className="text-2xl font-black text-yellow-400 mb-8 uppercase italic">{step === 'captain' ? 'ESCOLHA O CAPITÃO' : 'ESCOLHA O HERÓI'}</h2>
+            <h2 className="text-2xl font-black text-yellow-400 mb-8 uppercase italic">
+              {step === 'captain' ? 'ESCOLHA O CAPITÃO' : 'ESCOLHA O HERÓI'}
+            </h2>
             <div className="grid grid-cols-3 gap-4 max-w-lg">
               {selectedPlayers.filter(p => step === 'hero' ? p.id !== captainId : true).map(p => (
-                <button key={p.id} onClick={() => { if (step === 'captain') { setCaptainId(p.id); setStep('hero'); } else { setHeroId(p.id); setStep('palpite'); } }} className="flex flex-col items-center">
-                  <img src={getValidPhotoUrl(p.foto)} className="w-20 h-24 object-cover rounded-lg border-2 border-white/20" alt="" />
+                <button key={p.id} onClick={() => { 
+                  if (step === 'captain') { 
+                    setCaptainId(p.id); 
+                    setStep('hero'); 
+                  } else { 
+                    setHeroId(p.id); 
+                    setStep('palpite'); 
+                  } 
+                }} className="flex flex-col items-center">
+                  <img 
+                    src={getValidPhotoUrl(p.foto)} 
+                    className="w-20 h-24 object-cover rounded-lg border-2 border-white/20" 
+                    alt={p.short}
+                    onError={() => handleImageError(p.foto)}
+                  />
                   <span className="text-[10px] font-bold mt-2 uppercase">{p.short}</span>
                 </button>
               ))}
@@ -392,43 +581,114 @@ export default function EscalacaoFormacao({ jogoId = JOGO_ATUAL.id, mandante = J
             <h1 className="text-4xl font-black italic mb-10 text-white uppercase">QUAL O PLACAR?</h1>
             <div className="flex items-center justify-between w-full max-w-md mb-12">
               <div className="flex flex-col items-center gap-4">
-                <img src={ESCUDO_DEFAULT} className="w-24 h-24 object-contain" alt="" />
-                <input type="number" value={palpiteMandante} onChange={e => setPalpiteMandante(Number(e.target.value))} className="w-20 bg-zinc-900 border-2 border-yellow-400 text-center text-4xl font-black py-4 rounded-2xl" />
+                <img 
+                  src={mandanteLogo} 
+                  className="w-24 h-24 object-contain" 
+                  alt={mandante}
+                  onError={() => handleImageError(mandanteLogo)}
+                />
+                <input 
+                  type="number" 
+                  value={palpiteMandante} 
+                  onChange={e => setPalpiteMandante(Number(e.target.value))} 
+                  className="w-20 bg-zinc-900 border-2 border-yellow-400 text-center text-4xl font-black py-4 rounded-2xl" 
+                />
               </div>
               <div className="text-4xl font-black text-zinc-700 italic">VS</div>
               <div className="flex flex-col items-center gap-4">
-                <img src={visitanteLogo} className="w-24 h-24 object-contain" alt="" />
-                <input type="number" value={palpiteVisitante} onChange={e => setPalpiteVisitante(Number(e.target.value))} className="w-20 bg-zinc-900 border-2 border-white/20 text-center text-4xl font-black py-4 rounded-2xl" />
+                <img 
+                  src={visitanteLogo} 
+                  className="w-24 h-24 object-contain" 
+                  alt="Visitante"
+                  onError={() => handleImageError(visitanteLogo)}
+                />
+                <input 
+                  type="number" 
+                  value={palpiteVisitante} 
+                  onChange={e => setPalpiteVisitante(Number(e.target.value))} 
+                  className="w-20 bg-zinc-900 border-2 border-white/20 text-center text-4xl font-black py-4 rounded-2xl" 
+                />
               </div>
             </div>
-            <button onClick={generateFinalImage} className="w-full max-w-md py-5 bg-yellow-400 text-black rounded-2xl text-lg font-black italic">FINALIZAR →</button>
+            <button onClick={generateFinalImage} className="w-full max-w-md py-5 bg-yellow-400 text-black rounded-2xl text-lg font-black italic">
+              FINALIZAR →
+            </button>
           </div>
         )}
 
-        {step === 'saving' && <div className="flex-1 flex items-center justify-center bg-black text-white font-black italic">SALVANDO...</div>}
+        {step === 'saving' && (
+          <div className="flex-1 flex items-center justify-center bg-black text-white font-black italic">
+            SALVANDO...
+          </div>
+        )}
 
         {step === 'final' && (
           <div className="flex-1 flex flex-col items-center p-6 bg-zinc-950 overflow-y-auto">
             <div className="w-full max-w-sm aspect-[1/1.4] bg-zinc-950 rounded-[40px] overflow-hidden border-4 border-yellow-400 relative p-6 flex flex-col" ref={finalCardRef}>
               <img src={STADIUM_BG} className="absolute inset-0 w-full h-full object-cover opacity-40" alt="" />
               <div className="relative z-10 flex justify-between items-center mb-6">
-                <img src={ESCUDO_DEFAULT} className="w-12 h-12 object-contain" alt="" />
-                <div className="text-5xl font-black italic">{palpiteMandante}<span className="text-yellow-400 mx-1">-</span>{palpiteVisitante}</div>
-                <img src={visitanteLogo} className="w-12 h-12 object-contain" alt="" />
+                <img 
+                  src={mandanteLogo} 
+                  className="w-12 h-12 object-contain" 
+                  alt={mandante}
+                  onError={() => handleImageError(mandanteLogo)}
+                />
+                <div className="text-5xl font-black italic">
+                  {palpiteMandante}<span className="text-yellow-400 mx-1">-</span>{palpiteVisitante}
+                </div>
+                <img 
+                  src={visitanteLogo} 
+                  className="w-12 h-12 object-contain" 
+                  alt="Visitante"
+                  onError={() => handleImageError(visitanteLogo)}
+                />
               </div>
               <div className="relative z-10 flex-1 flex flex-col gap-1 overflow-hidden">
-                <div className="flex justify-between px-2 py-1 bg-white/5 rounded text-[10px] font-black text-yellow-400 italic mb-2"><span>RODADA {rodada}</span><span>OVR {teamOvr}</span></div>
+                <div className="flex justify-between px-2 py-1 bg-white/5 rounded text-[10px] font-black text-yellow-400 italic mb-2">
+                  <span>RODADA {rodada}</span>
+                  <span>OVR {teamOvr}</span>
+                </div>
                 {Object.entries(slotMap).filter(([_, s]) => s.player).map(([id, s]) => (
                   <div key={id} className="flex justify-between items-center px-2 py-0.5 border-b border-white/5">
-                    <div className="flex items-center gap-2"><span className="text-[9px] font-black text-zinc-600 w-6">{id}</span><span className="text-[11px] font-black text-white italic">{s.player?.short}</span></div>
-                    <div className="flex items-center gap-1.5">{s.player?.id === captainId && <span className="text-[8px] bg-yellow-400 text-black font-black px-1 rounded">C</span>}{s.player?.id === heroId && <span className="text-[8px] bg-cyan-400 text-black font-black px-1 rounded">H</span>}<span className="text-[10px] font-black text-zinc-500">{s.player?.ovr}</span></div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-black text-zinc-600 w-6">{id}</span>
+                      <span className="text-[11px] font-black text-white italic">{s.player?.short}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {s.player?.id === captainId && (
+                        <span className="text-[8px] bg-yellow-400 text-black font-black px-1 rounded">C</span>
+                      )}
+                      {s.player?.id === heroId && (
+                        <span className="text-[8px] bg-cyan-400 text-black font-black px-1 rounded">H</span>
+                      )}
+                      <span className="text-[10px] font-black text-zinc-500">{s.player?.ovr}</span>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
             <div className="w-full max-w-sm mt-6 flex flex-col gap-3">
-              <button onClick={shareWhatsApp} className="py-4 bg-[#25D366] text-white rounded-2xl font-black italic">WHATSAPP</button>
-              <button onClick={() => setStep('arena')} className="py-4 text-zinc-500 font-black text-xs tracking-widest uppercase">← EDITAR</button>
+              <button 
+                onClick={handleShare} 
+                className="py-4 bg-[#25D366] text-white rounded-2xl font-black italic flex items-center justify-center gap-2"
+                disabled={isGenerating}
+              >
+                📤 {isGenerating ? 'GERANDO...' : 'COMPARTILHAR IMAGEM'}
+              </button>
+              {finalImageUri && (
+                <button 
+                  onClick={() => downloadImage(finalImageUri)} 
+                  className="py-3 bg-zinc-800 text-white rounded-2xl font-black text-sm"
+                >
+                  💾 BAIXAR IMAGEM
+                </button>
+              )}
+              <button 
+                onClick={() => setStep('arena')} 
+                className="py-4 text-zinc-500 font-black text-xs tracking-widest uppercase"
+              >
+                ← EDITAR
+              </button>
             </div>
           </div>
         )}
