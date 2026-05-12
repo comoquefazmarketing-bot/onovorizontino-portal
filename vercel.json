@@ -17,6 +17,10 @@
     {
       "path": "/api/agents/campanha",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/agents/rafael",
+      "schedule": "0 8 * * 1"
     }
   ]
 }

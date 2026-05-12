@@ -22,6 +22,9 @@ export type { Player, SlotSuggestion, SuggestedLineup, AnalysisReport } from './
 export { GabiAgent, gerarPostagem } from './GabiAgent';
 export type { JogoResultado, Postagem } from './GabiAgent';
 
+export { RafaelAgent, coletarMetricas } from './RafaelAgent';
+export type { RelatorioSemanal, MetricaBloco, ColetaParams } from './RafaelAgent';
+
 // ─── Time completo ────────────────────────────────────────────────────────────
 
 import { MarketAgent }  from './MarketAgent';
@@ -29,6 +32,7 @@ import { AuditorAgent } from './AuditorAgent';
 import { DealerAgent }  from './DealerAgent';
 import { AnaAgent }     from './AnaAgent';
 import { GabiAgent }    from './GabiAgent';
+import { RafaelAgent }  from './RafaelAgent';
 
 export const Equipe = {
   leo:    MarketAgent,
@@ -36,9 +40,10 @@ export const Equipe = {
   bruno:  DealerAgent,
   ana:    AnaAgent,
   gabi:   GabiAgent,
+  rafael: RafaelAgent,
 
   apresentar(): void {
-    [MarketAgent, AuditorAgent, DealerAgent, AnaAgent, GabiAgent].forEach(a => {
+    [MarketAgent, AuditorAgent, DealerAgent, AnaAgent, GabiAgent, RafaelAgent].forEach(a => {
       console.log(`👤 ${a.name} — ${a.role} (v${a.version})`);
     });
     console.log('É Nível Makarios! 🐯❄️');
