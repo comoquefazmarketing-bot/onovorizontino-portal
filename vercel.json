@@ -5,6 +5,14 @@
     {
       "path": "/api/tigre-fc/cron-processar",
       "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/agents/audit",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/agents/campanha",
+      "schedule": "0 10,18 * * *"
     }
   ]
 }
