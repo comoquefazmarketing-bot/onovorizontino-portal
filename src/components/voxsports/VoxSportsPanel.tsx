@@ -196,11 +196,11 @@ export default function VoxSportsPanel() {
           <div className="w-1.5 h-10 bg-yellow-500 rounded-full" />
           <div>
             <h1 className="text-2xl font-black italic uppercase tracking-tighter leading-none">
-              VoxSports
+              Redação
             </h1>
             <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">
               Fila de copies · Léo · É Nível Makarios 🐯❄️
-            </p>
+</p>
           </div>
           <div className="ml-auto flex gap-3 text-center">
             <div>
