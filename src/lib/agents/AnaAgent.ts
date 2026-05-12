@@ -1,1 +1,262 @@
-Ly8gc3JjL2xpYi9hZ2VudHMvQW5hQWdlbnQudHMKLy8gQW5hIOKAlCBBZ2VudGUgZGUgRXNjYWxhw6fDo28gSW50ZWxpZ2VudGUgZG8gZWNvc3Npc3RlbWEgVGlncmVGQy4KLy8gQW5hbGlzYSBvIGVsZW5jbywgc3VnZXJlIGEgbWVsaG9yIGVzY2FsYcOnw6NvIHBvciBmb3JtYcOnw6NvIGUgYXZhbGlhIGxpbmV1cHMgZXhpc3RlbnRlcy4KCi8vIOKUgOKUgOKUgCBFbGVuY28gKGVzcGVsaG8gZG8gRXNjYWxhY2FvRm9ybWFjYW8udHN4KSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmV4cG9ydCBpbnRlcmZhY2UgUGxheWVyIHsKICBpZDogICAgbnVtYmVyOwogIG5hbWU6ICBzdHJpbmc7CiAgc2hvcnQ6IHN0cmluZzsKICBudW06ICAgbnVtYmVyOwogIHBvczogICBzdHJpbmc7CiAgb3ZyOiAgIG51bWJlcjsKfQoKY29uc3QgRUxFTkNPOiBQbGF5ZXJbXSA9IFsKICAvLyBHT0xFSVJPUwogIHsgaWQ6IDIzLCAgbmFtZTogJ0pvcmRpIE1hcnRpbnMnLCAgICAgIHNob3J0OiAnSk9SREknLCAgICAgICBudW06IDkzLCBwb3M6ICdHT0wnLCBvdnI6IDgyIH0sCiAgeyBpZDogMSwgICBuYW1lOiAnQ8Opc2FyIEF1Z3VzdG8nLCAgICAgIHNob3J0OiAnQ8OJU0FSJywgICAgICAgbnVtOiAzMSwgcG9zOiAnR09MJywgb3ZyOiA3OCB9LAogIHsgaWQ6IDIyLCAgbmFtZTogJ0pvw6NvIFNjYXBpbicsICAgICAgICBzaG9ydDogJ1NDQVBJTicsICAgICAgbnVtOiAxMiwgcG9zOiAnR09MJywgb3ZyOiA3MiB9LAogIHsgaWQ6IDYyLCAgbmFtZTogJ0x1Y2FzIFJpYmVpcm8nLCAgICAgIHNob3J0OiAnTFVDQVMnLCAgICAgICBudW06IDEsICBwb3M6ICdHT0wnLCBvdnI6IDcwIH0sCiAgeyBpZDogMTAxLCBuYW1lOiAnUGF1bG8gSGVucmlxdWUnLCAgICAgc2hvcnQ6ICdQLiBIRU5SSVFVRScsIG51bTogMjksIHBvczogJ0dPTCcsIG92cjogNzEgfSwKICAvLyBaQUdVRUlST1MKICB7IGlkOiA4LCAgIG5hbWU6ICdQYXRyaWNrIE1hcmNvcycsICAgICBzaG9ydDogJ1BBVFJJQ0snLCAgICAgbnVtOiA0LCAgcG9zOiAnWkFHJywgb3ZyOiA4NCB9LAogIHsgaWQ6IDM4LCAgbmFtZTogJ1JlbmF0byBQYWxtJywgICAgICAgIHNob3J0OiAnUi4gUEFMTScsICAgICBudW06IDMzLCBwb3M6ICdaQUcnLCBvdnI6IDgxIH0sCiAgeyBpZDogMzQsICBuYW1lOiAnRWR1YXJkbyBCcm9jaycsICAgICAgc2hvcnQ6ICdCUk9DSycsICAgICAgIG51bTogOCwgIHBvczogJ1pBRycsIG92cjogODAgfSwKICB7IGlkOiA2NiwgIG5hbWU6ICdBbGV4aXMgQWx2YXJpw7FvJywgICAgc2hvcnQ6ICdBTFZBUsONw5FPJywgICAgbnVtOiAyMiwgcG9zOiAnWkFHJywgb3ZyOiA3OSB9LAogIHsgaWQ6IDYsICAgbmFtZTogJ0NhcmxpbmhvcycsICAgICAgICAgIHNob3J0OiAnQ0FSTElOSE9TJywgICBudW06IDQ0LCBwb3M6ICdaQUcnLCBvdnI6IDc2IH0sCiAgeyBpZDogMywgICBuYW1lOiAnSm/Do28gVml0b3IgRGFudGFzJywgIHNob3J0OiAnREFOVEFTJywgICAgICBudW06IDI1LCBwb3M6ICdaQUcnLCBvdnI6IDc1IH0sCiAgeyBpZDogMTAyLCBuYW1lOiAnQXJ0aHVyIEJhcmJvc2EnLCAgICAgc2hvcnQ6ICdBUlRIVVInLCAgICAgIG51bTogMywgIHBvczogJ1pBRycsIG92cjogNzMgfSwKICB7IGlkOiAxMDMsIG5hbWU6ICdBbnRvbnkgR3VzdGF2bycsICAgICBzaG9ydDogJ0FOVE9OWScsICAgICAgbnVtOiAzOCwgcG9zOiAnWkFHJywgb3ZyOiA3MCB9LAogIHsgaWQ6IDEwNCwgbmFtZTogJ0thdcOjIFJvY2hhJywgICAgICAgICBzaG9ydDogJ0FMRU3Dg08nLCAgICAgIG51bTogMjEsIHBvczogJ1pBRycsIG92cjogNzIgfSwKICAvLyBMQVRFUkFJUwogIHsgaWQ6IDksICAgbmFtZTogJ1NhbmRlciBCb3J0b2xvdHRvJywgc2hvcnQ6ICdTQU5ERVInLCAgICAgIG51bTogMzYsIHBvczogJ0xBVCcsIG92cjogODEgfSwKICB7IGlkOiAyOCwgIG5hbWU6ICdNYXlrb24gSmVzdXMnLCAgICAgICBzaG9ydDogJ01BWUtPTicsICAgICAgbnVtOiA2NiwgcG9zOiAnTEFUJywgb3ZyOiA3OCB9LAogIHsgaWQ6IDI3LCAgbmFtZTogJ05pbHNvbiBDYXN0cmlsbMOzbicsIHNob3J0OiAnQ0FTVFJJTEzDk04nLCAgbnVtOiAyMCwgcG9zOiAnTEFUJywgb3ZyOiA3NyB9LAogIHsgaWQ6IDc1LCAgbmFtZTogJ0poaWxtYXIgTG9yYScsICAgICAgIHNob3J0OiAnTE9SQScsICAgICAgICBudW06IDIsICBwb3M6ICdMQVQnLCBvdnI6IDc0IH0sCiAgeyBpZDogMTA1LCBuYW1lOiAnQ2FybG9zIFJvYmVydG8nLCAgICAgc2hvcnQ6ICdFU1FVRVJEQScsICAgIG51bTogMjYsIHBvczogJ0xBVCcsIG92cjogNzEgfSwKICAvLyBWT0xBTlRFUwogIHsgaWQ6IDQxLCAgbmFtZTogJ0x1w61zIE95YW1hJywgICAgICAgICBzaG9ydDogJ09ZQU1BJywgICAgICAgbnVtOiA2LCAgcG9zOiAnVk9MJywgb3ZyOiA4MyB9LAogIHsgaWQ6IDQ2LCAgbmFtZTogJ01hcmxvbiBBZHJpYW5vJywgICAgIHNob3J0OiAnTUFSTE9OJywgICAgICBudW06IDI4LCBwb3M6ICdWT0wnLCBvdnI6IDgwIH0sCiAgeyBpZDogNDAsICBuYW1lOiAnTMOpbyBOYWxkaScsICAgICAgICAgIHNob3J0OiAnTkFMREknLCAgICAgICBudW06IDE4LCBwb3M6ICdWT0wnLCBvdnI6IDc4IH0sCiAgeyBpZDogMTA2LCBuYW1lOiAnR2FicmllbCBCYWhpYScsICAgICAgc2hvcnQ6ICdHLiBCQUhJQScsICAgIG51bTogNSwgIHBvczogJ1ZPTCcsIG92cjogNzQgfSwKICAvLyBNRUlBUwogIHsgaWQ6IDQ3LCAgbmFtZTogJ01hdGhldXMgQmlhbnF1aScsICAgc2hvcnQ6ICdCSUFOUVVJJywgICAgIG51bTogMTcsIHBvczogJ01FSScsIG92cjogODIgfSwKICB7IGlkOiAxMCwgIG5hbWU6ICdSw7RtdWxvIEF6ZXZlZG8nLCAgICBzaG9ydDogJ1LDlE1VTE8nLCAgICAgIG51bTogMTAsIHBvczogJ01FSScsIG92cjogODYgfSwKICB7IGlkOiAxMiwgIG5hbWU6ICdBbGV4YW5kcmUgU2lsdmEnLCAgIHNob3J0OiAnSlVOSU5ITycsICAgICBudW06IDUwLCBwb3M6ICdNRUknLCBvdnI6IDc5IH0sCiAgeyBpZDogMTcsICBuYW1lOiAnTHVpeiBPdGF2aW8nLCAgICAgICBzaG9ydDogJ1RBVklOSE8nLCAgICAgbnVtOiAxNSwgcG9zOiAnTUVJJywgb3ZyOiA3OCB9LAogIHsgaWQ6IDg2LCAgbmFtZTogJ0NocmlzdGlhbiBPcnTDrXonLCAgIHNob3J0OiAnVElUSSBPUlTDjVonLCAgbnVtOiA3NywgcG9zOiAnTUVJJywgb3ZyOiA4NCB9LAogIHsgaWQ6IDEzLCAgbmFtZTogJ0RpZWdvIEdhbG8nLCAgICAgICAgc2hvcnQ6ICdELiBHQUxPJywgICAgIG51bTogMTksIHBvczogJ01FSScsIG92cjogNzUgfSwKICB7IGlkOiAxMDcsIG5hbWU6ICdHYWJyaWVsIENvcnJlaWEnLCAgIHNob3J0OiAnRy4gQ09SUkVJQScsICBudW06IDE0LCBwb3M6ICdNRUknLCBvdnI6IDcyIH0sCiAgeyBpZDogMTA4LCBuYW1lOiAnTHVpeiBHYWJyaWVsJywgICAgICBzaG9ydDogJ0wuIEdBQlJJRUwnLCAgbnVtOiAyMywgcG9zOiAnTUVJJywgb3ZyOiA3MCB9LAogIHsgaWQ6IDEwOSwgbmFtZTogJ0hlY3RvciBCaWFuY2hpJywgICAgc2hvcnQ6ICdIRUNUT1InLCAgICAgIG51bTogMzIsIHBvczogJ01FSScsIG92cjogNzMgfSwKICB7IGlkOiAxMTAsIG5hbWU6ICdNaWd1ZWwgQ29udGllcm8nLCAgIHNob3J0OiAnQ09OVElFUk8nLCAgICBudW06IDM1LCBwb3M6ICdNRUknLCBvdnI6IDY5IH0sCiAgeyBpZDogMTExLCBuYW1lOiAnRWRzb24gSnVuaW9yJywgICAgICBzaG9ydDogJ05PR1VFSVJBJywgICAgbnVtOiAzNywgcG9zOiAnTUVJJywgb3ZyOiA2OCB9LAogIC8vIEFUQUNBTlRFUwogIHsgaWQ6IDE1LCAgbmFtZTogJ1JvYnNvbiBGZXJuYW5kZXMnLCAgc2hvcnQ6ICdST0JTT04nLCAgICAgIG51bTogMTEsIHBvczogJ0FUQScsIG92cjogODUgfSwKICB7IGlkOiA1OSwgIG5hbWU6ICdWaW7DrWNpdXMgUGFpdmEnLCAgICBzaG9ydDogJ1YuIFBBSVZBJywgICAgbnVtOiAxNiwgcG9zOiAnQVRBJywgb3ZyOiA3OSB9LAogIHsgaWQ6IDU3LCAgbmFtZTogJ1JvbmFsZCBCYXJjZWxsb3MnLCAgc2hvcnQ6ICdST05BTEQnLCAgICAgIG51bTogNywgIHBvczogJ0FUQScsIG92cjogODIgfSwKICB7IGlkOiA1NSwgIG5hbWU6ICdOaWNvbGFzIENhcmVjYScsICAgIHNob3J0OiAnQ0FSRUNBJywgICAgICBudW06IDE2LCBwb3M6ICdBVEEnLCBvdnI6IDgwIH0sCiAgeyBpZDogNTAsICBuYW1lOiAnQ2FybG9zIEhlbnJpcXVlJywgICBzaG9ydDogJ0NBUkzDg08nLCAgICAgIG51bTogOSwgIHBvczogJ0FUQScsIG92cjogODQgfSwKICB7IGlkOiA1MiwgIG5hbWU6ICdIw6lsaW8gQm9yZ2VzJywgICAgICBzaG9ydDogJ0jDiUxJTycsICAgICAgIG51bTogNDEsIHBvczogJ0FUQScsIG92cjogNzYgfSwKICB7IGlkOiA1MywgIG5hbWU6ICdKYXJkaWVsIE1hcmNpZWwnLCAgIHNob3J0OiAnSkFSRElFTCcsICAgICBudW06IDMwLCBwb3M6ICdBVEEnLCBvdnI6IDc1IH0sCiAgeyBpZDogMTEyLCBuYW1lOiAnRGllZ28gTWF0aGlhcycsICAgICBzaG9ydDogJ0QuIE1BVEhJQVMnLCAgbnVtOiAyNywgcG9zOiAnQVRBJywgb3ZyOiA3NiB9LAogIHsgaWQ6IDExMywgbmFtZTogJ0pob25lcyBLYXXDqicsICAgICAgIHNob3J0OiAnSi4gS0FVw4onLCAgICAgbnVtOiA0NywgcG9zOiAnQVRBJywgb3ZyOiA3MSB9LApdOwoKLy8g4pSA4pSA4pSAIE1hcGVhbWVudG8gc2xvdCDihpIgcG9zacOnw7VlcyBhY2VpdGFzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKY29uc3QgU0xPVF9QT1M6IFJlY29yZDxzdHJpbmcsIHN0cmluZ1tdPiA9IHsKICBnazogIFsnR09MJ10sCiAgY2IxOiBbJ1pBRyddLCBjYjI6IFsnWkFHJ10sIGNiMzogWydaQUcnXSwKICBsYjogIFsnTEFUJ10sIHJiOiAgWydMQVQnXSwKICBsbTogIFsnTEFUJywgJ01FSSddLCBybTogWydMQVQnLCAnTUVJJ10sCiAgdjE6ICBbJ1ZPTCddLCB2MjogIFsnVk9MJ10sCiAgbTE6ICBbJ1ZPTCcsICdNRUknXSwgbTI6IFsnVk9MJywgJ01FSSddLCBtMzogWydWT0wnLCAnTUVJJ10sIG00OiBbJ1ZPTCcsICdNRUknXSwKICBhbTogIFsnTUVJJ10sIGFtMTogWydNRUknXSwgYW0yOiBbJ01FSSddLAogIGx3OiAgWydBVEEnLCAnTUVJJ10sIHJ3OiBbJ0FUQScsICdNRUknXSwKICBzdDogIFsnQVRBJ10sIHN0MTogWydBVEEnXSwgc3QyOiBbJ0FUQSddLAp9OwoKLy8g4pSA4pSA4pSAIEZvcm1hw6fDtWVzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKY29uc3QgRk9STUFDT0VTOiBSZWNvcmQ8c3RyaW5nLCBzdHJpbmdbXT4gPSB7CiAgJzQtMy0zJzogICBbJ2drJywnbGInLCdjYjEnLCdjYjInLCdyYicsJ20xJywnbTInLCdtMycsJ3N0JywnbHcnLCdydyddLAogICc0LTQtMic6ICAgWydnaycsJ2xiJywnY2IxJywnY2IyJywncmInLCdtMScsJ20yJywnbTMnLCdtNCcsJ3N0MScsJ3N0MiddLAogICczLTUtMic6ICAgWydnaycsJ2NiMScsJ2NiMicsJ2NiMycsJ2xtJywncm0nLCdtMScsJ20yJywnYW0nLCdzdDEnLCdzdDInXSwKICAnNC01LTEnOiAgIFsnZ2snLCdsYicsJ2NiMScsJ2NiMicsJ3JiJywnbTEnLCdtMicsJ20zJywnYW0xJywnYW0yJywnc3QnXSwKICAnNC0yLTMtMSc6IFsnZ2snLCdsYicsJ2NiMScsJ2NiMicsJ3JiJywndjEnLCd2MicsJ2FtJywnbHcnLCdydycsJ3N0J10sCiAgJzUtMy0yJzogICBbJ2drJywnbGInLCdjYjEnLCdjYjInLCdjYjMnLCdyYicsJ20xJywnbTInLCdtMycsJ3N0MScsJ3N0MiddLAp9OwoKLy8g4pSA4pSA4pSAIFRpcG9zIGRlIHNhw61kYSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmV4cG9ydCBpbnRlcmZhY2UgU2xvdFN1Z2dlc3Rpb24gewogIHNsb3Q6ICAgIHN0cmluZzsKICBwb3NpY2FvOiBzdHJpbmdbXTsKICB0aXR1bGFyOiBQbGF5ZXI7CiAgcmVzZXJ2YTogUGxheWVyIHwgbnVsbDsKfQoKZXhwb3J0IGludGVyZmFjZSBTdWdnZXN0ZWRMaW5ldXAgewogIGZvcm1hY2FvOiAgIHN0cmluZzsKICBzbG90czogICAgICBTbG90U3VnZ2VzdGlvbltdOwogIG92cl9tZWRpbzogIG51bWJlcjsKICBjYXBpdGFvOiAgICBQbGF5ZXI7CiAgaGVyb2k6ICAgICAgUGxheWVyOwogIGZyYXF1ZXphczogIHN0cmluZ1tdOyAgICAgLy8gc2xvdHMgY29tIE9WUiBhYmFpeG8gZGUgNzUKICB0aW1lc3RhbXA6ICBzdHJpbmc7Cn0KCmV4cG9ydCBpbnRlcmZhY2UgQW5hbHlzaXNSZXBvcnQgewogIG92cl9tZWRpbzogICBudW1iZXI7CiAgb3ZyX21heDogICAgIG51bWJlcjsKICBvdnJfbWluOiAgICAgbnVtYmVyOwogIGNhcGl0YW86ICAgICBQbGF5ZXIgfCBudWxsOwogIGhlcm9pOiAgICAgICBQbGF5ZXIgfCBudWxsOwogIGZyYXF1ZXphczogICBBcnJheTx7IHNsb3Q6IHN0cmluZzsgcGxheWVyOiBQbGF5ZXI7IG1vdGl2bzogc3RyaW5nIH0+OwogIG5vdGE6ICAgICAgICBzdHJpbmc7ICAgICAgLy8gJ1MnLCAnQScsICdCJywgJ0MnLCAnRCcKICBjb21lbnRhcmlvOiAgc3RyaW5nOwogIHRpbWVzdGFtcDogICBzdHJpbmc7Cn0KCi8vIOKUgOKUgOKUgCBIZWxwZXJzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZnVuY3Rpb24gbWVsaG9yUGFyYShwb3NpY29lczogc3RyaW5nW10sIHVzYWRvczogU2V0PG51bWJlcj4pOiB7IHRpdHVsYXI6IFBsYXllcjsgcmVzZXJ2YTogUGxheWVyIHwgbnVsbCB9IHsKICBjb25zdCBjYW5kaWRhdG9zID0gRUxFTkNPCiAgICAuZmlsdGVyKHAgPT4gcG9zaWNvZXMuaW5jbHVkZXMocC5wb3MpICYmICF1c2Fkb3MuaGFzKHAuaWQpKQogICAgLnNvcnQoKGEsIGIpID0+IGIub3ZyIC0gYS5vdnIpOwoKICBpZiAoY2FuZGlkYXRvcy5sZW5ndGggPT09IDApIHsKICAgIGNvbnN0IGZhbGxiYWNrID0gRUxFTkNPCiAgICAgIC5maWx0ZXIocCA9PiAhdXNhZG9zLmhhcyhwLmlkKSkKICAgICAgLnNvcnQoKGEsIGIpID0+IGIub3ZyIC0gYS5vdnIpWzBdOwogICAgcmV0dXJuIHsgdGl0dWxhcjogZmFsbGJhY2ssIHJlc2VydmE6IG51bGwgfTsKICB9CgogIHJldHVybiB7IHRpdHVsYXI6IGNhbmRpZGF0b3NbMF0sIHJlc2VydmE6IGNhbmRpZGF0b3NbMV0gPz8gbnVsbCB9Owp9CgpmdW5jdGlvbiBub3RhKG92cjogbnVtYmVyKTogc3RyaW5nIHsKICBpZiAob3ZyID49IDgzKSByZXR1cm4gJ1MnOwogIGlmIChvdnIgPj0gODApIHJldHVybiAnQSc7CiAgaWYgKG92ciA+PSA3NykgcmV0dXJuICdCJzsKICBpZiAob3ZyID49IDc0KSByZXR1cm4gJ0MnOwogIHJldHVybiAnRCc7Cn0KCmZ1bmN0aW9uIGNvbWVudGFyaW8ob3ZyOiBudW1iZXIsIGZyYXF1ZXphczogbnVtYmVyKTogc3RyaW5nIHsKICBpZiAob3ZyID49IDgzICYmIGZyYXF1ZXphcyA9PT0gMCkgcmV0dXJuICdFc2NhbGHDp8OjbyBwZXJmZWl0YS4gw4kgTsOtdmVsIE1ha2FyaW9zISDwn5Cv4p2E77iPJzsKICBpZiAob3ZyID49IDgwKSByZXR1cm4gYFRpbWUgZm9ydGUuICR7ZnJhcXVlemFzID4gMCA/IGAke2ZyYXF1ZXphc30gcG9zacOnw6NvKMO1ZXMpIHBvZGVtIG1lbGhvcmFyLmAgOiAnQmVtIGVxdWlsaWJyYWRvLid9YDsKICBpZiAob3ZyID49IDc3KSByZXR1cm4gJ0VzY2FsYcOnw6NvIHPDs2xpZGEgY29tIGVzcGHDp28gcHJhIGV2b2x1w6fDo28uJzsKICBpZiAob3ZyID49IDc0KSByZXR1cm4gJ1RpbWUgbWVkaWFuby4gUmV2aXNlIGFzIHBvc2nDp8O1ZXMgZnJhY2FzIGFudGVzIGRvIGpvZ28uJzsKICByZXR1cm4gJ0VzY2FsYcOnw6NvIGFiYWl4byBkbyBlc3BlcmFkby4gTyBNYWthcmlvcyBwZWRlIHJldmlzw6NvIHVyZ2VudGUuJzsKfQoKLy8g4pSA4pSA4pSAIEZ1bsOnw7VlcyBwcmluY2lwYWlzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKLyoqCiAqIFN1Z2VyZSBhIG1lbGhvciBlc2NhbGHDp8OjbyBwb3Nzw612ZWwgcGFyYSB1bWEgZm9ybWHDp8Ojby4KICovCmV4cG9ydCBmdW5jdGlvbiBzdWdlcmlyRXNjYWxhY2FvKGZvcm1hY2FvID0gJzQtMy0zJyk6IFN1Z2dlc3RlZExpbmV1cCB7CiAgY29uc3Qgc2xvdHMgPSBGT1JNQUNPRVNbZm9ybWFjYW9dID8/IEZPUk1BQ09FU1snNC0zLTMnXTsKICBjb25zdCB1c2Fkb3MgPSBuZXcgU2V0PG51bWJlcj4oKTsKICBjb25zdCByZXN1bHRhZG86IFNsb3RTdWdnZXN0aW9uW10gPSBbXTsKCiAgZm9yIChjb25zdCBzbG90IG9mIHNsb3RzKSB7CiAgICBjb25zdCBwb3NpY29lcyA9IFNMT1RfUE9TW3Nsb3RdID8/IFsnTUVJJ107CiAgICBjb25zdCB7IHRpdHVsYXIsIHJlc2VydmEgfSA9IG1lbGhvclBhcmEocG9zaWNvZXMsIHVzYWRvcyk7CiAgICB1c2Fkb3MuYWRkKHRpdHVsYXIuaWQpOwogICAgcmVzdWx0YWRvLnB1c2goeyBzbG90LCBwb3NpY2FvOiBwb3NpY29lcywgdGl0dWxhciwgcmVzZXJ2YSB9KTsKICB9CgogIGNvbnN0IHRpdHVsYXJlcyA9IHJlc3VsdGFkby5tYXAociA9PiByLnRpdHVsYXIpOwogIGNvbnN0IG92ck1lZGlvICA9IE1hdGgucm91bmQodGl0dWxhcmVzLnJlZHVjZSgocywgcCkgPT4gcyArIHAub3ZyLCAwKSAvIHRpdHVsYXJlcy5sZW5ndGgpOwogIGNvbnN0IGNhcGl0YW8gICA9IFsuLi50aXR1bGFyZXNdLnNvcnQoKGEsIGIpID0+IGIub3ZyIC0gYS5vdnIpWzBdOwogIGNvbnN0IGhlcm9pICAgICA9IFsuLi50aXR1bGFyZXNdLmZpbHRlcihwID0+IHAucG9zID09PSAnQVRBJyB8fCBwLnBvcyA9PT0gJ01FSScpLnNvcnQoKGEsIGIpID0+IGIub3ZyIC0gYS5vdnIpWzBdID8/IGNhcGl0YW87CiAgY29uc3QgZnJhcXVlemFzID0gcmVzdWx0YWRvLmZpbHRlcihyID0+IHIudGl0dWxhci5vdnIgPCA3NSkubWFwKHIgPT4gci5zbG90KTsKCiAgcmV0dXJuIHsKICAgIGZvcm1hY2FvLCBzbG90czogcmVzdWx0YWRvLCBvdnJfbWVkaW86IG92ck1lZGlvLAogICAgY2FwaXRhbywgaGVyb2ksIGZyYXF1ZXphcywKICAgIHRpbWVzdGFtcDogbmV3IERhdGUoKS50b0lTT1N0cmluZygpLAogIH07Cn0KCi8qKgogKiBBbmFsaXNhIHVtYSBlc2NhbGHDp8OjbyBleGlzdGVudGUgKG1hcGEgc2xvdCDihpIgcGxheWVyX2lkKS4KICovCmV4cG9ydCBmdW5jdGlvbiBhbmFsaXNhckVzY2FsYWNhbyhzbG90TWFwOiBSZWNvcmQ8c3RyaW5nLCBudW1iZXIgfCBudWxsPik6IEFuYWx5c2lzUmVwb3J0IHsKICBjb25zdCBqb2dhZG9yZXM6IFBsYXllcltdID0gW107CiAgY29uc3QgZnJhcXVlemFzOiBBbmFseXNpc1JlcG9ydFsnZnJhcXVlemFzJ10gPSBbXTsKCiAgZm9yIChjb25zdCBbc2xvdCwgcGxheWVySWRdIG9mIE9iamVjdC5lbnRyaWVzKHNsb3RNYXApKSB7CiAgICBpZiAoIXBsYXllcklkKSBjb250aW51ZTsKICAgIGNvbnN0IHAgPSBFTEVOQ08uZmluZChlID0+IGUuaWQgPT09IHBsYXllcklkKTsKICAgIGlmICghcCkgY29udGludWU7CiAgICBqb2dhZG9yZXMucHVzaChwKTsKCiAgICBjb25zdCBwb3NFc3BlcmFkYXMgPSBTTE9UX1BPU1tzbG90XSA/PyBbXTsKICAgIGlmICghcG9zRXNwZXJhZGFzLmluY2x1ZGVzKHAucG9zKSkgewogICAgICBmcmFxdWV6YXMucHVzaCh7IHNsb3QsIHBsYXllcjogcCwgbW90aXZvOiBgJHtwLnNob3J0fSDDqSAke3AucG9zfSwgc2xvdCBwZWRlICR7cG9zRXNwZXJhZGFzLmpvaW4oJy8nKX1gIH0pOwogICAgfSBlbHNlIGlmIChwLm92ciA8IDc1KSB7CiAgICAgIGZyYXF1ZXphcy5wdXNoKHsgc2xvdCwgcGxheWVyOiBwLCBtb3Rpdm86IGBPVlIgJHtwLm92cn0g4oCUIGFiYWl4byBkbyBpZGVhbCBwYXJhIGVzdGUgc2xvdGAgfSk7CiAgICB9CiAgfQoKICBpZiAoam9nYWRvcmVzLmxlbmd0aCA9PT0gMCkgewogICAgcmV0dXJuIHsKICAgICAgb3ZyX21lZGlvOiAwLCBvdnJfbWF4OiAwLCBvdnJfbWluOiAwLAogICAgICBjYXBpdGFvOiBudWxsLCBoZXJvaTogbnVsbCwgZnJhcXVlemFzOiBbXSwKICAgICAgbm90YTogJ0QnLCBjb21lbnRhcmlvOiAnRXNjYWxhw6fDo28gdmF6aWEuJywKICAgICAgdGltZXN0YW1wOiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCksCiAgICB9OwogIH0KCiAgY29uc3Qgb3ZycyAgICA9IGpvZ2Fkb3Jlcy5tYXAocCA9PiBwLm92cik7CiAgY29uc3Qgb3ZyTWVkICA9IE1hdGgucm91bmQob3Zycy5yZWR1Y2UoKHMsIHYpID0+IHMgKyB2LCAwKSAvIG92cnMubGVuZ3RoKTsKICBjb25zdCBjYXBpdGFvID0gWy4uLmpvZ2Fkb3Jlc10uc29ydCgoYSwgYikgPT4gYi5vdnIgLSBhLm92cilbMF07CiAgY29uc3QgaGVyb2kgICA9IFsuLi5qb2dhZG9yZXNdLmZpbHRlcihwID0+IHAucG9zID09PSAnQVRBJyB8fCBwLnBvcyA9PT0gJ01FSScpLnNvcnQoKGEsIGIpID0+IGIub3ZyIC0gYS5vdnIpWzBdID8/IGNhcGl0YW87CgogIHJldHVybiB7CiAgICBvdnJfbWVkaW86IG92ck1lZCwKICAgIG92cl9tYXg6ICAgTWF0aC5tYXgoLi4ub3ZycyksCiAgICBvdnJfbWluOiAgIE1hdGgubWluKC4uLm92cnMpLAogICAgY2FwaXRhbywgaGVyb2ksIGZyYXF1ZXphcywKICAgIG5vdGE6ICAgICAgbm90YShvdnJNZWQpLAogICAgY29tZW50YXJpbzogY29tZW50YXJpbyhvdnJNZWQsIGZyYXF1ZXphcy5sZW5ndGgpLAogICAgdGltZXN0YW1wOiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCksCiAgfTsKfQoKLyoqCiAqIFJldG9ybmEgbyByYW5raW5nIGRvIGVsZW5jbyBwb3IgcG9zacOnw6NvLgogKi8KZXhwb3J0IGZ1bmN0aW9uIHJhbmtpbmdFbGVuY28ocG9zPzogc3RyaW5nKTogUGxheWVyW10gewogIHJldHVybiBFTEVOQ08KICAgIC5maWx0ZXIocCA9PiAhcG9zIHx8IHAucG9zID09PSBwb3MpCiAgICAuc29ydCgoYSwgYikgPT4gYi5vdnIgLSBhLm92cik7Cn0KCi8vIOKUgOKUgOKUgCBBbmFBZ2VudCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmV4cG9ydCBjb25zdCBBbmFBZ2VudCA9IHsKICBuYW1lOiAgICAnQW5hJywKICByb2xlOiAgICAnRXNjYWxhw6fDo28gSW50ZWxpZ2VudGUnLAogIHZlcnNpb246ICcxLjAuMCcsCgogIC8qKiBTdWdlcmUgYSBtZWxob3IgZXNjYWxhw6fDo28gcGFyYSB1bWEgZm9ybWHDp8Ojby4gKi8KICBzdWdlcmlyRXNjYWxhY2FvLAoKICAvKiogQW5hbGlzYSB1bWEgZXNjYWxhw6fDo28gZXhpc3RlbnRlIGUgcmV0b3JuYSByZWxhdMOzcmlvLiAqLwogIGFuYWxpc2FyRXNjYWxhY2FvLAoKICAvKiogUmFua2luZyBkbyBlbGVuY28gcG9yIE9WUiwgZmlsdHJhZG8gcG9yIHBvc2nDp8Ojby4gKi8KICByYW5raW5nRWxlbmNvLAoKICAvKiogTG9nIHBhZHJvbml6YWRvLiAqLwogIGxvZyhtc2c6IHN0cmluZyk6IHZvaWQgewogICAgY29uc29sZS5sb2coYFtBbmEgQCAke25ldyBEYXRlKCkudG9JU09TdHJpbmcoKX1dIPCfp6AgJHttc2d9YCk7CiAgfSwKfSBhcyBjb25zdDsK
+// src/lib/agents/AnaAgent.ts
+// Ana — Agente de Escalação Inteligente do ecossistema TigreFC.
+// Analisa o elenco, sugere a melhor escalação por formação e avalia lineups existentes.
+
+// ─── Elenco (espelho do EscalacaoFormacao.tsx) ────────────────────────────────
+
+export interface Player {
+  id:    number;
+  name:  string;
+  short: string;
+  num:   number;
+  pos:   string;
+  ovr:   number;
+}
+
+const ELENCO: Player[] = [
+  // GOLEIROS
+  { id: 23,  name: 'Jordi Martins',      short: 'JORDI',       num: 93, pos: 'GOL', ovr: 82 },
+  { id: 1,   name: 'César Augusto',      short: 'CÉSAR',       num: 31, pos: 'GOL', ovr: 78 },
+  { id: 22,  name: 'João Scapin',        short: 'SCAPIN',      num: 12, pos: 'GOL', ovr: 72 },
+  { id: 62,  name: 'Lucas Ribeiro',      short: 'LUCAS',       num: 1,  pos: 'GOL', ovr: 70 },
+  { id: 101, name: 'Paulo Henrique',     short: 'P. HENRIQUE', num: 29, pos: 'GOL', ovr: 71 },
+  // ZAGUEIROS
+  { id: 8,   name: 'Patrick Marcos',     short: 'PATRICK',     num: 4,  pos: 'ZAG', ovr: 84 },
+  { id: 38,  name: 'Renato Palm',        short: 'R. PALM',     num: 33, pos: 'ZAG', ovr: 81 },
+  { id: 34,  name: 'Eduardo Brock',      short: 'BROCK',       num: 8,  pos: 'ZAG', ovr: 80 },
+  { id: 66,  name: 'Alexis Alvariño',    short: 'ALVARÍÑO',    num: 22, pos: 'ZAG', ovr: 79 },
+  { id: 6,   name: 'Carlinhos',          short: 'CARLINHOS',   num: 44, pos: 'ZAG', ovr: 76 },
+  { id: 3,   name: 'João Vitor Dantas',  short: 'DANTAS',      num: 25, pos: 'ZAG', ovr: 75 },
+  { id: 102, name: 'Arthur Barbosa',     short: 'ARTHUR',      num: 3,  pos: 'ZAG', ovr: 73 },
+  { id: 103, name: 'Antony Gustavo',     short: 'ANTONY',      num: 38, pos: 'ZAG', ovr: 70 },
+  { id: 104, name: 'Kauã Rocha',         short: 'ALEMÃO',      num: 21, pos: 'ZAG', ovr: 72 },
+  // LATERAIS
+  { id: 9,   name: 'Sander Bortolotto', short: 'SANDER',      num: 36, pos: 'LAT', ovr: 81 },
+  { id: 28,  name: 'Maykon Jesus',       short: 'MAYKON',      num: 66, pos: 'LAT', ovr: 78 },
+  { id: 27,  name: 'Nilson Castrillón', short: 'CASTRILLÓN',  num: 20, pos: 'LAT', ovr: 77 },
+  { id: 75,  name: 'Jhilmar Lora',       short: 'LORA',        num: 2,  pos: 'LAT', ovr: 74 },
+  { id: 105, name: 'Carlos Roberto',     short: 'ESQUERDA',    num: 26, pos: 'LAT', ovr: 71 },
+  // VOLANTES
+  { id: 41,  name: 'Luís Oyama',         short: 'OYAMA',       num: 6,  pos: 'VOL', ovr: 83 },
+  { id: 46,  name: 'Marlon Adriano',     short: 'MARLON',      num: 28, pos: 'VOL', ovr: 80 },
+  { id: 40,  name: 'Léo Naldi',          short: 'NALDI',       num: 18, pos: 'VOL', ovr: 78 },
+  { id: 106, name: 'Gabriel Bahia',      short: 'G. BAHIA',    num: 5,  pos: 'VOL', ovr: 74 },
+  // MEIAS
+  { id: 47,  name: 'Matheus Bianqui',   short: 'BIANQUI',     num: 17, pos: 'MEI', ovr: 82 },
+  { id: 10,  name: 'Rômulo Azevedo',    short: 'RÔMULO',      num: 10, pos: 'MEI', ovr: 86 },
+  { id: 12,  name: 'Alexandre Silva',   short: 'JUNINHO',     num: 50, pos: 'MEI', ovr: 79 },
+  { id: 17,  name: 'Luiz Otavio',       short: 'TAVINHO',     num: 15, pos: 'MEI', ovr: 78 },
+  { id: 86,  name: 'Christian Ortíz',   short: 'TITI ORTÍZ',  num: 77, pos: 'MEI', ovr: 84 },
+  { id: 13,  name: 'Diego Galo',        short: 'D. GALO',     num: 19, pos: 'MEI', ovr: 75 },
+  { id: 107, name: 'Gabriel Correia',   short: 'G. CORREIA',  num: 14, pos: 'MEI', ovr: 72 },
+  { id: 108, name: 'Luiz Gabriel',      short: 'L. GABRIEL',  num: 23, pos: 'MEI', ovr: 70 },
+  { id: 109, name: 'Hector Bianchi',    short: 'HECTOR',      num: 32, pos: 'MEI', ovr: 73 },
+  { id: 110, name: 'Miguel Contiero',   short: 'CONTIERO',    num: 35, pos: 'MEI', ovr: 69 },
+  { id: 111, name: 'Edson Junior',      short: 'NOGUEIRA',    num: 37, pos: 'MEI', ovr: 68 },
+  // ATACANTES
+  { id: 15,  name: 'Robson Fernandes',  short: 'ROBSON',      num: 11, pos: 'ATA', ovr: 85 },
+  { id: 59,  name: 'Vinícius Paiva',    short: 'V. PAIVA',    num: 16, pos: 'ATA', ovr: 79 },
+  { id: 57,  name: 'Ronald Barcellos',  short: 'RONALD',      num: 7,  pos: 'ATA', ovr: 82 },
+  { id: 55,  name: 'Nicolas Careca',    short: 'CARECA',      num: 16, pos: 'ATA', ovr: 80 },
+  { id: 50,  name: 'Carlos Henrique',   short: 'CARLÃO',      num: 9,  pos: 'ATA', ovr: 84 },
+  { id: 52,  name: 'Hélio Borges',      short: 'HÉLIO',       num: 41, pos: 'ATA', ovr: 76 },
+  { id: 53,  name: 'Jardiel Marciel',   short: 'JARDIEL',     num: 30, pos: 'ATA', ovr: 75 },
+  { id: 112, name: 'Diego Mathias',     short: 'D. MATHIAS',  num: 27, pos: 'ATA', ovr: 76 },
+  { id: 113, name: 'Jhones Kauê',       short: 'J. KAUÊ',     num: 47, pos: 'ATA', ovr: 71 },
+];
+
+// ─── Mapeamento slot → posições aceitas ───────────────────────────────────────
+
+const SLOT_POS: Record<string, string[]> = {
+  gk:  ['GOL'],
+  cb1: ['ZAG'], cb2: ['ZAG'], cb3: ['ZAG'],
+  lb:  ['LAT'], rb:  ['LAT'],
+  lm:  ['LAT', 'MEI'], rm: ['LAT', 'MEI'],
+  v1:  ['VOL'], v2:  ['VOL'],
+  m1:  ['VOL', 'MEI'], m2: ['VOL', 'MEI'], m3: ['VOL', 'MEI'], m4: ['VOL', 'MEI'],
+  am:  ['MEI'], am1: ['MEI'], am2: ['MEI'],
+  lw:  ['ATA', 'MEI'], rw: ['ATA', 'MEI'],
+  st:  ['ATA'], st1: ['ATA'], st2: ['ATA'],
+};
+
+// ─── Formações ────────────────────────────────────────────────────────────────
+
+const FORMACOES: Record<string, string[]> = {
+  '4-3-3':   ['gk','lb','cb1','cb2','rb','m1','m2','m3','st','lw','rw'],
+  '4-4-2':   ['gk','lb','cb1','cb2','rb','m1','m2','m3','m4','st1','st2'],
+  '3-5-2':   ['gk','cb1','cb2','cb3','lm','rm','m1','m2','am','st1','st2'],
+  '4-5-1':   ['gk','lb','cb1','cb2','rb','m1','m2','m3','am1','am2','st'],
+  '4-2-3-1': ['gk','lb','cb1','cb2','rb','v1','v2','am','lw','rw','st'],
+  '5-3-2':   ['gk','lb','cb1','cb2','cb3','rb','m1','m2','m3','st1','st2'],
+};
+
+// ─── Tipos de saída ───────────────────────────────────────────────────────────
+
+export interface SlotSuggestion {
+  slot:    string;
+  posicao: string[];
+  titular: Player;
+  reserva: Player | null;
+}
+
+export interface SuggestedLineup {
+  formacao:   string;
+  slots:      SlotSuggestion[];
+  ovr_medio:  number;
+  capitao:    Player;
+  heroi:      Player;
+  fraquezas:  string[];     // slots com OVR abaixo de 75
+  timestamp:  string;
+}
+
+export interface AnalysisReport {
+  ovr_medio:   number;
+  ovr_max:     number;
+  ovr_min:     number;
+  capitao:     Player | null;
+  heroi:       Player | null;
+  fraquezas:   Array<{ slot: string; player: Player; motivo: string }>;
+  nota:        string;      // 'S', 'A', 'B', 'C', 'D'
+  comentario:  string;
+  timestamp:   string;
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function melhorPara(posicoes: string[], usados: Set<number>): { titular: Player; reserva: Player | null } {
+  const candidatos = ELENCO
+    .filter(p => posicoes.includes(p.pos) && !usados.has(p.id))
+    .sort((a, b) => b.ovr - a.ovr);
+
+  if (candidatos.length === 0) {
+    const fallback = ELENCO
+      .filter(p => !usados.has(p.id))
+      .sort((a, b) => b.ovr - a.ovr)[0];
+    return { titular: fallback, reserva: null };
+  }
+
+  return { titular: candidatos[0], reserva: candidatos[1] ?? null };
+}
+
+function nota(ovr: number): string {
+  if (ovr >= 83) return 'S';
+  if (ovr >= 80) return 'A';
+  if (ovr >= 77) return 'B';
+  if (ovr >= 74) return 'C';
+  return 'D';
+}
+
+function comentario(ovr: number, fraquezas: number): string {
+  if (ovr >= 83 && fraquezas === 0) return 'Escalação perfeita. É Nível Makarios! 🐯❄️';
+  if (ovr >= 80) return `Time forte. ${fraquezas > 0 ? `${fraquezas} posição(ões) podem melhorar.` : 'Bem equilibrado.'}`;
+  if (ovr >= 77) return 'Escalação sólida com espaço pra evolução.';
+  if (ovr >= 74) return 'Time mediano. Revise as posições fracas antes do jogo.';
+  return 'Escalação abaixo do esperado. O Makarios pede revisão urgente.';
+}
+
+// ─── Funções principais ───────────────────────────────────────────────────────
+
+/**
+ * Sugere a melhor escalação possível para uma formação.
+ */
+export function sugerirEscalacao(formacao = '4-3-3'): SuggestedLineup {
+  const slots = FORMACOES[formacao] ?? FORMACOES['4-3-3'];
+  const usados = new Set<number>();
+  const resultado: SlotSuggestion[] = [];
+
+  for (const slot of slots) {
+    const posicoes = SLOT_POS[slot] ?? ['MEI'];
+    const { titular, reserva } = melhorPara(posicoes, usados);
+    usados.add(titular.id);
+    resultado.push({ slot, posicao: posicoes, titular, reserva });
+  }
+
+  const titulares = resultado.map(r => r.titular);
+  const ovrMedio  = Math.round(titulares.reduce((s, p) => s + p.ovr, 0) / titulares.length);
+  const capitao   = [...titulares].sort((a, b) => b.ovr - a.ovr)[0];
+  const heroi     = [...titulares].filter(p => p.pos === 'ATA' || p.pos === 'MEI').sort((a, b) => b.ovr - a.ovr)[0] ?? capitao;
+  const fraquezas = resultado.filter(r => r.titular.ovr < 75).map(r => r.slot);
+
+  return {
+    formacao, slots: resultado, ovr_medio: ovrMedio,
+    capitao, heroi, fraquezas,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Analisa uma escalação existente (mapa slot → player_id).
+ */
+export function analisarEscalacao(slotMap: Record<string, number | null>): AnalysisReport {
+  const jogadores: Player[] = [];
+  const fraquezas: AnalysisReport['fraquezas'] = [];
+
+  for (const [slot, playerId] of Object.entries(slotMap)) {
+    if (!playerId) continue;
+    const p = ELENCO.find(e => e.id === playerId);
+    if (!p) continue;
+    jogadores.push(p);
+
+    const posEsperadas = SLOT_POS[slot] ?? [];
+    if (!posEsperadas.includes(p.pos)) {
+      fraquezas.push({ slot, player: p, motivo: `${p.short} é ${p.pos}, slot pede ${posEsperadas.join('/')}` });
+    } else if (p.ovr < 75) {
+      fraquezas.push({ slot, player: p, motivo: `OVR ${p.ovr} — abaixo do ideal para este slot` });
+    }
+  }
+
+  if (jogadores.length === 0) {
+    return {
+      ovr_medio: 0, ovr_max: 0, ovr_min: 0,
+      capitao: null, heroi: null, fraquezas: [],
+      nota: 'D', comentario: 'Escalação vazia.',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  const ovrs    = jogadores.map(p => p.ovr);
+  const ovrMed  = Math.round(ovrs.reduce((s, v) => s + v, 0) / ovrs.length);
+  const capitao = [...jogadores].sort((a, b) => b.ovr - a.ovr)[0];
+  const heroi   = [...jogadores].filter(p => p.pos === 'ATA' || p.pos === 'MEI').sort((a, b) => b.ovr - a.ovr)[0] ?? capitao;
+
+  return {
+    ovr_medio: ovrMed,
+    ovr_max:   Math.max(...ovrs),
+    ovr_min:   Math.min(...ovrs),
+    capitao, heroi, fraquezas,
+    nota:      nota(ovrMed),
+    comentario: comentario(ovrMed, fraquezas.length),
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Retorna o ranking do elenco por posição.
+ */
+export function rankingElenco(pos?: string): Player[] {
+  return ELENCO
+    .filter(p => !pos || p.pos === pos)
+    .sort((a, b) => b.ovr - a.ovr);
+}
+
+// ─── AnaAgent ─────────────────────────────────────────────────────────────────
+
+export const AnaAgent = {
+  name:    'Ana',
+  role:    'Escalação Inteligente',
+  version: '1.0.0',
+
+  /** Sugere a melhor escalação para uma formação. */
+  sugerirEscalacao,
+
+  /** Analisa uma escalação existente e retorna relatório. */
+  analisarEscalacao,
+
+  /** Ranking do elenco por OVR, filtrado por posição. */
+  rankingElenco,
+
+  /** Log padronizado. */
+  log(msg: string): void {
+    console.log(`[Ana @ ${new Date().toISOString()}] 🧠 ${msg}`);
+  },
+} as const;

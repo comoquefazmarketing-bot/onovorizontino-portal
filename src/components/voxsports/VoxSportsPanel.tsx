@@ -1,1 +1,275 @@
-J3VzZSBjbGllbnQnOwovLyBzcmMvY29tcG9uZW50cy92b3hzcG9ydHMvVm94U3BvcnRzUGFuZWwudHN4Ci8vIFBhaW5lbCBpbnRlcm5vIOKAlCBmaWxhIGRlIGNvcGllcyBkbyBMw6lvIGVtIHRlbXBvIHJlYWwgdmlhIFN1cGFiYXNlIFJlYWx0aW1lLgoKaW1wb3J0IFJlYWN0LCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QsIHVzZUNhbGxiYWNrIH0gZnJvbSAncmVhY3QnOwppbXBvcnQgeyBzdXBhYmFzZSB9IGZyb20gJ0AvbGliL3N1cGFiYXNlJzsKaW1wb3J0IHsgbW90aW9uLCBBbmltYXRlUHJlc2VuY2UgfSBmcm9tICdmcmFtZXItbW90aW9uJzsKCmludGVyZmFjZSBDb3B5SXRlbSB7CiAgaWQ6IG51bWJlcjsKICBqb2dvX2lkOiBudW1iZXIgfCBudWxsOwogIGV2ZW50bzogc3RyaW5nOwogIHRpdHVsbzogc3RyaW5nOwogIGNvcHk6IHN0cmluZzsKICBwdWJsaWNhZG86IGJvb2xlYW47CiAgY3JpYWRvX2VtOiBzdHJpbmc7Cn0KCmNvbnN0IEVWRU5UT19CQURHRTogUmVjb3JkPHN0cmluZywgeyBsYWJlbDogc3RyaW5nOyBjb3I6IHN0cmluZyB9PiA9IHsKICBnb2w6ICAgICAgIHsgbGFiZWw6ICdHT0wnLCAgICAgICBjb3I6ICdiZy15ZWxsb3ctNTAwIHRleHQtYmxhY2snIH0sCiAgdml0w7NyaWE6ICAgeyBsYWJlbDogJ1ZJVMOTUklBJywgICBjb3I6ICdiZy1lbWVyYWxkLTUwMCB0ZXh0LWJsYWNrJyB9LAogIGVtcGF0ZTogICAgeyBsYWJlbDogJ0VNUEFURScsICAgIGNvcjogJ2JnLXppbmMtNTAwIHRleHQtd2hpdGUnIH0sCiAgaW5pY2lvOiAgICB7IGxhYmVsOiAnSU7DjUNJTycsICAgIGNvcjogJ2JnLWJsdWUtNTAwIHRleHQtd2hpdGUnIH0sCiAgcMOqbmFsdGk6ICAgeyBsYWJlbDogJ1DDik5BTFRJJywgIGNvcjogJ2JnLW9yYW5nZS01MDAgdGV4dC1ibGFjaycgfSwKICBpbnRlcnZhbG86IHsgbGFiZWw6ICdJTlRFUlZBTE8nLCBjb3I6ICdiZy1wdXJwbGUtNTAwIHRleHQtd2hpdGUnIH0sCiAgY2xpbWE6ICAgICB7IGxhYmVsOiAnQ0xJTUEnLCAgICAgY29yOiAnYmctY3lhbi01MDAgdGV4dC1ibGFjaycgfSwKICAncHJlLWpvZ28nOnsgbGFiZWw6ICdQUsOJLUpPR08nLCBjb3I6ICdiZy1pbmRpZ28tNTAwIHRleHQtd2hpdGUnIH0sCn07CgpmdW5jdGlvbiBCYWRnZSh7IGV2ZW50byB9OiB7IGV2ZW50bzogc3RyaW5nIH0pIHsKICBjb25zdCBjZmcgPSBFVkVOVE9fQkFER0VbZXZlbnRvXSA/PyB7IGxhYmVsOiBldmVudG8udG9VcHBlckNhc2UoKSwgY29yOiAnYmctemluYy03MDAgdGV4dC13aGl0ZScgfTsKICByZXR1cm4gKAogICAgPHNwYW4gY2xhc3NOYW1lPXtgaW5saW5lLWJsb2NrIHB4LTIgcHktMC41IHJvdW5kZWQgdGV4dC1bOXB4XSBmb250LWJsYWNrIHRyYWNraW5nLXdpZGVzdCB1cHBlcmNhc2UgJHtjZmcuY29yfWB9PgogICAgICB7Y2ZnLmxhYmVsfQogICAgPC9zcGFuPgogICk7Cn0KCmZ1bmN0aW9uIGZvcm1hdFRzKGlzbzogc3RyaW5nKSB7CiAgcmV0dXJuIG5ldyBEYXRlKGlzbykudG9Mb2NhbGVTdHJpbmcoJ3B0LUJSJywgewogICAgZGF5OiAnMi1kaWdpdCcsIG1vbnRoOiAnMi1kaWdpdCcsIGhvdXI6ICcyLWRpZ2l0JywgbWludXRlOiAnMi1kaWdpdCcsCiAgfSk7Cn0KCmZ1bmN0aW9uIENvcHlDYXJkKHsgaXRlbSwgb25QdWJsaWNhciwgb25EZWxldGFyIH06IHsKICBpdGVtOiBDb3B5SXRlbTsKICBvblB1YmxpY2FyOiAoaWQ6IG51bWJlcikgPT4gUHJvbWlzZTx2b2lkPjsKICBvbkRlbGV0YXI6ICAoaWQ6IG51bWJlcikgPT4gUHJvbWlzZTx2b2lkPjsKfSkgewogIGNvbnN0IFtjb3BpYWRvSWR4LCBzZXRDb3BpYWRvSWR4XSA9IHVzZVN0YXRlPG51bWJlciB8IG51bGw+KG51bGwpOwogIGNvbnN0IFtsb2FkaW5nLCBzZXRMb2FkaW5nXSA9IHVzZVN0YXRlPCdwdWInIHwgJ2RlbCcgfCBudWxsPihudWxsKTsKCiAgY29uc3QgY29waWFyID0gYXN5bmMgKHRleHRvOiBzdHJpbmcsIGlkeDogbnVtYmVyKSA9PiB7CiAgICBhd2FpdCBuYXZpZ2F0b3IuY2xpcGJvYXJkLndyaXRlVGV4dCh0ZXh0byk7CiAgICBzZXRDb3BpYWRvSWR4KGlkeCk7CiAgICBzZXRUaW1lb3V0KCgpID0+IHNldENvcGlhZG9JZHgobnVsbCksIDE4MDApOwogIH07CgogIHJldHVybiAoCiAgICA8bW90aW9uLmRpdgogICAgICBsYXlvdXQKICAgICAgaW5pdGlhbD17eyBvcGFjaXR5OiAwLCB5OiAxMiB9fQogICAgICBhbmltYXRlPXt7IG9wYWNpdHk6IDEsIHk6IDAgfX0KICAgICAgZXhpdD17eyBvcGFjaXR5OiAwLCBzY2FsZTogMC45NSB9fQogICAgICB0cmFuc2l0aW9uPXt7IGR1cmF0aW9uOiAwLjIgfX0KICAgICAgY2xhc3NOYW1lPXtgcm91bmRlZC0yeGwgYm9yZGVyIHAtNCBmbGV4IGZsZXgtY29sIGdhcC0zICR7CiAgICAgICAgaXRlbS5wdWJsaWNhZG8KICAgICAgICAgID8gJ2JvcmRlci1lbWVyYWxkLTgwMC81MCBiZy1lbWVyYWxkLTk1MC8yMCcKICAgICAgICAgIDogJ2JvcmRlci16aW5jLTgwMCBiZy16aW5jLTkwMC82MCcKICAgICAgfWB9CiAgICA+CiAgICAgIHsvKiBIZWFkZXIgKi99CiAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLXN0YXJ0IGp1c3RpZnktYmV0d2VlbiBnYXAtMiI+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggZmxleC13cmFwIGl0ZW1zLWNlbnRlciBnYXAtMiI+CiAgICAgICAgICA8QmFkZ2UgZXZlbnRvPXtpdGVtLmV2ZW50b30gLz4KICAgICAgICAgIHtpdGVtLnB1YmxpY2FkbyAmJiAoCiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0idGV4dC1bOXB4XSBmb250LWJsYWNrIHRyYWNraW5nLXdpZGVzdCB0ZXh0LWVtZXJhbGQtNDAwIHVwcGVyY2FzZSI+4pyTIFB1YmxpY2Fkbzwvc3Bhbj4KICAgICAgICAgICl9CiAgICAgICAgICB7aXRlbS5qb2dvX2lkICYmICgKICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LVs5cHhdIHRleHQtemluYy02MDAiPmpvZ28gI3tpdGVtLmpvZ29faWR9PC9zcGFuPgogICAgICAgICAgKX0KICAgICAgICA8L2Rpdj4KICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQtWzEwcHhdIHRleHQtemluYy02MDAgd2hpdGVzcGFjZS1ub3dyYXAiPntmb3JtYXRUcyhpdGVtLmNyaWFkb19lbSl9PC9zcGFuPgogICAgICA8L2Rpdj4KCiAgICAgIHsvKiBUw610dWxvICovfQogICAgICA8cCBjbGFzc05hbWU9InRleHQtd2hpdGUgZm9udC1ibGFjayB0ZXh0LXNtIGxlYWRpbmctc251ZyI+e2l0ZW0udGl0dWxvfTwvcD4KCiAgICAgIHsvKiBDb3B5ICovfQogICAgICA8ZGl2IGNsYXNzTmFtZT0icmVsYXRpdmUgYmctemluYy05NTAgcm91bmRlZC14bCBwLTMgYm9yZGVyIGJvcmRlci16aW5jLTgwMCI+CiAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXppbmMtMzAwIHRleHQteHMgbGVhZGluZy1yZWxheGVkIHdoaXRlc3BhY2UtcHJlLXdyYXAgcHItOCI+e2l0ZW0uY29weX08L3A+CiAgICAgICAgPGJ1dHRvbgogICAgICAgICAgb25DbGljaz17KCkgPT4gY29waWFyKGl0ZW0uY29weSwgaXRlbS5pZCl9CiAgICAgICAgICBjbGFzc05hbWU9ImFic29sdXRlIHRvcC0yIHJpZ2h0LTIgdGV4dC16aW5jLTYwMCBob3Zlcjp0ZXh0LXllbGxvdy00MDAgdHJhbnNpdGlvbi1jb2xvcnMiCiAgICAgICAgICB0aXRsZT0iQ29waWFyIHRleHRvIgogICAgICAgID4KICAgICAgICAgIHtjb3BpYWRvSWR4ID09PSBpdGVtLmlkCiAgICAgICAgICAgID8gPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LVs5cHhdIGZvbnQtYmxhY2sgdGV4dC1lbWVyYWxkLTQwMCI+4pyTPC9zcGFuPgogICAgICAgICAgICA6IDxzdmcgY2xhc3NOYW1lPSJ3LTMuNSBoLTMuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggc3Ryb2tlTGluZWNhcD0icm91bmQiIHN0cm9rZUxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlV2lkdGg9ezJ9IGQ9Ik04IDVINmEyIDIgMCAwMC0yIDJ2MTJhMiAyIDAgMDAyIDJoMTBhMiAyIDAgMDAyLTJ2LTFNOCA1YTIgMiAwIDAwMiAyaDJhMiAyIDAgMDAyLTJNOCA1YTIgMiAwIDAxMi0yaDJhMiAyIDAgMDEyIDJtMCAwaDJhMiAyIDAgMDEyIDJ2M20yIDRIMTBtMCAwbDMtM20tMyAzbDMgMyIgLz48L3N2Zz4KICAgICAgICAgIH0KICAgICAgICA8L2J1dHRvbj4KICAgICAgPC9kaXY+CgogICAgICB7LyogQcOnw7VlcyAqL30KICAgICAgeyFpdGVtLnB1YmxpY2FkbyAmJiAoCiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggZ2FwLTIiPgogICAgICAgICAgPGJ1dHRvbgogICAgICAgICAgICBkaXNhYmxlZD17bG9hZGluZyAhPT0gbnVsbH0KICAgICAgICAgICAgb25DbGljaz17YXN5bmMgKCkgPT4geyBzZXRMb2FkaW5nKCdwdWInKTsgYXdhaXQgb25QdWJsaWNhcihpdGVtLmlkKTsgc2V0TG9hZGluZyhudWxsKTsgfX0KICAgICAgICAgICAgY2xhc3NOYW1lPSJmbGV4LTEgcHktMiByb3VuZGVkLXhsIGJnLXllbGxvdy01MDAgaG92ZXI6YmcteWVsbG93LTQwMCB0ZXh0LWJsYWNrIHRleHQteHMgZm9udC1ibGFjayB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgdHJhbnNpdGlvbi1jb2xvcnMgZGlzYWJsZWQ6b3BhY2l0eS01MCIKICAgICAgICAgID4KICAgICAgICAgICAge2xvYWRpbmcgPT09ICdwdWInID8gJ1B1YmxpY2FuZG8uLi4nIDogJ+KckyBQdWJsaWNhcid9CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgZGlzYWJsZWQ9e2xvYWRpbmcgIT09IG51bGx9CiAgICAgICAgICAgIG9uQ2xpY2s9e2FzeW5jICgpID0+IHsgc2V0TG9hZGluZygnZGVsJyk7IGF3YWl0IG9uRGVsZXRhcihpdGVtLmlkKTsgc2V0TG9hZGluZyhudWxsKTsgfX0KICAgICAgICAgICAgY2xhc3NOYW1lPSJweC00IHB5LTIgcm91bmRlZC14bCBiZy16aW5jLTgwMCBob3ZlcjpiZy1yZWQtOTAwLzYwIHRleHQtemluYy00MDAgaG92ZXI6dGV4dC1yZWQtNDAwIHRleHQteHMgZm9udC1ibGFjayB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgdHJhbnNpdGlvbi1jb2xvcnMgZGlzYWJsZWQ6b3BhY2l0eS01MCIKICAgICAgICAgID4KICAgICAgICAgICAge2xvYWRpbmcgPT09ICdkZWwnID8gJy4uLicgOiAn4pyVJ30KICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgIDwvZGl2PgogICAgICApfQogICAgPC9tb3Rpb24uZGl2PgogICk7Cn0KCi8vIOKUgOKUgOKUgCBQYWluZWwgcHJpbmNpcGFsIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gVm94U3BvcnRzUGFuZWwoKSB7CiAgY29uc3QgW2l0ZW1zLCBzZXRJdGVtc10gICAgICAgPSB1c2VTdGF0ZTxDb3B5SXRlbVtdPihbXSk7CiAgY29uc3QgW2xvYWRpbmcsIHNldExvYWRpbmddICAgPSB1c2VTdGF0ZSh0cnVlKTsKICBjb25zdCBbZmlsdHJvLCBzZXRGaWx0cm9dICAgICA9IHVzZVN0YXRlPCd0b2RvcycgfCAncGVuZGVudGVzJyB8ICdwdWJsaWNhZG9zJz4oJ3BlbmRlbnRlcycpOwogIGNvbnN0IFtldmVudG9GaWx0cm8sIHNldEV2ZW50b0ZpbHRyb10gPSB1c2VTdGF0ZTxzdHJpbmc+KCd0b2RvcycpOwoKICBjb25zdCBjYXJyZWdhckZpbGEgPSB1c2VDYWxsYmFjayhhc3luYyAoKSA9PiB7CiAgICBjb25zdCBxdWVyeSA9IHN1cGFiYXNlCiAgICAgIC5mcm9tKCd2b3hzcG9ydHNfZmlsYScpCiAgICAgIC5zZWxlY3QoJyonKQogICAgICAub3JkZXIoJ2NyaWFkb19lbScsIHsgYXNjZW5kaW5nOiBmYWxzZSB9KQogICAgICAubGltaXQoMTAwKTsKCiAgICBjb25zdCB7IGRhdGEgfSA9IGF3YWl0IHF1ZXJ5OwogICAgc2V0SXRlbXMoKGRhdGEgPz8gW10pIGFzIENvcHlJdGVtW10pOwogICAgc2V0TG9hZGluZyhmYWxzZSk7CiAgfSwgW10pOwoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgY2FycmVnYXJGaWxhKCk7CgogICAgLy8gUmVhbHRpbWUg4oCUIGF0dWFsaXphIGF1dG9tYXRpY2FtZW50ZSBxdWFuZG8gTMOpbyBnZXJhIHVtIG5vdm8gY29weQogICAgY29uc3QgY2hhbm5lbCA9IHN1cGFiYXNlCiAgICAgIC5jaGFubmVsKCd2b3hzcG9ydHNfZmlsYV9jaGFuZ2VzJykKICAgICAgLm9uKCdwb3N0Z3Jlc19jaGFuZ2VzJywgeyBldmVudDogJyonLCBzY2hlbWE6ICdwdWJsaWMnLCB0YWJsZTogJ3ZveHNwb3J0c19maWxhJyB9LCAoKSA9PiB7CiAgICAgICAgY2FycmVnYXJGaWxhKCk7CiAgICAgIH0pCiAgICAgIC5zdWJzY3JpYmUoKTsKCiAgICByZXR1cm4gKCkgPT4geyBzdXBhYmFzZS5yZW1vdmVDaGFubmVsKGNoYW5uZWwpOyB9OwogIH0sIFtjYXJyZWdhckZpbGFdKTsKCiAgY29uc3QgcHVibGljYXIgPSBhc3luYyAoaWQ6IG51bWJlcikgPT4gewogICAgYXdhaXQgZmV0Y2goJy9hcGkvdm94c3BvcnRzL3B1YmxpY2FyJywgewogICAgICBtZXRob2Q6ICdQQVRDSCcsCiAgICAgIGhlYWRlcnM6IHsgJ0NvbnRlbnQtVHlwZSc6ICdhcHBsaWNhdGlvbi9qc29uJyB9LAogICAgICBib2R5OiBKU09OLnN0cmluZ2lmeSh7IGlkIH0pLAogICAgfSk7CiAgICBhd2FpdCBjYXJyZWdhckZpbGEoKTsKICB9OwoKICBjb25zdCBkZWxldGFyID0gYXN5bmMgKGlkOiBudW1iZXIpID0+IHsKICAgIGF3YWl0IGZldGNoKCcvYXBpL3ZveHNwb3J0cy9wdWJsaWNhcicsIHsKICAgICAgbWV0aG9kOiAnREVMRVRFJywKICAgICAgaGVhZGVyczogeyAnQ29udGVudC1UeXBlJzogJ2FwcGxpY2F0aW9uL2pzb24nIH0sCiAgICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsgaWQgfSksCiAgICB9KTsKICAgIHNldEl0ZW1zKHByZXYgPT4gcHJldi5maWx0ZXIoaSA9PiBpLmlkICE9PSBpZCkpOwogIH07CgogIGNvbnN0IGV2ZW50b3MgPSBbJ3RvZG9zJywgLi4uQXJyYXkuZnJvbShuZXcgU2V0KGl0ZW1zLm1hcChpID0+IGkuZXZlbnRvKSkpXTsKCiAgY29uc3Qgdmlzw612ZWlzID0gaXRlbXMuZmlsdGVyKGkgPT4gewogICAgY29uc3QgcGFzc2FGaWx0cm8gPSBmaWx0cm8gPT09ICd0b2RvcycgPyB0cnVlIDogZmlsdHJvID09PSAncGVuZGVudGVzJyA/ICFpLnB1YmxpY2FkbyA6IGkucHVibGljYWRvOwogICAgY29uc3QgcGFzc2FFdmVudG8gPSBldmVudG9GaWx0cm8gPT09ICd0b2RvcycgfHwgaS5ldmVudG8gPT09IGV2ZW50b0ZpbHRybzsKICAgIHJldHVybiBwYXNzYUZpbHRybyAmJiBwYXNzYUV2ZW50bzsKICB9KTsKCiAgY29uc3QgcGVuZGVudGVzICA9IGl0ZW1zLmZpbHRlcihpID0+ICFpLnB1YmxpY2FkbykubGVuZ3RoOwogIGNvbnN0IHB1YmxpY2Fkb3MgPSBpdGVtcy5maWx0ZXIoaSA9PiAgaS5wdWJsaWNhZG8pLmxlbmd0aDsKCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJtaW4taC1zY3JlZW4gYmctYmxhY2sgdGV4dC13aGl0ZSI+CiAgICAgIDxkaXYgY2xhc3NOYW1lPSJtYXgtdy0zeGwgbXgtYXV0byBweC00IHB5LTEwIj4KCiAgICAgICAgey8qIEhlYWRlciAqL30KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgbWItOCI+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idy0xLjUgaC0xMCBiZy15ZWxsb3ctNTAwIHJvdW5kZWQtZnVsbCIgLz4KICAgICAgICAgIDxkaXY+CiAgICAgICAgICAgIDxoMSBjbGFzc05hbWU9InRleHQtMnhsIGZvbnQtYmxhY2sgaXRhbGljIHVwcGVyY2FzZSB0cmFja2luZy10aWdodGVyIGxlYWRpbmctbm9uZSI+CiAgICAgICAgICAgICAgVm94U3BvcnRzCiAgICAgICAgICAgIDwvaDE+CiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC16aW5jLTUwMCB0ZXh0LVsxMHB4XSBmb250LWJvbGQgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVzdCBtdC0wLjUiPgogICAgICAgICAgICAgIEZpbGEgZGUgY29waWVzIMK3IEzDqW8gwrcgw4kgTsOtdmVsIE1ha2FyaW9zIPCfkK/inYTvuI8KICAgICAgICAgICAgPC9wPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibWwtYXV0byBmbGV4IGdhcC0zIHRleHQtY2VudGVyIj4KICAgICAgICAgICAgPGRpdj4KICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idGV4dC15ZWxsb3ctNDAwIGZvbnQtYmxhY2sgdGV4dC14bCI+e3BlbmRlbnRlc308L2Rpdj4KICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idGV4dC16aW5jLTYwMCB0ZXh0LVs5cHhdIHVwcGVyY2FzZSB0cmFja2luZy13aWRlc3QiPlBlbmRlbnRlczwvZGl2PgogICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgPGRpdj4KICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idGV4dC1lbWVyYWxkLTQwMCBmb250LWJsYWNrIHRleHQteGwiPntwdWJsaWNhZG9zfTwvZGl2PgogICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ0ZXh0LXppbmMtNjAwIHRleHQtWzlweF0gdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVzdCI+UHVibGljYWRvczwvZGl2PgogICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDwvZGl2PgogICAgICAgIDwvZGl2PgoKICAgICAgICB7LyogRmlsdHJvcyAqL30KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBmbGV4LXdyYXAgZ2FwLTIgbWItNiI+CiAgICAgICAgICB7KFsncGVuZGVudGVzJywgJ3RvZG9zJywgJ3B1YmxpY2Fkb3MnXSBhcyBjb25zdCkubWFwKGYgPT4gKAogICAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgICAga2V5PXtmfQogICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldEZpbHRybyhmKX0KICAgICAgICAgICAgICBjbGFzc05hbWU9e2BweC0zIHB5LTEuNSByb3VuZGVkLWxnIHRleHQtWzEwcHhdIGZvbnQtYmxhY2sgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVzdCB0cmFuc2l0aW9uLWNvbG9ycyAkewogICAgICAgICAgICAgICAgZmlsdHJvID09PSBmID8gJ2JnLXllbGxvdy01MDAgdGV4dC1ibGFjaycgOiAnYmctemluYy05MDAgdGV4dC16aW5jLTUwMCBob3Zlcjp0ZXh0LXdoaXRlJwogICAgICAgICAgICAgIH1gfQogICAgICAgICAgICA+CiAgICAgICAgICAgICAge2Z9CiAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgKSl9CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idy1weCBiZy16aW5jLTgwMCBteC0xIiAvPgogICAgICAgICAge2V2ZW50b3MubWFwKGUgPT4gKAogICAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgICAga2V5PXtlfQogICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldEV2ZW50b0ZpbHRybyhlKX0KICAgICAgICAgICAgICBjbGFzc05hbWU9e2BweC0zIHB5LTEuNSByb3VuZGVkLWxnIHRleHQtWzEwcHhdIGZvbnQtYmxhY2sgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVzdCB0cmFuc2l0aW9uLWNvbG9ycyAkewogICAgICAgICAgICAgICAgZXZlbnRvRmlsdHJvID09PSBlID8gJ2JnLXppbmMtNzAwIHRleHQtd2hpdGUnIDogJ2JnLXppbmMtOTAwIHRleHQtemluYy02MDAgaG92ZXI6dGV4dC13aGl0ZScKICAgICAgICAgICAgICB9YH0KICAgICAgICAgICAgPgogICAgICAgICAgICAgIHtlfQogICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICkpfQogICAgICAgIDwvZGl2PgoKICAgICAgICB7LyogTGlzdGEgKi99CiAgICAgICAge2xvYWRpbmcgPyAoCiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ic3BhY2UteS0zIj4KICAgICAgICAgICAge1sxLDIsM10ubWFwKGkgPT4gKAogICAgICAgICAgICAgIDxkaXYga2V5PXtpfSBjbGFzc05hbWU9ImgtNDAgcm91bmRlZC0yeGwgYmctemluYy05MDAgYW5pbWF0ZS1wdWxzZSIgLz4KICAgICAgICAgICAgKSl9CiAgICAgICAgICA8L2Rpdj4KICAgICAgICApIDogdmlzw612ZWlzLmxlbmd0aCA9PT0gMCA/ICgKICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ0ZXh0LWNlbnRlciBweS0yMCB0ZXh0LXppbmMtNjAwIj4KICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LTR4bCBtYi0zIj7wn5CvPC9wPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9ImZvbnQtYmxhY2sgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVzdCB0ZXh0LXNtIj5GaWxhIHZhemlhPC9wPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQteHMgbXQtMSI+TyBMw6lvIGFpbmRhIG7Do28gZ2Vyb3UgbmVuaHVtIGNvcHkgY29tIGVzc2UgZmlsdHJvLjwvcD4KICAgICAgICAgIDwvZGl2PgogICAgICAgICkgOiAoCiAgICAgICAgICA8QW5pbWF0ZVByZXNlbmNlIG1vZGU9InBvcExheW91dCI+CiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJzcGFjZS15LTMiPgogICAgICAgICAgICAgIHt2aXPDrXZlaXMubWFwKGl0ZW0gPT4gKAogICAgICAgICAgICAgICAgPENvcHlDYXJkCiAgICAgICAgICAgICAgICAgIGtleT17aXRlbS5pZH0KICAgICAgICAgICAgICAgICAgaXRlbT17aXRlbX0KICAgICAgICAgICAgICAgICAgb25QdWJsaWNhcj17cHVibGljYXJ9CiAgICAgICAgICAgICAgICAgIG9uRGVsZXRhcj17ZGVsZXRhcn0KICAgICAgICAgICAgICAgIC8+CiAgICAgICAgICAgICAgKSl9CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgPC9BbmltYXRlUHJlc2VuY2U+CiAgICAgICAgKX0KCiAgICAgIDwvZGl2PgogICAgPC9kaXY+CiAgKTsKfQo=
+'use client';
+// src/components/voxsports/VoxSportsPanel.tsx
+// Painel interno — fila de copies do Léo em tempo real via Supabase Realtime.
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface CopyItem {
+  id: number;
+  jogo_id: number | null;
+  evento: string;
+  titulo: string;
+  copy: string;
+  publicado: boolean;
+  criado_em: string;
+}
+
+const EVENTO_BADGE: Record<string, { label: string; cor: string }> = {
+  gol:       { label: 'GOL',       cor: 'bg-yellow-500 text-black' },
+  vitória:   { label: 'VITÓRIA',   cor: 'bg-emerald-500 text-black' },
+  empate:    { label: 'EMPATE',    cor: 'bg-zinc-500 text-white' },
+  inicio:    { label: 'INÍCIO',    cor: 'bg-blue-500 text-white' },
+  pênalti:   { label: 'PÊNALTI',  cor: 'bg-orange-500 text-black' },
+  intervalo: { label: 'INTERVALO', cor: 'bg-purple-500 text-white' },
+  clima:     { label: 'CLIMA',     cor: 'bg-cyan-500 text-black' },
+  'pre-jogo':{ label: 'PRÉ-JOGO', cor: 'bg-indigo-500 text-white' },
+};
+
+function Badge({ evento }: { evento: string }) {
+  const cfg = EVENTO_BADGE[evento] ?? { label: evento.toUpperCase(), cor: 'bg-zinc-700 text-white' };
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black tracking-widest uppercase ${cfg.cor}`}>
+      {cfg.label}
+    </span>
+  );
+}
+
+function formatTs(iso: string) {
+  return new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function CopyCard({ item, onPublicar, onDeletar }: {
+  item: CopyItem;
+  onPublicar: (id: number) => Promise<void>;
+  onDeletar:  (id: number) => Promise<void>;
+}) {
+  const [copiadoIdx, setCopiadoIdx] = useState<number | null>(null);
+  const [loading, setLoading] = useState<'pub' | 'del' | null>(null);
+
+  const copiar = async (texto: string, idx: number) => {
+    await navigator.clipboard.writeText(texto);
+    setCopiadoIdx(idx);
+    setTimeout(() => setCopiadoIdx(null), 1800);
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+      className={`rounded-2xl border p-4 flex flex-col gap-3 ${
+        item.publicado
+          ? 'border-emerald-800/50 bg-emerald-950/20'
+          : 'border-zinc-800 bg-zinc-900/60'
+      }`}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge evento={item.evento} />
+          {item.publicado && (
+            <span className="text-[9px] font-black tracking-widest text-emerald-400 uppercase">✓ Publicado</span>
+          )}
+          {item.jogo_id && (
+            <span className="text-[9px] text-zinc-600">jogo #{item.jogo_id}</span>
+          )}
+        </div>
+        <span className="text-[10px] text-zinc-600 whitespace-nowrap">{formatTs(item.criado_em)}</span>
+      </div>
+
+      {/* Título */}
+      <p className="text-white font-black text-sm leading-snug">{item.titulo}</p>
+
+      {/* Copy */}
+      <div className="relative bg-zinc-950 rounded-xl p-3 border border-zinc-800">
+        <p className="text-zinc-300 text-xs leading-relaxed whitespace-pre-wrap pr-8">{item.copy}</p>
+        <button
+          onClick={() => copiar(item.copy, item.id)}
+          className="absolute top-2 right-2 text-zinc-600 hover:text-yellow-400 transition-colors"
+          title="Copiar texto"
+        >
+          {copiadoIdx === item.id
+            ? <span className="text-[9px] font-black text-emerald-400">✓</span>
+            : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+          }
+        </button>
+      </div>
+
+      {/* Ações */}
+      {!item.publicado && (
+        <div className="flex gap-2">
+          <button
+            disabled={loading !== null}
+            onClick={async () => { setLoading('pub'); await onPublicar(item.id); setLoading(null); }}
+            className="flex-1 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-black uppercase tracking-wider transition-colors disabled:opacity-50"
+          >
+            {loading === 'pub' ? 'Publicando...' : '✓ Publicar'}
+          </button>
+          <button
+            disabled={loading !== null}
+            onClick={async () => { setLoading('del'); await onDeletar(item.id); setLoading(null); }}
+            className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-red-900/60 text-zinc-400 hover:text-red-400 text-xs font-black uppercase tracking-wider transition-colors disabled:opacity-50"
+          >
+            {loading === 'del' ? '...' : '✕'}
+          </button>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Painel principal ─────────────────────────────────────────────────────────
+
+export default function VoxSportsPanel() {
+  const [items, setItems]       = useState<CopyItem[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [filtro, setFiltro]     = useState<'todos' | 'pendentes' | 'publicados'>('pendentes');
+  const [eventoFiltro, setEventoFiltro] = useState<string>('todos');
+
+  const carregarFila = useCallback(async () => {
+    const query = supabase
+      .from('voxsports_fila')
+      .select('*')
+      .order('criado_em', { ascending: false })
+      .limit(100);
+
+    const { data } = await query;
+    setItems((data ?? []) as CopyItem[]);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    carregarFila();
+
+    // Realtime — atualiza automaticamente quando Léo gera um novo copy
+    const channel = supabase
+      .channel('voxsports_fila_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'voxsports_fila' }, () => {
+        carregarFila();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [carregarFila]);
+
+  const publicar = async (id: number) => {
+    await fetch('/api/voxsports/publicar', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    await carregarFila();
+  };
+
+  const deletar = async (id: number) => {
+    await fetch('/api/voxsports/publicar', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    setItems(prev => prev.filter(i => i.id !== id));
+  };
+
+  const eventos = ['todos', ...Array.from(new Set(items.map(i => i.evento)))];
+
+  const visíveis = items.filter(i => {
+    const passaFiltro = filtro === 'todos' ? true : filtro === 'pendentes' ? !i.publicado : i.publicado;
+    const passaEvento = eventoFiltro === 'todos' || i.evento === eventoFiltro;
+    return passaFiltro && passaEvento;
+  });
+
+  const pendentes  = items.filter(i => !i.publicado).length;
+  const publicados = items.filter(i =>  i.publicado).length;
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-3xl mx-auto px-4 py-10">
+
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-1.5 h-10 bg-yellow-500 rounded-full" />
+          <div>
+            <h1 className="text-2xl font-black italic uppercase tracking-tighter leading-none">
+              Redação
+            </h1>
+            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+              Fila de copies · Léo · É Nível Makarios 🐯❄️
+</p>
+          </div>
+          <div className="ml-auto flex gap-3 text-center">
+            <div>
+              <div className="text-yellow-400 font-black text-xl">{pendentes}</div>
+              <div className="text-zinc-600 text-[9px] uppercase tracking-widest">Pendentes</div>
+            </div>
+            <div>
+              <div className="text-emerald-400 font-black text-xl">{publicados}</div>
+              <div className="text-zinc-600 text-[9px] uppercase tracking-widest">Publicados</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filtros */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {(['pendentes', 'todos', 'publicados'] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setFiltro(f)}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors ${
+                filtro === f ? 'bg-yellow-500 text-black' : 'bg-zinc-900 text-zinc-500 hover:text-white'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+          <div className="w-px bg-zinc-800 mx-1" />
+          {eventos.map(e => (
+            <button
+              key={e}
+              onClick={() => setEventoFiltro(e)}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors ${
+                eventoFiltro === e ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-zinc-600 hover:text-white'
+              }`}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+
+        {/* Lista */}
+        {loading ? (
+          <div className="space-y-3">
+            {[1,2,3].map(i => (
+              <div key={i} className="h-40 rounded-2xl bg-zinc-900 animate-pulse" />
+            ))}
+          </div>
+        ) : visíveis.length === 0 ? (
+          <div className="text-center py-20 text-zinc-600">
+            <p className="text-4xl mb-3">🐯</p>
+            <p className="font-black uppercase tracking-widest text-sm">Fila vazia</p>
+            <p className="text-xs mt-1">O Léo ainda não gerou nenhum copy com esse filtro.</p>
+          </div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            <div className="space-y-3">
+              {visíveis.map(item => (
+                <CopyCard
+                  key={item.id}
+                  item={item}
+                  onPublicar={publicar}
+                  onDeletar={deletar}
+                />
+              ))}
+            </div>
+          </AnimatePresence>
+        )}
+
+      </div>
+    </div>
+  );
+}

@@ -1,1 +1,88 @@
-Ly8gc3JjL2FwcC9hcGkvcHJveGltby1qb2dvL3JvdXRlLnRzCi8vIFVzYSBmZXRjaCBkaXJldG8gw6AgUkVTVCBBUEkgZG8gU3VwYWJhc2UgY29tIGEgYW5vbiBrZXkKLy8gRXZpdGEgcHJvYmxlbWFzIGNvbSBjcmVhdGVDbGllbnQgc2VydmVyIHF1ZSBwcmVjaXNhIGRlIGNvb2tpZXMKCmltcG9ydCB7IE5leHRSZXNwb25zZSB9IGZyb20gJ25leHQvc2VydmVyJzsKCmV4cG9ydCBjb25zdCBkeW5hbWljICAgID0gJ2ZvcmNlLWR5bmFtaWMnOwpleHBvcnQgY29uc3QgcmV2YWxpZGF0ZSA9IDA7Cgpjb25zdCBTVVBBQkFTRV9VUkwgID0gcHJvY2Vzcy5lbnYuTkVYVF9QVUJMSUNfU1VQQUJBU0VfVVJMITsKY29uc3QgU1VQQUJBU0VfQU5PTiA9IHByb2Nlc3MuZW52Lk5FWFRfUFVCTElDX1NVUEFCQVNFX0FOT05fS0VZITsKCmNvbnN0IGhlYWRlcnMgPSB7CiAgJ2FwaWtleSc6ICAgICAgICBTVVBBQkFTRV9BTk9OLAogICdBdXRob3JpemF0aW9uJzogYEJlYXJlciAke1NVUEFCQVNFX0FOT059YCwKICAnQWNjZXB0JzogICAgICAgICdhcHBsaWNhdGlvbi9qc29uJywKfTsKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBHRVQoKSB7CiAgdHJ5IHsKICAgIC8vIOKUgOKUgCAxLiBKb2dvIG1haXMgcHLDs3hpbW8gYWluZGEgbsOjbyBmaW5hbGl6YWRvIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAogICAgLy8gRXN0cmF0w6lnaWEgcG9yIGRhdGEg4oCUIHNlbSBkZXBlbmRlciBkYSBmbGFnIGBhdGl2b2AgKG5lbSBzZW1wcmUgc2luY3Jvbml6YWRhKS4KICAgIC8vIEphbmVsYTogam9nb3MgcXVlIHRlcm1pbmFyYW0gaMOhIG5vIG3DoXhpbW8gNGggKGVtIGFuZGFtZW50byBvdSBubyBmdXR1cm8pLgogICAgY29uc3QgY3V0b2ZmID0gbmV3IERhdGUoRGF0ZS5ub3coKSAtIDQgKiA2MCAqIDYwICogMTAwMCkudG9JU09TdHJpbmcoKTsKCiAgICAvLyBUZW50YTogbsOjbyBmaW5hbGl6YWRvICsgZGF0YSA+PSBjdXRvZmYgKHByw7N4aW1vcyBlIGVtIGFuZGFtZW50bykKICAgIGxldCBqb2dvVXJsID0gYCR7U1VQQUJBU0VfVVJMfS9yZXN0L3YxL2pvZ29zP3NlbGVjdD1pZCxjb21wZXRpY2FvLHJvZGFkYSxkYXRhX2hvcmEsbG9jYWwsdHJhbnNtaXNzYW8sYXRpdm8sZmluYWxpemFkbyxtYW5kYW50ZV9zbHVnLHZpc2l0YW50ZV9zbHVnLG1hbmRhbnRlX2lkLHZpc2l0YW50ZV9pZCxwbGFjYXJfbWFuZGFudGUscGxhY2FyX3Zpc2l0YW50ZSZmaW5hbGl6YWRvPWVxLmZhbHNlJmRhdGFfaG9yYT1ndGUuJHtlbmNvZGVVUklDb21wb25lbnQoY3V0b2ZmKX0mb3JkZXI9ZGF0YV9ob3JhLmFzYyZsaW1pdD0xYDsKCiAgICBsZXQgcmVzID0gYXdhaXQgZmV0Y2goam9nb1VybCwgeyBoZWFkZXJzLCBjYWNoZTogJ25vLXN0b3JlJyB9KTsKICAgIGxldCBqb2dvczogYW55W10gPSBhd2FpdCByZXMuanNvbigpOwoKICAgIC8vIEZhbGxiYWNrIEE6IG7Do28gZmluYWxpemFkbyBtYWlzIHByw7N4aW1vIG5vIGZ1dHVybyAoaWdub3JhIGphbmVsYSBkZSA0aCkKICAgIGlmICgham9nb3MgfHwgam9nb3MubGVuZ3RoID09PSAwKSB7CiAgICAgIGNvbnN0IG5vdyA9IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKTsKICAgICAgam9nb1VybCA9IGAke1NVUEFCQVNFX1VSTH0vcmVzdC92MS9qb2dvcz9zZWxlY3Q9aWQsY29tcGV0aWNhbyxyb2RhZGEsZGF0YV9ob3JhLGxvY2FsLHRyYW5zbWlzc2FvLGF0aXZvLGZpbmFsaXphZG8sbWFuZGFudGVfc2x1Zyx2aXNpdGFudGVfc2x1ZyxtYW5kYW50ZV9pZCx2aXNpdGFudGVfaWQscGxhY2FyX21hbmRhbnRlLHBsYWNhcl92aXNpdGFudGUmZmluYWxpemFkbz1lcS5mYWxzZSZkYXRhX2hvcmE9Z3RlLiR7ZW5jb2RlVVJJQ29tcG9uZW50KG5vdyl9Jm9yZGVyPWRhdGFfaG9yYS5hc2MmbGltaXQ9MWA7CiAgICAgIHJlcyA9IGF3YWl0IGZldGNoKGpvZ29VcmwsIHsgaGVhZGVycywgY2FjaGU6ICduby1zdG9yZScgfSk7CiAgICAgIGpvZ29zID0gYXdhaXQgcmVzLmpzb24oKTsKICAgIH0KCiAgICAvLyBGYWxsYmFjayBCOiBxdWFscXVlciBqb2dvIGFpbmRhIG7Do28gZmluYWxpemFkbyAobyBtYWlzIHJlY2VudGUpCiAgICBpZiAoIWpvZ29zIHx8IGpvZ29zLmxlbmd0aCA9PT0gMCkgewogICAgICBqb2dvVXJsID0gYCR7U1VQQUJBU0VfVVJMfS9yZXN0L3YxL2pvZ29zP3NlbGVjdD1pZCxjb21wZXRpY2FvLHJvZGFkYSxkYXRhX2hvcmEsbG9jYWwsdHJhbnNtaXNzYW8sYXRpdm8sZmluYWxpemFkbyxtYW5kYW50ZV9zbHVnLHZpc2l0YW50ZV9zbHVnLG1hbmRhbnRlX2lkLHZpc2l0YW50ZV9pZCxwbGFjYXJfbWFuZGFudGUscGxhY2FyX3Zpc2l0YW50ZSZmaW5hbGl6YWRvPWVxLmZhbHNlJm9yZGVyPWRhdGFfaG9yYS5kZXNjJmxpbWl0PTFgOwogICAgICByZXMgPSBhd2FpdCBmZXRjaChqb2dvVXJsLCB7IGhlYWRlcnMsIGNhY2hlOiAnbm8tc3RvcmUnIH0pOwogICAgICBqb2dvcyA9IGF3YWl0IHJlcy5qc29uKCk7CiAgICB9CgogICAgaWYgKCFqb2dvcyB8fCBqb2dvcy5sZW5ndGggPT09IDApIHsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKAogICAgICAgIHsgam9nb3M6IFtdIH0sCiAgICAgICAgeyBoZWFkZXJzOiB7ICdDYWNoZS1Db250cm9sJzogJ25vLXN0b3JlJyB9IH0KICAgICAgKTsKICAgIH0KCiAgICBjb25zdCBqb2dvID0gam9nb3NbMF07CgogICAgLy8g4pSA4pSAIDIuIEJ1c2NhIG9zIGRvaXMgdGltZXMgcGVsb3Mgc2x1Z3Mg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACiAgICBjb25zdCBzbHVncyA9IFtqb2dvLm1hbmRhbnRlX3NsdWcsIGpvZ28udmlzaXRhbnRlX3NsdWddCiAgICAgIC5maWx0ZXIoQm9vbGVhbikKICAgICAgLm1hcChzID0+IGAiJHtzfSJgKQogICAgICAuam9pbignLCcpOwoKICAgIGNvbnN0IHRpbWVzVXJsID0gYCR7U1VQQUJBU0VfVVJMfS9yZXN0L3YxL3RpbWVzX3NlcmllX2I/c2VsZWN0PWlkLG5vbWUsZXNjdWRvX3VybCxjb3JfcHJpbWFyaWEsc2lnbGEsc2x1ZyZzbHVnPWluLigke3NsdWdzfSlgOwogICAgY29uc3QgdGltZXNSZXMgPSBhd2FpdCBmZXRjaCh0aW1lc1VybCwgeyBoZWFkZXJzLCBjYWNoZTogJ25vLXN0b3JlJyB9KTsKICAgIGNvbnN0IHRpbWVzOiBhbnlbXSA9IGF3YWl0IHRpbWVzUmVzLmpzb24oKTsKCiAgICBjb25zdCBieVNsdWc6IFJlY29yZDxzdHJpbmcsIGFueT4gPSB7fTsKICAgICh0aW1lcyA/PyBbXSkuZm9yRWFjaCh0ID0+IHsgYnlTbHVnW3Quc2x1Z10gPSB0OyB9KTsKCiAgICAvLyDilIDilIAgMy4gTW9udGEgcmVzcG9zdGEg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACiAgICBjb25zdCByZXN1bHQgPSB7CiAgICAgIC4uLmpvZ28sCiAgICAgIG1hbmRhbnRlOiAgYnlTbHVnW2pvZ28ubWFuZGFudGVfc2x1Z10gID8/IHsgbm9tZTogam9nby5tYW5kYW50ZV9zbHVnLCAgZXNjdWRvX3VybDogbnVsbCB9LAogICAgICB2aXNpdGFudGU6IGJ5U2x1Z1tqb2dvLnZpc2l0YW50ZV9zbHVnXSA/PyB7IG5vbWU6IGpvZ28udmlzaXRhbnRlX3NsdWcsIGVzY3Vkb191cmw6IG51bGwgfSwKICAgIH07CgogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKAogICAgICB7IGpvZ29zOiBbcmVzdWx0XSB9LAogICAgICB7IGhlYWRlcnM6IHsgJ0NhY2hlLUNvbnRyb2wnOiAnbm8tc3RvcmUsIG5vLWNhY2hlLCBtdXN0LXJldmFsaWRhdGUnIH0gfQogICAgKTsKCiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCdbcHJveGltby1qb2dvXScsIGVycik7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgIHsgam9nb3M6IFtdLCBlcnJvcjogJ2ludGVybmFsX2Vycm9yJyB9LAogICAgICB7IHN0YXR1czogNTAwLCBoZWFkZXJzOiB7ICdDYWNoZS1Db250cm9sJzogJ25vLXN0b3JlJyB9IH0KICAgICk7CiAgfQp9Cg==
+// src/app/api/proximo-jogo/route.ts
+// Usa fetch direto à REST API do Supabase com a anon key
+// Evita problemas com createClient server que precisa de cookies
+
+import { NextResponse } from 'next/server';
+
+export const dynamic    = 'force-dynamic';
+export const revalidate = 0;
+
+const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const headers = {
+  'apikey':        SUPABASE_ANON,
+  'Authorization': `Bearer ${SUPABASE_ANON}`,
+  'Accept':        'application/json',
+};
+
+export async function GET() {
+  try {
+    // ── 1. Jogo mais próximo ainda não finalizado ─────────────────────────────
+    // Estratégia por data — sem depender da flag `ativo` (nem sempre sincronizada).
+    // Janela: jogos que terminaram há no máximo 4h (em andamento ou no futuro).
+    const cutoff = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+
+    // Tenta: não finalizado + data >= cutoff (próximos e em andamento)
+    let jogoUrl = `${SUPABASE_URL}/rest/v1/jogos?select=id,competicao,rodada,data_hora,local,transmissao,ativo,finalizado,mandante_slug,visitante_slug,mandante_id,visitante_id,placar_mandante,placar_visitante&finalizado=eq.false&data_hora=gte.${encodeURIComponent(cutoff)}&order=data_hora.asc&limit=1`;
+
+    let res = await fetch(jogoUrl, { headers, cache: 'no-store' });
+    let jogos: any[] = await res.json();
+
+    // Fallback A: não finalizado mais próximo no futuro (ignora janela de 4h)
+    if (!jogos || jogos.length === 0) {
+      const now = new Date().toISOString();
+      jogoUrl = `${SUPABASE_URL}/rest/v1/jogos?select=id,competicao,rodada,data_hora,local,transmissao,ativo,finalizado,mandante_slug,visitante_slug,mandante_id,visitante_id,placar_mandante,placar_visitante&finalizado=eq.false&data_hora=gte.${encodeURIComponent(now)}&order=data_hora.asc&limit=1`;
+      res = await fetch(jogoUrl, { headers, cache: 'no-store' });
+      jogos = await res.json();
+    }
+
+    // Fallback B: qualquer jogo ainda não finalizado (o mais recente)
+    if (!jogos || jogos.length === 0) {
+      jogoUrl = `${SUPABASE_URL}/rest/v1/jogos?select=id,competicao,rodada,data_hora,local,transmissao,ativo,finalizado,mandante_slug,visitante_slug,mandante_id,visitante_id,placar_mandante,placar_visitante&finalizado=eq.false&order=data_hora.desc&limit=1`;
+      res = await fetch(jogoUrl, { headers, cache: 'no-store' });
+      jogos = await res.json();
+    }
+
+    if (!jogos || jogos.length === 0) {
+      return NextResponse.json(
+        { jogos: [] },
+        { headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
+
+    const jogo = jogos[0];
+
+    // ── 2. Busca os dois times pelos slugs ────────────────────
+    const slugs = [jogo.mandante_slug, jogo.visitante_slug]
+      .filter(Boolean)
+      .map(s => `"${s}"`)
+      .join(',');
+
+    const timesUrl = `${SUPABASE_URL}/rest/v1/times_serie_b?select=id,nome,escudo_url,cor_primaria,sigla,slug&slug=in.(${slugs})`;
+    const timesRes = await fetch(timesUrl, { headers, cache: 'no-store' });
+    const times: any[] = await timesRes.json();
+
+    const bySlug: Record<string, any> = {};
+    (times ?? []).forEach(t => { bySlug[t.slug] = t; });
+
+    // ── 3. Monta resposta ─────────────────────────────────────
+    const result = {
+      ...jogo,
+      mandante:  bySlug[jogo.mandante_slug]  ?? { nome: jogo.mandante_slug,  escudo_url: null },
+      visitante: bySlug[jogo.visitante_slug] ?? { nome: jogo.visitante_slug, escudo_url: null },
+    };
+
+    return NextResponse.json(
+      { jogos: [result] },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
+    );
+
+  } catch (err) {
+    console.error('[proximo-jogo]', err);
+    return NextResponse.json(
+      { jogos: [], error: 'internal_error' },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } }
+    );
+  }
+}
