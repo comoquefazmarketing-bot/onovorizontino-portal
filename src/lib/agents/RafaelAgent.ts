@@ -1,1 +1,197 @@
-Ly8gc3JjL2xpYi9hZ2VudHMvUmFmYWVsQWdlbnQudHMKLy8gUmFmYWVsIOKAlCBBZ2VudGUgZGUgQW5hbHl0aWNzIGRvIGVjb3NzaXN0ZW1hIFRpZ3JlRkMgLyBPIE5vdm9yaXpvbnRpbm8uCi8vIEzDqiBtw6l0cmljYXMgZG8gU3VwYWJhc2UgZSBnZXJhIHJlbGF0w7NyaW8gc2VtYW5hbCBwYXJhIG8gRmVsaXBlLgoKLy8g4pSA4pSA4pSAIFRpcG9zIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZXhwb3J0IGludGVyZmFjZSBNZXRyaWNhQmxvY28gewogIGxhYmVsOiAgICBzdHJpbmc7CiAgdmFsb3I6ICAgIG51bWJlcjsKICB2YXJpYWNhbz86IG51bWJlcjsgICAgLy8gZGlmZXJlbsOnYSBlbSByZWxhw6fDo28gYW8gcGVyw61vZG8gYW50ZXJpb3IgKGFic29sdXRhKQogIHZhcmlhY2FvX3BjdD86IG51bWJlcjsgLy8gJSBkZSB2YXJpYcOnw6NvCiAgZGV0YWxoZT86IHN0cmluZzsKfQoKZXhwb3J0IGludGVyZmFjZSBSZWxhdG9yaW9TZW1hbmFsIHsKICBwZXJpb2RvOiAgICAgIHsgaW5pY2lvOiBzdHJpbmc7IGZpbTogc3RyaW5nIH07CiAgZXNjYWxhY29lczogICBNZXRyaWNhQmxvY287CiAgdXN1YXJpb3M6ICAgICBNZXRyaWNhQmxvY287CiAgY29waWVzOiAgICAgICBNZXRyaWNhQmxvY287CiAgcHVibGljYWRvczogICBNZXRyaWNhQmxvY287CiAgdGF4YV9wdWJsaWNhY2FvOiBNZXRyaWNhQmxvY287CiAgbm90aWNpYXNfZ2FiaTogIE1ldHJpY2FCbG9jbzsKICB0b3BfZXZlbnRvczogIEFycmF5PHsgZXZlbnRvOiBzdHJpbmc7IHRvdGFsOiBudW1iZXIgfT47CiAgcmVzdW1vOiAgICAgICBzdHJpbmc7CiAgbm90YV9nZXJhbDogICAnUycgfCAnQScgfCAnQicgfCAnQycgfCAnRCc7CiAgdGltZXN0YW1wOiAgICBzdHJpbmc7Cn0KCi8vIOKUgOKUgOKUgCBIZWxwZXJzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZnVuY3Rpb24gdmFyaWFjYW9QY3QoYXR1YWw6IG51bWJlciwgYW50ZXJpb3I6IG51bWJlcik6IG51bWJlciB7CiAgaWYgKGFudGVyaW9yID09PSAwKSByZXR1cm4gYXR1YWwgPiAwID8gMTAwIDogMDsKICByZXR1cm4gTWF0aC5yb3VuZCgoKGF0dWFsIC0gYW50ZXJpb3IpIC8gYW50ZXJpb3IpICogMTAwKTsKfQoKZnVuY3Rpb24gbm90YUdlcmFsKGVzY2FsYWNvZXM6IG51bWJlciwgdGF4YTogbnVtYmVyLCB1c3VhcmlvczogbnVtYmVyKTogJ1MnIHwgJ0EnIHwgJ0InIHwgJ0MnIHwgJ0QnIHsKICBjb25zdCBzY29yZSA9IChlc2NhbGFjb2VzID49IDUwID8gMyA6IGVzY2FsYWNvZXMgPj0gMjAgPyAyIDogZXNjYWxhY29lcyA+PSA1ID8gMSA6IDApCiAgICAgICAgICAgICAgKyAodGF4YSA+PSA4MCA/IDMgOiB0YXhhID49IDUwID8gMiA6IHRheGEgPj0gMjAgPyAxIDogMCkKICAgICAgICAgICAgICArICh1c3VhcmlvcyA+PSAyMCA/IDIgOiB1c3VhcmlvcyA+PSA1ID8gMSA6IDApOwogIGlmIChzY29yZSA+PSA3KSByZXR1cm4gJ1MnOwogIGlmIChzY29yZSA+PSA1KSByZXR1cm4gJ0EnOwogIGlmIChzY29yZSA+PSAzKSByZXR1cm4gJ0InOwogIGlmIChzY29yZSA+PSAxKSByZXR1cm4gJ0MnOwogIHJldHVybiAnRCc7Cn0KCmZ1bmN0aW9uIHJlc3Vtb1RleHRvKHI6IFJlbGF0b3Jpb1NlbWFuYWwpOiBzdHJpbmcgewogIGNvbnN0IHNldGFzID0gKHY/OiBudW1iZXIpID0+IHYgPT09IHVuZGVmaW5lZCA/ICcnIDogdiA+IDAgPyBgIOKGkSR7dn0lYCA6IHYgPCAwID8gYCDihpMke01hdGguYWJzKHYpfSVgIDogJyDihpInOwogIGNvbnN0IHBhcnRlczogc3RyaW5nW10gPSBbCiAgICBg8J+TiiBSZWxhdMOzcmlvIFJhZmFlbCDigJQgc2VtYW5hIGRlICR7bmV3IERhdGUoci5wZXJpb2RvLmluaWNpbykudG9Mb2NhbGVEYXRlU3RyaW5nKCdwdC1CUicpfSBhICR7bmV3IERhdGUoci5wZXJpb2RvLmZpbSkudG9Mb2NhbGVEYXRlU3RyaW5nKCdwdC1CUicpfWAsCiAgICBg4pq9IEVzY2FsYcOnw7VlczogJHtyLmVzY2FsYWNvZXMudmFsb3J9JHtzZXRhcyhyLmVzY2FsYWNvZXMudmFyaWFjYW9fcGN0KX1gLAogICAgYPCfkaQgVXN1w6FyaW9zIG5vdm9zOiAke3IudXN1YXJpb3MudmFsb3J9JHtzZXRhcyhyLnVzdWFyaW9zLnZhcmlhY2FvX3BjdCl9YCwKICAgIGDinI3vuI8gIENvcGllcyBnZXJhZG9zOiAke3IuY29waWVzLnZhbG9yfSB8IFB1YmxpY2Fkb3M6ICR7ci5wdWJsaWNhZG9zLnZhbG9yfSAoJHtyLnRheGFfcHVibGljYWNhby52YWxvcn0lKWAsCiAgICBg8J+TsCBOb3TDrWNpYXMgZGEgR2FiaTogJHtyLm5vdGljaWFzX2dhYmkudmFsb3J9YCwKICAgIHIudG9wX2V2ZW50b3MubGVuZ3RoID4gMAogICAgICA/IGDwn5SlIFRvcCBldmVudG86ICR7ci50b3BfZXZlbnRvc1swXS5ldmVudG99ICgke3IudG9wX2V2ZW50b3NbMF0udG90YWx9eClgCiAgICAgIDogJycsCiAgICBg8J+PhSBOb3RhIGdlcmFsOiAke3Iubm90YV9nZXJhbH0g4oCUIMOJIE7DrXZlbCBNYWthcmlvcyEg8J+Qr+KdhO+4j2AsCiAgXS5maWx0ZXIoQm9vbGVhbik7CiAgcmV0dXJuIHBhcnRlcy5qb2luKCdcbicpOwp9CgovLyDilIDilIDilIAgQ29sZXRhIGRlIGRhZG9zIChzZXJ2ZXItc2lkZSwgdmlhIFJFU1QgZGlyZXRvKSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKLy8gRXN0YXMgZnVuw6fDtWVzIHPDo28gY2hhbWFkYXMgcGVsYSByb3RhIGRlIEFQSSwgbsOjbyBwZWxvIGNsaWVudGUuCgpleHBvcnQgaW50ZXJmYWNlIENvbGV0YVBhcmFtcyB7CiAgc3VwYWJhc2VVcmw6ICBzdHJpbmc7CiAgYW5vbktleTogICAgICBzdHJpbmc7CiAgaW5pY2lvUGVyaW9kbzogc3RyaW5nOyAgIC8vIElTTyDigJQgaW7DrWNpbyBkYSBzZW1hbmEgYXR1YWwKICBmaW1QZXJpb2RvOiAgICBzdHJpbmc7ICAgLy8gSVNPIOKAlCBmaW0gZGEgc2VtYW5hIGF0dWFsCiAgaW5pY2lvQW50ZXJpb3I6IHN0cmluZzsgIC8vIElTTyDigJQgaW7DrWNpbyBkYSBzZW1hbmEgYW50ZXJpb3IKICBmaW1BbnRlcmlvcjogICAgc3RyaW5nOyAgLy8gSVNPIOKAlCBmaW0gZGEgc2VtYW5hIGFudGVyaW9yCn0KCmFzeW5jIGZ1bmN0aW9uIGNvbnRhckxpbmhhcygKICB1cmw6IHN0cmluZywga2V5OiBzdHJpbmcsCiAgdGFiZWxhOiBzdHJpbmcsIGZpbHRyb3M6IHN0cmluZwopOiBQcm9taXNlPG51bWJlcj4gewogIGNvbnN0IGVuZHBvaW50ID0gYCR7dXJsfS9yZXN0L3YxLyR7dGFiZWxhfT8ke2ZpbHRyb3N9JnNlbGVjdD1pZGA7CiAgY29uc3QgcmVzID0gYXdhaXQgZmV0Y2goZW5kcG9pbnQsIHsKICAgIGhlYWRlcnM6IHsKICAgICAgYXBpa2V5OiAgICAgICAga2V5LAogICAgICBBdXRob3JpemF0aW9uOiBgQmVhcmVyICR7a2V5fWAsCiAgICAgIEFjY2VwdDogICAgICAgICdhcHBsaWNhdGlvbi9qc29uJywKICAgICAgUHJlZmVyOiAgICAgICAgJ2NvdW50PWV4YWN0JywKICAgIH0sCiAgICBjYWNoZTogJ25vLXN0b3JlJywKICB9KTsKICBjb25zdCByYW5nZSA9IHJlcy5oZWFkZXJzLmdldCgnY29udGVudC1yYW5nZScpOwogIGlmIChyYW5nZSkgewogICAgY29uc3QgdG90YWwgPSByYW5nZS5zcGxpdCgnLycpWzFdOwogICAgaWYgKHRvdGFsICYmIHRvdGFsICE9PSAnKicpIHJldHVybiBOdW1iZXIodG90YWwpOwogIH0KICBjb25zdCBkYXRhID0gYXdhaXQgcmVzLmpzb24oKS5jYXRjaCgoKSA9PiBbXSk7CiAgcmV0dXJuIEFycmF5LmlzQXJyYXkoZGF0YSkgPyBkYXRhLmxlbmd0aCA6IDA7Cn0KCmFzeW5jIGZ1bmN0aW9uIGJ1c2NhckV2ZW50b3MoCiAgdXJsOiBzdHJpbmcsIGtleTogc3RyaW5nLAogIGluaWNpbzogc3RyaW5nLCBmaW06IHN0cmluZwopOiBQcm9taXNlPEFycmF5PHsgZXZlbnRvOiBzdHJpbmc7IHRvdGFsOiBudW1iZXIgfT4+IHsKICBjb25zdCBlbmRwb2ludCA9IGAke3VybH0vcmVzdC92MS92b3hzcG9ydHNfZmlsYT9jcmlhZG9fZW09Z3RlLiR7ZW5jb2RlVVJJQ29tcG9uZW50KGluaWNpbyl9JmNyaWFkb19lbT1sdGUuJHtlbmNvZGVVUklDb21wb25lbnQoZmltKX0mc2VsZWN0PWV2ZW50b2A7CiAgY29uc3QgcmVzID0gYXdhaXQgZmV0Y2goZW5kcG9pbnQsIHsKICAgIGhlYWRlcnM6IHsgYXBpa2V5OiBrZXksIEF1dGhvcml6YXRpb246IGBCZWFyZXIgJHtrZXl9YCwgQWNjZXB0OiAnYXBwbGljYXRpb24vanNvbicgfSwKICAgIGNhY2hlOiAnbm8tc3RvcmUnLAogIH0pOwogIGlmICghcmVzLm9rKSByZXR1cm4gW107CiAgY29uc3QgZGF0YTogeyBldmVudG86IHN0cmluZyB9W10gPSBhd2FpdCByZXMuanNvbigpLmNhdGNoKCgpID0+IFtdKTsKICBjb25zdCBjb250YWdlbTogUmVjb3JkPHN0cmluZywgbnVtYmVyPiA9IHt9OwogIGRhdGEuZm9yRWFjaChyID0+IHsgY29udGFnZW1bci5ldmVudG9dID0gKGNvbnRhZ2VtW3IuZXZlbnRvXSA/PyAwKSArIDE7IH0pOwogIHJldHVybiBPYmplY3QuZW50cmllcyhjb250YWdlbSkKICAgIC5tYXAoKFtldmVudG8sIHRvdGFsXSkgPT4gKHsgZXZlbnRvLCB0b3RhbCB9KSkKICAgIC5zb3J0KChhLCBiKSA9PiBiLnRvdGFsIC0gYS50b3RhbCk7Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBjb2xldGFyTWV0cmljYXMocDogQ29sZXRhUGFyYW1zKTogUHJvbWlzZTxSZWxhdG9yaW9TZW1hbmFsPiB7CiAgY29uc3QgeyBzdXBhYmFzZVVybDogdSwgYW5vbktleTogayB9ID0gcDsKCiAgY29uc3QgWwogICAgZXNjYWxhY29lc1NlbWFuYSwgZXNjYWxhY29lc0FudGVyaW9yLAogICAgdXN1YXJpb3NTZW1hbmEsICAgdXN1YXJpb3NBbnRlcmlvciwKICAgIGNvcGllc1NlbWFuYSwgICAgIGNvcGllc0FudGVyaW9yLAogICAgcHVibGljYWRvc1NlbWFuYSwKICAgIG5vdGljaWFzU2VtYW5hLAogICAgdG9wRXZlbnRvcywKICBdID0gYXdhaXQgUHJvbWlzZS5hbGwoWwogICAgY29udGFyTGluaGFzKHUsIGssICd0aWdyZV9mY19lc2NhbGFjb2VzJywgYGNyaWFkb19lbT1ndGUuJHtlbmNvZGVVUklDb21wb25lbnQocC5pbmljaW9QZXJpb2RvKX0mY3JpYWRvX2VtPWx0ZS4ke2VuY29kZVVSSUNvbXBvbmVudChwLmZpbVBlcmlvZG8pfWApLAogICAgY29udGFyTGluaGFzKHUsIGssICd0aWdyZV9mY19lc2NhbGFjb2VzJywgYGNyaWFkb19lbT1ndGUuJHtlbmNvZGVVUklDb21wb25lbnQocC5pbmljaW9BbnRlcmlvcil9JmNyaWFkb19lbT1sdGUuJHtlbmNvZGVVUklDb21wb25lbnQocC5maW1BbnRlcmlvcil9YCksCiAgICBjb250YXJMaW5oYXModSwgaywgJ3RpZ3JlX2ZjX3VzdWFyaW9zJywgICBgY3JpYWRvX2VtPWd0ZS4ke2VuY29kZVVSSUNvbXBvbmVudChwLmluaWNpb1BlcmlvZG8pfSZjcmlhZG9fZW09bHRlLiR7ZW5jb2RlVVJJQ29tcG9uZW50KHAuZmltUGVyaW9kbyl9YCksCiAgICBjb250YXJMaW5oYXModSwgaywgJ3RpZ3JlX2ZjX3VzdWFyaW9zJywgICBgY3JpYWRvX2VtPWd0ZS4ke2VuY29kZVVSSUNvbXBvbmVudChwLmluaWNpb0FudGVyaW9yKX0mY3JpYWRvX2VtPWx0ZS4ke2VuY29kZVVSSUNvbXBvbmVudChwLmZpbUFudGVyaW9yKX1gKSwKICAgIGNvbnRhckxpbmhhcyh1LCBrLCAndm94c3BvcnRzX2ZpbGEnLCAgICAgIGBjcmlhZG9fZW09Z3RlLiR7ZW5jb2RlVVJJQ29tcG9uZW50KHAuaW5pY2lvUGVyaW9kbyl9JmNyaWFkb19lbT1sdGUuJHtlbmNvZGVVUklDb21wb25lbnQocC5maW1QZXJpb2RvKX1gKSwKICAgIGNvbnRhckxpbmhhcyh1LCBrLCAndm94c3BvcnRzX2ZpbGEnLCAgICAgIGBjcmlhZG9fZW09Z3RlLiR7ZW5jb2RlVVJJQ29tcG9uZW50KHAuaW5pY2lvQW50ZXJpb3IpfSZjcmlhZG9fZW09bHRlLiR7ZW5jb2RlVVJJQ29tcG9uZW50KHAuZmltQW50ZXJpb3IpfWApLAogICAgY29udGFyTGluaGFzKHUsIGssICd2b3hzcG9ydHNfZmlsYScsICAgICAgYHB1YmxpY2Fkbz1lcS50cnVlJmNyaWFkb19lbT1ndGUuJHtlbmNvZGVVUklDb21wb25lbnQocC5pbmljaW9QZXJpb2RvKX0mY3JpYWRvX2VtPWx0ZS4ke2VuY29kZVVSSUNvbXBvbmVudChwLmZpbVBlcmlvZG8pfWApLAogICAgY29udGFyTGluaGFzKHUsIGssICdwb3N0YWdlbnMnLCAgICAgICAgICAgYGF1dG9yX2lhPWlsaWtlLipHYWJpKiZjcmlhZG9fZW09Z3RlLiR7ZW5jb2RlVVJJQ29tcG9uZW50KHAuaW5pY2lvUGVyaW9kbyl9JmNyaWFkb19lbT1sdGUuJHtlbmNvZGVVUklDb21wb25lbnQocC5maW1QZXJpb2RvKX1gKSwKICAgIGJ1c2NhckV2ZW50b3ModSwgaywgcC5pbmljaW9QZXJpb2RvLCBwLmZpbVBlcmlvZG8pLAogIF0pOwoKICBjb25zdCB0YXhhQXR1YWwgICAgPSBjb3BpZXNTZW1hbmEgPiAwID8gTWF0aC5yb3VuZCgocHVibGljYWRvc1NlbWFuYSAvIGNvcGllc1NlbWFuYSkgKiAxMDApIDogMDsKICBjb25zdCB0YXhhQW50ZXJpb3IgPSBjb3BpZXNBbnRlcmlvciA+IDAKICAgID8gTWF0aC5yb3VuZCgoYXdhaXQgY29udGFyTGluaGFzKHUsIGssICd2b3hzcG9ydHNfZmlsYScsIGBwdWJsaWNhZG89ZXEudHJ1ZSZjcmlhZG9fZW09Z3RlLiR7ZW5jb2RlVVJJQ29tcG9uZW50KHAuaW5pY2lvQW50ZXJpb3IpfSZjcmlhZG9fZW09bHRlLiR7ZW5jb2RlVVJJQ29tcG9uZW50KHAuZmltQW50ZXJpb3IpfWApIC8gY29waWVzQW50ZXJpb3IpICogMTAwKQogICAgOiAwOwoKICBjb25zdCByZWw6IFJlbGF0b3Jpb1NlbWFuYWwgPSB7CiAgICBwZXJpb2RvOiB7IGluaWNpbzogcC5pbmljaW9QZXJpb2RvLCBmaW06IHAuZmltUGVyaW9kbyB9LAogICAgZXNjYWxhY29lczogewogICAgICBsYWJlbDogJ0VzY2FsYcOnw7VlcyBjcmlhZGFzJywKICAgICAgdmFsb3I6IGVzY2FsYWNvZXNTZW1hbmEsCiAgICAgIHZhcmlhY2FvOiBlc2NhbGFjb2VzU2VtYW5hIC0gZXNjYWxhY29lc0FudGVyaW9yLAogICAgICB2YXJpYWNhb19wY3Q6IHZhcmlhY2FvUGN0KGVzY2FsYWNvZXNTZW1hbmEsIGVzY2FsYWNvZXNBbnRlcmlvciksCiAgICB9LAogICAgdXN1YXJpb3M6IHsKICAgICAgbGFiZWw6ICdVc3XDoXJpb3Mgbm92b3MnLAogICAgICB2YWxvcjogdXN1YXJpb3NTZW1hbmEsCiAgICAgIHZhcmlhY2FvOiB1c3Vhcmlvc1NlbWFuYSAtIHVzdWFyaW9zQW50ZXJpb3IsCiAgICAgIHZhcmlhY2FvX3BjdDogdmFyaWFjYW9QY3QodXN1YXJpb3NTZW1hbmEsIHVzdWFyaW9zQW50ZXJpb3IpLAogICAgfSwKICAgIGNvcGllczogewogICAgICBsYWJlbDogJ0NvcGllcyBnZXJhZG9zIChSZWRhw6fDo28pJywKICAgICAgdmFsb3I6IGNvcGllc1NlbWFuYSwKICAgICAgdmFyaWFjYW86IGNvcGllc1NlbWFuYSAtIGNvcGllc0FudGVyaW9yLAogICAgICB2YXJpYWNhb19wY3Q6IHZhcmlhY2FvUGN0KGNvcGllc1NlbWFuYSwgY29waWVzQW50ZXJpb3IpLAogICAgfSwKICAgIHB1YmxpY2Fkb3M6IHsKICAgICAgbGFiZWw6ICdDb3BpZXMgcHVibGljYWRvcycsCiAgICAgIHZhbG9yOiBwdWJsaWNhZG9zU2VtYW5hLAogICAgfSwKICAgIHRheGFfcHVibGljYWNhbzogewogICAgICBsYWJlbDogJ1RheGEgZGUgcHVibGljYcOnw6NvJywKICAgICAgdmFsb3I6IHRheGFBdHVhbCwKICAgICAgdmFyaWFjYW86IHRheGFBdHVhbCAtIHRheGFBbnRlcmlvciwKICAgIH0sCiAgICBub3RpY2lhc19nYWJpOiB7CiAgICAgIGxhYmVsOiAnTm90w61jaWFzIHB1YmxpY2FkYXMgcGVsYSBHYWJpJywKICAgICAgdmFsb3I6IG5vdGljaWFzU2VtYW5hLAogICAgfSwKICAgIHRvcF9ldmVudG9zOiB0b3BFdmVudG9zLnNsaWNlKDAsIDUpLAogICAgcmVzdW1vOiAnJywKICAgIG5vdGFfZ2VyYWw6IG5vdGFHZXJhbChlc2NhbGFjb2VzU2VtYW5hLCB0YXhhQXR1YWwsIHVzdWFyaW9zU2VtYW5hKSwKICAgIHRpbWVzdGFtcDogbmV3IERhdGUoKS50b0lTT1N0cmluZygpLAogIH07CgogIHJlbC5yZXN1bW8gPSByZXN1bW9UZXh0byhyZWwpOwogIHJldHVybiByZWw7Cn0KCi8vIOKUgOKUgOKUgCBSYWZhZWxBZ2VudCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmV4cG9ydCBjb25zdCBSYWZhZWxBZ2VudCA9IHsKICBuYW1lOiAgICAnUmFmYWVsJywKICByb2xlOiAgICAnQW5hbHl0aWNzICYgUmVsYXTDs3Jpb3MnLAogIHZlcnNpb246ICcxLjAuMCcsCgogIC8qKiBDb2xldGEgbcOpdHJpY2FzIGUgbW9udGEgbyByZWxhdMOzcmlvIHNlbWFuYWwuICovCiAgY29sZXRhck1ldHJpY2FzLAoKICAvKiogTG9nIHBhZHJvbml6YWRvLiAqLwogIGxvZyhtc2c6IHN0cmluZyk6IHZvaWQgewogICAgY29uc29sZS5sb2coYFtSYWZhZWwgQCAke25ldyBEYXRlKCkudG9JU09TdHJpbmcoKX1dIPCfk4ggJHttc2d9YCk7CiAgfSwKfSBhcyBjb25zdDsK
+// src/lib/agents/RafaelAgent.ts
+// Rafael — Agente de Analytics do ecossistema TigreFC / O Novorizontino.
+// Lê métricas do Supabase e gera relatório semanal para o Felipe.
+
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+
+export interface MetricaBloco {
+  label:    string;
+  valor:    number;
+  variacao?: number;
+  variacao_pct?: number;
+  detalhe?: string;
+}
+
+export interface RelatorioSemanal {
+  periodo:      { inicio: string; fim: string };
+  escalacoes:   MetricaBloco;
+  usuarios:     MetricaBloco;
+  copies:       MetricaBloco;
+  publicados:   MetricaBloco;
+  taxa_publicacao: MetricaBloco;
+  noticias_gabi:  MetricaBloco;
+  top_eventos:  Array<{ evento: string; total: number }>;
+  resumo:       string;
+  nota_geral:   'S' | 'A' | 'B' | 'C' | 'D';
+  timestamp:    string;
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function variacaoPct(atual: number, anterior: number): number {
+  if (anterior === 0) return atual > 0 ? 100 : 0;
+  return Math.round(((atual - anterior) / anterior) * 100);
+}
+
+function notaGeral(escalacoes: number, taxa: number, usuarios: number): 'S' | 'A' | 'B' | 'C' | 'D' {
+  const score = (escalacoes >= 50 ? 3 : escalacoes >= 20 ? 2 : escalacoes >= 5 ? 1 : 0)
+              + (taxa >= 80 ? 3 : taxa >= 50 ? 2 : taxa >= 20 ? 1 : 0)
+              + (usuarios >= 20 ? 2 : usuarios >= 5 ? 1 : 0);
+  if (score >= 7) return 'S';
+  if (score >= 5) return 'A';
+  if (score >= 3) return 'B';
+  if (score >= 1) return 'C';
+  return 'D';
+}
+
+function resumoTexto(r: RelatorioSemanal): string {
+  const setas = (v?: number) => v === undefined ? '' : v > 0 ? ` ↑${v}%` : v < 0 ? ` ↓${Math.abs(v)}%` : ' →';
+  const partes: string[] = [
+    `📊 Relatório Rafael — semana de ${new Date(r.periodo.inicio).toLocaleDateString('pt-BR')} a ${new Date(r.periodo.fim).toLocaleDateString('pt-BR')}`,
+    `⚽ Escalações: ${r.escalacoes.valor}${setas(r.escalacoes.variacao_pct)}`,
+    `👤 Usuários novos: ${r.usuarios.valor}${setas(r.usuarios.variacao_pct)}`,
+    `✍️  Copies gerados: ${r.copies.valor} | Publicados: ${r.publicados.valor} (${r.taxa_publicacao.valor}%)`,
+    `📰 Notícias da Gabi: ${r.noticias_gabi.valor}`,
+    r.top_eventos.length > 0
+      ? `🔥 Top evento: ${r.top_eventos[0].evento} (${r.top_eventos[0].total}x)`
+      : '',
+    `🏅 Nota geral: ${r.nota_geral} — É Nível Makarios! 🐯❄️`,
+  ].filter(Boolean);
+  return partes.join('\n');
+}
+
+// ─── Coleta de dados (server-side, via REST direto) ───────────────────────────
+
+export interface ColetaParams {
+  supabaseUrl:  string;
+  anonKey:      string;
+  inicioPeriodo: string;
+  fimPeriodo:    string;
+  inicioAnterior: string;
+  fimAnterior:    string;
+}
+
+async function contarLinhas(
+  url: string, key: string,
+  tabela: string, filtros: string
+): Promise<number> {
+  const endpoint = `${url}/rest/v1/${tabela}?${filtros}&select=id`;
+  const res = await fetch(endpoint, {
+    headers: {
+      apikey:        key,
+      Authorization: `Bearer ${key}`,
+      Accept:        'application/json',
+      Prefer:        'count=exact',
+    },
+    cache: 'no-store',
+  });
+  const range = res.headers.get('content-range');
+  if (range) {
+    const total = range.split('/')[1];
+    if (total && total !== '*') return Number(total);
+  }
+  const data = await res.json().catch(() => []);
+  return Array.isArray(data) ? data.length : 0;
+}
+
+async function buscarEventos(
+  url: string, key: string,
+  inicio: string, fim: string
+): Promise<Array<{ evento: string; total: number }>> {
+  const endpoint = `${url}/rest/v1/voxsports_fila?criado_em=gte.${encodeURIComponent(inicio)}&criado_em=lte.${encodeURIComponent(fim)}&select=evento`;
+  const res = await fetch(endpoint, {
+    headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  const data: { evento: string }[] = await res.json().catch(() => []);
+  const contagem: Record<string, number> = {};
+  data.forEach(r => { contagem[r.evento] = (contagem[r.evento] ?? 0) + 1; });
+  return Object.entries(contagem)
+    .map(([evento, total]) => ({ evento, total }))
+    .sort((a, b) => b.total - a.total);
+}
+
+export async function coletarMetricas(p: ColetaParams): Promise<RelatorioSemanal> {
+  const { supabaseUrl: u, anonKey: k } = p;
+
+  const [
+    escalacoesSemana, escalacoesAnterior,
+    usuariosSemana,   usuariosAnterior,
+    copiesSemana,     copiesAnterior,
+    publicadosSemana,
+    noticiasSemana,
+    topEventos,
+  ] = await Promise.all([
+    contarLinhas(u, k, 'tigre_fc_escalacoes', `criado_em=gte.${encodeURIComponent(p.inicioPeriodo)}&criado_em=lte.${encodeURIComponent(p.fimPeriodo)}`),
+    contarLinhas(u, k, 'tigre_fc_escalacoes', `criado_em=gte.${encodeURIComponent(p.inicioAnterior)}&criado_em=lte.${encodeURIComponent(p.fimAnterior)}`),
+    contarLinhas(u, k, 'tigre_fc_usuarios',   `criado_em=gte.${encodeURIComponent(p.inicioPeriodo)}&criado_em=lte.${encodeURIComponent(p.fimPeriodo)}`),
+    contarLinhas(u, k, 'tigre_fc_usuarios',   `criado_em=gte.${encodeURIComponent(p.inicioAnterior)}&criado_em=lte.${encodeURIComponent(p.fimAnterior)}`),
+    contarLinhas(u, k, 'voxsports_fila',      `criado_em=gte.${encodeURIComponent(p.inicioPeriodo)}&criado_em=lte.${encodeURIComponent(p.fimPeriodo)}`),
+    contarLinhas(u, k, 'voxsports_fila',      `criado_em=gte.${encodeURIComponent(p.inicioAnterior)}&criado_em=lte.${encodeURIComponent(p.fimAnterior)}`),
+    contarLinhas(u, k, 'voxsports_fila',      `publicado=eq.true&criado_em=gte.${encodeURIComponent(p.inicioPeriodo)}&criado_em=lte.${encodeURIComponent(p.fimPeriodo)}`),
+    contarLinhas(u, k, 'postagens',           `autor_ia=ilike.*Gabi*&criado_em=gte.${encodeURIComponent(p.inicioPeriodo)}&criado_em=lte.${encodeURIComponent(p.fimPeriodo)}`),
+    buscarEventos(u, k, p.inicioPeriodo, p.fimPeriodo),
+  ]);
+
+  const taxaAtual    = copiesSemana > 0 ? Math.round((publicadosSemana / copiesSemana) * 100) : 0;
+  const taxaAnterior = copiesAnterior > 0
+    ? Math.round((await contarLinhas(u, k, 'voxsports_fila', `publicado=eq.true&criado_em=gte.${encodeURIComponent(p.inicioAnterior)}&criado_em=lte.${encodeURIComponent(p.fimAnterior)}`) / copiesAnterior) * 100)
+    : 0;
+
+  const rel: RelatorioSemanal = {
+    periodo: { inicio: p.inicioPeriodo, fim: p.fimPeriodo },
+    escalacoes: {
+      label: 'Escalações criadas',
+      valor: escalacoesSemana,
+      variacao: escalacoesSemana - escalacoesAnterior,
+      variacao_pct: variacaoPct(escalacoesSemana, escalacoesAnterior),
+    },
+    usuarios: {
+      label: 'Usuários novos',
+      valor: usuariosSemana,
+      variacao: usuariosSemana - usuariosAnterior,
+      variacao_pct: variacaoPct(usuariosSemana, usuariosAnterior),
+    },
+    copies: {
+      label: 'Copies gerados (Redação)',
+      valor: copiesSemana,
+      variacao: copiesSemana - copiesAnterior,
+      variacao_pct: variacaoPct(copiesSemana, copiesAnterior),
+    },
+    publicados: {
+      label: 'Copies publicados',
+      valor: publicadosSemana,
+    },
+    taxa_publicacao: {
+      label: 'Taxa de publicação',
+      valor: taxaAtual,
+      variacao: taxaAtual - taxaAnterior,
+    },
+    noticias_gabi: {
+      label: 'Notícias publicadas pela Gabi',
+      valor: noticiasSemana,
+    },
+    top_eventos: topEventos.slice(0, 5),
+    resumo: '',
+    nota_geral: notaGeral(escalacoesSemana, taxaAtual, usuariosSemana),
+    timestamp: new Date().toISOString(),
+  };
+
+  rel.resumo = resumoTexto(rel);
+  return rel;
+}
+
+// ─── RafaelAgent ─────────────────────────────────────────────────────────────
+
+export const RafaelAgent = {
+  name:    'Rafael',
+  role:    'Analytics & Relatórios',
+  version: '1.0.0',
+
+  coletarMetricas,
+
+  log(msg: string): void {
+    console.log(`[Rafael @ ${new Date().toISOString()}] 📈 ${msg}`);
+  },
+} as const;

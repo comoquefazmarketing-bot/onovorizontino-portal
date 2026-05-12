@@ -1,1 +1,75 @@
-Ly8gc3JjL2FwcC9hcGkvYWdlbnRzL2NhbXBhbmhhL3JvdXRlLnRzCi8vIEJydW5vIOKAlCByb3RhIGRlIGNhbXBhbmhhIGRlIHJldGVuw6fDo28gYWNpb25hZGEgcG9yIGNyb24gb3Ugd2ViaG9vay4KLy8gR0VUICDihpIgcm9kYSBjYW1wYW5oYSBjb21wbGV0YSBjb20gZGVmYXVsdHMgKDQ4aCwgdGVtcGVyYXR1cmEgZG8gZW52KQovLyBQT1NUIOKGkiBib2R5IHsgaG9yYXM/OiBudW1iZXI7IHRlbXBlcmF0dXJhPzogbnVtYmVyIH0gcGFyYSBjb25maWd1cmFyIGEgY2FtcGFuaGEKLy8KLy8gUHJvdGXDp8OjbzogQ1JPTl9TRUNSRVQgKFZlcmNlbCBDcm9uKSBvdSBBdXRob3JpemF0aW9uOiBCZWFyZXIgPEFHRU5UU19TRUNSRVQ+CgppbXBvcnQgeyBOZXh0UmVxdWVzdCwgTmV4dFJlc3BvbnNlIH0gZnJvbSAnbmV4dC9zZXJ2ZXInOwppbXBvcnQgeyByb2RhckNhbXBhbmhhLCBkZXRlY3RhckluYXRpdm9zIH0gZnJvbSAnQC9saWIvYWdlbnRzL0RlYWxlckFnZW50JzsKCmV4cG9ydCBjb25zdCBkeW5hbWljICAgID0gJ2ZvcmNlLWR5bmFtaWMnOwpleHBvcnQgY29uc3QgcmV2YWxpZGF0ZSA9IDA7CgpmdW5jdGlvbiBhdXRvcml6YWRvKHJlcTogTmV4dFJlcXVlc3QpOiBib29sZWFuIHsKICBjb25zdCBjcm9uU2VjcmV0ICAgPSBwcm9jZXNzLmVudi5DUk9OX1NFQ1JFVDsKICBjb25zdCBhZ2VudHNTZWNyZXQgPSBwcm9jZXNzLmVudi5BR0VOVFNfU0VDUkVUOwoKICBjb25zdCBoZWFkZXJDcm9uICAgPSByZXEuaGVhZGVycy5nZXQoJ3gtY3Jvbi1zZWNyZXQnKTsKICBjb25zdCBoZWFkZXJCZWFyZXIgPSByZXEuaGVhZGVycy5nZXQoJ2F1dGhvcml6YXRpb24nKT8ucmVwbGFjZSgnQmVhcmVyICcsICcnKTsKCiAgaWYgKGNyb25TZWNyZXQgICAmJiBoZWFkZXJDcm9uICAgPT09IGNyb25TZWNyZXQpICAgcmV0dXJuIHRydWU7CiAgaWYgKGFnZW50c1NlY3JldCAmJiBoZWFkZXJCZWFyZXIgPT09IGFnZW50c1NlY3JldCkgcmV0dXJuIHRydWU7CiAgcmV0dXJuIGZhbHNlOwp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gR0VUKHJlcTogTmV4dFJlcXVlc3QpIHsKICBpZiAoIWF1dG9yaXphZG8ocmVxKSkgewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJybzogJ07Do28gYXV0b3JpemFkby4nIH0sIHsgc3RhdHVzOiA0MDEgfSk7CiAgfQoKICB0cnkgewogICAgY29uc3QgdGVtcCA9IHByb2Nlc3MuZW52LlRFTVBFUkFUVVJBX0FUVUFMID8gTnVtYmVyKHByb2Nlc3MuZW52LlRFTVBFUkFUVVJBX0FUVUFMKSA6IHVuZGVmaW5lZDsKICAgIGNvbnN0IHJlc3VsdGFkbyA9IGF3YWl0IHJvZGFyQ2FtcGFuaGEoNDgsIHRlbXApOwoKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7CiAgICAgIGFnZW50ZTogJ0JydW5vJywKICAgICAgcm9sZTogICAnR3Jvd3RoICYgUmV0ZW50aW9uJywKICAgICAgLi4ucmVzdWx0YWRvLAogICAgfSk7CiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCdbL2FwaS9hZ2VudHMvY2FtcGFuaGEgR0VUXScsIGVycik7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvOiAnRXJybyBpbnRlcm5vLicgfSwgeyBzdGF0dXM6IDUwMCB9KTsKICB9Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKHJlcTogTmV4dFJlcXVlc3QpIHsKICBpZiAoIWF1dG9yaXphZG8ocmVxKSkgewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJybzogJ07Do28gYXV0b3JpemFkby4nIH0sIHsgc3RhdHVzOiA0MDEgfSk7CiAgfQoKICB0cnkgewogICAgY29uc3QgYm9keSAgICAgICAgPSBhd2FpdCByZXEuanNvbigpLmNhdGNoKCgpID0+ICh7fSkpOwogICAgY29uc3QgaG9yYXMgICAgICAgPSB0eXBlb2YgYm9keT8uaG9yYXMgICAgICAgPT09ICdudW1iZXInID8gYm9keS5ob3JhcyAgICAgICA6IDQ4OwogICAgY29uc3QgdGVtcGVyYXR1cmEgPSB0eXBlb2YgYm9keT8udGVtcGVyYXR1cmEgPT09ICdudW1iZXInID8gYm9keS50ZW1wZXJhdHVyYSA6IHVuZGVmaW5lZDsKICAgIGNvbnN0IGFwZW5hc0NvbnRhciA9IGJvZHk/LmFwZW5hc19jb250YXIgPT09IHRydWU7CgogICAgaWYgKGFwZW5hc0NvbnRhcikgewogICAgICBjb25zdCBpbmF0aXZvcyA9IGF3YWl0IGRldGVjdGFySW5hdGl2b3MoaG9yYXMpOwogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oewogICAgICAgIGFnZW50ZTogICAgICAgICAnQnJ1bm8nLAogICAgICAgIHRvdGFsX2luYXRpdm9zOiBpbmF0aXZvcy5sZW5ndGgsCiAgICAgICAgaG9yYXMsCiAgICAgICAgaW5hdGl2b3MsCiAgICAgICAgdGltZXN0YW1wOiAgICAgIG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKSwKICAgICAgfSk7CiAgICB9CgogICAgY29uc3QgcmVzdWx0YWRvID0gYXdhaXQgcm9kYXJDYW1wYW5oYShob3JhcywgdGVtcGVyYXR1cmEpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgYWdlbnRlOiAnQnJ1bm8nLCAuLi5yZXN1bHRhZG8gfSk7CgogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcignWy9hcGkvYWdlbnRzL2NhbXBhbmhhIFBPU1RdJywgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm86ICdFcnJvIGludGVybm8uJyB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQo=
+// src/app/api/agents/campanha/route.ts
+// Bruno — rota de campanha de retenção acionada por cron ou webhook.
+// GET  → roda campanha completa com defaults (48h, temperatura do env)
+// POST → body { horas?: number; temperatura?: number } para configurar a campanha
+//
+// Proteção: CRON_SECRET (Vercel Cron) ou Authorization: Bearer <AGENTS_SECRET>
+
+import { NextRequest, NextResponse } from 'next/server';
+import { rodarCampanha, detectarInativos } from '@/lib/agents/DealerAgent';
+
+export const dynamic    = 'force-dynamic';
+export const revalidate = 0;
+
+function autorizado(req: NextRequest): boolean {
+  const cronSecret   = process.env.CRON_SECRET;
+  const agentsSecret = process.env.AGENTS_SECRET;
+
+  const headerCron   = req.headers.get('x-cron-secret');
+  const headerBearer = req.headers.get('authorization')?.replace('Bearer ', '');
+
+  if (cronSecret   && headerCron   === cronSecret)   return true;
+  if (agentsSecret && headerBearer === agentsSecret) return true;
+  return false;
+}
+
+export async function GET(req: NextRequest) {
+  if (!autorizado(req)) {
+    return NextResponse.json({ erro: 'Não autorizado.' }, { status: 401 });
+  }
+
+  try {
+    const temp = process.env.TEMPERATURA_ATUAL ? Number(process.env.TEMPERATURA_ATUAL) : undefined;
+    const resultado = await rodarCampanha(48, temp);
+
+    return NextResponse.json({
+      agente: 'Bruno',
+      role:   'Growth & Retention',
+      ...resultado,
+    });
+  } catch (err) {
+    console.error('[/api/agents/campanha GET]', err);
+    return NextResponse.json({ erro: 'Erro interno.' }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  if (!autorizado(req)) {
+    return NextResponse.json({ erro: 'Não autorizado.' }, { status: 401 });
+  }
+
+  try {
+    const body        = await req.json().catch(() => ({}));
+    const horas       = typeof body?.horas       === 'number' ? body.horas       : 48;
+    const temperatura = typeof body?.temperatura === 'number' ? body.temperatura : undefined;
+    const apenasContar = body?.apenas_contar === true;
+
+    if (apenasContar) {
+      const inativos = await detectarInativos(horas);
+      return NextResponse.json({
+        agente:         'Bruno',
+        total_inativos: inativos.length,
+        horas,
+        inativos,
+        timestamp:      new Date().toISOString(),
+      });
+    }
+
+    const resultado = await rodarCampanha(horas, temperatura);
+    return NextResponse.json({ agente: 'Bruno', ...resultado });
+
+  } catch (err) {
+    console.error('[/api/agents/campanha POST]', err);
+    return NextResponse.json({ erro: 'Erro interno.' }, { status: 500 });
+  }
+}

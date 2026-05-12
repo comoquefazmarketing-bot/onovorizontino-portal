@@ -1,1 +1,11 @@
-aW1wb3J0IHR5cGUgeyBNZXRhZGF0YSB9IGZyb20gJ25leHQnOwppbXBvcnQgVm94U3BvcnRzUGFuZWwgZnJvbSAnQC9jb21wb25lbnRzL3ZveHNwb3J0cy9Wb3hTcG9ydHNQYW5lbCc7CgpleHBvcnQgY29uc3QgbWV0YWRhdGE6IE1ldGFkYXRhID0gewogIHRpdGxlOiAnVm94U3BvcnRzIOKAlCBGaWxhIGRlIENvcGllcyB8IE8gTm92b3Jpem9udGlubycsCiAgZGVzY3JpcHRpb246ICdQYWluZWwgaW50ZXJubyBkZSBjb3BpZXMgZ2VyYWRvcyBwZWxvIEzDqW8gcGFyYSBvIGVjb3NzaXN0ZW1hIFRpZ3JlRkMuJywKfTsKCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIFZveFNwb3J0c1BhZ2UoKSB7CiAgcmV0dXJuIDxWb3hTcG9ydHNQYW5lbCAvPjsKfQo=
+import type { Metadata } from 'next';
+import VoxSportsPanel from '@/components/voxsports/VoxSportsPanel';
+
+export const metadata: Metadata = {
+  title: 'Redação — Fila de Copies | O Novorizontino',
+  description: 'Painel interno de copies gerados pelo Léo para o ecossistema TigreFC.',
+};
+
+export default function VoxSportsPage() {
+  return <VoxSportsPanel />;
+}

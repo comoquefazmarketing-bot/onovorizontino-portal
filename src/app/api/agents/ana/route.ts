@@ -1,1 +1,46 @@
-Ly8gc3JjL2FwcC9hcGkvYWdlbnRzL2FuYS9yb3V0ZS50cwovLyBBbmEg4oCUIHJvdGEgZGUgZXNjYWxhw6fDo28gaW50ZWxpZ2VudGUuCi8vCi8vIEdFVCAgP2Zvcm1hY2FvPTQtMy0zICAgICAgICAgICAg4oaSIHN1Z2VyZSBhIG1lbGhvciBlc2NhbGHDp8OjbyBwYXJhIGEgZm9ybWHDp8OjbwovLyBHRVQgID9yYW5raW5nPUFUQSAgICAgICAgICAgICAgIOKGkiByYW5raW5nIGRvIGVsZW5jbyBwb3IgcG9zacOnw6NvCi8vIFBPU1QgeyBzbG90czogeyBnazogMjMsIGNiMTogOCwgLi4uIH0gfSDihpIgYW5hbGlzYSBlc2NhbGHDp8OjbyBleGlzdGVudGUKCmltcG9ydCB7IE5leHRSZXF1ZXN0LCBOZXh0UmVzcG9uc2UgfSBmcm9tICduZXh0L3NlcnZlcic7CmltcG9ydCB7IHN1Z2VyaXJFc2NhbGFjYW8sIGFuYWxpc2FyRXNjYWxhY2FvLCByYW5raW5nRWxlbmNvIH0gZnJvbSAnQC9saWIvYWdlbnRzL0FuYUFnZW50JzsKCmV4cG9ydCBjb25zdCBkeW5hbWljICAgID0gJ2ZvcmNlLWR5bmFtaWMnOwpleHBvcnQgY29uc3QgcmV2YWxpZGF0ZSA9IDA7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gR0VUKHJlcTogTmV4dFJlcXVlc3QpIHsKICBjb25zdCBzcCAgICAgID0gcmVxLm5leHRVcmwuc2VhcmNoUGFyYW1zOwogIGNvbnN0IGZvcm1hY2FvID0gc3AuZ2V0KCdmb3JtYWNhbycpOwogIGNvbnN0IHJhbmtpbmcgID0gc3AuZ2V0KCdyYW5raW5nJyk7CgogIGlmIChyYW5raW5nICE9PSBudWxsKSB7CiAgICBjb25zdCBwb3MgPSByYW5raW5nLnRvVXBwZXJDYXNlKCkgfHwgdW5kZWZpbmVkOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsKICAgICAgYWdlbnRlOiAgJ0FuYScsCiAgICAgIHBvc2ljYW86IHBvcyA/PyAnVE9ET1MnLAogICAgICByYW5raW5nOiByYW5raW5nRWxlbmNvKHBvcyksCiAgICB9KTsKICB9CgogIGNvbnN0IHN1Z2VzdGFvID0gc3VnZXJpckVzY2FsYWNhbyhmb3JtYWNhbyA/PyAnNC0zLTMnKTsKICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBhZ2VudGU6ICdBbmEnLCAuLi5zdWdlc3RhbyB9KTsKfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIFBPU1QocmVxOiBOZXh0UmVxdWVzdCkgewogIHRyeSB7CiAgICBjb25zdCBib2R5ICA9IGF3YWl0IHJlcS5qc29uKCk7CiAgICBjb25zdCBzbG90cyA9IGJvZHk/LnNsb3RzIGFzIFJlY29yZDxzdHJpbmcsIG51bWJlciB8IG51bGw+IHwgdW5kZWZpbmVkOwoKICAgIGlmICghc2xvdHMpIHsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJybzogJ0NhbXBvICJzbG90cyIgb2JyaWdhdMOzcmlvLicgfSwgeyBzdGF0dXM6IDQwMCB9KTsKICAgIH0KCiAgICBjb25zdCByZWxhdG9yaW8gPSBhbmFsaXNhckVzY2FsYWNhbyhzbG90cyk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBhZ2VudGU6ICdBbmEnLCAuLi5yZWxhdG9yaW8gfSk7CiAgfSBjYXRjaCB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvOiAnUGF5bG9hZCBpbnbDoWxpZG8uJyB9LCB7IHN0YXR1czogNDAwIH0pOwogIH0KfQo=
+// src/app/api/agents/ana/route.ts
+// Ana — rota de escalação inteligente.
+//
+// GET  ?formacao=4-3-3            → sugere a melhor escalação para a formação
+// GET  ?ranking=ATA               → ranking do elenco por posição
+// POST { slots: { gk: 23, cb1: 8, ... } } → analisa escalação existente
+
+import { NextRequest, NextResponse } from 'next/server';
+import { sugerirEscalacao, analisarEscalacao, rankingElenco } from '@/lib/agents/AnaAgent';
+
+export const dynamic    = 'force-dynamic';
+export const revalidate = 0;
+
+export async function GET(req: NextRequest) {
+  const sp      = req.nextUrl.searchParams;
+  const formacao = sp.get('formacao');
+  const ranking  = sp.get('ranking');
+
+  if (ranking !== null) {
+    const pos = ranking.toUpperCase() || undefined;
+    return NextResponse.json({
+      agente:  'Ana',
+      posicao: pos ?? 'TODOS',
+      ranking: rankingElenco(pos),
+    });
+  }
+
+  const sugestao = sugerirEscalacao(formacao ?? '4-3-3');
+  return NextResponse.json({ agente: 'Ana', ...sugestao });
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body  = await req.json();
+    const slots = body?.slots as Record<string, number | null> | undefined;
+
+    if (!slots) {
+      return NextResponse.json({ erro: 'Campo "slots" obrigatório.' }, { status: 400 });
+    }
+
+    const relatorio = analisarEscalacao(slots);
+    return NextResponse.json({ agente: 'Ana', ...relatorio });
+  } catch {
+    return NextResponse.json({ erro: 'Payload inválido.' }, { status: 400 });
+  }
+}

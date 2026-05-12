@@ -1,1 +1,120 @@
-J3VzZSBjbGllbnQnOwovLyBzcmMvY29tcG9uZW50cy92aWRlb3MvTWFpblNob3J0c1NlY3Rpb24udHN4Ci8vIFNob3J0cyBkbyBjYW5hbCBAT05vdm9yaXpvbnRpbm8g4oCUIGJ1c2NhIGRpbsOibWljYSB2aWEgUlNTIGRvIFlvdVR1YmUKCmltcG9ydCBSZWFjdCwgeyB1c2VTdGF0ZSwgdXNlRWZmZWN0IH0gZnJvbSAncmVhY3QnOwoKaW50ZXJmYWNlIFNob3J0IHsKICB5b3V0dWJlX2lkOiBzdHJpbmc7CiAgdGl0dWxvOiBzdHJpbmc7CiAgdGh1bWJuYWlsPzogc3RyaW5nOwp9CgpmdW5jdGlvbiBTaG9ydENhcmQoeyBpZCwgdGl0dWxvIH06IHsgaWQ6IHN0cmluZzsgdGl0dWxvOiBzdHJpbmcgfSkgewogIGNvbnN0IFthY3RpdmUsIHNldEFjdGl2ZV0gPSB1c2VTdGF0ZShmYWxzZSk7CiAgY29uc3QgdGh1bWIgPSBgaHR0cHM6Ly9pLnl0aW1nLmNvbS92aS8ke2lkfS9tcWRlZmF1bHQuanBnYDsKCiAgcmV0dXJuICgKICAgIDxkaXYKICAgICAgY2xhc3NOYW1lPSJyZWxhdGl2ZSBhc3BlY3QtWzkvMTZdIHJvdW5kZWQtMnhsIG92ZXJmbG93LWhpZGRlbiBib3JkZXIgYm9yZGVyLXppbmMtODAwIGdyb3VwIGhvdmVyOmJvcmRlci15ZWxsb3ctNTAwIHRyYW5zaXRpb24tYWxsIGN1cnNvci1wb2ludGVyIGJnLXppbmMtOTUwIHNoYWRvdy14bCIKICAgICAgb25DbGljaz17KCkgPT4gc2V0QWN0aXZlKHRydWUpfQogICAgPgogICAgICB7YWN0aXZlID8gKAogICAgICAgIDxpZnJhbWUKICAgICAgICAgIHNyYz17YGh0dHBzOi8vd3d3LnlvdXR1YmUuY29tL2VtYmVkLyR7aWR9P2F1dG9wbGF5PTEmcmVsPTAmbW9kZXN0YnJhbmRpbmc9MWB9CiAgICAgICAgICBjbGFzc05hbWU9ImFic29sdXRlIGluc2V0LTAgdy1mdWxsIGgtZnVsbCIKICAgICAgICAgIHRpdGxlPXt0aXR1bG99CiAgICAgICAgICBhbGxvdz0iYXV0b3BsYXk7IGVuY3J5cHRlZC1tZWRpYTsgcGljdHVyZS1pbi1waWN0dXJlIgogICAgICAgICAgYWxsb3dGdWxsU2NyZWVuCiAgICAgICAgLz4KICAgICAgKSA6ICgKICAgICAgICA8PgogICAgICAgICAgey8qIFRodW1ibmFpbCAqL30KICAgICAgICAgIDxpbWcKICAgICAgICAgICAgc3JjPXt0aHVtYn0KICAgICAgICAgICAgYWx0PXt0aXR1bG99CiAgICAgICAgICAgIGxvYWRpbmc9ImxhenkiCiAgICAgICAgICAgIGNsYXNzTmFtZT0iYWJzb2x1dGUgaW5zZXQtMCB3LWZ1bGwgaC1mdWxsIG9iamVjdC1jb3ZlciB0cmFuc2l0aW9uLXRyYW5zZm9ybSBkdXJhdGlvbi01MDAgZ3JvdXAtaG92ZXI6c2NhbGUtMTA1IgogICAgICAgICAgLz4KCiAgICAgICAgICB7LyogRXNjdXJlY2ltZW50byAqL30KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJhYnNvbHV0ZSBpbnNldC0wIGJnLWdyYWRpZW50LXRvLXQgZnJvbS1ibGFjay84MCB2aWEtYmxhY2svMjAgdG8tYmxhY2svMTAgZ3JvdXAtaG92ZXI6ZnJvbS1ibGFjay82MCB0cmFuc2l0aW9uLWFsbCIgLz4KCiAgICAgICAgICB7LyogQm90w6NvIHBsYXkgKi99CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iYWJzb2x1dGUgaW5zZXQtMCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciI+CiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ3LTE0IGgtMTQgcm91bmRlZC1mdWxsIGJnLXllbGxvdy01MDAvOTAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgc2hhZG93LVswXzBfMjRweF9yZ2JhKDI0NSwxOTYsMCwwLjUpXSBzY2FsZS05MCBncm91cC1ob3ZlcjpzY2FsZS0xMDAgdHJhbnNpdGlvbi10cmFuc2Zvcm0iPgogICAgICAgICAgICAgIDxzdmcgY2xhc3NOYW1lPSJ3LTYgaC02IHRleHQtYmxhY2sgbWwtMSIgZmlsbD0iY3VycmVudENvbG9yIiB2aWV3Qm94PSIwIDAgMjQgMjQiPgogICAgICAgICAgICAgICAgPHBhdGggZD0iTTggNXYxNGwxMS03eiIgLz4KICAgICAgICAgICAgICA8L3N2Zz4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICB7LyogVMOtdHVsbyBuYSBiYXNlICovfQogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImFic29sdXRlIGJvdHRvbS0wIGxlZnQtMCByaWdodC0wIHAtMyI+CiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC13aGl0ZSB0ZXh0LVsxMHB4XSBmb250LWJsYWNrIHVwcGVyY2FzZSB0cmFja2luZy13aWRlIGxlYWRpbmctdGlnaHQgbGluZS1jbGFtcC0yIGRyb3Atc2hhZG93LW1kIj4KICAgICAgICAgICAgICB7dGl0dWxvfQogICAgICAgICAgICA8L3A+CiAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICB7LyogQmFkZ2UgU2hvcnRzICovfQogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImFic29sdXRlIHRvcC0yIGxlZnQtMiBweC0xLjUgcHktMC41IHJvdW5kZWQgYmctcmVkLTYwMCB0ZXh0LVs4cHhdIGZvbnQtYmxhY2sgdHJhY2tpbmctd2lkZXN0IHRleHQtd2hpdGUiPgogICAgICAgICAgICBTSE9SVFMKICAgICAgICAgIDwvZGl2PgogICAgICAgIDwvPgogICAgICApfQogICAgPC9kaXY+CiAgKTsKfQoKLy8gU2tlbGV0b24gZW5xdWFudG8gY2FycmVnYQpmdW5jdGlvbiBTa2VsZXRvbkNhcmQoKSB7CiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJyZWxhdGl2ZSBhc3BlY3QtWzkvMTZdIHJvdW5kZWQtMnhsIG92ZXJmbG93LWhpZGRlbiBiZy16aW5jLTkwMCBib3JkZXIgYm9yZGVyLXppbmMtODAwIGFuaW1hdGUtcHVsc2UiPgogICAgICA8ZGl2IGNsYXNzTmFtZT0iYWJzb2x1dGUgaW5zZXQtMCBiZy1ncmFkaWVudC10by10IGZyb20temluYy04MDAgdG8temluYy05MDAiIC8+CiAgICA8L2Rpdj4KICApOwp9CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBNYWluU2hvcnRzU2VjdGlvbigpIHsKICBjb25zdCBbc2hvcnRzLCBzZXRTaG9ydHNdID0gdXNlU3RhdGU8U2hvcnRbXT4oW10pOwogIGNvbnN0IFtsb2FkaW5nLCBzZXRMb2FkaW5nXSA9IHVzZVN0YXRlKHRydWUpOwoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgZmV0Y2goJy9hcGkvc2hvcnRzJykKICAgICAgLnRoZW4ociA9PiByLmpzb24oKSkKICAgICAgLnRoZW4oKGRhdGE6IFNob3J0W10pID0+IHsKICAgICAgICBzZXRTaG9ydHMoQXJyYXkuaXNBcnJheShkYXRhKSA/IGRhdGEuc2xpY2UoMCwgNikgOiBbXSk7CiAgICAgIH0pCiAgICAgIC5jYXRjaCgoKSA9PiBzZXRTaG9ydHMoW10pKQogICAgICAuZmluYWxseSgoKSA9PiBzZXRMb2FkaW5nKGZhbHNlKSk7CiAgfSwgW10pOwoKICByZXR1cm4gKAogICAgPHNlY3Rpb24gY2xhc3NOYW1lPSJweS0xNiBiZy1ibGFjayBib3JkZXItdCBib3JkZXItd2hpdGUvNSI+CiAgICAgIDxkaXYgY2xhc3NOYW1lPSJtYXgtdy03eGwgbXgtYXV0byBweC00Ij4KCiAgICAgICAgey8qIENhYmXDp2FsaG8gKi99CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBtYi0xMCI+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMiPgogICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idy0xLjUgaC04IGJnLXllbGxvdy01MDAgcm91bmRlZC1mdWxsIiAvPgogICAgICAgICAgICA8ZGl2PgogICAgICAgICAgICAgIDxoMiBjbGFzc05hbWU9InRleHQtd2hpdGUgZm9udC1ibGFjayBpdGFsaWMgdXBwZXJjYXNlIHRleHQtMnhsIG1kOnRleHQtM3hsIHRyYWNraW5nLXRpZ2h0ZXIgbGVhZGluZy1ub25lIj4KICAgICAgICAgICAgICAgIFJlZWxzIGRvIEZ1dGVib2wKICAgICAgICAgICAgICA8L2gyPgogICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC16aW5jLTYwMCB0ZXh0LVsxMHB4XSBmb250LWJvbGQgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVzdCBtdC0xIj4KICAgICAgICAgICAgICAgIEhhYmlsaWRhZGVzIMK3IERyaWJsZXMgwrcgQmFzdGlkb3JlcwogICAgICAgICAgICAgIDwvcD4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDxhCiAgICAgICAgICAgIGhyZWY9Imh0dHBzOi8vd3d3LnlvdXR1YmUuY29tL0BPTm92b3Jpem9udGluby9zaG9ydHMiCiAgICAgICAgICAgIHRhcmdldD0iX2JsYW5rIgogICAgICAgICAgICByZWw9Im5vb3BlbmVyIG5vcmVmZXJyZXIiCiAgICAgICAgICAgIGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSB0ZXh0LXppbmMtNTAwIGhvdmVyOnRleHQteWVsbG93LTUwMCB0ZXh0LVsxMHB4XSBmb250LWJsYWNrIHVwcGVyY2FzZSB0cmFja2luZy13aWRlc3QgdHJhbnNpdGlvbi1jb2xvcnMiCiAgICAgICAgICA+CiAgICAgICAgICAgIDxzdmcgY2xhc3NOYW1lPSJ3LTMuNSBoLTMuNSIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJjdXJyZW50Q29sb3IiPgogICAgICAgICAgICAgIDxwYXRoIGQ9Ik0yMy40OTggNi4xODZhMy4wMTYgMy4wMTYgMCAwIDAtMi4xMjItMi4xMzZDMTkuNTA1IDMuNTQ1IDEyIDMuNTQ1IDEyIDMuNTQ1cy03LjUwNSAwLTkuMzc3LjUwNUEzLjAxNyAzLjAxNyAwIDAgMCAuNTAyIDYuMTg2QzAgOC4wNyAwIDEyIDAgMTJzMCAzLjkzLjUwMiA1LjgxNGEzLjAxNiAzLjAxNiAwIDAgMCAyLjEyMiAyLjEzNmMxLjg3MS41MDUgOS4zNzYuNTA1IDkuMzc2LjUwNXM3LjUwNSAwIDkuMzc3LS41MDVhMy4wMTUgMy4wMTUgMCAwIDAgMi4xMjItMi4xMzZDMjQgMTUuOTMgMjQgMTIgMjQgMTJzMC0zLjkzLS41MDItNS44MTR6TTkuNTQ1IDE1LjU2OFY4LjQzMkwxNS44MTggMTJsLTYuMjczIDMuNTY4eiIvPgogICAgICAgICAgICA8L3N2Zz4KICAgICAgICAgICAgVmVyIHRvZG9zIOKGkgogICAgICAgICAgPC9hPgogICAgICAgIDwvZGl2PgoKICAgICAgICB7LyogR3JpZCAqL30KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZ3JpZCBncmlkLWNvbHMtMiBzbTpncmlkLWNvbHMtMyBtZDpncmlkLWNvbHMtNiBnYXAtMyBtZDpnYXAtNCI+CiAgICAgICAgICB7bG9hZGluZwogICAgICAgICAgICA/IEFycmF5LmZyb20oeyBsZW5ndGg6IDYgfSkubWFwKChfLCBpKSA9PiA8U2tlbGV0b25DYXJkIGtleT17aX0gLz4pCiAgICAgICAgICAgIDogc2hvcnRzLmxlbmd0aCA+IDAKICAgICAgICAgICAgICA/IHNob3J0cy5tYXAocyA9PiA8U2hvcnRDYXJkIGtleT17cy55b3V0dWJlX2lkfSBpZD17cy55b3V0dWJlX2lkfSB0aXR1bG89e3MudGl0dWxvfSAvPikKICAgICAgICAgICAgICA6IDxwIGNsYXNzTmFtZT0iY29sLXNwYW4tZnVsbCB0ZXh0LWNlbnRlciB0ZXh0LXppbmMtNjAwIHRleHQtc20gcHktOCI+TmVuaHVtIHNob3J0IGRpc3BvbsOtdmVsIG5vIG1vbWVudG8uPC9wPgogICAgICAgICAgfQogICAgICAgIDwvZGl2PgoKICAgICAgPC9kaXY+CiAgICA8L3NlY3Rpb24+CiAgKTsKfQo=
+'use client';
+// src/components/videos/MainShortsSection.tsx
+// Shorts do canal @ONovorizontino — busca dinâmica via RSS do YouTube
+
+import React, { useState, useEffect } from 'react';
+
+interface Short {
+  youtube_id: string;
+  titulo: string;
+  thumbnail?: string;
+}
+
+function ShortCard({ id, titulo }: { id: string; titulo: string }) {
+  const [active, setActive] = useState(false);
+  const thumb = `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+
+  return (
+    <div
+      className="relative aspect-[9/16] rounded-2xl overflow-hidden border border-zinc-800 group hover:border-yellow-500 transition-all cursor-pointer bg-zinc-950 shadow-xl"
+      onClick={() => setActive(true)}
+    >
+      {active ? (
+        <iframe
+          src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`}
+          className="absolute inset-0 w-full h-full"
+          title={titulo}
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+        />
+      ) : (
+        <>
+          <img
+            src={thumb}
+            alt={titulo}
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10 group-hover:from-black/60 transition-all" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-yellow-500/90 flex items-center justify-center shadow-[0_0_24px_rgba(245,196,0,0.5)] scale-90 group-hover:scale-100 transition-transform">
+              <svg className="w-6 h-6 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-3">
+            <p className="text-white text-[10px] font-black uppercase tracking-wide leading-tight line-clamp-2 drop-shadow-md">
+              {titulo}
+            </p>
+          </div>
+          <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-red-600 text-[8px] font-black tracking-widest text-white">
+            SHORTS
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 animate-pulse">
+      <div className="absolute inset-0 bg-gradient-to-t from-zinc-800 to-zinc-900" />
+    </div>
+  );
+}
+
+export default function MainShortsSection() {
+  const [shorts, setShorts] = useState<Short[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/shorts')
+      .then(r => r.json())
+      .then((data: Short[]) => {
+        setShorts(Array.isArray(data) ? data.slice(0, 6) : []);
+      })
+      .catch(() => setShorts([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <section className="py-16 bg-black border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-8 bg-yellow-500 rounded-full" />
+            <div>
+              <h2 className="text-white font-black italic uppercase text-2xl md:text-3xl tracking-tighter leading-none">
+                Reels do Futebol
+              </h2>
+              <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest mt-1">
+                Habilidades · Dribles · Bastidores
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://www.youtube.com/@ONovorizontino/shorts"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-zinc-500 hover:text-yellow-500 text-[10px] font-black uppercase tracking-widest transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            Ver todos →
+          </a>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+            : shorts.length > 0
+              ? shorts.map(s => <ShortCard key={s.youtube_id} id={s.youtube_id} titulo={s.titulo} />)
+              : <p className="col-span-full text-center text-zinc-600 text-sm py-8">Nenhum short disponível no momento.</p>
+          }
+        </div>
+      </div>
+    </section>
+  );
+}

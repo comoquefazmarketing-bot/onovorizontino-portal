@@ -1,1 +1,73 @@
-Ly8gc3JjL2FwcC9hcGkvYWdlbnRzL2F1ZGl0L3JvdXRlLnRzCi8vIENhcmxvcyDigJQgcm90YSBkZSBhdWRpdG9yaWEgYWNpb25hZGEgcG9yIGNyb24gKGRpw6FyaWEpIG91IHdlYmhvb2sgZGUgam9nby4KLy8gR0VUICDihpIgYXVkaXRvcmlhIGNvbXBsZXRhIChlc2NhbGHDp8O1ZXMgKyBzdGF0dXMgZGUgam9nYWRvcmVzKQovLyBQT1NUIOKGkiBib2R5IHsgdGFiZWxhPzogJ2VzY2FsYWNvZXMnIHwgJ2pvZ2Fkb3JlcycgfSBwYXJhIGF1ZGl0b3JpYSBwYXJjaWFsCi8vCi8vIFByb3Rlw6fDo286IENST05fU0VDUkVUIG5vIGhlYWRlciB4LWNyb24tc2VjcmV0IChWZXJjZWwgQ3Jvbikgb3UKLy8gICAgICAgICAgIEF1dGhvcml6YXRpb246IEJlYXJlciA8QUdFTlRTX1NFQ1JFVD4gcGFyYSBjaGFtYWRhcyBleHRlcm5hcy4KCmltcG9ydCB7IE5leHRSZXF1ZXN0LCBOZXh0UmVzcG9uc2UgfSBmcm9tICduZXh0L3NlcnZlcic7CmltcG9ydCB7IGF1ZGl0b3JpYUNvbXBsZXRhLCB2YWxpZGFyRXNjYWxhY29lcywgc3luY1N0YXR1c0pvZ2Fkb3JlcyB9IGZyb20gJ0AvbGliL2FnZW50cy9BdWRpdG9yQWdlbnQnOwoKZXhwb3J0IGNvbnN0IGR5bmFtaWMgICAgPSAnZm9yY2UtZHluYW1pYyc7CmV4cG9ydCBjb25zdCByZXZhbGlkYXRlID0gMDsKCmZ1bmN0aW9uIGF1dG9yaXphZG8ocmVxOiBOZXh0UmVxdWVzdCk6IGJvb2xlYW4gewogIGNvbnN0IGNyb25TZWNyZXQgICA9IHByb2Nlc3MuZW52LkNST05fU0VDUkVUOwogIGNvbnN0IGFnZW50c1NlY3JldCA9IHByb2Nlc3MuZW52LkFHRU5UU19TRUNSRVQ7CgogIGNvbnN0IGhlYWRlckNyb24gID0gcmVxLmhlYWRlcnMuZ2V0KCd4LWNyb24tc2VjcmV0Jyk7CiAgY29uc3QgaGVhZGVyQmVhcmVyID0gcmVxLmhlYWRlcnMuZ2V0KCdhdXRob3JpemF0aW9uJyk/LnJlcGxhY2UoJ0JlYXJlciAnLCAnJyk7CgogIGlmIChjcm9uU2VjcmV0ICAgJiYgaGVhZGVyQ3JvbiAgID09PSBjcm9uU2VjcmV0KSAgIHJldHVybiB0cnVlOwogIGlmIChhZ2VudHNTZWNyZXQgJiYgaGVhZGVyQmVhcmVyID09PSBhZ2VudHNTZWNyZXQpIHJldHVybiB0cnVlOwogIHJldHVybiBmYWxzZTsKfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIEdFVChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgaWYgKCFhdXRvcml6YWRvKHJlcSkpIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm86ICdOw6NvIGF1dG9yaXphZG8uJyB9LCB7IHN0YXR1czogNDAxIH0pOwogIH0KCiAgdHJ5IHsKICAgIGNvbnN0IHJlc3VsdGFkbyA9IGF3YWl0IGF1ZGl0b3JpYUNvbXBsZXRhKCk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oewogICAgICBhZ2VudGU6ICdDYXJsb3MnLAogICAgICByb2xlOiAgICdCYWNrLW9mZmljZSAmIERhdGEgSW50ZWdyaXR5JywKICAgICAgLi4ucmVzdWx0YWRvLAogICAgICB0aW1lc3RhbXA6IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKSwKICAgIH0pOwogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcignWy9hcGkvYWdlbnRzL2F1ZGl0IEdFVF0nLCBlcnIpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJybzogJ0Vycm8gaW50ZXJuby4gSXNzbyBuw6NvIMOpIE7DrXZlbCBNYWthcmlvcy4nIH0sIHsgc3RhdHVzOiA1MDAgfSk7CiAgfQp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gUE9TVChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgaWYgKCFhdXRvcml6YWRvKHJlcSkpIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm86ICdOw6NvIGF1dG9yaXphZG8uJyB9LCB7IHN0YXR1czogNDAxIH0pOwogIH0KCiAgdHJ5IHsKICAgIGNvbnN0IGJvZHkgPSBhd2FpdCByZXEuanNvbigpLmNhdGNoKCgpID0+ICh7fSkpOwogICAgY29uc3QgdGFiZWxhID0gYm9keT8udGFiZWxhIGFzIHN0cmluZyB8IHVuZGVmaW5lZDsKCiAgICBpZiAodGFiZWxhID09PSAnZXNjYWxhY29lcycpIHsKICAgICAgY29uc3QgbG9ncyA9IGF3YWl0IHZhbGlkYXJFc2NhbGFjb2VzKCk7CiAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGFnZW50ZTogJ0NhcmxvcycsIGxvZ3MsIHRpbWVzdGFtcDogbmV3IERhdGUoKS50b0lTT1N0cmluZygpIH0pOwogICAgfQoKICAgIGlmICh0YWJlbGEgPT09ICdqb2dhZG9yZXMnKSB7CiAgICAgIGNvbnN0IGpvZ2Fkb3JlcyA9IGF3YWl0IHN5bmNTdGF0dXNKb2dhZG9yZXMoKTsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgYWdlbnRlOiAnQ2FybG9zJywgam9nYWRvcmVzLCB0aW1lc3RhbXA6IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKSB9KTsKICAgIH0KCiAgICAvLyBTZW0gYm9keSBlc3BlY8OtZmljbyDihpIgYXVkaXRvcmlhIGNvbXBsZXRhCiAgICBjb25zdCByZXN1bHRhZG8gPSBhd2FpdCBhdWRpdG9yaWFDb21wbGV0YSgpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgYWdlbnRlOiAnQ2FybG9zJywgLi4ucmVzdWx0YWRvLCB0aW1lc3RhbXA6IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKSB9KTsKCiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCdbL2FwaS9hZ2VudHMvYXVkaXQgUE9TVF0nLCBlcnIpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJybzogJ0Vycm8gaW50ZXJuby4nIH0sIHsgc3RhdHVzOiA1MDAgfSk7CiAgfQp9Cg==
+// src/app/api/agents/audit/route.ts
+// Carlos — rota de auditoria acionada por cron (diária) ou webhook de jogo.
+// GET  → auditoria completa (escalações + status de jogadores)
+// POST → body { tabela?: 'escalacoes' | 'jogadores' } para auditoria parcial
+//
+// Proteção: CRON_SECRET no header x-cron-secret (Vercel Cron) ou
+//           Authorization: Bearer <AGENTS_SECRET> para chamadas externas.
+
+import { NextRequest, NextResponse } from 'next/server';
+import { auditoriaCompleta, validarEscalacoes, syncStatusJogadores } from '@/lib/agents/AuditorAgent';
+
+export const dynamic    = 'force-dynamic';
+export const revalidate = 0;
+
+function autorizado(req: NextRequest): boolean {
+  const cronSecret   = process.env.CRON_SECRET;
+  const agentsSecret = process.env.AGENTS_SECRET;
+
+  const headerCron  = req.headers.get('x-cron-secret');
+  const headerBearer = req.headers.get('authorization')?.replace('Bearer ', '');
+
+  if (cronSecret   && headerCron   === cronSecret)   return true;
+  if (agentsSecret && headerBearer === agentsSecret) return true;
+  return false;
+}
+
+export async function GET(req: NextRequest) {
+  if (!autorizado(req)) {
+    return NextResponse.json({ erro: 'Não autorizado.' }, { status: 401 });
+  }
+
+  try {
+    const resultado = await auditoriaCompleta();
+    return NextResponse.json({
+      agente: 'Carlos',
+      role:   'Back-office & Data Integrity',
+      ...resultado,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('[/api/agents/audit GET]', err);
+    return NextResponse.json({ erro: 'Erro interno. Isso não é Nível Makarios.' }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  if (!autorizado(req)) {
+    return NextResponse.json({ erro: 'Não autorizado.' }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json().catch(() => ({}));
+    const tabela = body?.tabela as string | undefined;
+
+    if (tabela === 'escalacoes') {
+      const logs = await validarEscalacoes();
+      return NextResponse.json({ agente: 'Carlos', logs, timestamp: new Date().toISOString() });
+    }
+
+    if (tabela === 'jogadores') {
+      const jogadores = await syncStatusJogadores();
+      return NextResponse.json({ agente: 'Carlos', jogadores, timestamp: new Date().toISOString() });
+    }
+
+    // Sem body específico → auditoria completa
+    const resultado = await auditoriaCompleta();
+    return NextResponse.json({ agente: 'Carlos', ...resultado, timestamp: new Date().toISOString() });
+
+  } catch (err) {
+    console.error('[/api/agents/audit POST]', err);
+    return NextResponse.json({ erro: 'Erro interno.' }, { status: 500 });
+  }
+}
