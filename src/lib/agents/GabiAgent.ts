@@ -1,1 +1,240 @@
-Ly8gc3JjL2xpYi9hZ2VudHMvR2FiaUFnZW50LnRzCi8vIEdhYmkg4oCUIEFnZW50ZSBkZSBOb3TDrWNpYXMgZG8gZWNvc3Npc3RlbWEgVGlncmVGQyAvIE8gTm92b3Jpem9udGluby4KLy8gR2VyYSBwb3N0cyBjb21wbGV0b3MgZGUgcmVzdWx0YWRvIGFzc2ltIHF1ZSBvIGpvZ28gdGVybWluYSBlIHB1YmxpY2EKLy8gZGlyZXRvIG5hIHRhYmVsYSBgcG9zdGFnZW5zYCBkbyBwb3J0YWwuCgpleHBvcnQgaW50ZXJmYWNlIEpvZ29SZXN1bHRhZG8gewogIGlkPzogICAgICAgICAgICAgIG51bWJlcjsKICByb2RhZGE6ICAgICAgICAgICBzdHJpbmc7CiAgY29tcGV0aWNhbzogICAgICAgc3RyaW5nOwogIG1hbmRhbnRlX3NsdWc6ICAgIHN0cmluZzsKICB2aXNpdGFudGVfc2x1ZzogICBzdHJpbmc7CiAgcGxhY2FyX21hbmRhbnRlOiAgbnVtYmVyOwogIHBsYWNhcl92aXNpdGFudGU6IG51bWJlcjsKICBkYXRhX2hvcmE6ICAgICAgICBzdHJpbmc7CiAgbG9jYWw/OiAgICAgICAgICAgc3RyaW5nOwp9CgpleHBvcnQgaW50ZXJmYWNlIFBvc3RhZ2VtIHsKICB0aXR1bG86ICAgICAgIHN0cmluZzsKICBzbHVnOiAgICAgICAgIHN0cmluZzsKICBjYXRlZ29yaWE6ICAgIHN0cmluZzsKICByZXN1bW9faWE6ICAgIHN0cmluZzsKICBjb250ZXVkbzogICAgIHN0cmluZzsKICBhdXRvcl9pYTogICAgIHN0cmluZzsKICBpbWFnZW1fY2FwYTogIHN0cmluZyB8IG51bGw7CiAgc3RhdHVzOiAgICAgICAncHVibGlzaGVkJyB8ICdkcmFmdCc7CiAgZm9udGVfbm9tZTogICBzdHJpbmc7CiAgZm9udGVfdXJsOiAgICBzdHJpbmc7CiAgY3JpYWRvX2VtOiAgICBzdHJpbmc7Cn0KCi8vIOKUgOKUgOKUgCBNYXBhcyBkZSBhcG9pbyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmNvbnN0IE5PTUVTOiBSZWNvcmQ8c3RyaW5nLCBzdHJpbmc+ID0gewogICdub3Zvcml6b250aW5vJzogJ05vdm9yaXpvbnRpbm8nLCAnZ3JlbWlvLW5vdm9yaXpvbnRpbm8nOiAnTm92b3Jpem9udGlubycsCiAgJ2F2YWknOiAnQXZhw60nLCAnY3JpY2l1bWEnOiAnQ3JpY2nDum1hJywgJ2JvdGFmb2dvLXNwJzogJ0JvdGFmb2dvLVNQJywKICAnYW1lcmljYS1tZyc6ICdBbcOpcmljYS1NRycsICdnb2lhcyc6ICdHb2nDoXMnLCAnc3BvcnQnOiAnU3BvcnQnLAogICdjdWlhYmEnOiAnQ3VpYWLDoScsICdjcmInOiAnQ1JCJywgJ2F0aGxldGljJzogJ0F0aGxldGljJywgJ2F0aGxldGljLW1nJzogJ0F0aGxldGljJywKICAnY2VhcmEnOiAnQ2VhcsOhJywgJ2p1dmVudHVkZSc6ICdKdXZlbnR1ZGUnLCAncG9udGUtcHJldGEnOiAnUG9udGUgUHJldGEnLAogICd2aWxhLW5vdmEnOiAnVmlsYSBOb3ZhJywgJ29wZXJhcmlvLXByJzogJ09wZXLDoXJpbycsICdsb25kcmluYSc6ICdMb25kcmluYScsCiAgJ3Nhby1iZXJuYXJkbyc6ICdTw6NvIEJlcm5hcmRvJywgJ2Nvcml0aWJhJzogJ0Nvcml0aWJhJywgJ3NhbnRvcyc6ICdTYW50b3MnLAogICdwYXlzYW5kdSc6ICdQYXlzYW5kdScsICdyZW1vJzogJ1JlbW8nLCAnYXRobGV0aWNvLXByJzogJ0F0aGxldGljbycsCiAgJ2NoYXBlY29lbnNlJzogJ0NoYXBlY29lbnNlJywgJ2d1YXJhbmknOiAnR3VhcmFuaScsICdpdHVhbm8nOiAnSXR1YW5vJywKICAnbWlyYXNzb2wnOiAnTWlyYXNzb2wnLCAndm9sdGEtcmVkb25kYSc6ICdWb2x0YSBSZWRvbmRhJywgJ2FtYXpvbmFzJzogJ0FtYXpvbmFzJywKfTsKCmZ1bmN0aW9uIG5vbWUoc2x1Zzogc3RyaW5nKTogc3RyaW5nIHsKICByZXR1cm4gTk9NRVNbc2x1Z10gPz8gc2x1Zy5yZXBsYWNlKC8tL2csICcgJykucmVwbGFjZSgvXGJcdy9nLCBjID0+IGMudG9VcHBlckNhc2UoKSk7Cn0KCmZ1bmN0aW9uIHNsdWdpZnkodGV4dDogc3RyaW5nKTogc3RyaW5nIHsKICByZXR1cm4gdGV4dAogICAgLnRvTG93ZXJDYXNlKCkKICAgIC5ub3JtYWxpemUoJ05GRCcpLnJlcGxhY2UoL1vMgC3Nr10vZywgJycpCiAgICAucmVwbGFjZSgvW15hLXowLTlccy1dL2csICcnKQogICAgLnRyaW0oKQogICAgLnJlcGxhY2UoL1xzKy9nLCAnLScpCiAgICAucmVwbGFjZSgvLSsvZywgJy0nKTsKfQoKLy8g4pSA4pSA4pSAIEzDs2dpY2EgZGUgcmVzdWx0YWRvIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZnVuY3Rpb24gaXNOb3Zvcml6b250aW5vKHNsdWc6IHN0cmluZyk6IGJvb2xlYW4gewogIHJldHVybiBzbHVnID09PSAnbm92b3Jpem9udGlubycgfHwgc2x1ZyA9PT0gJ2dyZW1pby1ub3Zvcml6b250aW5vJzsKfQoKZnVuY3Rpb24gcmVzdWx0YWRvKGpvZ286IEpvZ29SZXN1bHRhZG8pOiAndml0w7NyaWEnIHwgJ2RlcnJvdGEnIHwgJ2VtcGF0ZScgewogIGNvbnN0IG5vdm9NYW5kYW50ZSA9IGlzTm92b3Jpem9udGlubyhqb2dvLm1hbmRhbnRlX3NsdWcpOwogIGNvbnN0IHBtID0gam9nby5wbGFjYXJfbWFuZGFudGU7CiAgY29uc3QgcHYgPSBqb2dvLnBsYWNhcl92aXNpdGFudGU7CiAgaWYgKHBtID09PSBwdikgcmV0dXJuICdlbXBhdGUnOwogIGlmIChub3ZvTWFuZGFudGUpIHJldHVybiBwbSA+IHB2ID8gJ3ZpdMOzcmlhJyA6ICdkZXJyb3RhJzsKICByZXR1cm4gcHYgPiBwbSA/ICd2aXTDs3JpYScgOiAnZGVycm90YSc7Cn0KCmZ1bmN0aW9uIHBsYWNhck5vdm8oam9nbzogSm9nb1Jlc3VsdGFkbyk6IHN0cmluZyB7CiAgcmV0dXJuIGlzTm92b3Jpem9udGlubyhqb2dvLm1hbmRhbnRlX3NsdWcpCiAgICA/IGAke2pvZ28ucGxhY2FyX21hbmRhbnRlfXgke2pvZ28ucGxhY2FyX3Zpc2l0YW50ZX1gCiAgICA6IGAke2pvZ28ucGxhY2FyX3Zpc2l0YW50ZX14JHtqb2dvLnBsYWNhcl9tYW5kYW50ZX1gOwp9CgpmdW5jdGlvbiBhZHZlcnNhcmlvKGpvZ286IEpvZ29SZXN1bHRhZG8pOiBzdHJpbmcgewogIHJldHVybiBpc05vdm9yaXpvbnRpbm8oam9nby5tYW5kYW50ZV9zbHVnKQogICAgPyBub21lKGpvZ28udmlzaXRhbnRlX3NsdWcpCiAgICA6IG5vbWUoam9nby5tYW5kYW50ZV9zbHVnKTsKfQoKZnVuY3Rpb24gbWFuZG8oam9nbzogSm9nb1Jlc3VsdGFkbyk6ICdjYXNhJyB8ICdmb3JhJyB7CiAgcmV0dXJuIGlzTm92b3Jpem9udGlubyhqb2dvLm1hbmRhbnRlX3NsdWcpID8gJ2Nhc2EnIDogJ2ZvcmEnOwp9CgovLyDilIDilIDilIAgVGVtcGxhdGVzIGRlIHTDrXR1bG8g4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgpjb25zdCBUSVRVTE9TOiBSZWNvcmQ8c3RyaW5nLCBzdHJpbmdbXT4gPSB7CiAgdml0w7NyaWE6IFsKICAgICdUaWdyZSB2ZW5jZSB7YWR2ZXJzYXJpb30gcG9yIHtwbGFjYXJ9IGUgc2VndWUgZW0gYWx0YSBuYSB7Y29tcGV0aWNhb30nLAogICAgJ05vdm9yaXpvbnRpbm8gZG9taW5hIHthZHZlcnNhcmlvfSBlIHZlbmNlIHBvciB7cGxhY2FyfSBuYSB7Y29tcGV0aWNhb30nLAogICAgJ1ZpdMOzcmlhIGRvIFRpZ3JlISBOb3Zvcml6b250aW5vIHN1cGVyYSB7YWR2ZXJzYXJpb30gcG9yIHtwbGFjYXJ9JywKICAgICd7cGxhY2FyfTogTm92b3Jpem9udGlubyBiYXRlIHthZHZlcnNhcmlvfSBlIHNvbWEgbWFpcyB0csOqcyBwb250b3MgbmEge2NvbXBldGljYW99JywKICBdLAogIGRlcnJvdGE6IFsKICAgICdOb3Zvcml6b250aW5vIHBlcmRlIHBhcmEge2FkdmVyc2FyaW99IHBvciB7cGxhY2FyfSBuYSB7Y29tcGV0aWNhb30nLAogICAgJ1RpZ3JlIHRyb3Blw6dhIGRpYW50ZSBkbyB7YWR2ZXJzYXJpb306IHtwbGFjYXJ9IG5hIHtjb21wZXRpY2FvfScsCiAgICAnRGVycm90YSBwYXJhIHthZHZlcnNhcmlvfSBwb3Ige3BsYWNhcn0g4oCUIE5vdm9yaXpvbnRpbm8gdm9sdGEgYSB0cmVpbmFyIG5hIHNlbWFuYScsCiAgXSwKICBlbXBhdGU6IFsKICAgICdOb3Zvcml6b250aW5vIGVtcGF0YSBjb20ge2FkdmVyc2FyaW99IGVtIHtwbGFjYXJ9IHBlbGEge2NvbXBldGljYW99JywKICAgICdUaWdyZSBmaWNhIG5vIHtwbGFjYXJ9IGNvbSB7YWR2ZXJzYXJpb30gbmEge2NvbXBldGljYW99JywKICAgICdVbSBhIHVtOiBOb3Zvcml6b250aW5vIGRpdmlkZSBvcyBwb250b3MgY29tIHthZHZlcnNhcmlvfSBwZWxhIHtjb21wZXRpY2FvfScsCiAgXSwKfTsKCi8vIOKUgOKUgOKUgCBUZW1wbGF0ZXMgZGUgY29udGXDumRvIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZnVuY3Rpb24gZ2VyYXJDb250ZXVkbyhqb2dvOiBKb2dvUmVzdWx0YWRvKTogc3RyaW5nIHsKICBjb25zdCByZXMgICA9IHJlc3VsdGFkbyhqb2dvKTsKICBjb25zdCBhZHYgICA9IGFkdmVyc2FyaW8oam9nbyk7CiAgY29uc3QgcGxhY2FyID0gcGxhY2FyTm92byhqb2dvKTsKICBjb25zdCBtbmQgICA9IG1hbmRvKGpvZ28pOwogIGNvbnN0IGRhdGEgID0gbmV3IERhdGUoam9nby5kYXRhX2hvcmEpLnRvTG9jYWxlRGF0ZVN0cmluZygncHQtQlInLCB7CiAgICB3ZWVrZGF5OiAnbG9uZycsIGRheTogJzItZGlnaXQnLCBtb250aDogJ2xvbmcnLAogIH0pOwogIGNvbnN0IGxvY2FsID0gam9nby5sb2NhbCA/PyAobW5kID09PSAnY2FzYScgPyAnRXN0w6FkaW8gSm9yZ2UgSXNtYWVsIGRlIEJpYXNpIOKAlCBOb3ZvIEhvcml6b250ZScgOiAnam9nbyBmb3JhIGRlIGNhc2EnKTsKCiAgY29uc3QgaW50cm86IFJlY29yZDx0eXBlb2YgcmVzLCBzdHJpbmc+ID0gewogICAgdml0w7NyaWE6IGBPIEdyw6ptaW8gTm92b3Jpem9udGlubyBjb25xdWlzdG91IG1haXMgdW1hIHZpdMOzcmlhIGltcG9ydGFudGUgcGVsYSAke2pvZ28uY29tcGV0aWNhb30uIE5hICR7ZGF0YX0sIG8gVGlncmUgJHttbmQgPT09ICdjYXNhJyA/IGByZWNlYmV1IG8gJHthZHZ9IG5vIEpvcmrDo29gIDogYGVuZnJlbnRvdSBvICR7YWR2fSBmb3JhIGRlIGNhc2FgfSBlIHNhaXUgY29tIG8gcGxhY2FyIGZhdm9yw6F2ZWwgZGUgKioke3BsYWNhcn0qKiwgc29tYW5kbyBtYWlzIHRyw6pzIHBvbnRvcyBuYSB0YWJlbGEuYCwKICAgIGRlcnJvdGE6IGBPIEdyw6ptaW8gTm92b3Jpem9udGlubyBmb2kgc3VwZXJhZG8gcGVsbyAke2Fkdn0gbmVzdGEgJHtkYXRhfSBwZWxhICR7am9nby5jb21wZXRpY2FvfS4gTyBwbGFjYXIgZmluYWwgZGUgKioke3BsYWNhcn0qKiBtYXJjb3UgdW1hIHRhcmRlIGRpZsOtY2lsIHBhcmEgbyBUaWdyZSwgcXVlIHByZWNpc2Fyw6Egc2UgcmVjdXBlcmFyIHJhcGlkYW1lbnRlIHBhcmEgb3MgcHLDs3hpbW9zIGRlc2FmaW9zIGRhIGNvbXBldGnDp8Ojby5gLAogICAgZW1wYXRlOiAgYE8gR3LDqm1pbyBOb3Zvcml6b250aW5vIGZpY291IG5vIGVtcGF0ZSBjb20gbyAke2Fkdn0gbmVzdGEgJHtkYXRhfSBwZWxhICR7am9nby5jb21wZXRpY2FvfS4gTyBwbGFjYXIgZGUgKioke3BsYWNhcn0qKiByZWZsZXRpdSB1bSBqb2dvIGVxdWlsaWJyYWRvLCBjb20gbyBUaWdyZSBkaXZpZGluZG8gb3MgcG9udG9zICR7bW5kID09PSAnY2FzYScgPyBgZGlhbnRlIGRhIHN1YSB0b3JjaWRhIG5vIEpvcmrDo29gIDogYGZvcmEgZGUgY2FzYWB9LmAsCiAgfTsKCiAgY29uc3QgbWVpbzogUmVjb3JkPHR5cGVvZiByZXMsIHN0cmluZz4gPSB7CiAgICB2aXTDs3JpYTogYEEgcGFydGlkYSBmb2kgcmVhbGl6YWRhIGVtICR7bG9jYWx9LiBPIE5vdm9yaXpvbnRpbm8gbW9zdHJvdSBxdWFsaWRhZGUgZSBvcmdhbml6YcOnw6NvIGFvIGxvbmdvIGRvcyA5MCBtaW51dG9zLCBjb25zdHJ1aW5kbyBvIHJlc3VsdGFkbyBjb20gZWZpY2nDqm5jaWEgZSBkZXRlcm1pbmHDp8Ojby4gQSBlcXVpcGUgY29tYW5kYWRhIHBlbGEgY29taXNzw6NvIHTDqWNuaWNhIHRldmUgbyBjb250cm9sZSBkbyBqb2dvIG5vcyBtb21lbnRvcyBkZWNpc2l2b3MuYCwKICAgIGRlcnJvdGE6IGBBIHBhcnRpZGEgYWNvbnRlY2V1IGVtICR7bG9jYWx9LiBBcGVzYXIgZG8gZW1wZW5obywgbyBOb3Zvcml6b250aW5vIG7Do28gY29uc2VndWl1IHN1cGVyYXIgbyBhZHZlcnPDoXJpbyBuZXN0YSBvY2FzacOjby4gQSBlcXVpcGUgc2VndWUgdHJhYmFsaGFuZG8gcGFyYSBjb3JyaWdpciBvcyBwb250b3MgZmFsaG9zIGUgdm9sdGFyIGEgdmVuY2VyIG5vIHByw7N4aW1vIGNvbXByb21pc3NvLmAsCiAgICBlbXBhdGU6ICBgQSBwYXJ0aWRhIGZvaSBkaXNwdXRhZGEgZW0gJHtsb2NhbH0uIE8gVGlncmUgYnVzY291IGEgdml0w7NyaWEgYXTDqSBvIGFwaXRvIGZpbmFsLCBtYXMgbsOjbyBmb2kgcG9zc8OtdmVsIHF1ZWJyYXIgbyBlcXVpbMOtYnJpbyBpbXBvc3RvIHBlbG8gYWR2ZXJzw6FyaW8uIE8gcG9udG8gY29ucXVpc3RhZG8gbWFudMOpbSBvIHRpbWUgbmEgYnJpZ2EgbmEgdGFiZWxhIGRhICR7am9nby5jb21wZXRpY2FvfS5gLAogIH07CgogIGNvbnN0IGZlY2hhbWVudG86IFJlY29yZDx0eXBlb2YgcmVzLCBzdHJpbmc+ID0gewogICAgdml0w7NyaWE6IGBDb20gbyByZXN1bHRhZG8sIG8gTm92b3Jpem9udGlubyBtYW50w6ltIG8gcml0bW8gcG9zaXRpdm8gZSBzZWd1ZSBlbSBidXNjYSBkb3Mgc2V1cyBvYmpldGl2b3MgbmEgJHtqb2dvLmNvbXBldGljYW99LiBBIHRvcmNpZGEgZG8gVGlncmUgcG9kZSBjb21lbW9yYXIgbWFpcyB1bWEgY29ucXVpc3RhIGltcG9ydGFudGUgbmVzc2EgdHJhamV0w7NyaWEuYCwKICAgIGRlcnJvdGE6IGBPIE5vdm9yaXpvbnRpbm8gasOhIHBlbnNhIG5hIHByw7N4aW1hIHJvZGFkYSBwYXJhIHZvbHRhciBhIHBvbnR1YXIgZSBzZSBtYW50ZXIgY29tcGV0aXRpdm8gbmEgJHtqb2dvLmNvbXBldGljYW99LiBBIGNvbmZpYW7Dp2Egbm8gdHJhYmFsaG8gc2VndWUgZmlybWUuYCwKICAgIGVtcGF0ZTogIGBPIEdyw6ptaW8gTm92b3Jpem9udGlubyBzZWd1ZSBuYSBjb21wZXRpw6fDo28gY29tIGZvY28gdG90YWwgbm9zIHByw7N4aW1vcyBqb2dvcy4gQ2FkYSBwb250byBjb25xdWlzdGFkbyDDqSBpbXBvcnRhbnRlIG5hIGxvbmdhIGpvcm5hZGEgZGEgJHtqb2dvLmNvbXBldGljYW99LmAsCiAgfTsKCiAgcmV0dXJuIGAke2ludHJvW3Jlc119XG5cbiR7bWVpb1tyZXNdfVxuXG4ke2ZlY2hhbWVudG9bcmVzXX1gOwp9CgpmdW5jdGlvbiBnZXJhclJlc3Vtbyhqb2dvOiBKb2dvUmVzdWx0YWRvKTogc3RyaW5nIHsKICBjb25zdCByZXMgICAgPSByZXN1bHRhZG8oam9nbyk7CiAgY29uc3QgYWR2ICAgID0gYWR2ZXJzYXJpbyhqb2dvKTsKICBjb25zdCBwbGFjYXIgPSBwbGFjYXJOb3ZvKGpvZ28pOwogIGNvbnN0IGVtb2ppcyA9IHsgdml0w7NyaWE6ICfwn4+GJywgZGVycm90YTogJ/CfmJQnLCBlbXBhdGU6ICfwn6SdJyB9OwogIGNvbnN0IHZlcmJvcyA9IHsgdml0w7NyaWE6ICd2ZW5jZXUnLCBkZXJyb3RhOiAncGVyZGV1IHBhcmEnLCBlbXBhdGU6ICdlbXBhdG91IGNvbScgfTsKICByZXR1cm4gYCR7ZW1vamlzW3Jlc119IE5vdm9yaXpvbnRpbm8gJHt2ZXJib3NbcmVzXX0gJHthZHZ9IHBvciAke3BsYWNhcn0gcGVsYSAke2pvZ28uY29tcGV0aWNhb30g4oCUIFJvZGFkYSAke2pvZ28ucm9kYWRhfS5gOwp9CgpmdW5jdGlvbiBwaWNrPFQ+KGFycjogVFtdKTogVCB7CiAgcmV0dXJuIGFycltNYXRoLmZsb29yKE1hdGgucmFuZG9tKCkgKiBhcnIubGVuZ3RoKV07Cn0KCmZ1bmN0aW9uIGludGVycG9sYXIodHBsOiBzdHJpbmcsIHZhcnM6IFJlY29yZDxzdHJpbmcsIHN0cmluZz4pOiBzdHJpbmcgewogIHJldHVybiB0cGwucmVwbGFjZSgvXHsoXHcrKVx9L2csIChfLCBrKSA9PiB2YXJzW2tdID8/IGspOwp9CgovLyDilIDilIDilIAgZ2VyYXJQb3N0YWdlbSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmV4cG9ydCBmdW5jdGlvbiBnZXJhclBvc3RhZ2VtKGpvZ286IEpvZ29SZXN1bHRhZG8sIHN0YXR1czogJ3B1Ymxpc2hlZCcgfCAnZHJhZnQnID0gJ3B1Ymxpc2hlZCcpOiBQb3N0YWdlbSB7CiAgY29uc3QgcmVzICAgID0gcmVzdWx0YWRvKGpvZ28pOwogIGNvbnN0IGFkdiAgICA9IGFkdmVyc2FyaW8oam9nbyk7CiAgY29uc3QgcGxhY2FyID0gcGxhY2FyTm92byhqb2dvKTsKICBjb25zdCBjb21wICAgPSBqb2dvLmNvbXBldGljYW8ucmVwbGFjZSgnU8OpcmllIEIgMjAyNicsICdTw6lyaWUgQicpLnJlcGxhY2UoJ1PDqXJpZSBCIDIwMjUnLCAnU8OpcmllIEInKTsKCiAgY29uc3QgdmFycyA9IHsgYWR2ZXJzYXJpbzogYWR2LCBwbGFjYXIsIGNvbXBldGljYW86IGNvbXAsIHJvZGFkYTogam9nby5yb2RhZGEgfTsKCiAgY29uc3QgdGl0dWxvICAgPSBpbnRlcnBvbGFyKHBpY2soVElUVUxPU1tyZXNdKSwgdmFycyk7CiAgY29uc3Qgc2x1ZyAgICAgPSBgJHtzbHVnaWZ5KHRpdHVsbyl9LXJvZGFkYS0ke2pvZ28ucm9kYWRhfS0ke0RhdGUubm93KCl9YDsKICBjb25zdCBjb250ZXVkbyA9IGdlcmFyQ29udGV1ZG8oam9nbyk7CiAgY29uc3QgcmVzdW1vICAgPSBnZXJhclJlc3Vtbyhqb2dvKTsKCiAgcmV0dXJuIHsKICAgIHRpdHVsbywKICAgIHNsdWcsCiAgICBjYXRlZ29yaWE6ICAgJ1Jlc3VsdGFkb3MnLAogICAgcmVzdW1vX2lhOiAgIHJlc3VtbywKICAgIGNvbnRldWRvLAogICAgYXV0b3JfaWE6ICAgICdHYWJpIOKAoiBJQSBkbyBQb3J0YWwnLAogICAgaW1hZ2VtX2NhcGE6IG51bGwsCiAgICBzdGF0dXMsCiAgICBmb250ZV9ub21lOiAgJ08gTm92b3Jpem9udGlubycsCiAgICBmb250ZV91cmw6ICAgJ2h0dHBzOi8vd3d3Lm9ub3Zvcml6b250aW5vLmNvbS5icicsCiAgICBjcmlhZG9fZW06ICAgbmV3IERhdGUoKS50b0lTT1N0cmluZygpLAogIH07Cn0KCi8vIOKUgOKUgOKUgCBHYWJpQWdlbnQg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgpleHBvcnQgY29uc3QgR2FiaUFnZW50ID0gewogIG5hbWU6ICAgICdHYWJpJywKICByb2xlOiAgICAnTm90w61jaWFzICYgUmVzdWx0YWRvcycsCiAgdmVyc2lvbjogJzEuMC4wJywKCiAgLyoqIEdlcmEgYSBwb3N0YWdlbSBhIHBhcnRpciBkZSB1bSByZXN1bHRhZG8gZGUgam9nby4gKi8KICBnZXJhclBvc3RhZ2VtLAoKICAvKiogTG9nIHBhZHJvbml6YWRvLiAqLwogIGxvZyhtc2c6IHN0cmluZyk6IHZvaWQgewogICAgY29uc29sZS5sb2coYFtHYWJpIEAgJHtuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCl9XSDwn5OwICR7bXNnfWApOwogIH0sCn0gYXMgY29uc3Q7Cg==
+// src/lib/agents/GabiAgent.ts
+// Gabi — Agente de Notícias do ecossistema TigreFC / O Novorizontino.
+// Gera posts completos de resultado assim que o jogo termina e publica
+// direto na tabela `postagens` do portal.
+
+export interface JogoResultado {
+  id?:              number;
+  rodada:           string;
+  competicao:       string;
+  mandante_slug:    string;
+  visitante_slug:   string;
+  placar_mandante:  number;
+  placar_visitante: number;
+  data_hora:        string;
+  local?:           string;
+}
+
+export interface Postagem {
+  titulo:       string;
+  slug:         string;
+  categoria:    string;
+  resumo_ia:    string;
+  conteudo:     string;
+  autor_ia:     string;
+  imagem_capa:  string | null;
+  status:       'published' | 'draft';
+  fonte_nome:   string;
+  fonte_url:    string;
+  criado_em:    string;
+}
+
+// ─── Mapas de apoio ───────────────────────────────────────────────────────────
+
+const NOMES: Record<string, string> = {
+  'novorizontino': 'Novorizontino', 'gremio-novorizontino': 'Novorizontino',
+  'avai': 'Avaí', 'criciuma': 'Criciúma', 'botafogo-sp': 'Botafogo-SP',
+  'america-mg': 'América-MG', 'goias': 'Goiás', 'sport': 'Sport',
+  'cuiaba': 'Cuiabá', 'crb': 'CRB', 'athletic': 'Athletic', 'athletic-mg': 'Athletic',
+  'ceara': 'Ceará', 'juventude': 'Juventude', 'ponte-preta': 'Ponte Preta',
+  'vila-nova': 'Vila Nova', 'operario-pr': 'Operário', 'londrina': 'Londrina',
+  'sao-bernardo': 'São Bernardo', 'coritiba': 'Coritiba', 'santos': 'Santos',
+  'paysandu': 'Paysandu', 'remo': 'Remo', 'athletico-pr': 'Athletico',
+  'chapecoense': 'Chapecoense', 'guarani': 'Guarani', 'ituano': 'Ituano',
+  'mirassol': 'Mirassol', 'volta-redonda': 'Volta Redonda', 'amazonas': 'Amazonas',
+};
+
+function nome(slug: string): string {
+  return NOMES[slug] ?? slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+// ─── Logos dos adversários (canvas-safe para imagem_capa) ────────────────────
+
+const SB = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal';
+const WK = 'https://upload.wikimedia.org/wikipedia/commons';
+const ESCUDO_NOVORIZONTINO = `${SB}/Escudo%20Novorizontino.png`;
+
+const LOGOS_CAPA: Record<string, string> = {
+  'novorizontino':        ESCUDO_NOVORIZONTINO,
+  'gremio-novorizontino': ESCUDO_NOVORIZONTINO,
+  'avai':                 `${SB}/Avai_Futebol_Clube_logo.svg.png`,
+  'botafogo-sp':          `${SB}/Botafogo_sp.svg`,
+  'america-mg':           `${SB}/ESCUDO%20AMERICA%20MINEIRO.png`,
+  'criciuma':             `${WK}/2/24/Crici%C3%BAma_EC_logo.svg`,
+  'cuiaba':               `${WK}/9/9e/Cuiab%C3%A1_EC.svg`,
+  'crb':                  `${WK}/7/73/CRB_logo.svg`,
+  'sport':                `${WK}/1/17/Sport_Club_do_Recife.png`,
+  'londrina':             `${WK}/a/a2/Londrina_Esporte_Clube.svg`,
+  'juventude':            `${WK}/8/8b/Esporte_Clube_Juventude.svg`,
+  'ceara':                `${WK}/2/27/Ceara_Sporting_Club_logo.svg`,
+  'sao-bernardo':         `${WK}/7/7d/S%C3%A3o_Bernardo_Futebol_Clube.png`,
+  'operario-pr':          `${WK}/0/00/Operar%C3%A1rio_Ferroviario_Esporte_Clube.svg`,
+  'goias':                `${WK}/b/bd/Goias_logo.svg`,
+  'vila-nova':            `${WK}/4/48/Vila_Nova_Futebol_Clube.png`,
+  'ponte-preta':          `${WK}/2/29/Associacao_Atletica_Ponte_Preta_logo.svg`,
+  'athletic':             `${WK}/thumb/f/f8/Athletic_Club_%28Minas_Gerais%29.svg/320px-Athletic_Club_%28Minas_Gerais%29.svg.png`,
+  'athletic-mg':          `${WK}/thumb/f/f8/Athletic_Club_%28Minas_Gerais%29.svg/320px-Athletic_Club_%28Minas_Gerais%29.svg.png`,
+};
+
+function imagemCapa(jogo: JogoResultado): string | null {
+  const adv = isNovorizontino(jogo.mandante_slug) ? jogo.visitante_slug : jogo.mandante_slug;
+  return LOGOS_CAPA[adv] ?? null;
+}
+
+// ─── Lógica de resultado ──────────────────────────────────────────────────────
+
+function isNovorizontino(slug: string): boolean {
+  return slug === 'novorizontino' || slug === 'gremio-novorizontino';
+}
+
+function resultado(jogo: JogoResultado): 'vitória' | 'derrota' | 'empate' {
+  const novoMandante = isNovorizontino(jogo.mandante_slug);
+  const pm = jogo.placar_mandante;
+  const pv = jogo.placar_visitante;
+  if (pm === pv) return 'empate';
+  if (novoMandante) return pm > pv ? 'vitória' : 'derrota';
+  return pv > pm ? 'vitória' : 'derrota';
+}
+
+function placarNovo(jogo: JogoResultado): string {
+  return isNovorizontino(jogo.mandante_slug)
+    ? `${jogo.placar_mandante}x${jogo.placar_visitante}`
+    : `${jogo.placar_visitante}x${jogo.placar_mandante}`;
+}
+
+function adversario(jogo: JogoResultado): string {
+  return isNovorizontino(jogo.mandante_slug)
+    ? nome(jogo.visitante_slug)
+    : nome(jogo.mandante_slug);
+}
+
+function mando(jogo: JogoResultado): 'casa' | 'fora' {
+  return isNovorizontino(jogo.mandante_slug) ? 'casa' : 'fora';
+}
+
+// ─── Templates de título ──────────────────────────────────────────────────────
+
+const TITULOS: Record<string, string[]> = {
+  vitória: [
+    'Tigre vence {adversario} por {placar} e segue em alta na {competicao}',
+    'Novorizontino domina {adversario} e vence por {placar} na {competicao}',
+    'Vitória do Tigre! Novorizontino supera {adversario} por {placar}',
+    '{placar}: Novorizontino bate {adversario} e soma mais três pontos na {competicao}',
+  ],
+  derrota: [
+    'Novorizontino perde para {adversario} por {placar} na {competicao}',
+    'Tigre tropeça diante do {adversario}: {placar} na {competicao}',
+    'Derrota para {adversario} por {placar} — Novorizontino volta a treinar na semana',
+  ],
+  empate: [
+    'Novorizontino empata com {adversario} em {placar} pela {competicao}',
+    'Tigre fica no {placar} com {adversario} na {competicao}',
+    'Um a um: Novorizontino divide os pontos com {adversario} pela {competicao}',
+  ],
+};
+
+// ─── Templates de conteúdo ────────────────────────────────────────────────────
+
+function gerarConteudo(jogo: JogoResultado): string {
+  const res   = resultado(jogo);
+  const adv   = adversario(jogo);
+  const placar = placarNovo(jogo);
+  const mnd   = mando(jogo);
+  const data  = new Date(jogo.data_hora).toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: 'long',
+  });
+  const local = jogo.local ?? (mnd === 'casa' ? 'Estádio Jorge Ismael de Biasi — Novo Horizonte' : 'jogo fora de casa');
+
+  const intro: Record<typeof res, string> = {
+    vitória: `O Grêmio Novorizontino conquistou mais uma vitória importante pela ${jogo.competicao}. Na ${data}, o Tigre ${mnd === 'casa' ? `recebeu o ${adv} no Jorjão` : `enfrentou o ${adv} fora de casa`} e saiu com o placar favorável de **${placar}**, somando mais três pontos na tabela.`,
+    derrota: `O Grêmio Novorizontino foi superado pelo ${adv} nesta ${data} pela ${jogo.competicao}. O placar final de **${placar}** marcou uma tarde difícil para o Tigre, que precisará se recuperar rapidamente para os próximos desafios da competição.`,
+    empate:  `O Grêmio Novorizontino ficou no empate com o ${adv} nesta ${data} pela ${jogo.competicao}. O placar de **${placar}** refletiu um jogo equilibrado, com o Tigre dividindo os pontos ${mnd === 'casa' ? `diante da sua torcida no Jorjão` : `fora de casa`}.`,
+  };
+
+  const meio: Record<typeof res, string> = {
+    vitória: `A partida foi realizada em ${local}. O Novorizontino mostrou qualidade e organização ao longo dos 90 minutos, construindo o resultado com eficiência e determinação. A equipe comandada pela comissão técnica teve o controle do jogo nos momentos decisivos.`,
+    derrota: `A partida aconteceu em ${local}. Apesar do empenho, o Novorizontino não conseguiu superar o adversário nesta ocasião. A equipe segue trabalhando para corrigir os pontos falhos e voltar a vencer no próximo compromisso.`,
+    empate:  `A partida foi disputada em ${local}. O Tigre buscou a vitória até o apito final, mas não foi possível quebrar o equilíbrio imposto pelo adversário. O ponto conquistado mantém o time na briga na tabela da ${jogo.competicao}.`,
+  };
+
+  const fechamento: Record<typeof res, string> = {
+    vitória: `Com o resultado, o Novorizontino mantém o ritmo positivo e segue em busca dos seus objetivos na ${jogo.competicao}. A torcida do Tigre pode comemorar mais uma conquista importante nessa trajetória.`,
+    derrota: `O Novorizontino já pensa na próxima rodada para voltar a pontuar e se manter competitivo na ${jogo.competicao}. A confiança no trabalho segue firme.`,
+    empate:  `O Grêmio Novorizontino segue na competição com foco total nos próximos jogos. Cada ponto conquistado é importante na longa jornada da ${jogo.competicao}.`,
+  };
+
+  return `${intro[res]}\n\n${meio[res]}\n\n${fechamento[res]}`;
+}
+
+function gerarResumo(jogo: JogoResultado): string {
+  const res    = resultado(jogo);
+  const adv    = adversario(jogo);
+  const placar = placarNovo(jogo);
+  const emojis = { vitória: '🏆', derrota: '😔', empate: '🤝' };
+  const verbos = { vitória: 'venceu', derrota: 'perdeu para', empate: 'empatou com' };
+  return `${emojis[res]} Novorizontino ${verbos[res]} ${adv} por ${placar} pela ${jogo.competicao} — Rodada ${jogo.rodada}.`;
+}
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function interpolar(tpl: string, vars: Record<string, string>): string {
+  return tpl.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? k);
+}
+
+// ─── gerarPostagem ────────────────────────────────────────────────────────────
+
+export function gerarPostagem(jogo: JogoResultado, status: 'published' | 'draft' = 'published'): Postagem {
+  const res    = resultado(jogo);
+  const adv    = adversario(jogo);
+  const placar = placarNovo(jogo);
+  const comp   = jogo.competicao.replace('Série B 2026', 'Série B').replace('Série B 2025', 'Série B');
+
+  const vars = { adversario: adv, placar, competicao: comp, rodada: jogo.rodada };
+
+  const titulo   = interpolar(pick(TITULOS[res]), vars);
+  const slug     = `${slugify(titulo)}-rodada-${jogo.rodada}-${Date.now()}`;
+  const conteudo = gerarConteudo(jogo);
+  const resumo   = gerarResumo(jogo);
+
+  return {
+    titulo,
+    slug,
+    categoria:   'Resultados',
+    resumo_ia:   resumo,
+    conteudo,
+    autor_ia:    'Gabi • IA do Portal',
+    imagem_capa: imagemCapa(jogo),
+    status,
+    fonte_nome:  'O Novorizontino',
+    fonte_url:   'https://www.onovorizontino.com.br',
+    criado_em:   new Date().toISOString(),
+  };
+}
+
+// ─── GabiAgent ───────────────────────────────────────────────────────────────
+
+export const GabiAgent = {
+  name:    'Gabi',
+  role:    'Notícias & Resultados',
+  version: '1.0.0',
+
+  /** Gera a postagem a partir de um resultado de jogo. */
+  gerarPostagem,
+
+  /** Log padronizado. */
+  log(msg: string): void {
+    console.log(`[Gabi @ ${new Date().toISOString()}] 📰 ${msg}`);
+  },
+} as const;

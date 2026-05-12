@@ -1,1 +1,237 @@
-Ly8gc3JjL2xpYi9hZ2VudHMvRGVhbGVyQWdlbnQudHMKLy8gQnJ1bm8g4oCUIEFnZW50ZSBkZSBHcm93dGggJiBSZXRlbnRpb24gZG8gZWNvc3Npc3RlbWEgVGlncmVGQyAvIE8gTm92b3Jpem9udGluby4KLy8gSWRlbnRpZmljYSB0b3JjZWRvcmVzIGluYXRpdm9zIGUgY3JpYSBub3RpZmljYcOnw7VlcyBwdXNoIHBlcnNvbmFsaXphZGFzIG5vIGphcmfDo28gTWFrYXJpb3MuCgppbXBvcnQgeyBzdXBhYmFzZSB9IGZyb20gJ0AvbGliL3N1cGFiYXNlJzsKCi8vIOKUgOKUgOKUgCBUaXBvcyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmV4cG9ydCBpbnRlcmZhY2UgVXN1YXJpb0luYXRpdm8gewogIHVzZXJfaWQ6IHN0cmluZzsKICBhcGVsaWRvOiBzdHJpbmcgfCBudWxsOwogIHVsdGltYV9lc2NhbGFjYW86IHN0cmluZyB8IG51bGw7ICAgLy8gSVNPIHRpbWVzdGFtcAogIGhvcmFzX3NlbV9lc2NhbGFyOiBudW1iZXI7Cn0KCmV4cG9ydCBpbnRlcmZhY2UgUHVzaFBheWxvYWQgewogIHVzZXJfaWQ6IHN0cmluZzsKICB0aXR1bG86IHN0cmluZzsKICBjb3Jwbzogc3RyaW5nOwogIHVybDogc3RyaW5nOwogIGNyaWFkb19lbTogc3RyaW5nOwp9CgpleHBvcnQgaW50ZXJmYWNlIENhbXBhbmhhUmVzdWx0IHsKICB0b3RhbF9pbmF0aXZvczogbnVtYmVyOwogIG5vdGlmaWNhY29lczogUHVzaFBheWxvYWRbXTsKICB0aW1lc3RhbXA6IHN0cmluZzsKfQoKLy8g4pSA4pSA4pSAIFRlbXBsYXRlcyBkZSBub3RpZmljYcOnw6NvIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKY29uc3QgUFVTSF9URU1QTEFURVMgPSBbCiAgewogICAgdGl0dWxvOiAn8J+QryBWZW0gY29tIG8gTWFrYXJpb3MhJywKICAgIGNvcnBvOiAgJ1N1YSBlc2NhbGHDp8OjbyBlc3TDoSB0ZSBlc3BlcmFuZG8sIHthcGVsaWRvfS4gTyBUaWdyZSBuw6NvIGVzcGVyYSBwb3IgbmluZ3XDqW0uJywKICB9LAogIHsKICAgIHRpdHVsbzogJ+KavSBDYWTDqiBzdWEgZXNjYWxhw6fDo28/JywKICAgIGNvcnBvOiAgJ3thcGVsaWRvfSwgbyBUaWdyZUZDIHNlbnRlIHN1YSBmYWx0YS4gRXNjYWxhIHNldSB0aW1lIGFudGVzIGRvIGFwaXRvIGluaWNpYWwhJywKICB9LAogIHsKICAgIHRpdHVsbzogJ+KdhO+4jyBQb2xvIFN1bCBjaGFtYSwge2FwZWxpZG99IScsCiAgICBjb3JwbzogICdMw6EgZm9yYSB0w6Ege3RlbXB9wrBDIGUgdm9jw6ogYWluZGEgbsOjbyBlc2NhbG91LiBJc3NvIG7Do28gw6kgTsOtdmVsIE1ha2FyaW9zLicsCiAgfSwKICB7CiAgICB0aXR1bG86ICfwn5SlIEZhbHRhIHZvY8OqIG5vIGNhbXBvIScsCiAgICBjb3JwbzogICdUb2RvIG11bmRvIGrDoSBlc2NhbG91IG1lbm9zIHZvY8OqLCB7YXBlbGlkb30uIE7Do28gZGVpeGEgbyBUaWdyZSBuYSBtw6NvLicsCiAgfSwKICB7CiAgICB0aXR1bG86ICfij7Agw5psdGltYXMgaG9yYXMgcHJhIGVzY2FsYXIhJywKICAgIGNvcnBvOiAgJ3thcGVsaWRvfSwgbyBqb2dvIHTDoSBjaGVnYW5kby4gRW50cmEgbm8gVGlncmVGQyBlIG1vbnRhIHN1YSBlcXVpcGUgYWdvcmEuJywKICB9LApdOwoKZnVuY3Rpb24gcGljazxUPihhcnI6IFRbXSk6IFQgewogIHJldHVybiBhcnJbTWF0aC5mbG9vcihNYXRoLnJhbmRvbSgpICogYXJyLmxlbmd0aCldOwp9CgpmdW5jdGlvbiBpbnRlcnBvbGFyKHRlbXBsYXRlOiBzdHJpbmcsIGN0eDogeyBhcGVsaWRvOiBzdHJpbmc7IHRlbXA/OiBudW1iZXIgfSk6IHN0cmluZyB7CiAgcmV0dXJuIHRlbXBsYXRlCiAgICAucmVwbGFjZSgve2FwZWxpZG99L2csIGN0eC5hcGVsaWRvIHx8ICdUb3JjZWRvcicpCiAgICAucmVwbGFjZSgve3RlbXB9L2csIFN0cmluZyhjdHgudGVtcCA/PyAyMCkpOwp9CgovLyDilIDilIDilIAgRGV0ZWN0YSB1c3XDoXJpb3MgaW5hdGl2b3Mg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgovKioKICogUmV0b3JuYSB1c3XDoXJpb3MgcXVlIG7Do28gZXNjYWxhcmFtIG5hcyDDumx0aW1hcyBgaG9yYXNgIGhvcmFzLgogKiBDcnV6YSB0aWdyZV9mY191c3VhcmlvcyBjb20gdGlncmVfZmNfZXNjYWxhY29lcyBwYXJhIGFjaGFyIG9zIGluYXRpdm9zLgogKi8KZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGRldGVjdGFySW5hdGl2b3MoaG9yYXMgPSA0OCk6IFByb21pc2U8VXN1YXJpb0luYXRpdm9bXT4gewogIGNvbnN0IGN1dG9mZiA9IG5ldyBEYXRlKERhdGUubm93KCkgLSBob3JhcyAqIDYwICogNjAgKiAxMDAwKS50b0lTT1N0cmluZygpOwoKICAvLyBCdXNjYSB0b2RvcyBvcyB1c3XDoXJpb3MKICBjb25zdCB7IGRhdGE6IHVzdWFyaW9zLCBlcnJvcjogZXJyVSB9ID0gYXdhaXQgc3VwYWJhc2UKICAgIC5mcm9tKCd0aWdyZV9mY191c3VhcmlvcycpCiAgICAuc2VsZWN0KCd1c2VyX2lkLCBhcGVsaWRvJyk7CgogIGlmIChlcnJVIHx8ICF1c3VhcmlvcykgewogICAgY29uc29sZS5lcnJvcignW0JydW5vXSBFcnJvIGFvIGJ1c2NhciB1c3XDoXJpb3M6JywgZXJyVSk7CiAgICByZXR1cm4gW107CiAgfQoKICAvLyBCdXNjYSDDumx0aW1hIGVzY2FsYcOnw6NvIGRlIGNhZGEgdXNlcgogIGNvbnN0IHsgZGF0YTogZXNjYWxhY29lcywgZXJyb3I6IGVyckUgfSA9IGF3YWl0IHN1cGFiYXNlCiAgICAuZnJvbSgndGlncmVfZmNfZXNjYWxhY29lcycpCiAgICAuc2VsZWN0KCd1c2VyX2lkLCBjcmlhZG9fZW0nKQogICAgLm9yZGVyKCdjcmlhZG9fZW0nLCB7IGFzY2VuZGluZzogZmFsc2UgfSk7CgogIGlmIChlcnJFKSB7CiAgICBjb25zb2xlLmVycm9yKCdbQnJ1bm9dIEVycm8gYW8gYnVzY2FyIGVzY2FsYcOnw7VlczonLCBlcnJFKTsKICAgIHJldHVybiBbXTsKICB9CgogIC8vIE1hcGVpYSDDumx0aW1hIGVzY2FsYcOnw6NvIHBvciB1c2VyX2lkCiAgY29uc3QgdWx0aW1hRXNjYWxhY2FvID0gbmV3IE1hcDxzdHJpbmcsIHN0cmluZz4oKTsKICBmb3IgKGNvbnN0IGUgb2YgKGVzY2FsYWNvZXMgPz8gW10pIGFzIHsgdXNlcl9pZDogc3RyaW5nOyBjcmlhZG9fZW06IHN0cmluZyB9W10pIHsKICAgIGlmICghdWx0aW1hRXNjYWxhY2FvLmhhcyhlLnVzZXJfaWQpKSB7CiAgICAgIHVsdGltYUVzY2FsYWNhby5zZXQoZS51c2VyX2lkLCBlLmNyaWFkb19lbSk7CiAgICB9CiAgfQoKICBjb25zdCBhZ29yYSA9IERhdGUubm93KCk7CiAgY29uc3QgaW5hdGl2b3M6IFVzdWFyaW9JbmF0aXZvW10gPSBbXTsKCiAgZm9yIChjb25zdCB1IG9mIHVzdWFyaW9zIGFzIHsgdXNlcl9pZDogc3RyaW5nOyBhcGVsaWRvOiBzdHJpbmcgfCBudWxsIH1bXSkgewogICAgY29uc3QgdWx0aW1hID0gdWx0aW1hRXNjYWxhY2FvLmdldCh1LnVzZXJfaWQpID8/IG51bGw7CiAgICBjb25zdCBob3Jhc1NlbSA9IHVsdGltYQogICAgICA/IChhZ29yYSAtIG5ldyBEYXRlKHVsdGltYSkuZ2V0VGltZSgpKSAvIDNfNjAwXzAwMAogICAgICA6IEluZmluaXR5OwoKICAgIGlmIChob3Jhc1NlbSA+PSBob3JhcyB8fCB1bHRpbWEgPT09IG51bGwpIHsKICAgICAgaW5hdGl2b3MucHVzaCh7CiAgICAgICAgdXNlcl9pZDogICAgICAgICAgdS51c2VyX2lkLAogICAgICAgIGFwZWxpZG86ICAgICAgICAgIHUuYXBlbGlkbywKICAgICAgICB1bHRpbWFfZXNjYWxhY2FvOiB1bHRpbWEsCiAgICAgICAgaG9yYXNfc2VtX2VzY2FsYXI6IE1hdGgucm91bmQoaG9yYXNTZW0gPT09IEluZmluaXR5ID8gOTk5OSA6IGhvcmFzU2VtKSwKICAgICAgfSk7CiAgICB9CiAgfQoKICBjb25zb2xlLmxvZyhgW0JydW5vXSAke2luYXRpdm9zLmxlbmd0aH0gaW5hdGl2b3MgZGV0ZWN0YWRvcyAoPiR7aG9yYXN9aCBzZW0gZXNjYWxhcikuYCk7CiAgcmV0dXJuIGluYXRpdm9zOwp9CgovLyDilIDilIDilIAgR2VyYSBub3RpZmljYcOnw7VlcyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCi8qKgogKiBHZXJhIHBheWxvYWRzIGRlIHB1c2ggcGVyc29uYWxpemFkb3MgcGFyYSBjYWRhIHVzdcOhcmlvIGluYXRpdm8uCiAqIFBlcnNpc3RlIG5hIHRhYmVsYSB0aWdyZV9mY19wdXNoX3F1ZXVlIHNlIGV4aXN0aXIuCiAqLwpleHBvcnQgYXN5bmMgZnVuY3Rpb24gZ2VyYXJOb3RpZmljYWNvZXMoCiAgaW5hdGl2b3M6IFVzdWFyaW9JbmF0aXZvW10sCiAgdGVtcGVyYXR1cmE/OiBudW1iZXIsCik6IFByb21pc2U8UHVzaFBheWxvYWRbXT4gewogIGlmIChpbmF0aXZvcy5sZW5ndGggPT09IDApIHJldHVybiBbXTsKCiAgY29uc3QgcGF5bG9hZHM6IFB1c2hQYXlsb2FkW10gPSBpbmF0aXZvcy5tYXAodSA9PiB7CiAgICBjb25zdCB0cGwgPSBwaWNrKFBVU0hfVEVNUExBVEVTKTsKICAgIGNvbnN0IGFwZWxpZG8gPSB1LmFwZWxpZG8gPz8gJ1RvcmNlZG9yJzsKICAgIHJldHVybiB7CiAgICAgIHVzZXJfaWQ6ICAgdS51c2VyX2lkLAogICAgICB0aXR1bG86ICAgIGludGVycG9sYXIodHBsLnRpdHVsbywgeyBhcGVsaWRvLCB0ZW1wOiB0ZW1wZXJhdHVyYSB9KSwKICAgICAgY29ycG86ICAgICBpbnRlcnBvbGFyKHRwbC5jb3JwbywgIHsgYXBlbGlkbywgdGVtcDogdGVtcGVyYXR1cmEgfSksCiAgICAgIHVybDogICAgICAgJy90aWdyZS1mYy9lc2NhbGFyJywKICAgICAgY3JpYWRvX2VtOiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCksCiAgICB9OwogIH0pOwoKICAvLyBUZW50YSBpbnNlcmlyIG5hIGZpbGEg4oCUIGZhbGhhIHNpbGVuY2lvc2Egc2UgdGFiZWxhIG7Do28gZXhpc3RpciBhaW5kYQogIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlCiAgICAuZnJvbSgndGlncmVfZmNfcHVzaF9xdWV1ZScpCiAgICAuaW5zZXJ0KHBheWxvYWRzKTsKCiAgaWYgKGVycm9yKSB7CiAgICBjb25zb2xlLndhcm4oJ1tCcnVub10gdGlncmVfZmNfcHVzaF9xdWV1ZSBuw6NvIGVuY29udHJhZGEg4oCUIHBheWxvYWRzIGFwZW5hcyBlbSBtZW3Ds3JpYS4nLCBlcnJvci5tZXNzYWdlKTsKICB9IGVsc2UgewogICAgY29uc29sZS5sb2coYFtCcnVub10gJHtwYXlsb2Fkcy5sZW5ndGh9IG5vdGlmaWNhw6fDtWVzIGVuZmlsZWlyYWRhcyBjb20gc3VjZXNzby5gKTsKICB9CgogIHJldHVybiBwYXlsb2FkczsKfQoKLy8g4pSA4pSA4pSAIENhbXBhbmhhIGNvbXBsZXRhIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIHJvZGFyQ2FtcGFuaGEoaG9yYXMgPSA0OCwgdGVtcGVyYXR1cmE/OiBudW1iZXIpOiBQcm9taXNlPENhbXBhbmhhUmVzdWx0PiB7CiAgY29uc29sZS5sb2coYFtCcnVub10gSW5pY2lhbmRvIGNhbXBhbmhhIGRlIHJldGVuw6fDo28g4oCUIGphbmVsYTogJHtob3Jhc31oLi4uYCk7CiAgY29uc3QgaW5hdGl2b3MgPSBhd2FpdCBkZXRlY3RhckluYXRpdm9zKGhvcmFzKTsKICBjb25zdCBub3RpZmljYWNvZXMgPSBhd2FpdCBnZXJhck5vdGlmaWNhY29lcyhpbmF0aXZvcywgdGVtcGVyYXR1cmEpOwogIHJldHVybiB7CiAgICB0b3RhbF9pbmF0aXZvczogaW5hdGl2b3MubGVuZ3RoLAogICAgbm90aWZpY2Fjb2VzLAogICAgdGltZXN0YW1wOiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCksCiAgfTsKfQoKLy8g4pSA4pSA4pSAIERlYWxlckFnZW50IOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZXhwb3J0IGNvbnN0IERlYWxlckFnZW50ID0gewogIG5hbWU6ICdCcnVubycsCiAgcm9sZTogJ0dyb3d0aCAmIFJldGVudGlvbicsCiAgdmVyc2lvbjogJzEuMC4wJywKCiAgLyoqIERldGVjdGEgdXN1w6FyaW9zIHF1ZSBuw6NvIGVzY2FsYXJhbSBub3Mgw7psdGltb3MgTiBob3JhcyAocGFkcsOjbzogNDhoKS4gKi8KICBkZXRlY3RhckluYXRpdm9zLAoKICAvKiogR2VyYSBwYXlsb2FkcyBkZSBwdXNoIHBlcnNvbmFsaXphZG9zIGUgZW5maWxlaXJhIG5vIFN1cGFiYXNlLiAqLwogIGdlcmFyTm90aWZpY2Fjb2VzLAoKICAvKiogUm9kYSBhIGNhbXBhbmhhIGNvbXBsZXRhIGRlIHJldGVuw6fDo28uICovCiAgcm9kYXJDYW1wYW5oYSwKCiAgLyoqIExvZyBwYWRyb25pemFkbyBubyBlc3RpbG8gQnJ1bm8uICovCiAgbG9nKG1zZzogc3RyaW5nKTogdm9pZCB7CiAgICBjb25zb2xlLmxvZyhgW0JydW5vIEAgJHtuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCl9XSDwn5OjICR7bXNnfWApOwogIH0sCn0gYXMgY29uc3Q7Cg==
+// src/lib/agents/DealerAgent.ts
+// Bruno — Agente de Growth & Retention do ecossistema TigreFC / O Novorizontino.
+// Identifica torcedores inativos e cria notificações push personalizadas no jargão Makarios.
+
+import { supabase } from '@/lib/supabase';
+
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+
+export interface UsuarioInativo {
+  user_id: string;
+  apelido: string | null;
+  ultima_escalacao: string | null;   // ISO timestamp
+  horas_sem_escalar: number;
+}
+
+export interface PushPayload {
+  user_id: string;
+  titulo: string;
+  corpo: string;
+  url: string;
+  criado_em: string;
+}
+
+export interface CampanhaResult {
+  total_inativos: number;
+  notificacoes: PushPayload[];
+  timestamp: string;
+}
+
+// ─── Templates de notificação ────────────────────────────────────────────────
+
+const PUSH_TEMPLATES = [
+  {
+    titulo: '🐯 Vem com o Makarios!',
+    corpo:  'Sua escalação está te esperando, {apelido}. O Tigre não espera por ninguém.',
+  },
+  {
+    titulo: '⚽ Cadê sua escalação?',
+    corpo:  '{apelido}, o TigreFC sente sua falta. Escala seu time antes do apito inicial!',
+  },
+  {
+    titulo: '❄️ Polo Sul chama, {apelido}!',
+    corpo:  'Lá fora tá {temp}°C e você ainda não escalou. Isso não é Nível Makarios.',
+  },
+  {
+    titulo: '🔥 Falta você no campo!',
+    corpo:  'Todo mundo já escalou menos você, {apelido}. Não deixa o Tigre na mão.',
+  },
+  {
+    titulo: '⏰ Últimas horas pra escalar!',
+    corpo:  '{apelido}, o jogo tá chegando. Entra no TigreFC e monta sua equipe agora.',
+  },
+];
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function interpolar(template: string, ctx: { apelido: string; temp?: number }): string {
+  return template
+    .replace(/{apelido}/g, ctx.apelido || 'Torcedor')
+    .replace(/{temp}/g, String(ctx.temp ?? 20));
+}
+
+// ─── Detecta usuários inativos ────────────────────────────────────────────────
+
+/**
+ * Retorna usuários que não escalaram nas últimas `horas` horas.
+ * Cruza tigre_fc_usuarios com tigre_fc_escalacoes para achar os inativos.
+ */
+export async function detectarInativos(horas = 48): Promise<UsuarioInativo[]> {
+  const cutoff = new Date(Date.now() - horas * 60 * 60 * 1000).toISOString();
+
+  // Busca todos os usuários
+  const { data: usuarios, error: errU } = await supabase
+    .from('tigre_fc_usuarios')
+    .select('user_id, apelido');
+
+  if (errU || !usuarios) {
+    console.error('[Bruno] Erro ao buscar usuários:', errU);
+    return [];
+  }
+
+  // Busca última escalação de cada user
+  const { data: escalacoes, error: errE } = await supabase
+    .from('tigre_fc_escalacoes')
+    .select('user_id, criado_em')
+    .order('criado_em', { ascending: false });
+
+  if (errE) {
+    console.error('[Bruno] Erro ao buscar escalações:', errE);
+    return [];
+  }
+
+  // Mapeia última escalação por user_id
+  const ultimaEscalacao = new Map<string, string>();
+  for (const e of (escalacoes ?? []) as { user_id: string; criado_em: string }[]) {
+    if (!ultimaEscalacao.has(e.user_id)) {
+      ultimaEscalacao.set(e.user_id, e.criado_em);
+    }
+  }
+
+  const agora = Date.now();
+  const inativos: UsuarioInativo[] = [];
+
+  for (const u of usuarios as { user_id: string; apelido: string | null }[]) {
+    const ultima = ultimaEscalacao.get(u.user_id) ?? null;
+    const horasSem = ultima
+      ? (agora - new Date(ultima).getTime()) / 3_600_000
+      : Infinity;
+
+    if (horasSem >= horas || ultima === null) {
+      inativos.push({
+        user_id:          u.user_id,
+        apelido:          u.apelido,
+        ultima_escalacao: ultima,
+        horas_sem_escalar: Math.round(horasSem === Infinity ? 9999 : horasSem),
+      });
+    }
+  }
+
+  console.log(`[Bruno] ${inativos.length} inativos detectados (>${horas}h sem escalar).`);
+  return inativos;
+}
+
+// ─── Gera notificações ────────────────────────────────────────────────────────
+
+/**
+ * Gera payloads de push personalizados para cada usuário inativo.
+ * Persiste na tabela tigre_fc_push_queue se existir.
+ */
+export async function gerarNotificacoes(
+  inativos: UsuarioInativo[],
+  temperatura?: number,
+): Promise<PushPayload[]> {
+  if (inativos.length === 0) return [];
+
+  const payloads: PushPayload[] = inativos.map(u => {
+    const tpl = pick(PUSH_TEMPLATES);
+    const apelido = u.apelido ?? 'Torcedor';
+    return {
+      user_id:   u.user_id,
+      titulo:    interpolar(tpl.titulo, { apelido, temp: temperatura }),
+      corpo:     interpolar(tpl.corpo,  { apelido, temp: temperatura }),
+      url:       '/tigre-fc/escalar',
+      criado_em: new Date().toISOString(),
+    };
+  });
+
+  // Tenta inserir na fila — falha silenciosa se tabela não existir ainda
+  const { error } = await supabase
+    .from('tigre_fc_push_queue')
+    .insert(payloads);
+
+  if (error) {
+    console.warn('[Bruno] tigre_fc_push_queue não encontrada — payloads apenas em memória.', error.message);
+  } else {
+    console.log(`[Bruno] ${payloads.length} notificações enfileiradas com sucesso.`);
+  }
+
+  return payloads;
+}
+
+// ─── OneSignal push real ──────────────────────────────────────────────────────
+
+export async function enviarPushOneSignal(payload: PushPayload): Promise<boolean> {
+  const appId  = process.env.ONESIGNAL_APP_ID;
+  const apiKey = process.env.ONESIGNAL_API_KEY;
+  if (!appId || !apiKey) return false;
+
+  try {
+    const res = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Basic ${apiKey}`,
+      },
+      body: JSON.stringify({
+        app_id:            appId,
+        include_aliases:   { external_id: [payload.user_id] },
+        target_channel:    'push',
+        headings:          { en: payload.titulo, pt: payload.titulo },
+        contents:          { en: payload.corpo,  pt: payload.corpo },
+        url:               payload.url,
+        chrome_web_icon:   'https://www.onovorizontino.com.br/favicon.ico',
+      }),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('[Bruno] OneSignal falhou:', e);
+    return false;
+  }
+}
+
+// ─── Campanha completa ────────────────────────────────────────────────────────
+
+export async function rodarCampanha(horas = 48, temperatura?: number): Promise<CampanhaResult> {
+  console.log(`[Bruno] Iniciando campanha de retenção — janela: ${horas}h...`);
+  const inativos     = await detectarInativos(horas);
+  const notificacoes = await gerarNotificacoes(inativos, temperatura);
+
+  // Dispara push real via OneSignal se configurado
+  const temOneSignal = !!(process.env.ONESIGNAL_APP_ID && process.env.ONESIGNAL_API_KEY);
+  if (temOneSignal && notificacoes.length > 0) {
+    const resultados = await Promise.allSettled(notificacoes.map(enviarPushOneSignal));
+    const enviados = resultados.filter(r => r.status === 'fulfilled' && r.value).length;
+    console.log(`[Bruno] OneSignal: ${enviados}/${notificacoes.length} pushes enviados.`);
+  }
+
+  return {
+    total_inativos: inativos.length,
+    notificacoes,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+// ─── DealerAgent ─────────────────────────────────────────────────────────────
+
+export const DealerAgent = {
+  name: 'Bruno',
+  role: 'Growth & Retention',
+  version: '1.0.0',
+
+  /** Detecta usuários que não escalaram nos últimos N horas (padrão: 48h). */
+  detectarInativos,
+
+  /** Gera payloads de push personalizados e enfileira no Supabase. */
+  gerarNotificacoes,
+
+  /** Roda a campanha completa de retenção. */
+  rodarCampanha,
+
+  /** Log padronizado no estilo Bruno. */
+  log(msg: string): void {
+    console.log(`[Bruno @ ${new Date().toISOString()}] 📣 ${msg}`);
+  },
+} as const;
