@@ -126,6 +126,27 @@ async function salvarNaFila(jogoId: number | undefined, tipo: string, copy: stri
   }
 }
 
+// ─── Gabi: publica notícia de resultado quando jogo finaliza ─────────────────
+
+async function acionarGabi(record: JogoRow) {
+  if (!record.finalizado) return;
+  try {
+    const base   = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.onovorizontino.com.br';
+    const secret = process.env.AGENTS_SECRET ?? '';
+    await fetch(`${base}/api/agents/gabi`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':    'application/json',
+        'x-webhook-secret': secret,
+      },
+      body: JSON.stringify({ jogo_id: record.id, status: 'published' }),
+    });
+    console.log(`[webhook/jogo] Gabi acionada para jogo ${record.id}`);
+  } catch (e) {
+    console.warn('[webhook/jogo] Gabi falhou:', e);
+  }
+}
+
 // ─── Ana: verifica se a rodada fechou após finalizado=true ───────────────────
 
 async function notificarAnaSeRodadaFechou(record: JogoRow) {
@@ -200,8 +221,11 @@ export async function POST(req: NextRequest) {
     // ── Persiste na fila (falha silenciosa se tabela não existir) ───────────
     await salvarNaFila(jogoId, tipo, script.copy, script.titulo);
 
-    // ── Ana verifica rodada (fire-and-forget) ───────────────────────────────
-    if (recordRow) notificarAnaSeRodadaFechou(recordRow);
+    // ── Gabi publica resultado + Ana verifica rodada (fire-and-forget) ────────
+    if (recordRow) {
+      acionarGabi(recordRow);
+      notificarAnaSeRodadaFechou(recordRow);
+    }
 
     return NextResponse.json({
       agente:  'Léo',
