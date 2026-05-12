@@ -8,6 +8,7 @@ export default function Navbar() {
     { name: 'Tabela', href: '/tabela' },
     { name: 'Elenco', href: '/elenco' },
     { name: 'Vídeos', href: '/videos' },
+    { name: 'Redação', href: '/voxsports' },
   ];
 
   return (

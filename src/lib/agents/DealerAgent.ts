@@ -161,12 +161,52 @@ export async function gerarNotificacoes(
   return payloads;
 }
 
+// ─── OneSignal push real ──────────────────────────────────────────────────────
+
+export async function enviarPushOneSignal(payload: PushPayload): Promise<boolean> {
+  const appId  = process.env.ONESIGNAL_APP_ID;
+  const apiKey = process.env.ONESIGNAL_API_KEY;
+  if (!appId || !apiKey) return false;
+
+  try {
+    const res = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Basic ${apiKey}`,
+      },
+      body: JSON.stringify({
+        app_id:            appId,
+        include_aliases:   { external_id: [payload.user_id] },
+        target_channel:    'push',
+        headings:          { en: payload.titulo, pt: payload.titulo },
+        contents:          { en: payload.corpo,  pt: payload.corpo },
+        url:               payload.url,
+        chrome_web_icon:   'https://www.onovorizontino.com.br/favicon.ico',
+      }),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('[Bruno] OneSignal falhou:', e);
+    return false;
+  }
+}
+
 // ─── Campanha completa ────────────────────────────────────────────────────────
 
 export async function rodarCampanha(horas = 48, temperatura?: number): Promise<CampanhaResult> {
   console.log(`[Bruno] Iniciando campanha de retenção — janela: ${horas}h...`);
-  const inativos = await detectarInativos(horas);
+  const inativos     = await detectarInativos(horas);
   const notificacoes = await gerarNotificacoes(inativos, temperatura);
+
+  // Dispara push real via OneSignal se configurado
+  const temOneSignal = !!(process.env.ONESIGNAL_APP_ID && process.env.ONESIGNAL_API_KEY);
+  if (temOneSignal && notificacoes.length > 0) {
+    const resultados = await Promise.allSettled(notificacoes.map(enviarPushOneSignal));
+    const enviados = resultados.filter(r => r.status === 'fulfilled' && r.value).length;
+    console.log(`[Bruno] OneSignal: ${enviados}/${notificacoes.length} pushes enviados.`);
+  }
+
   return {
     total_inativos: inativos.length,
     notificacoes,

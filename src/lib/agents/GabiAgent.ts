@@ -58,6 +58,39 @@ function slugify(text: string): string {
     .replace(/-+/g, '-');
 }
 
+// ─── Logos dos adversários (canvas-safe para imagem_capa) ────────────────────
+
+const SB = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal';
+const WK = 'https://upload.wikimedia.org/wikipedia/commons';
+const ESCUDO_NOVORIZONTINO = `${SB}/Escudo%20Novorizontino.png`;
+
+const LOGOS_CAPA: Record<string, string> = {
+  'novorizontino':        ESCUDO_NOVORIZONTINO,
+  'gremio-novorizontino': ESCUDO_NOVORIZONTINO,
+  'avai':                 `${SB}/Avai_Futebol_Clube_logo.svg.png`,
+  'botafogo-sp':          `${SB}/Botafogo_sp.svg`,
+  'america-mg':           `${SB}/ESCUDO%20AMERICA%20MINEIRO.png`,
+  'criciuma':             `${WK}/2/24/Crici%C3%BAma_EC_logo.svg`,
+  'cuiaba':               `${WK}/9/9e/Cuiab%C3%A1_EC.svg`,
+  'crb':                  `${WK}/7/73/CRB_logo.svg`,
+  'sport':                `${WK}/1/17/Sport_Club_do_Recife.png`,
+  'londrina':             `${WK}/a/a2/Londrina_Esporte_Clube.svg`,
+  'juventude':            `${WK}/8/8b/Esporte_Clube_Juventude.svg`,
+  'ceara':                `${WK}/2/27/Ceara_Sporting_Club_logo.svg`,
+  'sao-bernardo':         `${WK}/7/7d/S%C3%A3o_Bernardo_Futebol_Clube.png`,
+  'operario-pr':          `${WK}/0/00/Operar%C3%A1rio_Ferroviario_Esporte_Clube.svg`,
+  'goias':                `${WK}/b/bd/Goias_logo.svg`,
+  'vila-nova':            `${WK}/4/48/Vila_Nova_Futebol_Clube.png`,
+  'ponte-preta':          `${WK}/2/29/Associacao_Atletica_Ponte_Preta_logo.svg`,
+  'athletic':             `${WK}/thumb/f/f8/Athletic_Club_%28Minas_Gerais%29.svg/320px-Athletic_Club_%28Minas_Gerais%29.svg.png`,
+  'athletic-mg':          `${WK}/thumb/f/f8/Athletic_Club_%28Minas_Gerais%29.svg/320px-Athletic_Club_%28Minas_Gerais%29.svg.png`,
+};
+
+function imagemCapa(jogo: JogoResultado): string | null {
+  const adv = isNovorizontino(jogo.mandante_slug) ? jogo.visitante_slug : jogo.mandante_slug;
+  return LOGOS_CAPA[adv] ?? null;
+}
+
 // ─── Lógica de resultado ──────────────────────────────────────────────────────
 
 function isNovorizontino(slug: string): boolean {
@@ -182,7 +215,7 @@ export function gerarPostagem(jogo: JogoResultado, status: 'published' | 'draft'
     resumo_ia:   resumo,
     conteudo,
     autor_ia:    'Gabi • IA do Portal',
-    imagem_capa: null,
+    imagem_capa: imagemCapa(jogo),
     status,
     fonte_nome:  'O Novorizontino',
     fonte_url:   'https://www.onovorizontino.com.br',

@@ -465,6 +465,56 @@ function DraggableSlot({
 }
 
 // =============================================================================
+// ANA BUTTON — sugere escalação ideal via /api/agents/ana
+// =============================================================================
+
+function AnaButton({ formation, onApply }: {
+  formation: string;
+  onApply: (slots: Record<string, Player>) => void;
+}) {
+  const [loading, setLoading] = React.useState(false);
+  const [erro, setErro]       = React.useState<string | null>(null);
+
+  const sugerir = async () => {
+    setLoading(true);
+    setErro(null);
+    try {
+      const res  = await fetch(`/api/agents/ana?formacao=${encodeURIComponent(formation)}`);
+      const data = await res.json();
+      if (!data?.slots) throw new Error('Sem sugestão');
+
+      const mapa: Record<string, Player> = {};
+      for (const s of data.slots as { slot: string; titular: Player }[]) {
+        mapa[s.slot] = s.titular;
+      }
+      onApply(mapa);
+    } catch {
+      setErro('Ana não conseguiu sugerir agora. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="w-full mb-2">
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={sugerir}
+        disabled={loading}
+        className="w-full py-3 rounded-2xl border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+      >
+        {loading
+          ? <><span className="animate-spin">⚙</span> Ana pensando...</>
+          : <>🧠 Ana sugere a escalação ideal</>
+        }
+      </motion.button>
+      {erro && <p className="text-red-400 text-[10px] text-center mt-1">{erro}</p>}
+    </div>
+  );
+}
+
+// =============================================================================
 // COMPONENTE PRINCIPAL
 // =============================================================================
 
@@ -1033,8 +1083,21 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
               <h1 className="text-4xl font-black italic mb-2 text-yellow-500 uppercase tracking-tighter text-center">
                 ESCOLHA A TÁTICA
               </h1>
-              <p className="text-zinc-500 text-sm mb-10 text-center">Como o Tigrão vai entrar em campo?</p>
-              <div className="grid grid-cols-2 gap-4 w-full">
+              <p className="text-zinc-500 text-sm mb-6 text-center">Como o Tigrão vai entrar em campo?</p>
+
+              {/* Botão Ana */}
+              <AnaButton formation={formation} onApply={(slots) => {
+                setSlotMap(prev => {
+                  const next = { ...prev };
+                  Object.entries(slots).forEach(([slotId, player]) => {
+                    if (next[slotId]) next[slotId] = { ...next[slotId], player };
+                  });
+                  return next;
+                });
+                setStep('arena');
+              }} />
+
+              <div className="grid grid-cols-2 gap-4 w-full mt-4">
                 {Object.keys(formationConfigs).map(f => (
                   <motion.button key={f} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                     onClick={() => handleChangeFormation(f)}
