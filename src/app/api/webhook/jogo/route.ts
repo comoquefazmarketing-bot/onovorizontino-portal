@@ -126,6 +126,23 @@ async function salvarNaFila(jogoId: number | undefined, tipo: string, copy: stri
   }
 }
 
+// ─── Ana: verifica se a rodada fechou após finalizado=true ───────────────────
+
+async function notificarAnaSeRodadaFechou(record: JogoRow) {
+  if (!record.finalizado) return;
+  try {
+    const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.onovorizontino.com.br';
+    const res  = await fetch(`${base}/api/agents/ana/rodada`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const status = await res.json();
+    if (status.completa && !status.proxima_existe) {
+      console.log(`[webhook/jogo] Ana: rodada ${status.rodada_atual} completa. Próxima: ${status.proximo_numero} ainda não cadastrada.`);
+    }
+  } catch (e) {
+    console.warn('[webhook/jogo] Ana check failed:', e);
+  }
+}
+
 // ─── Handler principal ────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -142,6 +159,7 @@ export async function POST(req: NextRequest) {
     let tipo: string;
     let ctx: Partial<GameContext>;
     let jogoId: number | undefined;
+    let recordRow: JogoRow | null = null;
 
     if (isSupabase) {
       const payload = body as SupabaseWebhookPayload;
@@ -152,12 +170,15 @@ export async function POST(req: NextRequest) {
 
       const evento = detectarEvento(payload.record, payload.old_record);
       if (!evento) {
+        // Mesmo sem evento de copy, verifica se Ana precisa agir
+        await notificarAnaSeRodadaFechou(payload.record);
         return NextResponse.json({ ignorado: true, motivo: 'nenhum evento relevante detectado' });
       }
 
-      tipo   = evento.tipo;
-      ctx    = evento.ctx;
-      jogoId = payload.record.id;
+      tipo      = evento.tipo;
+      ctx       = evento.ctx;
+      jogoId    = payload.record.id;
+      recordRow = payload.record;
     } else {
       const manual = body as ManualPayload;
       tipo   = manual.tipo ?? 'default';
@@ -178,6 +199,9 @@ export async function POST(req: NextRequest) {
 
     // ── Persiste na fila (falha silenciosa se tabela não existir) ───────────
     await salvarNaFila(jogoId, tipo, script.copy, script.titulo);
+
+    // ── Ana verifica rodada (fire-and-forget) ───────────────────────────────
+    if (recordRow) notificarAnaSeRodadaFechou(recordRow);
 
     return NextResponse.json({
       agente:  'Léo',
