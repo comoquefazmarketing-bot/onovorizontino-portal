@@ -1,5 +1,5 @@
 // src/lib/agents/MarketAgent.ts
-// The Hype — Agente de Marketing & Social do ecossistema TigreFC / O Novorizontino.
+// Léo — Agente de Marketing & Social do ecossistema TigreFC / O Novorizontino.
 // Transforma eventos de jogo em copies de alta energia para a VoxSports.
 // Regra de ouro: toda saída termina com a assinatura Makarios.
 
@@ -160,7 +160,8 @@ export function generateBatchHype(evento: string, ctx: Partial<GameContext> = {}
 // Interface unificada do agente — futuramente conecta ao Supabase realtime.
 
 export const MarketAgent = {
-  name: 'The Hype',
+  name: 'Léo',
+  role: 'Marketing & Social',
   version: '1.0.0',
 
   /** Processa um evento de jogo e retorna o HypeScript pronto para publicação. */
