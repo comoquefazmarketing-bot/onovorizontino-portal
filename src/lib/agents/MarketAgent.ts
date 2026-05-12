@@ -1,1 +1,181 @@
-Ly8gc3JjL2xpYi9hZ2VudHMvTWFya2V0QWdlbnQudHMKLy8gVGhlIEh5cGUg4oCUIEFnZW50ZSBkZSBNYXJrZXRpbmcgJiBTb2NpYWwgZG8gZWNvc3Npc3RlbWEgVGlncmVGQyAvIE8gTm92b3Jpem9udGluby4KLy8gVHJhbnNmb3JtYSBldmVudG9zIGRlIGpvZ28gZW0gY29waWVzIGRlIGFsdGEgZW5lcmdpYSBwYXJhIGEgVm94U3BvcnRzLgovLyBSZWdyYSBkZSBvdXJvOiB0b2RhIHNhw61kYSB0ZXJtaW5hIGNvbSBhIGFzc2luYXR1cmEgTWFrYXJpb3MuCgpleHBvcnQgY29uc3QgQVNTSU5BVFVSQSA9ICfDiSBOw612ZWwgTWFrYXJpb3MhIPCfkK/inYTvuI8nOwoKLy8g4pSA4pSA4pSAIFRpcG9zIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZXhwb3J0IGludGVyZmFjZSBHYW1lQ29udGV4dCB7CiAgZXZlbnRvOiBzdHJpbmc7ICAgICAgICAgICAvLyBleDogJ2dvbCcsICd2aXTDs3JpYScsICdww6puYWx0aScsICdpbnRlcnZhbG8nLCAnY2xpbWEnCiAgdGVtcGVyYXR1cmE/OiBudW1iZXI7ICAgICAvLyDCsEMg4oCUIGFjaW9uYSBtb2RvICJQb2xvIFN1bCBQYXVsaXN0YSIgc2UgPCAxNgogIHBsYWNhck1hbmRhbnRlPzogbnVtYmVyOwogIHBsYWNhclZpc2l0YW50ZT86IG51bWJlcjsKICBtYW5kYW50ZT86IHN0cmluZzsgICAgICAgIC8vIGV4OiAnTm92b3Jpem9udGlubycKICB2aXNpdGFudGU/OiBzdHJpbmc7CiAgbWludXRvPzogbnVtYmVyOyAgICAgICAgICAvLyBtaW51dG8gZG8gam9nbwogIGpvZ2Fkb3I/OiBzdHJpbmc7ICAgICAgICAgLy8gbm9tZSBkbyBhdGxldGEgZW52b2x2aWRvCn0KCmV4cG9ydCBpbnRlcmZhY2UgSHlwZVNjcmlwdCB7CiAgdGl0dWxvOiBzdHJpbmc7CiAgY29weTogc3RyaW5nOwogIGhhc2h0YWdzOiBzdHJpbmdbXTsKICBhc3NpbmF0dXJhOiB0eXBlb2YgQVNTSU5BVFVSQTsKICB0aW1lc3RhbXA6IHN0cmluZzsKfQoKLy8g4pSA4pSA4pSAIFRlbXBsYXRlcyBwb3IgZXZlbnRvIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKY29uc3QgUE9MT19TVUxfVEVNUExBVEVTID0gWwogICdPIEpvcmrDo28gdMOhIGNvbSB7dGVtcH3CsEMgZSBvIFRpZ3JlIG7Do28gYWJhaXhhIGEgY2FiZcOnYSBwcmEgbmluZ3XDqW0uIE5lbSBwcm8gZnJpby4nLAogICd7dGVtcH3CsEMgbm8gUG9sbyBTdWwgUGF1bGlzdGEuIE1hcyBhIHRvcmNpZGEgdMOhIGVtIGNoYW1hcy4gw4kgTm92b3Jpem9udGlubywgw6kgYXNzaW0uJywKICAnTmV2ZSBubyBKb3Jqw6NvPyBRdWUgdmVuaGEuIE8gVGlncmUgam9nYSBlbSBxdWFscXVlciB0ZW1wZXJhdHVyYS4ge3RlbXB9wrBDIGRlIHB1cmEgcmHDp2EuJywKXTsKCmNvbnN0IFRFTVBMQVRFUzogUmVjb3JkPHN0cmluZywgc3RyaW5nW10+ID0gewogIGdvbDogWwogICAgJ0FBQUhISEghIHtqb2dhZG9yfSBCQUxBTsOHT1UgQVMgUkVERVMhIHtwbGFjYXJ9IOKAlCBPIFRpZ3JlIHTDoSB2aXZvLCB0w6EgYnJhdm8gZSB0w6EgbWFyY2FuZG8hJywKICAgICdHT0wgRE8gVElHUkUhIHtqb2dhZG9yfSBuw6NvIHBlcmRvb3UuIHtwbGFjYXJ9LiBKb3Jqw6NvIGVtIMOqeHRhc2UhJywKICAgICfDiSB7am9nYWRvcn0hIMOJIG8gTm92b3Jpem9udGlubyEgw4kge3BsYWNhcn0gZSBhIGZlc3RhIGNvbWXDp2EgYWdvcmEgbm8gaW50ZXJpb3IgcGF1bGlzdGEhJywKICBdLAogIHZpdMOzcmlhOiBbCiAgICAnVFLDilMgUE9OVE9TISB7bWFuZGFudGV9IHtwbGFjYXJ9IHt2aXNpdGFudGV9LiBNaXNzw6NvIGN1bXByaWRhLCBUaWdyZS4gTsOtdmVsIE1ha2FyaW9zIGRlIHBlcmZvcm1hbmNlLicsCiAgICAnVklUw5NSSUEhIHtwbGFjYXJ9LiBPIFRpZ3JlIHJ1Z2l1IGUgbyBKb3Jqw6NvIHJlc3BvbmRldS4gTWFpcyB0csOqcyBwb250aW5ob3MgbmEgY29udGEuJywKICAgICd7bWFuZGFudGV9IGRvbWlub3UgZG8gY29tZcOnbyBhbyBmaW0uIHtwbGFjYXJ9LiBWYWkgcHJhIGNpbWEsIE5vdm9yaXpvbnRpbm8hJywKICBdLAogIHDDqm5hbHRpOiBbCiAgICAnUMOKTkFMVEkhIE8gw6FyYml0cm8gbWFyY291IGUgYWdvcmEgw6kgbmVydm9zIMOgIGZsb3IgZGEgcGVsZSBubyBKb3Jqw6NvLiBRdWVtIGJhdGU/JywKICAgICfDiSBwZW5hbHR5ISB7bWludXRvfcKwIG1pbnV0by4gTyBjb3Jhw6fDo28gZG8gdG9yY2Vkb3IgZG8gVGlncmUgcGFyYSBwb3IgdW0gc2VndW5kby4uLicsCiAgICAnUMOqbmFsdGkgYXNzaW5hbGFkby4gQ29uY2VudHJhw6fDo28gdG90YWwuIE8gTm92b3Jpem9udGlubyB2YWkgcHJhIGNpbWEuJywKICBdLAogIGludGVydmFsbzogWwogICAgJ0ZJTSBETyBQUklNRUlSTyBURU1QTy4ge3BsYWNhcn0uIFTDqWNuaWNvIGrDoSB0w6EgY29tIGEgbG91c2EgbmEgbcOjby4gU2VndW5kbyB0ZW1wbyDDqSBvdXRyYSBoaXN0w7NyaWEuJywKICAgICdJbnRlcnZhbG8gY29tIHtwbGFjYXJ9LiBPIFRpZ3JlIGFpbmRhIG7Do28gbW9zdHJvdSB0dWRvLiBBZ3VhcmRhLicsCiAgICAnNDUgbWludXRvcyBzZSBmb3JhbS4ge3BsYWNhcn0uIE8gcXVlIHZlbSBwb3IgYcOtIG5vIHNlZ3VuZG8gdGVtcG8/JywKICBdLAogIGNsaW1hOiBbCiAgICAne3RlbXB9wrBDIG5vIEpvcmrDo28uIE1hcyBpc3NvIG7Do28gcGFyYSBvIFRpZ3JlLiBOdW5jYSBwYXJvdS4nLAogICAgJ1RlbXBlcmF0dXJhOiB7dGVtcH3CsEMuIERldGVybWluYcOnw6NvOiBpbmZpbml0YS4gw4kgTm92b3Jpem9udGluby4nLAogICAgJ0NsaW1hIGRlIHt0ZW1wfcKwQyBubyBlc3TDoWRpby4gQSB0b3JjaWRhIGFxdWVjZSBvIGFtYmllbnRlIGRvIGplaXRvIHF1ZSBzw7MgZWxhIHNhYmUuJywKICBdLAogIGRlZmF1bHQ6IFsKICAgICdPIE5vdm9yaXpvbnRpbm8gZXN0w6EgZW0gY2FtcG8gZSBvIGNvcmHDp8OjbyBkbyBpbnRlcmlvciBwYXVsaXN0YSBlc3TDoSBuYSBhcnF1aWJhbmNhZGEuJywKICAgICfDiSBkaWEgZGUgVGlncmUuIMOJIGRpYSBkZSBlbnRyYXIgY29tIHR1ZG8uIEpvcmrDo28sIHBvZGUgZXNwZXJhci4nLAogICAgJ05vdm9yaXpvbnRpbm86IG8gY2x1YmUgcXVlIG7Do28gZGVzaXN0ZSwgbsOjbyByZWN1YSBlIG51bmNhIGRlY2VwY2lvbmEgbyB0b3JjZWRvci4nLAogIF0sCn07Cgpjb25zdCBIQVNIVEFHU19CQVNFID0gWycjTm92b3Jpem9udGlubycsICcjVGlncmVGQycsICcjVm94U3BvcnRzJywgJyNQb2xvU3VsUGF1bGlzdGEnXTsKCmNvbnN0IEhBU0hUQUdTX0VWRU5UTzogUmVjb3JkPHN0cmluZywgc3RyaW5nW10+ID0gewogIGdvbDogICAgICAgWycjR29sJywgJyNUaWdyZScsICcjU2VyaWVCJ10sCiAgdml0w7NyaWE6ICAgWycjVml0w7NyaWEnLCAnI1Ryw6pzUG9udG9zJywgJyNOb3Zvcml6b250aW5vJ10sCiAgcMOqbmFsdGk6ICAgWycjUGVuYWx0eScsICcjRW1vw6fDo28nLCAnI0pvcmrDo28nXSwKICBpbnRlcnZhbG86IFsnI0ludGVydmFsbycsICcjQW7DoWxpc2UnXSwKICBjbGltYTogICAgIFsnI05ldmVQYXVsaXN0YW5hJywgJyNQb2xvU3VsUGF1bGlzdGEnLCAnI0ZyaW9Ow6NvUGFyYSddLAp9OwoKLy8g4pSA4pSA4pSAIEhlbHBlcnMg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgpmdW5jdGlvbiBwaWNrPFQ+KGFycjogVFtdKTogVCB7CiAgcmV0dXJuIGFycltNYXRoLmZsb29yKE1hdGgucmFuZG9tKCkgKiBhcnIubGVuZ3RoKV07Cn0KCmZ1bmN0aW9uIGJ1aWxkUGxhY2FyKGN0eDogR2FtZUNvbnRleHQpOiBzdHJpbmcgewogIGlmIChjdHgucGxhY2FyTWFuZGFudGUgPT09IHVuZGVmaW5lZCB8fCBjdHgucGxhY2FyVmlzaXRhbnRlID09PSB1bmRlZmluZWQpIHJldHVybiAnJzsKICByZXR1cm4gYCR7Y3R4LnBsYWNhck1hbmRhbnRlfXgke2N0eC5wbGFjYXJWaXNpdGFudGV9YDsKfQoKZnVuY3Rpb24gaW50ZXJwb2xhdGUodGVtcGxhdGU6IHN0cmluZywgY3R4OiBHYW1lQ29udGV4dCk6IHN0cmluZyB7CiAgY29uc3QgcGxhY2FyID0gYnVpbGRQbGFjYXIoY3R4KTsKICByZXR1cm4gdGVtcGxhdGUKICAgIC5yZXBsYWNlKC97dGVtcH0vZywgICAgICBTdHJpbmcoY3R4LnRlbXBlcmF0dXJhID8/ICc/PycpKQogICAgLnJlcGxhY2UoL3twbGFjYXJ9L2csICAgIHBsYWNhcikKICAgIC5yZXBsYWNlKC97bWFuZGFudGV9L2csICBjdHgubWFuZGFudGUgID8/ICdOb3Zvcml6b250aW5vJykKICAgIC5yZXBsYWNlKC97dmlzaXRhbnRlfS9nLCBjdHgudmlzaXRhbnRlID8/ICdBZHZlcnPDoXJpbycpCiAgICAucmVwbGFjZSgve2pvZ2Fkb3J9L2csICAgY3R4LmpvZ2Fkb3IgICA/PyAnTyBjYW1pc2EgMTAnKQogICAgLnJlcGxhY2UoL3ttaW51dG99L2csICAgIFN0cmluZyhjdHgubWludXRvID8/ICc/PycpKTsKfQoKZnVuY3Rpb24gYnVpbGRUaXR1bG8oY3R4OiBHYW1lQ29udGV4dCk6IHN0cmluZyB7CiAgY29uc3QgcHJlZml4ZXM6IFJlY29yZDxzdHJpbmcsIHN0cmluZz4gPSB7CiAgICBnb2w6ICAgICAgICfimr0gR09MIERPIFRJR1JFJywKICAgIHZpdMOzcmlhOiAgICfwn4+GIFZJVMOTUklBJywKICAgIHDDqm5hbHRpOiAgICfwn46vIFDDik5BTFRJJywKICAgIGludGVydmFsbzogJ/CflJQgSU5URVJWQUxPJywKICAgIGNsaW1hOiAgICAgJ+KdhO+4jyBQT0xPIFNVTCBQQVVMSVNUQScsCiAgICBkZWZhdWx0OiAgICfwn5CvIE5PVk9SSVpPTlRJTk8nLAogIH07CiAgY29uc3QgYmFzZSA9IHByZWZpeGVzW2N0eC5ldmVudG9dID8/IHByZWZpeGVzLmRlZmF1bHQ7CiAgY29uc3QgcGxhY2FyID0gYnVpbGRQbGFjYXIoY3R4KTsKICByZXR1cm4gcGxhY2FyID8gYCR7YmFzZX0g4oCUICR7cGxhY2FyfWAgOiBiYXNlOwp9CgovLyDilIDilIDilIAgZ2VuZXJhdGVIeXBlU2NyaXB0IOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKLyoqCiAqIEdlcmEgdW0gSHlwZVNjcmlwdCBjb21wbGV0byBhIHBhcnRpciBkZSB1bSBldmVudG8gZGUgam9nby4KICogU2UgY3R4LnRlbXBlcmF0dXJhIDwgMTYsIGF0aXZhIGF1dG9tYXRpY2FtZW50ZSBvIG1vZG8gIlBvbG8gU3VsIFBhdWxpc3RhIi4KICovCmV4cG9ydCBmdW5jdGlvbiBnZW5lcmF0ZUh5cGVTY3JpcHQoZXZlbnRvOiBzdHJpbmcsIGN0eDogUGFydGlhbDxHYW1lQ29udGV4dD4gPSB7fSk6IEh5cGVTY3JpcHQgewogIGNvbnN0IGNvbnRleHQ6IEdhbWVDb250ZXh0ID0geyBldmVudG8sIC4uLmN0eCB9OwoKICBjb25zdCBpc1BvbG9TdWwgPSAoY29udGV4dC50ZW1wZXJhdHVyYSA/PyA5OSkgPCAxNjsKCiAgLy8gU2VsZWNpb25hIHRlbXBsYXRlOiBQb2xvIFN1bCB0ZW0gcHJpb3JpZGFkZSBzZSB0ZW1wZXJhdHVyYSA8IDE2IGUgZXZlbnRvIGZvciBjbGltYS9kZWZhdWx0CiAgbGV0IHRlbXBsYXRlOiBzdHJpbmc7CiAgaWYgKGlzUG9sb1N1bCAmJiAoZXZlbnRvID09PSAnY2xpbWEnIHx8IGV2ZW50byA9PT0gJ2RlZmF1bHQnIHx8ICFURU1QTEFURVNbZXZlbnRvXSkpIHsKICAgIHRlbXBsYXRlID0gcGljayhQT0xPX1NVTF9URU1QTEFURVMpOwogIH0gZWxzZSB7CiAgICBjb25zdCBwb29sID0gVEVNUExBVEVTW2V2ZW50b10gPz8gVEVNUExBVEVTLmRlZmF1bHQ7CiAgICB0ZW1wbGF0ZSA9IHBpY2socG9vbCk7CiAgfQoKICBjb25zdCBjb3B5ID0gaW50ZXJwb2xhdGUodGVtcGxhdGUsIGNvbnRleHQpOwogIGNvbnN0IGhhc2h0YWdzID0gWwogICAgLi4uSEFTSFRBR1NfQkFTRSwKICAgIC4uLihIQVNIVEFHU19FVkVOVE9bZXZlbnRvXSA/PyBbXSksCiAgICAuLi4oaXNQb2xvU3VsID8gWycjUG9sb1N1bFBhdWxpc3RhJywgJyNOZXZlUGF1bGlzdGFuYSddIDogW10pLAogIF07CgogIHJldHVybiB7CiAgICB0aXR1bG86ICAgIGJ1aWxkVGl0dWxvKGNvbnRleHQpLAogICAgY29weTogICAgICBgJHtjb3B5fVxuXG4ke0FTU0lOQVRVUkF9YCwKICAgIGhhc2h0YWdzOiAgWy4uLm5ldyBTZXQoaGFzaHRhZ3MpXSwKICAgIGFzc2luYXR1cmE6IEFTU0lOQVRVUkEsCiAgICB0aW1lc3RhbXA6IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKSwKICB9Owp9CgovLyDilIDilIDilIAgZ2VuZXJhdGVCYXRjaEh5cGUg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACi8vIEdlcmEgbcO6bHRpcGxvcyBjb3BpZXMgdmFyaWFkb3MgcGFyYSBvIG1lc21vIGV2ZW50byAow7p0aWwgcGFyYSBBL0IgZW0gcmVkZXMgc29jaWFpcykuCgpleHBvcnQgZnVuY3Rpb24gZ2VuZXJhdGVCYXRjaEh5cGUoZXZlbnRvOiBzdHJpbmcsIGN0eDogUGFydGlhbDxHYW1lQ29udGV4dD4gPSB7fSwgcXVhbnRpZGFkZSA9IDMpOiBIeXBlU2NyaXB0W10gewogIHJldHVybiBBcnJheS5mcm9tKHsgbGVuZ3RoOiBxdWFudGlkYWRlIH0sICgpID0+IGdlbmVyYXRlSHlwZVNjcmlwdChldmVudG8sIGN0eCkpOwp9CgovLyDilIDilIDilIAgTWFya2V0QWdlbnQg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACi8vIEludGVyZmFjZSB1bmlmaWNhZGEgZG8gYWdlbnRlIOKAlCBmdXR1cmFtZW50ZSBjb25lY3RhIGFvIFN1cGFiYXNlIHJlYWx0aW1lLgoKZXhwb3J0IGNvbnN0IE1hcmtldEFnZW50ID0gewogIG5hbWU6ICdUaGUgSHlwZScsCiAgdmVyc2lvbjogJzEuMC4wJywKCiAgLyoqIFByb2Nlc3NhIHVtIGV2ZW50byBkZSBqb2dvIGUgcmV0b3JuYSBvIEh5cGVTY3JpcHQgcHJvbnRvIHBhcmEgcHVibGljYcOnw6NvLiAqLwogIHByb2Nlc3NhcihldmVudG86IHN0cmluZywgY3R4OiBQYXJ0aWFsPEdhbWVDb250ZXh0PiA9IHt9KTogSHlwZVNjcmlwdCB7CiAgICByZXR1cm4gZ2VuZXJhdGVIeXBlU2NyaXB0KGV2ZW50bywgY3R4KTsKICB9LAoKICAvKiogR2VyYSB2YXJpYcOnw7VlcyBwYXJhIHRlc3RlIEEvQiBlbSBtw7psdGlwbG9zIGNhbmFpcy4gKi8KICBiYXRjaChldmVudG86IHN0cmluZywgY3R4OiBQYXJ0aWFsPEdhbWVDb250ZXh0PiA9IHt9LCBuID0gMyk6IEh5cGVTY3JpcHRbXSB7CiAgICByZXR1cm4gZ2VuZXJhdGVCYXRjaEh5cGUoZXZlbnRvLCBjdHgsIG4pOwogIH0sCgogIC8qKiBMb2cgcGFkcm9uaXphZG8gbm8gZXN0aWxvIE1ha2FyaW9zLiAqLwogIGxvZyhtc2c6IHN0cmluZyk6IHZvaWQgewogICAgY29uc29sZS5sb2coYFtUaGVIeXBlIEAgJHtuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCl9XSAke21zZ30gJHtBU1NJTkFUVVJBfWApOwogIH0sCn0gYXMgY29uc3Q7Cg==
+// src/lib/agents/MarketAgent.ts
+// Léo — Agente de Marketing & Social do ecossistema TigreFC / O Novorizontino.
+// Transforma eventos de jogo em copies de alta energia para a VoxSports.
+// Regra de ouro: toda saída termina com a assinatura Makarios.
+
+export const ASSINATURA = 'É Nível Makarios! 🐯❄️';
+
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+
+export interface GameContext {
+  evento: string;           // ex: 'gol', 'vitória', 'pênalti', 'intervalo', 'clima'
+  temperatura?: number;     // °C — aciona modo "Polo Sul Paulista" se < 16
+  placarMandante?: number;
+  placarVisitante?: number;
+  mandante?: string;        // ex: 'Novorizontino'
+  visitante?: string;
+  minuto?: number;          // minuto do jogo
+  jogador?: string;         // nome do atleta envolvido
+}
+
+export interface HypeScript {
+  titulo: string;
+  copy: string;
+  hashtags: string[];
+  assinatura: typeof ASSINATURA;
+  timestamp: string;
+}
+
+// ─── Templates por evento ─────────────────────────────────────────────────────
+
+const POLO_SUL_TEMPLATES = [
+  'O Jorjão tá com {temp}°C e o Tigre não abaixa a cabeça pra ninguém. Nem pro frio.',
+  '{temp}°C no Polo Sul Paulista. Mas a torcida tá em chamas. É Novorizontino, é assim.',
+  'Neve no Jorjão? Que venha. O Tigre joga em qualquer temperatura. {temp}°C de pura raça.',
+];
+
+const TEMPLATES: Record<string, string[]> = {
+  gol: [
+    'AAAHHHH! {jogador} BALANÇOU AS REDES! {placar} — O Tigre tá vivo, tá bravo e tá marcando!',
+    'GOL DO TIGRE! {jogador} não perdoou. {placar}. Jorjão em êxtase!',
+    'É {jogador}! É o Novorizontino! É {placar} e a festa começa agora no interior paulista!',
+  ],
+  vitória: [
+    'TRÊS PONTOS! {mandante} {placar} {visitante}. Missão cumprida, Tigre. Nível Makarios de performance.',
+    'VITÓRIA! {placar}. O Tigre rugiu e o Jorjão respondeu. Mais três pontinhos na conta.',
+    '{mandante} dominou do começo ao fim. {placar}. Vai pra cima, Novorizontino!',
+  ],
+  pênalti: [
+    'PÊNALTI! O árbitro marcou e agora é nervos à flor da pele no Jorjão. Quem bate?',
+    'É penalty! {minuto}° minuto. O coração do torcedor do Tigre para por um segundo...',
+    'Pênalti assinalado. Concentração total. O Novorizontino vai pra cima.',
+  ],
+  intervalo: [
+    'FIM DO PRIMEIRO TEMPO. {placar}. Técnico já tá com a lousa na mão. Segundo tempo é outra história.',
+    'Intervalo com {placar}. O Tigre ainda não mostrou tudo. Aguarda.',
+    '45 minutos se foram. {placar}. O que vem por aí no segundo tempo?',
+  ],
+  clima: [
+    '{temp}°C no Jorjão. Mas isso não para o Tigre. Nunca parou.',
+    'Temperatura: {temp}°C. Determinação: infinita. É Novorizontino.',
+    'Clima de {temp}°C no estádio. A torcida aquece o ambiente do jeito que só ela sabe.',
+  ],
+  default: [
+    'O Novorizontino está em campo e o coração do interior paulista está na arquibancada.',
+    'É dia de Tigre. É dia de entrar com tudo. Jorjão, pode esperar.',
+    'Novorizontino: o clube que não desiste, não recua e nunca decepciona o torcedor.',
+  ],
+};
+
+const HASHTAGS_BASE = ['#Novorizontino', '#TigreFC', '#VoxSports', '#PoloSulPaulista'];
+
+const HASHTAGS_EVENTO: Record<string, string[]> = {
+  gol:       ['#Gol', '#Tigre', '#SerieB'],
+  vitória:   ['#Vitória', '#TrêsPontos', '#Novorizontino'],
+  pênalti:   ['#Penalty', '#Emoção', '#Jorjão'],
+  intervalo: ['#Intervalo', '#Análise'],
+  clima:     ['#NevePaulistana', '#PoloSulPaulista', '#FrioNãoPara'],
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function buildPlacar(ctx: GameContext): string {
+  if (ctx.placarMandante === undefined || ctx.placarVisitante === undefined) return '';
+  return `${ctx.placarMandante}x${ctx.placarVisitante}`;
+}
+
+function interpolate(template: string, ctx: GameContext): string {
+  const placar = buildPlacar(ctx);
+  return template
+    .replace(/{temp}/g,      String(ctx.temperatura ?? '??'))
+    .replace(/{placar}/g,    placar)
+    .replace(/{mandante}/g,  ctx.mandante  ?? 'Novorizontino')
+    .replace(/{visitante}/g, ctx.visitante ?? 'Adversário')
+    .replace(/{jogador}/g,   ctx.jogador   ?? 'O camisa 10')
+    .replace(/{minuto}/g,    String(ctx.minuto ?? '??'));
+}
+
+function buildTitulo(ctx: GameContext): string {
+  const prefixes: Record<string, string> = {
+    gol:       '⚽ GOL DO TIGRE',
+    vitória:   '🏆 VITÓRIA',
+    pênalti:   '🎯 PÊNALTI',
+    intervalo: '🔔 INTERVALO',
+    clima:     '❄️ POLO SUL PAULISTA',
+    default:   '🐯 NOVORIZONTINO',
+  };
+  const base = prefixes[ctx.evento] ?? prefixes.default;
+  const placar = buildPlacar(ctx);
+  return placar ? `${base} — ${placar}` : base;
+}
+
+// ─── generateHypeScript ───────────────────────────────────────────────────────
+
+/**
+ * Gera um HypeScript completo a partir de um evento de jogo.
+ * Se ctx.temperatura < 16, ativa automaticamente o modo "Polo Sul Paulista".
+ */
+export function generateHypeScript(evento: string, ctx: Partial<GameContext> = {}): HypeScript {
+  const context: GameContext = { evento, ...ctx };
+
+  const isPoloSul = (context.temperatura ?? 99) < 16;
+
+  // Seleciona template: Polo Sul tem prioridade se temperatura < 16 e evento for clima/default
+  let template: string;
+  if (isPoloSul && (evento === 'clima' || evento === 'default' || !TEMPLATES[evento])) {
+    template = pick(POLO_SUL_TEMPLATES);
+  } else {
+    const pool = TEMPLATES[evento] ?? TEMPLATES.default;
+    template = pick(pool);
+  }
+
+  const copy = interpolate(template, context);
+  const hashtags = [
+    ...HASHTAGS_BASE,
+    ...(HASHTAGS_EVENTO[evento] ?? []),
+    ...(isPoloSul ? ['#PoloSulPaulista', '#NevePaulistana'] : []),
+  ];
+
+  return {
+    titulo:    buildTitulo(context),
+    copy:      `${copy}\n\n${ASSINATURA}`,
+    hashtags:  [...new Set(hashtags)],
+    assinatura: ASSINATURA,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+// ─── generateBatchHype ────────────────────────────────────────────────────────
+// Gera múltiplos copies variados para o mesmo evento (útil para A/B em redes sociais).
+
+export function generateBatchHype(evento: string, ctx: Partial<GameContext> = {}, quantidade = 3): HypeScript[] {
+  return Array.from({ length: quantidade }, () => generateHypeScript(evento, ctx));
+}
+
+// ─── MarketAgent ──────────────────────────────────────────────────────────────
+// Interface unificada do agente — futuramente conecta ao Supabase realtime.
+
+export const MarketAgent = {
+  name: 'Léo',
+  role: 'Marketing & Social',
+  version: '1.0.0',
+
+  /** Processa um evento de jogo e retorna o HypeScript pronto para publicação. */
+  processar(evento: string, ctx: Partial<GameContext> = {}): HypeScript {
+    return generateHypeScript(evento, ctx);
+  },
+
+  /** Gera variações para teste A/B em múltiplos canais. */
+  batch(evento: string, ctx: Partial<GameContext> = {}, n = 3): HypeScript[] {
+    return generateBatchHype(evento, ctx, n);
+  },
+
+  /** Log padronizado no estilo Makarios. */
+  log(msg: string): void {
+    console.log(`[TheHype @ ${new Date().toISOString()}] ${msg} ${ASSINATURA}`);
+  },
+} as const;

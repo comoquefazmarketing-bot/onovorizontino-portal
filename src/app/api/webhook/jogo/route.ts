@@ -1,1 +1,252 @@
-Ly8gc3JjL2FwcC9hcGkvd2ViaG9vay9qb2dvL3JvdXRlLnRzCi8vIEdhdGV3YXkgZGUgZXZlbnRvcyBkZSBqb2dvIOKAlCBpbnRlZ3JhIEzDqW8gKE1hcmtldEFnZW50KSBhdXRvbWF0aWNhbWVudGUuCi8vCi8vIEZvbnRlcyBzdXBvcnRhZGFzOgovLyAgIDEuIFN1cGFiYXNlIERhdGFiYXNlIFdlYmhvb2sgKElOU0VSVC9VUERBVEUgbmEgdGFiZWxhIGpvZ29zKQovLyAgIDIuIFBPU1QgbWFudWFsOiB7IHRpcG8sIGpvZ29faWQsIGpvZ2Fkb3I/LCBwbGFjYXJfbWFuZGFudGU/LCBwbGFjYXJfdmlzaXRhbnRlPywKLy8gICAgICAgICAgICAgICAgICAgICBtYW5kYW50ZT8sIHZpc2l0YW50ZT8sIG1pbnV0bz8sIHRlbXBlcmF0dXJhPyB9Ci8vCi8vIEZsdXhvOiBkZXRlY3RhIG8gZXZlbnRvIOKGkiBMw6lvIGdlcmEgbyBjb3B5IOKGkiBzYWx2YSBlbSB2b3hzcG9ydHNfZmlsYSDihpIgcmV0b3JuYQoKaW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gJ25leHQvc2VydmVyJzsKaW1wb3J0IHsgZ2VuZXJhdGVIeXBlU2NyaXB0IH0gICAgICAgIGZyb20gJ0AvbGliL2FnZW50cy9NYXJrZXRBZ2VudCc7CmltcG9ydCB0eXBlIHsgR2FtZUNvbnRleHQgfSAgICAgICAgICBmcm9tICdAL2xpYi9hZ2VudHMvTWFya2V0QWdlbnQnOwppbXBvcnQgeyBzdXBhYmFzZSB9ICAgICAgICAgICAgICAgICAgZnJvbSAnQC9saWIvc3VwYWJhc2UnOwoKZXhwb3J0IGNvbnN0IGR5bmFtaWMgICAgPSAnZm9yY2UtZHluYW1pYyc7CmV4cG9ydCBjb25zdCByZXZhbGlkYXRlID0gMDsKCi8vIOKUgOKUgOKUgCBBdXRoIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZnVuY3Rpb24gYXV0b3JpemFkbyhyZXE6IE5leHRSZXF1ZXN0KTogYm9vbGVhbiB7CiAgY29uc3Qgc2VjcmV0ICA9IHByb2Nlc3MuZW52LldFQkhPT0tfU0VDUkVUID8/IHByb2Nlc3MuZW52LkFHRU5UU19TRUNSRVQ7CiAgaWYgKCFzZWNyZXQpIHJldHVybiB0cnVlOyAvLyBzZW0gc2VjcmV0IGNvbmZpZ3VyYWRvIOKGkiBhYmVydG8gKG7Do28gcmVjb21lbmRhZG8gZW0gcHJvZCkKICBjb25zdCBiZWFyZXIgPSByZXEuaGVhZGVycy5nZXQoJ2F1dGhvcml6YXRpb24nKT8ucmVwbGFjZSgnQmVhcmVyICcsICcnKTsKICBjb25zdCB4U2VjcmV0ID0gcmVxLmhlYWRlcnMuZ2V0KCd4LXdlYmhvb2stc2VjcmV0Jyk7CiAgcmV0dXJuIGJlYXJlciA9PT0gc2VjcmV0IHx8IHhTZWNyZXQgPT09IHNlY3JldDsKfQoKLy8g4pSA4pSA4pSAIFRpcG9zIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKaW50ZXJmYWNlIEpvZ29Sb3cgewogIGlkOiBudW1iZXI7CiAgbWFuZGFudGVfc2x1ZzogICBzdHJpbmc7CiAgdmlzaXRhbnRlX3NsdWc6ICBzdHJpbmc7CiAgcGxhY2FyX21hbmRhbnRlOiBudW1iZXIgfCBudWxsOwogIHBsYWNhcl92aXNpdGFudGU6IG51bWJlciB8IG51bGw7CiAgZmluYWxpemFkbzogYm9vbGVhbjsKICBhdGl2bzogYm9vbGVhbjsKICBjb21wZXRpY2FvOiBzdHJpbmc7CiAgcm9kYWRhOiBzdHJpbmc7Cn0KCmludGVyZmFjZSBTdXBhYmFzZVdlYmhvb2tQYXlsb2FkIHsKICB0eXBlOiAgICAgICAnSU5TRVJUJyB8ICdVUERBVEUnIHwgJ0RFTEVURSc7CiAgdGFibGU6ICAgICAgc3RyaW5nOwogIHJlY29yZDogICAgIEpvZ29Sb3c7CiAgb2xkX3JlY29yZDogSm9nb1JvdyB8IG51bGw7Cn0KCmludGVyZmFjZSBNYW51YWxQYXlsb2FkIHsKICB0aXBvOiAgICAgICAgICAgICBzdHJpbmc7ICAgICAgICAgICAgLy8gJ2dvbCcgfCAndml0w7NyaWEnIHwgJ3DDqm5hbHRpJyB8ICdpbnRlcnZhbG8nIHwgJ2NsaW1hJyB8ICdwcmUtam9nbycKICBqb2dvX2lkPzogICAgICAgICBudW1iZXI7CiAgam9nYWRvcj86ICAgICAgICAgc3RyaW5nOwogIHBsYWNhcl9tYW5kYW50ZT86IG51bWJlcjsKICBwbGFjYXJfdmlzaXRhbnRlPzogbnVtYmVyOwogIG1hbmRhbnRlPzogICAgICAgIHN0cmluZzsKICB2aXNpdGFudGU/OiAgICAgICBzdHJpbmc7CiAgbWludXRvPzogICAgICAgICAgbnVtYmVyOwogIHRlbXBlcmF0dXJhPzogICAgIG51bWJlcjsKfQoKLy8g4pSA4pSA4pSAIERldGVjw6fDo28gZGUgZXZlbnRvIGEgcGFydGlyIGRlIHVtIFVQREFURSBkbyBTdXBhYmFzZSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmZ1bmN0aW9uIGRldGVjdGFyRXZlbnRvKAogIHJlY29yZDogSm9nb1JvdywKICBvbGRSZWNvcmQ6IEpvZ29Sb3cgfCBudWxsLAopOiB7IHRpcG86IHN0cmluZzsgY3R4OiBQYXJ0aWFsPEdhbWVDb250ZXh0PiB9IHwgbnVsbCB7CgogIGNvbnN0IGN0eDogUGFydGlhbDxHYW1lQ29udGV4dD4gPSB7CiAgICBtYW5kYW50ZTogICAgICAgIHNsdWdQYXJhTm9tZShyZWNvcmQubWFuZGFudGVfc2x1ZyksCiAgICB2aXNpdGFudGU6ICAgICAgIHNsdWdQYXJhTm9tZShyZWNvcmQudmlzaXRhbnRlX3NsdWcpLAogICAgcGxhY2FyTWFuZGFudGU6ICByZWNvcmQucGxhY2FyX21hbmRhbnRlICA/PyB1bmRlZmluZWQsCiAgICBwbGFjYXJWaXNpdGFudGU6IHJlY29yZC5wbGFjYXJfdmlzaXRhbnRlID8/IHVuZGVmaW5lZCwKICB9OwoKICAvLyBKb2dvIGZpbmFsaXphZG8g4oaSIHZpdMOzcmlhIC8gZW1wYXRlIC8gZGVycm90YQogIGlmIChyZWNvcmQuZmluYWxpemFkbyAmJiAhb2xkUmVjb3JkPy5maW5hbGl6YWRvKSB7CiAgICBjb25zdCBwbSA9IHJlY29yZC5wbGFjYXJfbWFuZGFudGUgPz8gMDsKICAgIGNvbnN0IHB2ID0gcmVjb3JkLnBsYWNhcl92aXNpdGFudGUgPz8gMDsKICAgIHJldHVybiB7IHRpcG86IHBtICE9PSBwdiA/ICd2aXTDs3JpYScgOiAnZW1wYXRlJywgY3R4IH07CiAgfQoKICAvLyBQbGFjYXIgbXVkb3Ug4oaSIGdvbAogIGlmICgKICAgIG9sZFJlY29yZCAmJgogICAgKHJlY29yZC5wbGFjYXJfbWFuZGFudGUgICE9PSBvbGRSZWNvcmQucGxhY2FyX21hbmRhbnRlIHx8CiAgICAgcmVjb3JkLnBsYWNhcl92aXNpdGFudGUgIT09IG9sZFJlY29yZC5wbGFjYXJfdmlzaXRhbnRlKQogICkgewogICAgcmV0dXJuIHsgdGlwbzogJ2dvbCcsIGN0eCB9OwogIH0KCiAgLy8gSm9nbyBhdGl2YWRvIChjb21lw6dvdSkKICBpZiAocmVjb3JkLmF0aXZvICYmICFvbGRSZWNvcmQ/LmF0aXZvKSB7CiAgICByZXR1cm4geyB0aXBvOiAnaW5pY2lvJywgY3R4IH07CiAgfQoKICByZXR1cm4gbnVsbDsKfQoKLy8g4pSA4pSA4pSAIFNsdWcg4oaSIG5vbWUgbGVnw612ZWwgKGZhbGxiYWNrIHLDoXBpZG8gc2VtIGJhbmNvKSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmZ1bmN0aW9uIHNsdWdQYXJhTm9tZShzbHVnOiBzdHJpbmcpOiBzdHJpbmcgewogIGNvbnN0IG1hcGE6IFJlY29yZDxzdHJpbmcsIHN0cmluZz4gPSB7CiAgICAnbm92b3Jpem9udGlubyc6ICdOb3Zvcml6b250aW5vJywgJ2dyZW1pby1ub3Zvcml6b250aW5vJzogJ05vdm9yaXpvbnRpbm8nLAogICAgJ2F2YWknOiAnQXZhw60nLCAnY3JpY2l1bWEnOiAnQ3JpY2nDum1hJywgJ2JvdGFmb2dvLXNwJzogJ0JvdGFmb2dvLVNQJywKICAgICdhbWVyaWNhLW1nJzogJ0Ftw6lyaWNhLU1HJywgJ2F0bGV0aWNvLW1nJzogJ0F0bMOpdGljby1NRycsICdnb2lhcyc6ICdHb2nDoXMnLAogICAgJ3Nwb3J0JzogJ1Nwb3J0JywgJ2N1aWFiYSc6ICdDdWlhYsOhJywgJ2NyYic6ICdDUkInLCAnYXRobGV0aWMnOiAnQXRobGV0aWMnLAogICAgJ2NlYXJhJzogJ0NlYXLDoScsICdqdXZlbnR1ZGUnOiAnSnV2ZW50dWRlJywgJ3BvbnRlLXByZXRhJzogJ1BvbnRlIFByZXRhJywKICAgICd2aWxhLW5vdmEnOiAnVmlsYSBOb3ZhJywgJ29wZXJhcmlvLXByJzogJ09wZXLDoXJpbycsICdsb25kcmluYSc6ICdMb25kcmluYScsCiAgICAnc2FvLWJlcm5hcmRvJzogJ1PDo28gQmVybmFyZG8nLCAnY29yaXRpYmEnOiAnQ29yaXRpYmEnLCAnc2FudG9zJzogJ1NhbnRvcycsCiAgICAncGF5c2FuZHUnOiAnUGF5c2FuZHUnLCAncmVtbyc6ICdSZW1vJywgJ2F0aGxldGljby1wcic6ICdBdGhsZXRpY28nLAogIH07CiAgcmV0dXJuIG1hcGFbc2x1Z10gPz8gc2x1Zy5yZXBsYWNlKC8tL2csICcgJykucmVwbGFjZSgvXGJcdy9nLCBjID0+IGMudG9VcHBlckNhc2UoKSk7Cn0KCi8vIOKUgOKUgOKUgCBQZXJzaXN0ZSBjb3B5IG5hIGZpbGEgZG8gU3VwYWJhc2Ug4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgphc3luYyBmdW5jdGlvbiBzYWx2YXJOYUZpbGEoam9nb0lkOiBudW1iZXIgfCB1bmRlZmluZWQsIHRpcG86IHN0cmluZywgY29weTogc3RyaW5nLCB0aXR1bG86IHN0cmluZykgewogIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlCiAgICAuZnJvbSgndm94c3BvcnRzX2ZpbGEnKQogICAgLmluc2VydCh7IGpvZ29faWQ6IGpvZ29JZCA/PyBudWxsLCBldmVudG86IHRpcG8sIHRpdHVsbywgY29weSwgY3JpYWRvX2VtOiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCkgfSk7CgogIGlmIChlcnJvcikgewogICAgLy8gVGFiZWxhIHBvZGUgYWluZGEgbsOjbyBleGlzdGlyIOKAlCBmYWxoYSBzaWxlbmNpb3NhLCBjb3B5IHJldG9ybmEgbmEgcmVzcG9uc2UKICAgIGNvbnNvbGUud2FybignW3dlYmhvb2svam9nb10gdm94c3BvcnRzX2ZpbGEgbsOjbyBlbmNvbnRyYWRhOicsIGVycm9yLm1lc3NhZ2UpOwogIH0KfQoKLy8g4pSA4pSA4pSAIEhhbmRsZXIgcHJpbmNpcGFsIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIFBPU1QocmVxOiBOZXh0UmVxdWVzdCkgewogIGlmICghYXV0b3JpemFkbyhyZXEpKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvOiAnTsOjbyBhdXRvcml6YWRvLicgfSwgeyBzdGF0dXM6IDQwMSB9KTsKICB9CgogIHRyeSB7CiAgICBjb25zdCBib2R5ID0gYXdhaXQgcmVxLmpzb24oKTsKCiAgICAvLyDilIDilIAgRGV0ZWN0YSBvcmlnZW06IFN1cGFiYXNlIHdlYmhvb2sgb3UgY2hhbWFkYSBtYW51YWwg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACiAgICBjb25zdCBpc1N1cGFiYXNlID0gJ3R5cGUnIGluIGJvZHkgJiYgJ3JlY29yZCcgaW4gYm9keTsKCiAgICBsZXQgdGlwbzogc3RyaW5nOwogICAgbGV0IGN0eDogUGFydGlhbDxHYW1lQ29udGV4dD47CiAgICBsZXQgam9nb0lkOiBudW1iZXIgfCB1bmRlZmluZWQ7CgogICAgaWYgKGlzU3VwYWJhc2UpIHsKICAgICAgY29uc3QgcGF5bG9hZCA9IGJvZHkgYXMgU3VwYWJhc2VXZWJob29rUGF5bG9hZDsKCiAgICAgIGlmIChwYXlsb2FkLnRhYmxlICE9PSAnam9nb3MnKSB7CiAgICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgaWdub3JhZG86IHRydWUsIG1vdGl2bzogYHRhYmVsYSAnJHtwYXlsb2FkLnRhYmxlfScgbsOjbyBtb25pdG9yYWRhYCB9KTsKICAgICAgfQoKICAgICAgY29uc3QgZXZlbnRvID0gZGV0ZWN0YXJFdmVudG8ocGF5bG9hZC5yZWNvcmQsIHBheWxvYWQub2xkX3JlY29yZCk7CiAgICAgIGlmICghZXZlbnRvKSB7CiAgICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgaWdub3JhZG86IHRydWUsIG1vdGl2bzogJ25lbmh1bSBldmVudG8gcmVsZXZhbnRlIGRldGVjdGFkbycgfSk7CiAgICAgIH0KCiAgICAgIHRpcG8gICA9IGV2ZW50by50aXBvOwogICAgICBjdHggICAgPSBldmVudG8uY3R4OwogICAgICBqb2dvSWQgPSBwYXlsb2FkLnJlY29yZC5pZDsKICAgIH0gZWxzZSB7CiAgICAgIGNvbnN0IG1hbnVhbCA9IGJvZHkgYXMgTWFudWFsUGF5bG9hZDsKICAgICAgdGlwbyAgID0gbWFudWFsLnRpcG8gPz8gJ2RlZmF1bHQnOwogICAgICBqb2dvSWQgPSBtYW51YWwuam9nb19pZDsKICAgICAgY3R4ID0gewogICAgICAgIGpvZ2Fkb3I6ICAgICAgICAgbWFudWFsLmpvZ2Fkb3IsCiAgICAgICAgcGxhY2FyTWFuZGFudGU6ICBtYW51YWwucGxhY2FyX21hbmRhbnRlLAogICAgICAgIHBsYWNhclZpc2l0YW50ZTogbWFudWFsLnBsYWNhcl92aXNpdGFudGUsCiAgICAgICAgbWFuZGFudGU6ICAgICAgICBtYW51YWwubWFuZGFudGUsCiAgICAgICAgdmlzaXRhbnRlOiAgICAgICBtYW51YWwudmlzaXRhbnRlLAogICAgICAgIG1pbnV0bzogICAgICAgICAgbWFudWFsLm1pbnV0bywKICAgICAgICB0ZW1wZXJhdHVyYTogICAgIG1hbnVhbC50ZW1wZXJhdHVyYSwKICAgICAgfTsKICAgIH0KCiAgICAvLyDilIDilIAgTMOpbyBlbnRyYSBlbSBjYW1wbyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKICAgIGNvbnN0IHNjcmlwdCA9IGdlbmVyYXRlSHlwZVNjcmlwdCh0aXBvLCBjdHgpOwoKICAgIC8vIOKUgOKUgCBQZXJzaXN0ZSBuYSBmaWxhIChmYWxoYSBzaWxlbmNpb3NhIHNlIHRhYmVsYSBuw6NvIGV4aXN0aXIpIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAogICAgYXdhaXQgc2FsdmFyTmFGaWxhKGpvZ29JZCwgdGlwbywgc2NyaXB0LmNvcHksIHNjcmlwdC50aXR1bG8pOwoKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7CiAgICAgIGFnZW50ZTogICdMw6lvJywKICAgICAgZXZlbnRvOiAgdGlwbywKICAgICAgam9nb19pZDogam9nb0lkID8/IG51bGwsCiAgICAgIHNjcmlwdCwKICAgIH0pOwoKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoJ1t3ZWJob29rL2pvZ29dJywgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm86ICdFcnJvIGludGVybm8uJyB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQoKLy8gR0VUIGRlIGRpYWduw7NzdGljbyDigJQgdmVyaWZpY2Egc2UgYSByb3RhIGVzdMOhIHZpdmEKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIEdFVCgpIHsKICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oewogICAgYWdlbnRlOiAnTMOpbycsCiAgICByb3RhOiAgICcvYXBpL3dlYmhvb2svam9nbycsCiAgICBzdGF0dXM6ICdvbmxpbmUnLAogICAgZXZlbnRvc19zdXBvcnRhZG9zOiBbJ2dvbCcsICd2aXTDs3JpYScsICdlbXBhdGUnLCAncMOqbmFsdGknLCAnaW50ZXJ2YWxvJywgJ2luaWNpbycsICdjbGltYScsICdwcmUtam9nbyddLAogICAgdGltZXN0YW1wOiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCksCiAgfSk7Cn0K
+// src/app/api/webhook/jogo/route.ts
+// Gateway de eventos de jogo — integra Léo (MarketAgent) automaticamente.
+//
+// Fontes suportadas:
+//   1. Supabase Database Webhook (INSERT/UPDATE na tabela jogos)
+//   2. POST manual: { tipo, jogo_id, jogador?, placar_mandante?, placar_visitante?,
+//                     mandante?, visitante?, minuto?, temperatura? }
+//
+// Fluxo: detecta o evento → Léo gera o copy → salva em voxsports_fila → retorna
+
+import { NextRequest, NextResponse } from 'next/server';
+import { generateHypeScript }        from '@/lib/agents/MarketAgent';
+import type { GameContext }          from '@/lib/agents/MarketAgent';
+import { supabase }                  from '@/lib/supabase';
+
+export const dynamic    = 'force-dynamic';
+export const revalidate = 0;
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+function autorizado(req: NextRequest): boolean {
+  const secret  = process.env.WEBHOOK_SECRET ?? process.env.AGENTS_SECRET;
+  if (!secret) return true; // sem secret configurado → aberto (não recomendado em prod)
+  const bearer = req.headers.get('authorization')?.replace('Bearer ', '');
+  const xSecret = req.headers.get('x-webhook-secret');
+  return bearer === secret || xSecret === secret;
+}
+
+// ─── Tipos ───────────────────────────────────────────────────────────────────
+
+interface JogoRow {
+  id: number;
+  mandante_slug:   string;
+  visitante_slug:  string;
+  placar_mandante: number | null;
+  placar_visitante: number | null;
+  finalizado: boolean;
+  ativo: boolean;
+  competicao: string;
+  rodada: string;
+}
+
+interface SupabaseWebhookPayload {
+  type:       'INSERT' | 'UPDATE' | 'DELETE';
+  table:      string;
+  record:     JogoRow;
+  old_record: JogoRow | null;
+}
+
+interface ManualPayload {
+  tipo:             string;            // 'gol' | 'vitória' | 'pênalti' | 'intervalo' | 'clima' | 'pre-jogo'
+  jogo_id?:         number;
+  jogador?:         string;
+  placar_mandante?: number;
+  placar_visitante?: number;
+  mandante?:        string;
+  visitante?:       string;
+  minuto?:          number;
+  temperatura?:     number;
+}
+
+// ─── Detecção de evento a partir de um UPDATE do Supabase ────────────────────
+
+function detectarEvento(
+  record: JogoRow,
+  oldRecord: JogoRow | null,
+): { tipo: string; ctx: Partial<GameContext> } | null {
+
+  const ctx: Partial<GameContext> = {
+    mandante:        slugParaNome(record.mandante_slug),
+    visitante:       slugParaNome(record.visitante_slug),
+    placarMandante:  record.placar_mandante  ?? undefined,
+    placarVisitante: record.placar_visitante ?? undefined,
+  };
+
+  // Jogo finalizado → vitória / empate / derrota
+  if (record.finalizado && !oldRecord?.finalizado) {
+    const pm = record.placar_mandante ?? 0;
+    const pv = record.placar_visitante ?? 0;
+    return { tipo: pm !== pv ? 'vitória' : 'empate', ctx };
+  }
+
+  // Placar mudou → gol
+  if (
+    oldRecord &&
+    (record.placar_mandante  !== oldRecord.placar_mandante ||
+     record.placar_visitante !== oldRecord.placar_visitante)
+  ) {
+    return { tipo: 'gol', ctx };
+  }
+
+  // Jogo ativado (começou)
+  if (record.ativo && !oldRecord?.ativo) {
+    return { tipo: 'inicio', ctx };
+  }
+
+  return null;
+}
+
+// ─── Slug → nome legível (fallback rápido sem banco) ─────────────────────────
+
+function slugParaNome(slug: string): string {
+  const mapa: Record<string, string> = {
+    'novorizontino': 'Novorizontino', 'gremio-novorizontino': 'Novorizontino',
+    'avai': 'Avaí', 'criciuma': 'Criciúma', 'botafogo-sp': 'Botafogo-SP',
+    'america-mg': 'América-MG', 'atletico-mg': 'Atlético-MG', 'goias': 'Goiás',
+    'sport': 'Sport', 'cuiaba': 'Cuiabá', 'crb': 'CRB', 'athletic': 'Athletic',
+    'ceara': 'Ceará', 'juventude': 'Juventude', 'ponte-preta': 'Ponte Preta',
+    'vila-nova': 'Vila Nova', 'operario-pr': 'Operário', 'londrina': 'Londrina',
+    'sao-bernardo': 'São Bernardo', 'coritiba': 'Coritiba', 'santos': 'Santos',
+    'paysandu': 'Paysandu', 'remo': 'Remo', 'athletico-pr': 'Athletico',
+  };
+  return mapa[slug] ?? slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ─── Persiste copy na fila do Supabase ───────────────────────────────────────
+
+async function salvarNaFila(jogoId: number | undefined, tipo: string, copy: string, titulo: string) {
+  const { error } = await supabase
+    .from('voxsports_fila')
+    .insert({ jogo_id: jogoId ?? null, evento: tipo, titulo, copy, criado_em: new Date().toISOString() });
+
+  if (error) {
+    // Tabela pode ainda não existir — falha silenciosa, copy retorna na response
+    console.warn('[webhook/jogo] voxsports_fila não encontrada:', error.message);
+  }
+}
+
+// ─── Gabi: publica notícia de resultado quando jogo finaliza ─────────────────
+
+async function acionarGabi(record: JogoRow) {
+  if (!record.finalizado) return;
+  try {
+    const base   = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.onovorizontino.com.br';
+    const secret = process.env.AGENTS_SECRET ?? '';
+    await fetch(`${base}/api/agents/gabi`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':    'application/json',
+        'x-webhook-secret': secret,
+      },
+      body: JSON.stringify({ jogo_id: record.id, status: 'published' }),
+    });
+    console.log(`[webhook/jogo] Gabi acionada para jogo ${record.id}`);
+  } catch (e) {
+    console.warn('[webhook/jogo] Gabi falhou:', e);
+  }
+}
+
+// ─── Ana: verifica se a rodada fechou após finalizado=true ───────────────────
+
+async function notificarAnaSeRodadaFechou(record: JogoRow) {
+  if (!record.finalizado) return;
+  try {
+    const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.onovorizontino.com.br';
+    const res  = await fetch(`${base}/api/agents/ana/rodada`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const status = await res.json();
+    if (status.completa && !status.proxima_existe) {
+      console.log(`[webhook/jogo] Ana: rodada ${status.rodada_atual} completa. Próxima: ${status.proximo_numero} ainda não cadastrada.`);
+    }
+  } catch (e) {
+    console.warn('[webhook/jogo] Ana check failed:', e);
+  }
+}
+
+// ─── Handler principal ────────────────────────────────────────────────────────
+
+export async function POST(req: NextRequest) {
+  if (!autorizado(req)) {
+    return NextResponse.json({ erro: 'Não autorizado.' }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+
+    // ── Detecta origem: Supabase webhook ou chamada manual ──────────────────
+    const isSupabase = 'type' in body && 'record' in body;
+
+    let tipo: string;
+    let ctx: Partial<GameContext>;
+    let jogoId: number | undefined;
+    let recordRow: JogoRow | null = null;
+
+    if (isSupabase) {
+      const payload = body as SupabaseWebhookPayload;
+
+      if (payload.table !== 'jogos') {
+        return NextResponse.json({ ignorado: true, motivo: `tabela '${payload.table}' não monitorada` });
+      }
+
+      const evento = detectarEvento(payload.record, payload.old_record);
+      if (!evento) {
+        // Mesmo sem evento de copy, verifica se Ana precisa agir
+        await notificarAnaSeRodadaFechou(payload.record);
+        return NextResponse.json({ ignorado: true, motivo: 'nenhum evento relevante detectado' });
+      }
+
+      tipo      = evento.tipo;
+      ctx       = evento.ctx;
+      jogoId    = payload.record.id;
+      recordRow = payload.record;
+    } else {
+      const manual = body as ManualPayload;
+      tipo   = manual.tipo ?? 'default';
+      jogoId = manual.jogo_id;
+      ctx = {
+        jogador:         manual.jogador,
+        placarMandante:  manual.placar_mandante,
+        placarVisitante: manual.placar_visitante,
+        mandante:        manual.mandante,
+        visitante:       manual.visitante,
+        minuto:          manual.minuto,
+        temperatura:     manual.temperatura,
+      };
+    }
+
+    // ── Léo entra em campo ──────────────────────────────────────────────────
+    const script = generateHypeScript(tipo, ctx);
+
+    // ── Persiste na fila (falha silenciosa se tabela não existir) ───────────
+    await salvarNaFila(jogoId, tipo, script.copy, script.titulo);
+
+    // ── Gabi publica resultado + Ana verifica rodada (fire-and-forget) ────────
+    if (recordRow) {
+      acionarGabi(recordRow);
+      notificarAnaSeRodadaFechou(recordRow);
+    }
+
+    return NextResponse.json({
+      agente:  'Léo',
+      evento:  tipo,
+      jogo_id: jogoId ?? null,
+      script,
+    });
+
+  } catch (err) {
+    console.error('[webhook/jogo]', err);
+    return NextResponse.json({ erro: 'Erro interno.' }, { status: 500 });
+  }
+}
+
+// GET de diagnóstico — verifica se a rota está viva
+export async function GET() {
+  return NextResponse.json({
+    agente: 'Léo',
+    rota:   '/api/webhook/jogo',
+    status: 'online',
+    eventos_suportados: ['gol', 'vitória', 'empate', 'pênalti', 'intervalo', 'inicio', 'clima', 'pre-jogo'],
+    timestamp: new Date().toISOString(),
+  });
+}

@@ -1,1 +1,65 @@
-Ly8gc3JjL2FwcC9hcGkvYWdlbnRzL2h5cGUvcm91dGUudHMKLy8gTMOpbyDigJQgcm90YSBww7pibGljYSBkZSBnZXJhw6fDo28gZGUgY29weS4gVXNhZGEgcGVsbyBmcm9udCwgVm94U3BvcnRzIGUgd2ViaG9va3MgZGUgam9nby4KLy8gUE9TVCDihpIgYm9keSB7IGV2ZW50bzogc3RyaW5nOyB0ZW1wZXJhdHVyYT86IG51bWJlcjsgcGxhY2FyTWFuZGFudGU/OiBudW1iZXI7IC4uLiB9Ci8vIEdFVCAg4oaSID9ldmVudG89Z29sJnRlbXBlcmF0dXJhPTEzJnBsYWNhck1hbmRhbnRlPTImcGxhY2FyVmlzaXRhbnRlPTAmam9nYWRvcj1DYXJsJUMzJUEzbwoKaW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gJ25leHQvc2VydmVyJzsKaW1wb3J0IHsgZ2VuZXJhdGVIeXBlU2NyaXB0LCBnZW5lcmF0ZUJhdGNoSHlwZSB9IGZyb20gJ0AvbGliL2FnZW50cy9NYXJrZXRBZ2VudCc7CmltcG9ydCB0eXBlIHsgR2FtZUNvbnRleHQgfSBmcm9tICdAL2xpYi9hZ2VudHMvTWFya2V0QWdlbnQnOwoKZXhwb3J0IGNvbnN0IGR5bmFtaWMgICAgPSAnZm9yY2UtZHluYW1pYyc7CmV4cG9ydCBjb25zdCByZXZhbGlkYXRlID0gMDsKCmZ1bmN0aW9uIHBhcnNlQ3R4KGRhdGE6IFJlY29yZDxzdHJpbmcsIHN0cmluZyB8IG51bWJlciB8IHVuZGVmaW5lZD4pOiBQYXJ0aWFsPEdhbWVDb250ZXh0PiB7CiAgcmV0dXJuIHsKICAgIHRlbXBlcmF0dXJhOiAgICAgIGRhdGEudGVtcGVyYXR1cmEgICAgICA/IE51bWJlcihkYXRhLnRlbXBlcmF0dXJhKSAgICAgIDogdW5kZWZpbmVkLAogICAgcGxhY2FyTWFuZGFudGU6ICAgZGF0YS5wbGFjYXJNYW5kYW50ZSAgID8gTnVtYmVyKGRhdGEucGxhY2FyTWFuZGFudGUpICAgOiB1bmRlZmluZWQsCiAgICBwbGFjYXJWaXNpdGFudGU6ICBkYXRhLnBsYWNhclZpc2l0YW50ZSAgPyBOdW1iZXIoZGF0YS5wbGFjYXJWaXNpdGFudGUpICA6IHVuZGVmaW5lZCwKICAgIG1pbnV0bzogICAgICAgICAgIGRhdGEubWludXRvICAgICAgICAgICA/IE51bWJlcihkYXRhLm1pbnV0bykgICAgICAgICAgIDogdW5kZWZpbmVkLAogICAgbWFuZGFudGU6ICAgICAgICAgZGF0YS5tYW5kYW50ZSAgICAgICAgID8gU3RyaW5nKGRhdGEubWFuZGFudGUpICAgICAgICAgOiB1bmRlZmluZWQsCiAgICB2aXNpdGFudGU6ICAgICAgICBkYXRhLnZpc2l0YW50ZSAgICAgICAgPyBTdHJpbmcoZGF0YS52aXNpdGFudGUpICAgICAgICA6IHVuZGVmaW5lZCwKICAgIGpvZ2Fkb3I6ICAgICAgICAgIGRhdGEuam9nYWRvciAgICAgICAgICA/IFN0cmluZyhkYXRhLmpvZ2Fkb3IpICAgICAgICAgIDogdW5kZWZpbmVkLAogIH07Cn0KCi8vIEdFVCDigJQgY2hhbWFkYSBsZXZlLCBzZW0gYXV0ZW50aWNhw6fDo28gKGNvbnRlw7pkbyBww7pibGljbykKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIEdFVChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgY29uc3Qgc3AgICAgICA9IHJlcS5uZXh0VXJsLnNlYXJjaFBhcmFtczsKICBjb25zdCBldmVudG8gID0gc3AuZ2V0KCdldmVudG8nKSA/PyAnZGVmYXVsdCc7CiAgY29uc3QgYmF0Y2ggICA9IHNwLmdldCgnYmF0Y2gnKSA/IE51bWJlcihzcC5nZXQoJ2JhdGNoJykpIDogMTsKCiAgY29uc3QgY3R4ID0gcGFyc2VDdHgoewogICAgdGVtcGVyYXR1cmE6ICAgICBzcC5nZXQoJ3RlbXBlcmF0dXJhJykgICAgID8/IHVuZGVmaW5lZCwKICAgIHBsYWNhck1hbmRhbnRlOiAgc3AuZ2V0KCdwbGFjYXJNYW5kYW50ZScpICA/PyB1bmRlZmluZWQsCiAgICBwbGFjYXJWaXNpdGFudGU6IHNwLmdldCgncGxhY2FyVmlzaXRhbnRlJykgPz8gdW5kZWZpbmVkLAogICAgbWludXRvOiAgICAgICAgICBzcC5nZXQoJ21pbnV0bycpICAgICAgICAgID8/IHVuZGVmaW5lZCwKICAgIG1hbmRhbnRlOiAgICAgICAgc3AuZ2V0KCdtYW5kYW50ZScpICAgICAgICA/PyB1bmRlZmluZWQsCiAgICB2aXNpdGFudGU6ICAgICAgIHNwLmdldCgndmlzaXRhbnRlJykgICAgICAgPz8gdW5kZWZpbmVkLAogICAgam9nYWRvcjogICAgICAgICBzcC5nZXQoJ2pvZ2Fkb3InKSAgICAgICAgID8/IHVuZGVmaW5lZCwKICB9KTsKCiAgaWYgKGJhdGNoID4gMSkgewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgYWdlbnRlOiAnTMOpbycsIHNjcmlwdHM6IGdlbmVyYXRlQmF0Y2hIeXBlKGV2ZW50bywgY3R4LCBNYXRoLm1pbihiYXRjaCwgNSkpIH0pOwogIH0KCiAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgYWdlbnRlOiAnTMOpbycsIHNjcmlwdDogZ2VuZXJhdGVIeXBlU2NyaXB0KGV2ZW50bywgY3R4KSB9KTsKfQoKLy8gUE9TVCDigJQgY2hhbWFkYSBjb21wbGV0YSBjb20gYm9keSBKU09OCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKHJlcTogTmV4dFJlcXVlc3QpIHsKICB0cnkgewogICAgY29uc3QgYm9keSAgID0gYXdhaXQgcmVxLmpzb24oKTsKICAgIGNvbnN0IGV2ZW50byA9IGJvZHk/LmV2ZW50byA/PyAnZGVmYXVsdCc7CiAgICBjb25zdCBiYXRjaCAgPSB0eXBlb2YgYm9keT8uYmF0Y2ggPT09ICdudW1iZXInID8gTWF0aC5taW4oYm9keS5iYXRjaCwgNSkgOiAxOwogICAgY29uc3QgY3R4ICAgID0gcGFyc2VDdHgoYm9keSk7CgogICAgaWYgKGJhdGNoID4gMSkgewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBhZ2VudGU6ICdMw6lvJywgc2NyaXB0czogZ2VuZXJhdGVCYXRjaEh5cGUoZXZlbnRvLCBjdHgsIGJhdGNoKSB9KTsKICAgIH0KCiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBhZ2VudGU6ICdMw6lvJywgc2NyaXB0OiBnZW5lcmF0ZUh5cGVTY3JpcHQoZXZlbnRvLCBjdHgpIH0pOwogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcignWy9hcGkvYWdlbnRzL2h5cGUgUE9TVF0nLCBlcnIpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJybzogJ1BheWxvYWQgaW52w6FsaWRvLicgfSwgeyBzdGF0dXM6IDQwMCB9KTsKICB9Cn0K
+// src/app/api/agents/hype/route.ts
+// Léo — rota pública de geração de copy. Usada pelo front, VoxSports e webhooks de jogo.
+// POST → body { evento: string; temperatura?: number; placarMandante?: number; ... }
+// GET  → ?evento=gol&temperatura=13&placarMandante=2&placarVisitante=0&jogador=Carl%C3%A3o
+
+import { NextRequest, NextResponse } from 'next/server';
+import { generateHypeScript, generateBatchHype } from '@/lib/agents/MarketAgent';
+import type { GameContext } from '@/lib/agents/MarketAgent';
+
+export const dynamic    = 'force-dynamic';
+export const revalidate = 0;
+
+function parseCtx(data: Record<string, string | number | undefined>): Partial<GameContext> {
+  return {
+    temperatura:      data.temperatura      ? Number(data.temperatura)      : undefined,
+    placarMandante:   data.placarMandante   ? Number(data.placarMandante)   : undefined,
+    placarVisitante:  data.placarVisitante  ? Number(data.placarVisitante)  : undefined,
+    minuto:           data.minuto           ? Number(data.minuto)           : undefined,
+    mandante:         data.mandante         ? String(data.mandante)         : undefined,
+    visitante:        data.visitante        ? String(data.visitante)        : undefined,
+    jogador:          data.jogador          ? String(data.jogador)          : undefined,
+  };
+}
+
+// GET — chamada leve, sem autenticação (conteúdo público)
+export async function GET(req: NextRequest) {
+  const sp      = req.nextUrl.searchParams;
+  const evento  = sp.get('evento') ?? 'default';
+  const batch   = sp.get('batch') ? Number(sp.get('batch')) : 1;
+
+  const ctx = parseCtx({
+    temperatura:     sp.get('temperatura')     ?? undefined,
+    placarMandante:  sp.get('placarMandante')  ?? undefined,
+    placarVisitante: sp.get('placarVisitante') ?? undefined,
+    minuto:          sp.get('minuto')          ?? undefined,
+    mandante:        sp.get('mandante')        ?? undefined,
+    visitante:       sp.get('visitante')       ?? undefined,
+    jogador:         sp.get('jogador')         ?? undefined,
+  });
+
+  if (batch > 1) {
+    return NextResponse.json({ agente: 'Léo', scripts: generateBatchHype(evento, ctx, Math.min(batch, 5)) });
+  }
+
+  return NextResponse.json({ agente: 'Léo', script: generateHypeScript(evento, ctx) });
+}
+
+// POST — chamada completa com body JSON
+export async function POST(req: NextRequest) {
+  try {
+    const body   = await req.json();
+    const evento = body?.evento ?? 'default';
+    const batch  = typeof body?.batch === 'number' ? Math.min(body.batch, 5) : 1;
+    const ctx    = parseCtx(body);
+
+    if (batch > 1) {
+      return NextResponse.json({ agente: 'Léo', scripts: generateBatchHype(evento, ctx, batch) });
+    }
+
+    return NextResponse.json({ agente: 'Léo', script: generateHypeScript(evento, ctx) });
+  } catch (err) {
+    console.error('[/api/agents/hype POST]', err);
+    return NextResponse.json({ erro: 'Payload inválido.' }, { status: 400 });
+  }
+}
