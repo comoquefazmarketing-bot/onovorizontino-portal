@@ -1,10 +1,1 @@
-{
-  "cleanUrls": true,
-  "framework": "nextjs",
-  "crons": [
-    {
-      "path": "/api/tigre-fc/cron-processar",
-      "schedule": "0 23 * * *"
-    }
-  ]
-}
+ewogICJjbGVhblVybHMiOiB0cnVlLAogICJmcmFtZXdvcmsiOiAibmV4dGpzIiwKICAiY3JvbnMiOiBbCiAgICB7CiAgICAgICJwYXRoIjogIi9hcGkvdGlncmUtZmMvY3Jvbi1wcm9jZXNzYXIiLAogICAgICAic2NoZWR1bGUiOiAiMCAyMyAqICogKiIKICAgIH0sCiAgICB7CiAgICAgICJwYXRoIjogIi9hcGkvYWdlbnRzL2F1ZGl0IiwKICAgICAgInNjaGVkdWxlIjogIjAgNiAqICogKiIKICAgIH0sCiAgICB7CiAgICAgICJwYXRoIjogIi9hcGkvYWdlbnRzL2NhbXBhbmhhIiwKICAgICAgInNjaGVkdWxlIjogIjAgMTAsMTggKiAqICoiCiAgICB9CiAgXQp9Cg==
