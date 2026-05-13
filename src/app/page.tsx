@@ -196,7 +196,7 @@ export default async function Home() {
       </div>
 
       <Footer />
-      <EscalacaoPopup />
+      {/* <EscalacaoPopup /> */}
       <LgpdBanner />
     </main>
   );
