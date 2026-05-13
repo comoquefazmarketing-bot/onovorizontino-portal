@@ -51,6 +51,22 @@ interface Agente {
   acoes: Acao[];
 }
 
+// ── Supervisor (entidade separada dos agentes comuns) ────────────────────────
+const SUPERVISOR: Agente = {
+  id:          'supervisor',
+  nome:        'Supervisor',
+  cargo:       'Chefe de Operações · Sênior em todos os setores',
+  descricao:   'Conhece a rotina de todos os agentes. Verifica o estado do sistema, aciona quem for necessário e só escala para o administrador quando algo realmente importa.',
+  inicial:     'S',
+  cor:         '#F8FAFC',
+  sombra:      'rgba(248,250,252,0.25)',
+  corBg:       'rgba(248,250,252,0.04)',
+  scheduleMs:  15 * 60 * 1000, // 15 min
+  acoes: [
+    { id: 'ciclo',   label: '🧠 Rodar ciclo de supervisão', method: 'GET', path: '/api/agents/supervisor', primary: true },
+  ],
+};
+
 // ── Definições dos agentes ───────────────────────────────────────────────────
 const AGENTES: Agente[] = [
   {
@@ -225,6 +241,174 @@ function Avatar({ agente, size = 56, working, auto }: { agente: Agente; size?: n
         }}
       />
     </div>
+  );
+}
+
+// ── Supervisor Card (full-width boss card) ────────────────────────────────────
+function SupervisorCard({
+  state, selected, modoAuto, nextRun, onToggleAuto, onClick, tick,
+}: {
+  state: AgentState; selected: boolean; modoAuto: boolean;
+  nextRun: number | null; onToggleAuto: () => void; onClick: () => void; tick: number;
+}) {
+  const isWorking = state.status === 'working';
+  const COR = SUPERVISOR.cor;
+
+  const statusLabel =
+    isWorking ? '● EXECUTANDO CICLO'
+    : state.status === 'done'  ? '✓ CICLO CONCLUÍDO'
+    : state.status === 'error' ? '✗ ERRO NO CICLO'
+    : modoAuto ? '⟳ AUTO — SUPERVISIONANDO'
+    : '● AGUARDANDO ORDEM';
+
+  const statusColor =
+    isWorking ? '#F5C400'
+    : state.status === 'done'  ? '#4ADE80'
+    : state.status === 'error' ? '#FF2244'
+    : modoAuto ? COR
+    : '#52525b';
+
+  return (
+    <motion.div
+      layout
+      className="relative rounded-2xl overflow-hidden cursor-pointer"
+      style={{
+        background: selected ? 'rgba(248,250,252,0.05)' : 'rgba(255,255,255,0.02)',
+        border: `1.5px solid ${selected ? COR + '55' : modoAuto ? COR + '30' : 'rgba(255,255,255,0.1)'}`,
+        boxShadow: selected
+          ? `0 0 48px ${SUPERVISOR.sombra}, inset 0 0 40px rgba(248,250,252,0.03)`
+          : modoAuto ? `0 0 24px ${SUPERVISOR.sombra}` : 'none',
+      }}
+      whileHover={{ scale: 1.005 }}
+      whileTap={{ scale: 0.995 }}
+      onClick={onClick}
+    >
+      {isWorking && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: `linear-gradient(90deg, transparent 0%, rgba(248,250,252,0.04) 50%, transparent 100%)` }}
+          animate={{ x: ['-100%', '200%'] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+        />
+      )}
+
+      {/* Linha decorativa superior */}
+      <div className="absolute top-0 left-0 right-0 h-[1px]"
+        style={{ background: `linear-gradient(90deg, transparent, ${COR}40, transparent)` }} />
+
+      <div className="p-6 flex flex-col md:flex-row md:items-center gap-6">
+        {/* Avatar grande */}
+        <div className="flex items-center gap-5 flex-shrink-0">
+          <div className="relative" style={{ width: 72, height: 72 }}>
+            {isWorking && (
+              <motion.div
+                className="absolute rounded-full"
+                style={{ inset: -4, border: `2px solid ${COR}`, boxShadow: `0 0 20px ${COR}60` }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              />
+            )}
+            {modoAuto && !isWorking && (
+              <motion.div
+                className="absolute rounded-full"
+                style={{ inset: -4, border: `1.5px dashed ${COR}50` }}
+                animate={{ rotate: -360 }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+              />
+            )}
+            <div
+              className="w-full h-full rounded-full flex items-center justify-center font-black select-none"
+              style={{
+                background: `radial-gradient(circle at 35% 35%, rgba(248,250,252,0.3), rgba(248,250,252,0.06))`,
+                border: `2px solid ${COR}30`,
+                color: COR,
+                fontSize: 28,
+                boxShadow: (isWorking || modoAuto) ? `0 0 32px ${SUPERVISOR.sombra}` : 'inset 0 0 20px rgba(248,250,252,0.08)',
+              }}
+            >
+              S
+            </div>
+            <div
+              className="absolute bottom-0 right-0 rounded-full border-2 border-[#0a0a0a]"
+              style={{ width: 18, height: 18, background: isWorking ? '#F5C400' : modoAuto ? COR : '#3f3f46' }}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="font-black uppercase text-2xl tracking-tighter leading-none text-white">
+                SUPERVISOR
+              </span>
+              <span className="text-[9px] font-black tracking-[2px] px-2 py-0.5 rounded"
+                style={{ background: `${COR}15`, border: `1px solid ${COR}30`, color: COR }}>
+                SÊNIOR
+              </span>
+            </div>
+            <p className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mt-1">
+              Chefe de Operações · Orquestrador do Escritório
+            </p>
+            <p className="text-[11px] font-black tracking-[1.5px] mt-1.5" style={{ color: statusColor }}>
+              {statusLabel}
+            </p>
+          </div>
+        </div>
+
+        {/* Info central */}
+        <div className="flex-1 min-w-0 border-t md:border-t-0 md:border-l border-white/5 md:pl-6 pt-4 md:pt-0">
+          <p className="text-[12px] text-zinc-400 leading-relaxed">
+            {SUPERVISOR.descricao}
+          </p>
+          {state.ultimaTarefa && (
+            <p className="text-[11px] text-zinc-500 mt-2 truncate">
+              {isWorking ? '⚡ ' : state.auto ? '🤖 ' : '↳ '}{state.ultimaTarefa}
+            </p>
+          )}
+          {modoAuto && nextRun !== null && !isWorking && (
+            <p className="text-[11px] mt-1" style={{ color: COR + '99' }}>
+              próximo ciclo em: {formatCountdown(nextRun - Date.now())}
+            </p>
+          )}
+        </div>
+
+        {/* Controles */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Toggle auto */}
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-[9px] font-black tracking-[1.5px] uppercase" style={{ color: modoAuto ? COR : '#52525b' }}>
+              AUTO
+            </p>
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleAuto(); }}
+              className="relative w-11 h-6 rounded-full transition-all"
+              style={{ background: modoAuto ? COR : '#27272a' }}
+            >
+              <motion.div
+                className="absolute top-0.5 w-5 h-5 rounded-full shadow"
+                style={{ background: modoAuto ? '#050505' : '#71717a' }}
+                animate={{ left: modoAuto ? '22px' : '2px' }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              />
+            </button>
+          </div>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); onClick(); }}
+            className="px-5 py-2.5 rounded-xl font-black text-[11px] tracking-[2px] uppercase transition-all"
+            style={{
+              background: selected ? COR : 'rgba(255,255,255,0.04)',
+              color:      selected ? '#050505' : COR,
+              border:     `1px solid ${COR}30`,
+            }}
+          >
+            {selected ? '← FECHAR' : 'VER LOGS →'}
+          </button>
+        </div>
+      </div>
+
+      {/* Linha decorativa inferior */}
+      <div className="absolute bottom-0 left-0 right-0 h-[1px]"
+        style={{ background: `linear-gradient(90deg, transparent, ${COR}20, transparent)` }} />
+    </motion.div>
   );
 }
 
@@ -591,12 +775,14 @@ export default function EscritorioVirtual() {
     }
   }, []);
 
-  // ── Modo autônomo: agendamento de cada agente ──────────────────────────────
+  // ── Modo autônomo: agendamento de cada agente + supervisor ───────────────────
   useEffect(() => {
     if (!mounted) return;
     const intervals: ReturnType<typeof setInterval>[] = [];
 
-    AGENTES.forEach(agente => {
+    const todosAgentes = [SUPERVISOR, ...AGENTES];
+
+    todosAgentes.forEach(agente => {
       if (!agente.scheduleMs || !modoAuto[agente.id]) return;
       const primaryAcao = agente.acoes.find(a => a.primary) ?? agente.acoes[0];
 
@@ -626,7 +812,8 @@ export default function EscritorioVirtual() {
     });
   }, []);
 
-  const agenteAtual = selecionado ? AGENTES.find(a => a.id === selecionado) ?? null : null;
+  const todosAgentesComSupervisor = [SUPERVISOR, ...AGENTES];
+  const agenteAtual  = selecionado ? todosAgentesComSupervisor.find(a => a.id === selecionado) ?? null : null;
   const totalWorking = Object.values(agentStates).filter(s => s.status === 'working').length;
   const totalAuto    = Object.values(modoAuto).filter(Boolean).length;
 
@@ -654,7 +841,7 @@ export default function EscritorioVirtual() {
             ESCRITÓRIO <span className="text-[#F5C400]">VIRTUAL</span>
           </h1>
           <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
-            <span className="text-[11px] text-zinc-500 font-bold tracking-widest uppercase">{AGENTES.length} AGENTES</span>
+            <span className="text-[11px] text-zinc-500 font-bold tracking-widest uppercase">1 SUPERVISOR · {AGENTES.length} AGENTES</span>
             <span className="w-px h-3 bg-white/10" />
             {totalWorking > 0 && (
               <>
@@ -677,22 +864,46 @@ export default function EscritorioVirtual() {
       </div>
 
       <div className={`relative z-10 transition-all duration-300 ${agenteAtual ? 'lg:mr-[440px]' : ''}`}>
-        <div className="max-w-5xl mx-auto px-4 py-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-            {AGENTES.map(agente => (
-              <AgentCard
-                key={agente.id}
-                agente={agente}
-                state={agentStates[agente.id] ?? { status: 'idle' }}
-                selected={selecionado === agente.id}
-                modoAuto={!!modoAuto[agente.id]}
-                nextRun={nextRunRef.current[agente.id] ?? null}
-                onToggleAuto={() => toggleAuto(agente.id)}
-                onClick={() => setSelecionado(selecionado === agente.id ? null : agente.id)}
-              />
-            ))}
+        <div className="max-w-5xl mx-auto px-4 py-10 space-y-6">
+
+          {/* ── Supervisor — card chefe no topo ─────────────────────────────── */}
+          <div>
+            <p className="text-[9px] font-black tracking-[4px] text-zinc-700 uppercase mb-3">
+              COMANDO
+            </p>
+            <SupervisorCard
+              state={agentStates['supervisor'] ?? { status: 'idle' }}
+              selected={selecionado === 'supervisor'}
+              modoAuto={!!modoAuto['supervisor']}
+              nextRun={nextRunRef.current['supervisor'] ?? null}
+              onToggleAuto={() => toggleAuto('supervisor')}
+              onClick={() => setSelecionado(selecionado === 'supervisor' ? null : 'supervisor')}
+              tick={tick}
+            />
           </div>
-          <div className="mt-16 pt-8 border-t border-white/[0.05] text-center">
+
+          {/* ── Agentes ─────────────────────────────────────────────────────── */}
+          <div>
+            <p className="text-[9px] font-black tracking-[4px] text-zinc-700 uppercase mb-3">
+              EQUIPE
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {AGENTES.map(agente => (
+                <AgentCard
+                  key={agente.id}
+                  agente={agente}
+                  state={agentStates[agente.id] ?? { status: 'idle' }}
+                  selected={selecionado === agente.id}
+                  modoAuto={!!modoAuto[agente.id]}
+                  nextRun={nextRunRef.current[agente.id] ?? null}
+                  onToggleAuto={() => toggleAuto(agente.id)}
+                  onClick={() => setSelecionado(selecionado === agente.id ? null : agente.id)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 pt-8 border-t border-white/[0.05] text-center">
             <p className="text-[10px] text-zinc-700 font-bold tracking-[4px] uppercase">
               Escritório Virtual • Equipe Makarios • By Felipe Makarios
             </p>
