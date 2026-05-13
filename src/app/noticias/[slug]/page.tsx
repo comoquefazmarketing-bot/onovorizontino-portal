@@ -11,6 +11,7 @@ export const dynamicParams = true;
 
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPA_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SITE_URL = 'https://www.onovorizontino.com.br';
 
 const headers = {
   apikey: SUPA_ANON,
@@ -22,6 +23,12 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+function calcReadingTime(html: string): number {
+  const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = text.split(' ').filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
 async function getPost(slug: string) {
   const url = `${SUPA_URL}/rest/v1/postagens?slug=eq.${encodeURIComponent(
     slug,
@@ -31,7 +38,7 @@ async function getPost(slug: string) {
   return data?.[0] ?? null;
 }
 
-async function getRelacionadas(slug: string) {
+async function getRelacionadas(slug: string, _categoria: string) {
   const url = `${SUPA_URL}/rest/v1/postagens?status=eq.published&slug=neq.${encodeURIComponent(
     slug,
   )}&select=id,titulo,slug,imagem_capa,categoria,criado_em&order=criado_em.desc&limit=3`;
@@ -43,13 +50,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPost(slug);
   if (!post) return { title: 'Notícia não encontrada' };
+
+  const canonical = `${SITE_URL}/noticias/${post.slug}`;
+  const description = post.resumo_ia ?? 'Cobertura completa do Grêmio Novorizontino na Série B 2026.';
+
   return {
-    title: `${post.titulo} | Portal O Novorizontino`,
-    description: post.resumo_ia ?? 'Cobertura completa do Grêmio Novorizontino.',
+    title: post.titulo,
+    description,
+    keywords: ['Grêmio Novorizontino', 'Novorizontino', post.categoria, 'Série B 2026', 'Tigre do Vale'],
+    authors: [{ name: post.autor_ia ?? 'Redação O Novorizontino' }],
+    alternates: { canonical },
     openGraph: {
+      type: 'article',
+      url: canonical,
       title: post.titulo,
-      description: post.resumo_ia ?? '',
-      images: post.imagem_capa ? [{ url: post.imagem_capa }] : [],
+      description,
+      publishedTime: post.criado_em,
+      authors: [post.autor_ia ?? 'Redação O Novorizontino'],
+      images: post.imagem_capa
+        ? [{ url: post.imagem_capa, width: 1200, height: 630, alt: post.titulo }]
+        : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.titulo,
+      description,
+      images: post.imagem_capa ? [post.imagem_capa] : [],
     },
   };
 }
@@ -57,7 +83,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function NoticiaSlugPage({ params }: Props) {
   const { slug } = await params;
 
-  const [post, relacionadas] = await Promise.all([getPost(slug), getRelacionadas(slug)]);
+  const [post, relacionadas] = await Promise.all([getPost(slug), getRelacionadas(slug, '')]);
 
   if (!post) notFound();
 
@@ -67,16 +93,51 @@ export default async function NoticiaSlugPage({ params }: Props) {
     year: 'numeric',
   });
 
+  const readingTime = calcReadingTime(post.conteudo ?? '');
+
   const FALLBACK =
     'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
+  const canonical = `${SITE_URL}/noticias/${post.slug}`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: post.titulo,
+    description: post.resumo_ia ?? '',
+    image: post.imagem_capa ? [post.imagem_capa] : [],
+    datePublished: post.criado_em,
+    dateModified: post.criado_em,
+    author: {
+      '@type': 'Person',
+      name: post.autor_ia ?? 'Redação O Novorizontino',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Portal O Novorizontino',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/assets/logos/LOGO - O NOVORIZONTINO.png`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': canonical,
+    },
+  };
+
   return (
-    <article className="min-h-screen bg-[#050505] text-white selection:bg-yellow-500 selection:text-black">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <article className="min-h-screen bg-[#050505] text-white selection:bg-yellow-500 selection:text-black">
       {/* Hero */}
       <div className="relative w-full aspect-[21/9] max-h-[520px] overflow-hidden">
         <Image
           src={post.imagem_capa || FALLBACK}
-          alt={post.titulo}
+          alt={`${post.titulo} — Grêmio Novorizontino`}
           fill
           priority
           className="object-cover opacity-60"
@@ -96,7 +157,7 @@ export default async function NoticiaSlugPage({ params }: Props) {
           <h1 className="text-3xl md:text-5xl font-black uppercase italic leading-[1.05] tracking-tighter text-white mt-2">
             {post.titulo}
           </h1>
-          <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center gap-4 mt-4 flex-wrap">
             <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">
               {dataFormatada}
             </span>
@@ -108,6 +169,10 @@ export default async function NoticiaSlugPage({ params }: Props) {
                 </span>
               </>
             )}
+            <span className="text-zinc-700">·</span>
+            <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">
+              {readingTime} min de leitura
+            </span>
           </div>
         </div>
       </div>
@@ -203,5 +268,6 @@ export default async function NoticiaSlugPage({ params }: Props) {
         </div>
       )}
     </article>
+    </>
   );
 }
