@@ -108,7 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-grow">{children}</main>
 
         <Analytics />
-        <LgpdBanner />
+        {/* <LgpdBanner /> */}{/* temporariamente desativado */}
         <TigreFCButton />
         <ModoDesespero />
 
