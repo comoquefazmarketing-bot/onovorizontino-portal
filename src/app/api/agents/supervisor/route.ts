@@ -1,6 +1,6 @@
 // Supervisor — orquestra todos os agentes do escritório virtual.
 // Conhece a rotina de cada um, verifica o estado do sistema e aciona
-// quem for necessário. Só escala para o usuário quando algo importa.
+// quem for necessário. Só escala para o usuário (via Telegram) quando algo importa.
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic    = 'force-dynamic';
@@ -60,11 +60,33 @@ async function chamarAgente(
   }
 }
 
+async function enviarTelegram(texto: string): Promise<void> {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId   = process.env.TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) return;
+  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: texto, parse_mode: 'HTML' }),
+  }).catch(e => console.warn('[Supervisor] Telegram falhou:', e));
+}
+
+function formatarHoraBR(d: Date): string {
+  return d.toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day:      '2-digit',
+    month:    '2-digit',
+    year:     'numeric',
+    hour:     '2-digit',
+    minute:   '2-digit',
+  });
+}
+
 interface Decisao {
-  agente:    string;
-  motivo:    string;
-  acao:      string;
-  ok:        boolean;
+  agente:     string;
+  motivo:     string;
+  acao:       string;
+  ok:         boolean;
   resultado?: any;
 }
 
@@ -90,11 +112,10 @@ export async function GET(req: NextRequest) {
   const ultimoJogo = ultimosJogos[0];
 
   if (ultimoJogo) {
-    const jogoMs       = new Date(ultimoJogo.data_hora).getTime();
-    const horasSince   = (nowMs - jogoMs) / 3_600_000;
+    const jogoMs     = new Date(ultimoJogo.data_hora).getTime();
+    const horasSince = (nowMs - jogoMs) / 3_600_000;
 
     if (horasSince <= 24) {
-      // Verifica se já existe post de resultado recente para este jogo
       const limit = new Date(jogoMs - 30 * 60_000).toISOString();
       const postsExistentes = await supaFetch(
         `postagens?categoria=eq.Resultados&criado_em=gte.${encodeURIComponent(limit)}&select=id&limit=1`,
@@ -104,7 +125,7 @@ export async function GET(req: NextRequest) {
         const r = await chamarAgente(BASE, '/api/agents/gabi', 'POST', { jogo_id: ultimoJogo.id });
         decisoes.push({
           agente:    'Gabi',
-          motivo:    `Jogo da Rodada ${ultimoJogo.rodada} finalizado há ${Math.round(horasSince)}h sem matéria publicada`,
+          motivo:    `Jogo da Rodada ${ultimoJogo.rodada} finalizado há ${Math.round(horasSince)}h sem matéria`,
           acao:      'Publicar matéria de resultado',
           ok:        r.ok,
           resultado: r.data,
@@ -134,20 +155,20 @@ export async function GET(req: NextRequest) {
   const proximoJogo = proximosJogos[0];
 
   if (proximoJogo) {
-    const proximoMs     = new Date(proximoJogo.data_hora).getTime();
-    const horasAteJogo  = (proximoMs - nowMs) / 3_600_000;
+    const proximoMs    = new Date(proximoJogo.data_hora).getTime();
+    const horasAteJogo = (proximoMs - nowMs) / 3_600_000;
 
     if (horasAteJogo <= 6) {
-      alertas.push(
-        `🚨 ALERTA: Jogo em ${Math.round(horasAteJogo)}h — ${proximoJogo.competicao} Rodada ${proximoJogo.rodada}. Supervisor notifica o administrador.`,
-      );
+      alertas.push(`🚨 JOGO EM ${Math.round(horasAteJogo)}h — ${proximoJogo.competicao} Rodada ${proximoJogo.rodada}`);
+    } else if (horasAteJogo <= 48) {
+      alertas.push(`📅 Próximo jogo em ${Math.round(horasAteJogo)}h — Rodada ${proximoJogo.rodada}`);
     }
 
     if (horasAteJogo <= 48) {
       const r = await chamarAgente(BASE, '/api/agents/ana/rodada', 'GET');
       decisoes.push({
         agente:    'Ana',
-        motivo:    `Jogo em ${Math.round(horasAteJogo)}h — verificação de escalação e rodada`,
+        motivo:    `Jogo em ${Math.round(horasAteJogo)}h — verificação de escalação`,
         acao:      'Status da Rodada',
         ok:        r.ok,
         resultado: r.data,
@@ -158,20 +179,20 @@ export async function GET(req: NextRequest) {
   // ── 3. RAFAEL — Relatório semanal (segunda-feira, 8h–12h horário BR) ─────────
   const diaSemana = now.getDay();
   const horaUTC   = now.getUTCHours();
-  const horaBR    = (horaUTC - 3 + 24) % 24; // UTC-3
+  const horaBR    = (horaUTC - 3 + 24) % 24;
   if (diaSemana === 1 && horaBR >= 8 && horaBR <= 12) {
     const r = await chamarAgente(BASE, '/api/agents/rafael', 'GET');
     decisoes.push({
       agente:    'Rafael',
-      motivo:    'Segunda-feira (janela 8h–12h) — relatório semanal de métricas',
+      motivo:    'Segunda-feira (8h–12h) — relatório semanal de métricas',
       acao:      'Gerar relatório',
       ok:        r.ok,
       resultado: r.data,
     });
-    if (r.ok) alertas.push('📊 Rafael gerou relatório semanal');
+    if (r.ok) alertas.push('📊 Rafael gerou relatório semanal de métricas');
   }
 
-  // ── 4. BRUNO — Verificação de inativos (a cada ciclo como auditoria rápida) ──
+  // ── 4. BRUNO — Verificação de inativos ──────────────────────────────────────
   const r4 = await chamarAgente(BASE, '/api/agents/campanha', 'POST', {
     apenas_contar: true,
     horas: 48,
@@ -184,25 +205,22 @@ export async function GET(req: NextRequest) {
     resultado: r4.data,
   });
   if (r4.ok && r4.data?.total > 50) {
-    alertas.push(`📣 Bruno detectou ${r4.data.total} fãs inativos há 48h. Considere rodar campanha.`);
+    alertas.push(`📣 Bruno: ${r4.data.total} fãs inativos há 48h — recomenda campanha`);
   }
 
-  // ── 5. LÉO — Copy de contexto (só se tiver jogo recente ou próximo) ─────────
+  // ── 5. LÉO — Copy contextual ─────────────────────────────────────────────────
   if (ultimoJogo || proximoJogo) {
     const evento = ultimoJogo ? 'vitoria' : 'preview';
-    const r5 = await chamarAgente(BASE, '/api/agents/hype', 'GET', undefined);
-    // Léo via query param
-    const r5b = await chamarAgente(BASE, `/api/agents/hype?evento=${evento}`, 'GET');
+    const r5 = await chamarAgente(BASE, `/api/agents/hype?evento=${evento}`, 'GET');
     decisoes.push({
       agente:    'Léo',
-      motivo:    ultimoJogo ? 'Jogo recente — gerar copy de resultado' : 'Jogo próximo — gerar copy de prévia',
+      motivo:    ultimoJogo ? 'Jogo recente — copy de resultado' : 'Jogo próximo — copy de prévia',
       acao:      `Copy: ${evento}`,
-      ok:        r5b.ok,
-      resultado: r5b.data,
+      ok:        r5.ok,
+      resultado: r5.data,
     });
   }
 
-  // ── Resumo ───────────────────────────────────────────────────────────────────
   if (decisoes.length === 0) {
     decisoes.push({
       agente: 'Supervisor',
@@ -212,7 +230,44 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const resumo = `Ciclo concluído — ${decisoes.length} verificações, ${alertas.length} alertas`;
+  const acoesRealizadas = decisoes.filter(
+    d => d.acao !== 'Nenhuma ação' && d.acao !== 'Aguardando próximo ciclo',
+  );
+  const temErros = decisoes.some(d => !d.ok);
+  const resumo   = `Ciclo concluído — ${decisoes.length} verificações, ${alertas.length} alertas`;
+
+  // ── Telegram: notifica quando há alertas, ações ou erros (ciclos ociosos são silenciosos) ──
+  if (alertas.length > 0 || acoesRealizadas.length > 0 || temErros) {
+    const horario = formatarHoraBR(now);
+
+    let msg = `🧠 <b>SUPERVISOR</b> · Escritório Makarios\n`;
+    msg    += `🕐 ${horario}\n`;
+    msg    += `━━━━━━━━━━━━━━━━━━━━\n`;
+
+    if (alertas.length > 0) {
+      msg += `\n<b>🔔 ALERTAS</b>\n`;
+      msg += alertas.map(a => `• ${a}`).join('\n') + '\n';
+    }
+
+    if (acoesRealizadas.length > 0) {
+      msg += `\n<b>⚡ AÇÕES EXECUTADAS</b>\n`;
+      msg += acoesRealizadas
+        .map(d => `${d.ok ? '✅' : '❌'} <b>${d.agente}</b> — ${d.acao}`)
+        .join('\n') + '\n';
+    }
+
+    if (temErros) {
+      msg += `\n<b>❌ ERROS</b>\n`;
+      msg += decisoes
+        .filter(d => !d.ok)
+        .map(d => `• ${d.agente}: ${d.acao}`)
+        .join('\n') + '\n';
+    }
+
+    msg += `\n<i>${decisoes.length} verificações · ${acoesRealizadas.length} ações · onovorizontino.com.br</i>`;
+
+    enviarTelegram(msg);
+  }
 
   return NextResponse.json({
     supervisor: 'Supervisor · Escritório Makarios',
