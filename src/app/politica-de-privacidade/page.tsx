@@ -23,7 +23,8 @@ const SECOES = [
 
 • Dados de navegação: endereço IP (anonimizado), páginas visitadas, tempo de permanência, tipo de dispositivo e navegador — coletados automaticamente pelo Google Analytics 4 para fins de análise de audiência.
 • Dados de cadastro (TigreFC): ao criar uma conta no jogo TigreFC, coletamos nome de usuário, endereço de e-mail e, opcionalmente, nome de display — fornecidos diretamente pelo usuário via autenticação Google (Supabase Auth).
-• Cookies e tecnologias similares: utilizamos cookies de sessão, preferências e cookies de terceiros (Google Analytics, Google AdSense) para personalizar a experiência e veicular anúncios relevantes.`,
+• Token de notificação push (opcional): caso você aceite receber notificações do portal, coletamos um identificador de dispositivo (token) por meio do serviço OneSignal, utilizado exclusivamente para o envio de avisos sobre jogos e novidades. Nenhum dado pessoal identificável é armazenado neste token.
+• Cookies e tecnologias similares: utilizamos cookies de sessão, preferências e cookies de terceiros (Google Analytics, Google AdSense, OneSignal) para personalizar a experiência e veicular anúncios relevantes.`,
   },
   {
     titulo: '3. Como Usamos seus Dados',
@@ -32,7 +33,9 @@ const SECOES = [
 • Operar e melhorar o portal, analisando métricas de audiência (Google Analytics 4, ID: G-J10P2E3X5X).
 • Personalizar sua experiência no jogo TigreFC (rankings, perfil, histórico de escalações).
 • Veicular anúncios relevantes por meio da rede Google AdSense (ID: ca-pub-8594673486819604), que pode usar cookies para exibir anúncios com base em visitas anteriores ao nosso site ou a outros sites.
-• Enviar comunicações sobre novidades do portal, apenas quando você optar por recebê-las.`,
+• Enviar notificações push sobre jogos e novidades, por meio do OneSignal, exclusivamente quando você conceder permissão expressa no navegador ou dispositivo — a permissão pode ser revogada a qualquer momento nas configurações do seu dispositivo.
+
+Base legal do tratamento (LGPD Art. 7): consentimento do titular (inciso I) para cookies analíticos, publicitários e notificações push; legítimo interesse do controlador (inciso IX) para análise de audiência agregada e segurança do portal; execução de contrato ou de procedimentos preliminares (inciso V) para dados de conta do TigreFC.`,
   },
   {
     titulo: '4. Google AdSense e Publicidade',
@@ -54,7 +57,10 @@ Você pode desativar o uso do Google Analytics instalando o complemento do naveg
 
 • Provedores de serviço essenciais: Supabase (banco de dados e autenticação), Vercel (hospedagem) — todos sob contratos que garantem a proteção dos dados.
 • Google (Analytics e AdSense): conforme descrito nas seções anteriores, em conformidade com a Política de Privacidade do Google.
-• Autoridades legais: quando exigido por lei ou ordem judicial válida.`,
+• OneSignal (notificações push): identificador de dispositivo é compartilhado com o serviço OneSignal, Inc. (EUA), utilizado exclusivamente para envio de notificações autorizadas pelo usuário. Consulte a política de privacidade da OneSignal em onesignal.com/privacy_policy.
+• Autoridades legais: quando exigido por lei ou ordem judicial válida.
+
+Transferências internacionais de dados (LGPD Art. 33): os provedores acima (Google, Supabase, Vercel, OneSignal) operam servidores predominantemente nos Estados Unidos. Essas transferências são realizadas com base em cláusulas contratuais padrão e/ou certificações equivalentes que garantem nível de proteção adequado aos dados pessoais dos titulares.`,
   },
   {
     titulo: '7. Seus Direitos (LGPD)',
@@ -83,10 +89,11 @@ Para exercer qualquer um desses direitos, entre em contato: comoquefazmarketing@
     titulo: '10. Cookies',
     conteudo: `Utilizamos os seguintes tipos de cookies:
 
-• Cookies essenciais: necessários para o funcionamento básico do site (ex.: sessão de autenticação no TigreFC).
-• Cookies analíticos: Google Analytics 4 para análise de audiência (podem ser desativados).
-• Cookies de publicidade: Google AdSense para exibição de anúncios relevantes (podem ser desativados nas configurações do Google).
-• Cookies de preferências: armazenam suas preferências de consentimento (LGPD).
+• Cookies essenciais: necessários para o funcionamento básico do site (ex.: sessão de autenticação no TigreFC). Duração: sessão.
+• Cookies analíticos: Google Analytics 4 para análise de audiência (podem ser desativados). Duração: até 2 anos.
+• Cookies de publicidade: Google AdSense para exibição de anúncios relevantes (podem ser desativados nas configurações do Google). Duração: até 13 meses.
+• Cookies de preferências: armazenam suas preferências de consentimento (LGPD) e configurações do portal. Duração: 1 ano.
+• Token de notificação push (OneSignal): identificador de dispositivo armazenado localmente, utilizado para envio de notificações autorizadas. Pode ser revogado nas configurações do navegador/dispositivo.
 
 Você pode controlar e/ou excluir cookies conforme desejar. Para detalhes, consulte aboutcookies.org. Você pode excluir todos os cookies já armazenados em seu computador e configurar a maioria dos navegadores para bloqueá-los. Nesse caso, você pode ter que ajustar manualmente algumas preferências sempre que visitar um site.`,
   },
@@ -109,7 +116,7 @@ Você pode controlar e/ou excluir cookies conforme desejar. Para detalhes, consu
 ];
 
 export default function PoliticaPrivacidadePage() {
-  const dataAtualizacao = '04 de maio de 2026';
+  const dataAtualizacao = '13 de maio de 2026';
 
   return (
     <main
