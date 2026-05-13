@@ -233,6 +233,12 @@ export default function JumbotronJogo({
 
   const countdown = useCountdown(dataJogo);
 
+  const isLive = !finalizado && !!dataJogo && (() => {
+    const ms = new Date(dataJogo).getTime();
+    const now = Date.now();
+    return now >= ms - 15 * 60 * 1000 && now <= ms + 120 * 60 * 1000;
+  })();
+
   const ctaDisabled = mercadoFechado;
   const ctaLabel = mercadoFechado
     ? '🔒 MERCADO FECHADO'
@@ -271,13 +277,17 @@ export default function JumbotronJogo({
 
       <div className="flex items-center justify-between px-5 pt-4 pb-2 relative z-10">
         <div className="flex items-center gap-2">
-          <motion.div
-            animate={{ opacity: [1, 0.3, 1], scale: [1, 1.3, 1] }}
-            transition={{ duration: 1.4, repeat: Infinity }}
-            className="w-2.5 h-2.5 rounded-full"
-            style={{ background: C.red, boxShadow: `0 0 10px ${C.red}, 0 0 20px ${C.red}80` }} />
-          <span className="text-[10px] font-black tracking-[3px]" style={{ color: C.red }}>AO VIVO</span>
-          <span className="text-zinc-700">•</span>
+          {isLive ? (
+            <>
+              <motion.div
+                animate={{ opacity: [1, 0.3, 1], scale: [1, 1.3, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity }}
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ background: C.red, boxShadow: `0 0 10px ${C.red}, 0 0 20px ${C.red}80` }} />
+              <span className="text-[10px] font-black tracking-[3px]" style={{ color: C.red }}>AO VIVO</span>
+              <span className="text-zinc-700">•</span>
+            </>
+          ) : null}
           <span className="text-[10px] font-black tracking-[3px]" style={{ color: C.cyan, textShadow: `0 0 8px ${C.cyan}50` }}>
             RÁDIO VOX
           </span>

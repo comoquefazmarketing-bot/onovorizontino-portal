@@ -9,64 +9,119 @@ import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
 
 const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
+const FALLBACK_JOGO = {
+  id: 14,
+  data_hora: '2026-05-16T23:30:00+00:00',
+  competicao: 'Série B 2026',
+  rodada: '9',
+  local: 'Arena Pantanal — Cuiabá, MT',
+  transmissao: 'ESPN · Disney+',
+  mandante_slug: 'cuiaba',
+  visitante_slug: 'novorizontino',
+  mandante:  { nome: 'Cuiabá',        escudo_url: 'https://logodownload.org/wp-content/uploads/2017/02/cuiaba-logo-escudo.png',        sigla: 'CUI' },
+  visitante: { nome: 'Novorizontino', escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png', sigla: 'NOV' },
+  ativo: true,
+  finalizado: false,
+};
+
 export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: string }> }) {
   const resolvedParams = use(params);
-  const [mounted, setMounted] = useState(false);
-  const [jogo, setJogo] = useState<any>(null);
-  const [ranking, setRanking] = useState<any[]>([]);
-  const [meuId, setMeuId] = useState<string | null>(null);
+  const [mounted, setMounted]           = useState(false);
+  const [jogo, setJogo]                 = useState<any>(null);
+  const [ranking, setRanking]           = useState<any[]>([]);
+  const [meuId, setMeuId]               = useState<string | null>(null);
   const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
   const [mercadoFechado, setMercadoFechado] = useState(false);
-  const [sofaEventId, setSofaEventId] = useState<number | null>(null);
+  const [sofaEventId, setSofaEventId]   = useState<number | null>(null);
+
+  // escalação do usuário logado para o jogo atual
+  const [formacao, setFormacao]               = useState<string | null>(null);
+  const [capitaoNome, setCapitaoNome]         = useState<string | null>(null);
+  const [heroiNome, setHeroiNome]             = useState<string | null>(null);
+  const [palpiteMandante, setPalpiteMandante] = useState<number | null>(null);
+  const [palpiteVisitante, setPalpiteVisitante] = useState<number | null>(null);
+  const [totalEscalacoes, setTotalEscalacoes] = useState(0);
+  const [minhaPos, setMinhaPos]               = useState<number | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!mounted) return;
     async function init() {
+      // ── sessão ──────────────────────────────────────────────────────────────
       const { data: { session } } = await sb.auth.getSession();
+      let usuarioId: string | null = null;
+      let googleId:  string | null = null;
       if (session?.user?.id) {
-        const { data: u } = await sb.from('tigre_fc_usuarios').select('id').eq('google_id', session.user.id).maybeSingle();
-        if (u) setMeuId(u.id);
+        googleId = session.user.id;
+        const { data: u } = await sb.from('tigre_fc_usuarios').select('id').eq('google_id', googleId).maybeSingle();
+        if (u) { usuarioId = u.id; setMeuId(u.id); }
       }
 
-      // Busca o jogo via API ou define o fallback para a 8ª Rodada
+      // ── próximo jogo ────────────────────────────────────────────────────────
       const resJogo = await fetch('/api/proximo-jogo').then(r => r.json()).catch(() => null);
-      if (resJogo?.jogos?.length > 0) {
-        setJogo(resJogo.jogos[0]);
-      } else {
-        setJogo({
-          id: 13,
-          data_hora: '2026-05-11T22:00:00+00:00',
-          competicao: 'Série B 2026',
-          rodada: '8',
-          local: 'Estádio Dr. Jorge Ismael de Biasi — Novo Horizonte, SP',
-          transmissao: 'ESPN · Disney+',
-          mandante_slug: 'novorizontino',
-          visitante_slug: 'botafogo-sp',
-          mandante: {
-            nome: 'Novorizontino',
-            escudo_url: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png',
-            sigla: 'NOV'
-          },
-          visitante: {
-            nome: 'Botafogo-SP',
-            escudo_url: 'https://logodownload.org/wp-content/uploads/2017/02/botafogo-sp-logo-escudo.png',
-            sigla: 'BOT-SP'
-          },
-          ativo: true,
-          finalizado: false
-        });
+      const jogoAtual = resJogo?.jogos?.[0] ?? FALLBACK_JOGO;
+      setJogo(jogoAtual);
+
+      // ── total de escalações para este jogo ──────────────────────────────────
+      if (jogoAtual?.id) {
+        const { count } = await sb
+          .from('tigre_fc_escalacoes')
+          .select('id', { count: 'exact', head: true })
+          .eq('jogo_id', jogoAtual.id);
+        setTotalEscalacoes(count ?? 0);
       }
 
-      // Busca o SofaScore ID do próximo jogo para o widget de escalação
+      // ── escalação do usuário logado ─────────────────────────────────────────
+      if (usuarioId && jogoAtual?.id) {
+        const { data: esc } = await sb
+          .from('tigre_fc_escalacoes')
+          .select('formacao, capitao_id, heroi_id, palpite_tigre, palpite_adv')
+          .eq('usuario_id', usuarioId)
+          .eq('jogo_id', jogoAtual.id)
+          .maybeSingle();
+
+        if (esc) {
+          setFormacao(esc.formacao ?? null);
+
+          // Resolve nomes de capitão e herói
+          const ids = [esc.capitao_id, esc.heroi_id].filter(Boolean);
+          if (ids.length > 0) {
+            const { data: jogadores } = await sb
+              .from('tigre_fc_jogadores')
+              .select('id, apelido, nome')
+              .in('id', ids);
+            const byId = Object.fromEntries((jogadores ?? []).map((j: any) => [j.id, j.apelido || j.nome]));
+            setCapitaoNome(byId[esc.capitao_id] ?? null);
+            setHeroiNome(byId[esc.heroi_id]     ?? null);
+          }
+
+          // palpite_tigre = Novorizontino, palpite_adv = adversário
+          const isNovMand = jogoAtual.mandante_slug === 'novorizontino';
+          setPalpiteMandante(isNovMand ? esc.palpite_tigre : esc.palpite_adv);
+          setPalpiteVisitante(isNovMand ? esc.palpite_adv  : esc.palpite_tigre);
+        }
+      }
+
+      // ── SofaScore widget ────────────────────────────────────────────────────
       fetch('/api/tigre-fc/sofascore-proximo-jogo')
         .then(r => r.json())
         .then(d => { if (d?.eventId) setSofaEventId(d.eventId); })
         .catch(() => {});
 
-      const { data: resRank } = await sb.from('tigre_fc_usuarios').select('id, nome, apelido, avatar_url, pontos_total').order('pontos_total', { ascending: false }).limit(10);
-      if (resRank) setRanking(resRank);
+      // ── ranking geral ───────────────────────────────────────────────────────
+      const { data: resRank } = await sb
+        .from('tigre_fc_usuarios')
+        .select('id, nome, apelido, avatar_url, pontos_total')
+        .order('pontos_total', { ascending: false })
+        .limit(10);
+      if (resRank) {
+        setRanking(resRank);
+        if (usuarioId) {
+          const pos = resRank.findIndex((u: any) => u.id === usuarioId);
+          setMinhaPos(pos >= 0 ? pos + 1 : null);
+        }
+      }
     }
     init();
   }, [mounted]);
@@ -93,19 +148,42 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
           <h1 className="text-7xl md:text-8xl font-black italic uppercase leading-none shadow-text tracking-tighter">
             TIGRE <span className="text-[#F5C400]">FC</span>
           </h1>
+          <p className="text-[10px] font-black tracking-[4px] uppercase mt-2" style={{ color: '#00F3FF', opacity: 0.7 }}>
+            BROADCAST STATION · RÁDIO VOX
+          </p>
+          {jogo && (
+            <div className="flex items-center justify-center gap-6 mt-5 text-center">
+              <div>
+                <p className="text-2xl font-black text-[#F5C400] leading-none">{totalEscalacoes}</p>
+                <p className="text-[9px] font-black tracking-[2px] text-zinc-500 uppercase mt-0.5">ESCALADOS</p>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div>
+                <p className="text-2xl font-black text-white leading-none">R{jogo.rodada}</p>
+                <p className="text-[9px] font-black tracking-[2px] text-zinc-500 uppercase mt-0.5">RODADA</p>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div>
+                <p className="text-2xl font-black text-[#F5C400] leading-none">{minhaPos ? `#${minhaPos}` : '—'}</p>
+                <p className="text-[9px] font-black tracking-[2px] text-zinc-500 uppercase mt-0.5">NO RANKING</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-10 space-y-10">
-        
+
         {jogo && (
-          <JumbotronJogo 
-            jogo={jogo} 
-            mercadoFechado={mercadoFechado} 
-            stats={{
-              ranking: ranking.map(u => ({ nome: u.nome, apelido: u.apelido, pontos: u.pontos_total ?? 0 })),
-              participantes: ranking.length
-            } as any}
+          <JumbotronJogo
+            jogo={jogo}
+            formacao={formacao}
+            capitaoNome={capitaoNome}
+            heroiNome={heroiNome}
+            palpiteMandante={palpiteMandante}
+            palpiteVisitante={palpiteVisitante}
+            totalEscalacoes={totalEscalacoes}
+            mercadoFechado={mercadoFechado}
           />
         )}
 
