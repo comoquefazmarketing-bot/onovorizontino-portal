@@ -149,7 +149,7 @@ export default function TigreFCPage({ params }: { params: Promise<{ jogoId?: str
             TIGRE <span className="text-[#F5C400]">FC</span>
           </h1>
           <p className="text-[10px] font-black tracking-[4px] uppercase mt-2" style={{ color: '#00F3FF', opacity: 0.7 }}>
-            BROADCAST STATION · RÁDIO VOX
+            BROADCAST STATION
           </p>
           {jogo && (
             <div className="flex items-center justify-center gap-6 mt-5 text-center">

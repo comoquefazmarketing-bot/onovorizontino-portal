@@ -277,7 +277,7 @@ export default function JumbotronJogo({
 
       <div className="flex items-center justify-between px-5 pt-4 pb-2 relative z-10">
         <div className="flex items-center gap-2">
-          {isLive ? (
+          {isLive && (
             <>
               <motion.div
                 animate={{ opacity: [1, 0.3, 1], scale: [1, 1.3, 1] }}
@@ -285,12 +285,8 @@ export default function JumbotronJogo({
                 className="w-2.5 h-2.5 rounded-full"
                 style={{ background: C.red, boxShadow: `0 0 10px ${C.red}, 0 0 20px ${C.red}80` }} />
               <span className="text-[10px] font-black tracking-[3px]" style={{ color: C.red }}>AO VIVO</span>
-              <span className="text-zinc-700">•</span>
             </>
-          ) : null}
-          <span className="text-[10px] font-black tracking-[3px]" style={{ color: C.cyan, textShadow: `0 0 8px ${C.cyan}50` }}>
-            RÁDIO VOX
-          </span>
+          )}
         </div>
         <div className="text-[9px] font-black tracking-[3px] text-zinc-500 truncate max-w-[60%] text-right">
           R{rodada} • {competicaoDisplay}
