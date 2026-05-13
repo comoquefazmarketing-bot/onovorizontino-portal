@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FONT = "'Barlow Condensed', sans-serif";
-const STORAGE_KEY = 'escritorio_log_v2';
+const STORAGE_LOG  = 'escritorio_log_v3';
+const STORAGE_AUTO = 'escritorio_auto_v1';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 type AgentStatus = 'idle' | 'working' | 'done' | 'error';
@@ -15,12 +16,14 @@ interface LogItem {
   ts: number;
   status: 'working' | 'done' | 'error';
   tarefa: string;
+  auto: boolean;
   resultado?: string;
 }
 
 interface AgentState {
   status: AgentStatus;
   ultimaTarefa?: string;
+  auto?: boolean;
   ts?: number;
 }
 
@@ -31,6 +34,7 @@ interface Acao {
   path: string;
   params?: Record<string, string | number>;
   body?: Record<string, unknown>;
+  primary?: boolean; // ação usada no modo autônomo
 }
 
 interface Agente {
@@ -42,6 +46,7 @@ interface Agente {
   cor: string;
   sombra: string;
   corBg: string;
+  scheduleMs?: number;  // intervalo de auto-execução em ms
   acoes: Acao[];
 }
 
@@ -51,13 +56,14 @@ const AGENTES: Agente[] = [
     id: 'gabi',
     nome: 'Gabi',
     cargo: 'Repórter de Jogos',
-    descricao: 'Cobertura dos resultados e publicação automática de notícias pós-jogo.',
+    descricao: 'Monitora jogos finalizados e gera notícias automáticas pós-jogo.',
     inicial: 'G',
     cor: '#F5C400',
     sombra: 'rgba(245,196,0,0.25)',
     corBg: 'rgba(245,196,0,0.06)',
+    scheduleMs: 30 * 60 * 1000, // 30 min
     acoes: [
-      { id: 'preview', label: '📰 Prévia do próximo jogo', method: 'GET', path: '/api/agents/gabi' },
+      { id: 'auto', label: '📰 Verificar último resultado', method: 'GET', path: '/api/agents/gabi', params: { auto: 1 }, primary: true },
     ],
   },
   {
@@ -69,13 +75,14 @@ const AGENTES: Agente[] = [
     cor: '#00F3FF',
     sombra: 'rgba(0,243,255,0.2)',
     corBg: 'rgba(0,243,255,0.04)',
+    scheduleMs: 60 * 60 * 1000, // 1h
     acoes: [
+      { id: 'rodada', label: '📅 Status da Rodada', method: 'GET', path: '/api/agents/ana/rodada', primary: true },
       { id: 'sug433', label: '⚽ Sugerir 4-3-3', method: 'GET', path: '/api/agents/ana', params: { formacao: '4-3-3' } },
       { id: 'sug442', label: '⚽ Sugerir 4-4-2', method: 'GET', path: '/api/agents/ana', params: { formacao: '4-4-2' } },
       { id: 'sug4231', label: '⚽ Sugerir 4-2-3-1', method: 'GET', path: '/api/agents/ana', params: { formacao: '4-2-3-1' } },
       { id: 'rankATA', label: '🏃 Top Atacantes', method: 'GET', path: '/api/agents/ana', params: { ranking: 'ATA' } },
       { id: 'rankZAG', label: '🛡 Top Zagueiros', method: 'GET', path: '/api/agents/ana', params: { ranking: 'ZAG' } },
-      { id: 'rodada', label: '📅 Status da Rodada', method: 'GET', path: '/api/agents/ana/rodada' },
     ],
   },
   {
@@ -87,8 +94,9 @@ const AGENTES: Agente[] = [
     cor: '#C084FC',
     sombra: 'rgba(192,132,252,0.25)',
     corBg: 'rgba(192,132,252,0.04)',
+    scheduleMs: 45 * 60 * 1000, // 45 min
     acoes: [
-      { id: 'hype_vit', label: '🏆 Copy de Vitória', method: 'GET', path: '/api/agents/hype', params: { evento: 'vitoria' } },
+      { id: 'hype_vit', label: '🏆 Copy de Vitória', method: 'GET', path: '/api/agents/hype', params: { evento: 'vitoria' }, primary: true },
       { id: 'hype_gol', label: '⚽ Copy de Gol', method: 'GET', path: '/api/agents/hype', params: { evento: 'gol' } },
       { id: 'hype_pen', label: '😬 Copy de Pênalti', method: 'GET', path: '/api/agents/hype', params: { evento: 'penalti' } },
       { id: 'hype_batch', label: '🎯 3 variações (A/B)', method: 'GET', path: '/api/agents/hype', params: { evento: 'vitoria', batch: 3 } },
@@ -103,8 +111,9 @@ const AGENTES: Agente[] = [
     cor: '#FF2244',
     sombra: 'rgba(255,34,68,0.25)',
     corBg: 'rgba(255,34,68,0.04)',
+    scheduleMs: 3 * 60 * 60 * 1000, // 3h
     acoes: [
-      { id: 'audit_all', label: '🔍 Auditoria Completa', method: 'GET', path: '/api/agents/audit' },
+      { id: 'audit_all', label: '🔍 Auditoria Completa', method: 'GET', path: '/api/agents/audit', primary: true },
       { id: 'audit_esc', label: '📋 Auditar Escalações', method: 'POST', path: '/api/agents/audit', body: { tabela: 'escalacoes' } },
       { id: 'sync_jog', label: '🔄 Sincronizar Jogadores', method: 'POST', path: '/api/agents/audit', body: { tabela: 'jogadores' } },
     ],
@@ -118,8 +127,9 @@ const AGENTES: Agente[] = [
     cor: '#4ADE80',
     sombra: 'rgba(74,222,128,0.2)',
     corBg: 'rgba(74,222,128,0.04)',
+    scheduleMs: 6 * 60 * 60 * 1000, // 6h
     acoes: [
-      { id: 'count_48', label: '📊 Contar inativos (48h)', method: 'POST', path: '/api/agents/campanha', body: { apenas_contar: true } },
+      { id: 'count_48', label: '📊 Contar inativos (48h)', method: 'POST', path: '/api/agents/campanha', body: { apenas_contar: true }, primary: true },
       { id: 'count_24', label: '📊 Contar inativos (24h)', method: 'POST', path: '/api/agents/campanha', body: { horas: 24, apenas_contar: true } },
       { id: 'campanha', label: '🚀 Rodar campanha completa', method: 'GET', path: '/api/agents/campanha' },
     ],
@@ -133,45 +143,61 @@ const AGENTES: Agente[] = [
     cor: '#60A5FA',
     sombra: 'rgba(96,165,250,0.2)',
     corBg: 'rgba(96,165,250,0.04)',
+    scheduleMs: 12 * 60 * 60 * 1000, // 12h
     acoes: [
-      { id: 'rel_1', label: '📈 Relatório desta semana', method: 'GET', path: '/api/agents/rafael' },
+      { id: 'rel_1', label: '📈 Relatório desta semana', method: 'GET', path: '/api/agents/rafael', primary: true },
       { id: 'rel_2', label: '📈 Comparativo 2 semanas', method: 'GET', path: '/api/agents/rafael', params: { semanas: 2 } },
     ],
   },
 ];
 
-// ── Utilitários de log ────────────────────────────────────────────────────────
+// ── Utilitários ───────────────────────────────────────────────────────────────
 function loadLog(): LogItem[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]'); }
-  catch { return []; }
+  try { return JSON.parse(localStorage.getItem(STORAGE_LOG) ?? '[]'); } catch { return []; }
 }
 function saveLog(log: LogItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(log.slice(0, 60)));
+  localStorage.setItem(STORAGE_LOG, JSON.stringify(log.slice(0, 80)));
+}
+function loadAuto(): Record<string, boolean> {
+  try { return JSON.parse(localStorage.getItem(STORAGE_AUTO) ?? '{}'); } catch { return {}; }
+}
+function saveAuto(auto: Record<string, boolean>) {
+  localStorage.setItem(STORAGE_AUTO, JSON.stringify(auto));
 }
 function formatTs(ts: number) {
   return new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return 'agora';
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}h ${m % 60}min`;
+  if (m > 0) return `${m}min ${s % 60}s`;
+  return `${s}s`;
+}
 function formatResult(raw: string): string {
-  try {
-    const parsed = JSON.parse(raw);
-    return JSON.stringify(parsed, null, 2);
-  } catch { return raw; }
+  try { return JSON.stringify(JSON.parse(raw), null, 2); } catch { return raw; }
 }
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
-function Avatar({ agente, size = 56, working }: { agente: Agente; size?: number; working: boolean }) {
+function Avatar({ agente, size = 56, working, auto }: { agente: Agente; size?: number; working: boolean; auto: boolean }) {
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       {working && (
         <motion.div
           className="absolute rounded-full"
-          style={{
-            inset: -3,
-            border: `2px solid ${agente.cor}`,
-            boxShadow: `0 0 12px ${agente.cor}`,
-          }}
+          style={{ inset: -3, border: `2px solid ${agente.cor}`, boxShadow: `0 0 14px ${agente.cor}` }}
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+        />
+      )}
+      {auto && !working && (
+        <motion.div
+          className="absolute rounded-full"
+          style={{ inset: -3, border: `1.5px dashed ${agente.cor}60` }}
+          animate={{ rotate: -360 }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
         />
       )}
       <div
@@ -181,20 +207,18 @@ function Avatar({ agente, size = 56, working }: { agente: Agente; size?: number;
           border: `2px solid ${agente.cor}35`,
           color: agente.cor,
           fontSize: size * 0.38,
-          boxShadow: working ? `0 0 20px ${agente.sombra}` : `inset 0 0 20px ${agente.cor}15`,
+          boxShadow: (working || auto) ? `0 0 22px ${agente.sombra}` : `inset 0 0 20px ${agente.cor}15`,
           letterSpacing: '-0.02em',
         }}
       >
         {agente.inicial}
       </div>
-      {/* Status dot */}
       <div
         className="absolute bottom-0 right-0 rounded-full border-2 border-[#0a0a0a]"
         style={{
           width: size * 0.26,
           height: size * 0.26,
-          background: working ? '#F5C400'
-            : 'var(--dot-color, #3f3f46)',
+          background: working ? '#F5C400' : auto ? agente.cor : '#3f3f46',
         }}
       />
     </div>
@@ -203,59 +227,49 @@ function Avatar({ agente, size = 56, working }: { agente: Agente; size?: number;
 
 // ── Card do agente ────────────────────────────────────────────────────────────
 function AgentCard({
-  agente,
-  state,
-  selected,
-  onClick,
+  agente, state, selected, modoAuto, nextRun, onToggleAuto, onClick,
 }: {
-  agente: Agente;
-  state: AgentState;
-  selected: boolean;
-  onClick: () => void;
+  agente: Agente; state: AgentState; selected: boolean;
+  modoAuto: boolean; nextRun: number | null;
+  onToggleAuto: () => void; onClick: () => void;
 }) {
   const isWorking = state.status === 'working';
   const statusLabel =
     isWorking ? '● EXECUTANDO'
     : state.status === 'done' ? '✓ CONCLUÍDO'
     : state.status === 'error' ? '✗ ERRO'
+    : modoAuto ? '⟳ AUTO'
     : '● AGUARDANDO';
   const statusColor =
     isWorking ? '#F5C400'
     : state.status === 'done' ? '#4ADE80'
     : state.status === 'error' ? '#FF2244'
+    : modoAuto ? agente.cor
     : '#52525b';
-  const dotColor =
-    isWorking ? '#F5C400'
-    : state.status === 'done' ? '#4ADE80'
-    : state.status === 'error' ? '#FF2244'
-    : '#3f3f46';
 
   return (
     <motion.div
       layout
-      onClick={onClick}
-      className="relative rounded-2xl p-5 cursor-pointer overflow-hidden group transition-colors"
+      className="relative rounded-2xl p-5 overflow-hidden group"
       style={{
         background: selected ? agente.corBg : 'rgba(255,255,255,0.018)',
-        border: `1.5px solid ${selected ? agente.cor + '55' : 'rgba(255,255,255,0.06)'}`,
-        boxShadow: selected ? `0 0 32px ${agente.sombra}` : 'none',
-        '--dot-color': dotColor,
-      } as React.CSSProperties}
+        border: `1.5px solid ${selected ? agente.cor + '55' : modoAuto ? agente.cor + '25' : 'rgba(255,255,255,0.06)'}`,
+        boxShadow: selected ? `0 0 32px ${agente.sombra}` : modoAuto ? `0 0 16px ${agente.sombra}` : 'none',
+      }}
       whileHover={{ scale: 1.012 }}
       whileTap={{ scale: 0.985 }}
     >
-      {/* Scan line when working */}
       {isWorking && (
         <motion.div
           className="absolute inset-0 pointer-events-none"
-          style={{ background: `linear-gradient(180deg, transparent 0%, ${agente.cor}08 50%, transparent 100%)` }}
+          style={{ background: `linear-gradient(180deg, transparent 0%, ${agente.cor}07 50%, transparent 100%)` }}
           animate={{ y: ['-100%', '200%'] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
         />
       )}
 
       <div className="flex items-start gap-4">
-        <Avatar agente={agente} size={52} working={isWorking} />
+        <Avatar agente={agente} size={52} working={isWorking} auto={modoAuto} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <span className="font-black uppercase text-base tracking-tight leading-none" style={{ color: agente.cor }}>
@@ -268,10 +282,15 @@ function AgentCard({
           <p className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mt-0.5">{agente.cargo}</p>
           {state.ultimaTarefa && (
             <p className="text-[11px] text-zinc-400 mt-2 truncate">
-              {isWorking ? '⚡ ' : '↳ '}{state.ultimaTarefa}
+              {isWorking ? '⚡ ' : state.auto ? '🤖 ' : '↳ '}{state.ultimaTarefa}
             </p>
           )}
-          {state.ts && (
+          {modoAuto && nextRun !== null && !isWorking && (
+            <p className="text-[10px] mt-0.5" style={{ color: agente.cor + 'aa' }}>
+              próx. execução: {formatCountdown(nextRun - Date.now())}
+            </p>
+          )}
+          {!modoAuto && state.ts && (
             <p className="text-[10px] text-zinc-700 mt-0.5">{formatTs(state.ts)}</p>
           )}
         </div>
@@ -281,15 +300,34 @@ function AgentCard({
         {agente.descricao}
       </p>
 
-      <div
-        className="mt-4 w-full py-2 rounded-xl text-[11px] font-black tracking-[2px] uppercase text-center transition-all"
-        style={{
-          background: selected ? agente.cor : 'rgba(255,255,255,0.04)',
-          color: selected ? '#050505' : agente.cor,
-          border: `1px solid ${agente.cor}25`,
-        }}
-      >
-        {selected ? '← FECHAR PAINEL' : 'ABRIR PAINEL →'}
+      <div className="mt-4 flex gap-2">
+        {/* Toggle autônomo */}
+        {agente.scheduleMs && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleAuto(); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black tracking-[1.5px] uppercase transition-all"
+            style={{
+              background: modoAuto ? agente.cor + '20' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${modoAuto ? agente.cor + '60' : 'rgba(255,255,255,0.08)'}`,
+              color: modoAuto ? agente.cor : '#52525b',
+            }}
+          >
+            <span className="text-xs">{modoAuto ? '🤖' : '○'}</span>
+            AUTO
+          </button>
+        )}
+        {/* Abrir painel */}
+        <button
+          onClick={onClick}
+          className="flex-1 py-1.5 rounded-xl text-[11px] font-black tracking-[2px] uppercase transition-all"
+          style={{
+            background: selected ? agente.cor : 'rgba(255,255,255,0.04)',
+            color: selected ? '#050505' : agente.cor,
+            border: `1px solid ${agente.cor}25`,
+          }}
+        >
+          {selected ? '← FECHAR' : 'ABRIR PAINEL →'}
+        </button>
       </div>
     </motion.div>
   );
@@ -297,20 +335,16 @@ function AgentCard({
 
 // ── Painel lateral ────────────────────────────────────────────────────────────
 function AgentPanel({
-  agente,
-  state,
-  log,
-  onClose,
-  onExecutar,
+  agente, state, log, modoAuto, onClose, onExecutar, onToggleAuto,
 }: {
-  agente: Agente;
-  state: AgentState;
-  log: LogItem[];
+  agente: Agente; state: AgentState; log: LogItem[];
+  modoAuto: boolean;
   onClose: () => void;
   onExecutar: (acao: Acao) => void;
+  onToggleAuto: () => void;
 }) {
   const isWorking = state.status === 'working';
-  const logDoAgente = log.filter(l => l.agenteId === agente.id).slice(0, 20);
+  const logDoAgente = log.filter(l => l.agenteId === agente.id).slice(0, 25);
 
   return (
     <motion.div
@@ -326,23 +360,43 @@ function AgentPanel({
         boxShadow: `-24px 0 80px ${agente.sombra}`,
       }}
     >
-      {/* Cabeçalho */}
-      <div className="flex items-center gap-4 p-5 border-b border-white/5 flex-shrink-0"
-        style={{ background: agente.corBg }}>
-        <Avatar agente={agente} size={48} working={isWorking} />
+      {/* Header */}
+      <div className="flex items-center gap-4 p-5 border-b border-white/5 flex-shrink-0" style={{ background: agente.corBg }}>
+        <Avatar agente={agente} size={48} working={isWorking} auto={modoAuto} />
         <div className="flex-1 min-w-0">
-          <p className="font-black uppercase text-xl tracking-tight leading-none" style={{ color: agente.cor }}>
-            {agente.nome}
-          </p>
+          <p className="font-black uppercase text-xl tracking-tight leading-none" style={{ color: agente.cor }}>{agente.nome}</p>
           <p className="text-[11px] text-zinc-500 font-bold tracking-widest uppercase mt-0.5">{agente.cargo}</p>
         </div>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors text-sm flex-shrink-0"
-        >
+        <button onClick={onClose} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors text-sm flex-shrink-0">
           ✕
         </button>
       </div>
+
+      {/* Modo autônomo */}
+      {agente.scheduleMs && (
+        <div className="px-5 py-3 border-b border-white/5 flex-shrink-0 flex items-center justify-between"
+          style={{ background: modoAuto ? agente.corBg : 'transparent' }}>
+          <div>
+            <p className="text-xs font-black tracking-[2px] uppercase" style={{ color: modoAuto ? agente.cor : '#52525b' }}>
+              {modoAuto ? '🤖 MODO AUTÔNOMO ATIVO' : '○ MODO AUTÔNOMO'}
+            </p>
+            <p className="text-[10px] text-zinc-600 mt-0.5">
+              Execução automática a cada {formatCountdown(agente.scheduleMs)}
+            </p>
+          </div>
+          <button
+            onClick={onToggleAuto}
+            className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
+            style={{ background: modoAuto ? agente.cor : '#27272a' }}
+          >
+            <motion.div
+              className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow"
+              animate={{ left: modoAuto ? '22px' : '2px' }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            />
+          </button>
+        </div>
+      )}
 
       {/* Ações rápidas */}
       <div className="p-5 border-b border-white/5 flex-shrink-0">
@@ -357,16 +411,14 @@ function AgentPanel({
                 disabled={isWorking}
                 className="w-full py-2.5 px-4 rounded-xl text-sm font-bold text-left flex items-center justify-between transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
-                  background: running ? `${agente.cor}18` : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${running ? agente.cor + '50' : 'rgba(255,255,255,0.07)'}`,
-                  color: running ? agente.cor : '#d4d4d8',
+                  background: running ? `${agente.cor}18` : acao.primary ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${running ? agente.cor + '50' : acao.primary ? agente.cor + '25' : 'rgba(255,255,255,0.07)'}`,
+                  color: running ? agente.cor : acao.primary ? '#e4e4e7' : '#a1a1aa',
                 }}
               >
-                <span>{acao.label}</span>
+                <span>{acao.label}{acao.primary ? <span className="ml-2 text-[9px] tracking-widest opacity-50">PRIMÁRIA</span> : null}</span>
                 {running ? (
-                  <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="text-xs">
-                    ⚙
-                  </motion.span>
+                  <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="text-xs">⚙</motion.span>
                 ) : (
                   <span className="text-zinc-600 text-xs">▶</span>
                 )}
@@ -376,16 +428,17 @@ function AgentPanel({
         </div>
       </div>
 
-      {/* Log de atividade */}
+      {/* Log */}
       <div className="flex-1 overflow-y-auto p-5">
         <p className="text-[10px] font-black tracking-[3px] text-zinc-500 uppercase mb-3">
-          LOG DE ATIVIDADE {logDoAgente.length > 0 && <span className="text-zinc-700 normal-case tracking-normal font-bold">({logDoAgente.length})</span>}
+          LOG DE ATIVIDADE
+          {logDoAgente.length > 0 && <span className="text-zinc-700 normal-case tracking-normal font-bold ml-1">({logDoAgente.length})</span>}
         </p>
         {logDoAgente.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-3xl mb-3">🤖</p>
             <p className="text-zinc-600 text-sm font-bold">Nenhuma atividade ainda.</p>
-            <p className="text-zinc-700 text-xs mt-1">Execute uma tarefa para começar.</p>
+            <p className="text-zinc-700 text-xs mt-1">Execute uma tarefa ou ative o modo autônomo.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -395,6 +448,11 @@ function AgentPanel({
                   <span className="text-sm leading-none">
                     {item.status === 'working' ? '⚡' : item.status === 'done' ? '✅' : '❌'}
                   </span>
+                  {item.auto && (
+                    <span className="text-[9px] font-black tracking-[1.5px] px-1.5 py-0.5 rounded" style={{ background: agente.cor + '20', color: agente.cor }}>
+                      AUTO
+                    </span>
+                  )}
                   <span className="text-[10px] font-black tracking-[1.5px]"
                     style={{ color: item.status === 'working' ? '#F5C400' : item.status === 'done' ? '#4ADE80' : '#FF2244' }}>
                     {item.status === 'working' ? 'EXECUTANDO' : item.status === 'done' ? 'CONCLUÍDO' : 'ERRO'}
@@ -403,9 +461,9 @@ function AgentPanel({
                 </div>
                 <p className="text-xs font-bold text-zinc-300 mb-2">{item.tarefa}</p>
                 {item.resultado && (
-                  <pre className="text-[10px] text-zinc-500 font-mono bg-black/50 rounded-lg p-2.5 overflow-x-auto max-h-40 overflow-y-auto whitespace-pre-wrap leading-relaxed border border-white/[0.04]">
-                    {formatResult(item.resultado).length > 600
-                      ? formatResult(item.resultado).slice(0, 600) + '\n…'
+                  <pre className="text-[10px] text-zinc-500 font-mono bg-black/50 rounded-lg p-2.5 overflow-x-auto max-h-44 overflow-y-auto whitespace-pre-wrap leading-relaxed border border-white/[0.04]">
+                    {formatResult(item.resultado).length > 700
+                      ? formatResult(item.resultado).slice(0, 700) + '\n…'
                       : formatResult(item.resultado)}
                   </pre>
                 )}
@@ -420,39 +478,50 @@ function AgentPanel({
 
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function EscritorioVirtual() {
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted]       = useState(false);
   const [agentStates, setAgentStates] = useState<Record<string, AgentState>>({});
-  const [log, setLog] = useState<LogItem[]>([]);
+  const [log, setLog]               = useState<LogItem[]>([]);
+  const [modoAuto, setModoAuto]     = useState<Record<string, boolean>>({});
   const [selecionado, setSelecionado] = useState<string | null>(null);
+  const [tick, setTick]             = useState(0); // força re-render para countdown
+  const nextRunRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     setMounted(true);
-    const savedLog = loadLog();
+    const savedLog  = loadLog();
+    const savedAuto = loadAuto();
     setLog(savedLog);
-    // Restaura último estado de cada agente a partir do log
+    setModoAuto(savedAuto);
+
+    // Restaura estado de cada agente a partir do log
     const states: Record<string, AgentState> = {};
     [...savedLog].reverse().forEach(item => {
       if (!states[item.agenteId] && item.status !== 'working') {
         states[item.agenteId] = {
           status: item.status === 'done' ? 'done' : 'error',
           ultimaTarefa: item.tarefa,
+          auto: item.auto,
           ts: item.ts,
         };
       }
     });
     setAgentStates(states);
+
+    // Tick a cada segundo para atualizar countdown
+    const tickId = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(tickId);
   }, []);
 
-  const executarAcao = useCallback(async (agente: Agente, acao: Acao) => {
-    const logId = `${agente.id}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    const now = Date.now();
+  const executarAcao = useCallback(async (agente: Agente, acao: Acao, isAuto = false) => {
+    const logId = `${agente.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const now   = Date.now();
 
     setAgentStates(prev => ({
       ...prev,
-      [agente.id]: { status: 'working', ultimaTarefa: acao.label, ts: now },
+      [agente.id]: { status: 'working', ultimaTarefa: acao.label, auto: isAuto, ts: now },
     }));
 
-    const entry: LogItem = { id: logId, agenteId: agente.id, ts: now, status: 'working', tarefa: acao.label };
+    const entry: LogItem = { id: logId, agenteId: agente.id, ts: now, status: 'working', tarefa: acao.label, auto: isAuto };
     setLog(prev => { const next = [entry, ...prev]; saveLog(next); return next; });
 
     try {
@@ -466,48 +535,76 @@ export default function EscritorioVirtual() {
 
       setAgentStates(prev => ({
         ...prev,
-        [agente.id]: { status: 'done', ultimaTarefa: acao.label, ts: Date.now() },
+        [agente.id]: { status: 'done', ultimaTarefa: acao.label, auto: isAuto, ts: Date.now() },
       }));
       setLog(prev => {
         const next = prev.map(i => i.id === logId ? { ...i, status: 'done' as const, resultado } : i);
         saveLog(next); return next;
       });
     } catch (err) {
-      const resultado = String(err);
       setAgentStates(prev => ({
         ...prev,
-        [agente.id]: { status: 'error', ultimaTarefa: acao.label, ts: Date.now() },
+        [agente.id]: { status: 'error', ultimaTarefa: acao.label, auto: isAuto, ts: Date.now() },
       }));
       setLog(prev => {
-        const next = prev.map(i => i.id === logId ? { ...i, status: 'error' as const, resultado } : i);
+        const next = prev.map(i => i.id === logId ? { ...i, status: 'error' as const, resultado: String(err) } : i);
         saveLog(next); return next;
       });
     }
   }, []);
 
+  // ── Modo autônomo: agendamento de cada agente ──────────────────────────────
+  useEffect(() => {
+    if (!mounted) return;
+    const intervals: ReturnType<typeof setInterval>[] = [];
+
+    AGENTES.forEach(agente => {
+      if (!agente.scheduleMs || !modoAuto[agente.id]) return;
+      const primaryAcao = agente.acoes.find(a => a.primary) ?? agente.acoes[0];
+
+      // Executa imediatamente na primeira ativação
+      const now = Date.now();
+      if (!nextRunRef.current[agente.id] || nextRunRef.current[agente.id] <= now) {
+        executarAcao(agente, primaryAcao, true);
+        nextRunRef.current[agente.id] = now + agente.scheduleMs;
+      }
+
+      const id = setInterval(() => {
+        nextRunRef.current[agente.id] = Date.now() + agente.scheduleMs!;
+        executarAcao(agente, primaryAcao, true);
+      }, agente.scheduleMs);
+      intervals.push(id);
+    });
+
+    return () => intervals.forEach(clearInterval);
+  }, [mounted, modoAuto, executarAcao]);
+
+  const toggleAuto = useCallback((agenteId: string) => {
+    setModoAuto(prev => {
+      const next = { ...prev, [agenteId]: !prev[agenteId] };
+      if (!next[agenteId]) delete nextRunRef.current[agenteId];
+      saveAuto(next);
+      return next;
+    });
+  }, []);
+
   const agenteAtual = selecionado ? AGENTES.find(a => a.id === selecionado) ?? null : null;
+  const totalWorking = Object.values(agentStates).filter(s => s.status === 'working').length;
+  const totalAuto    = Object.values(modoAuto).filter(Boolean).length;
 
   if (!mounted) return <div className="min-h-screen bg-[#050505]" />;
 
-  const totalWorking = Object.values(agentStates).filter(s => s.status === 'working').length;
-
   return (
-    <main
-      className="min-h-screen bg-[#050505] text-white overflow-x-hidden"
-      style={{ fontFamily: FONT }}
-    >
+    <main className="min-h-screen bg-[#050505] text-white overflow-x-hidden" style={{ fontFamily: FONT }}>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,700;1,900&display=swap');
       `}</style>
 
-      {/* Dot grid background */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
+      {/* Dot grid */}
+      <div className="fixed inset-0 pointer-events-none" style={{
+        backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
+        backgroundSize: '28px 28px',
+      }} />
 
       {/* Header */}
       <div className="relative pt-16 pb-10 text-center border-b border-white/[0.06]">
@@ -517,19 +614,21 @@ export default function EscritorioVirtual() {
           <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">
             ESCRITÓRIO <span className="text-[#F5C400]">VIRTUAL</span>
           </h1>
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <span className="text-[11px] text-zinc-500 font-bold tracking-widest uppercase">
-              {AGENTES.length} AGENTES
-            </span>
+          <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
+            <span className="text-[11px] text-zinc-500 font-bold tracking-widest uppercase">{AGENTES.length} AGENTES</span>
             <span className="w-px h-3 bg-white/10" />
-            {totalWorking > 0 ? (
-              <span className="flex items-center gap-1.5 text-[11px] font-black tracking-widest uppercase text-[#F5C400]">
-                <motion.span
-                  className="w-2 h-2 rounded-full bg-[#F5C400]"
-                  animate={{ opacity: [1, 0.3, 1] }}
-                  transition={{ duration: 1.2, repeat: Infinity }}
-                />
-                {totalWorking} EM EXECUÇÃO
+            {totalWorking > 0 && (
+              <>
+                <span className="flex items-center gap-1.5 text-[11px] font-black tracking-widest uppercase text-[#F5C400]">
+                  <motion.span className="w-2 h-2 rounded-full bg-[#F5C400]" animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
+                  {totalWorking} EXECUTANDO
+                </span>
+                <span className="w-px h-3 bg-white/10" />
+              </>
+            )}
+            {totalAuto > 0 ? (
+              <span className="text-[11px] font-black tracking-widest uppercase" style={{ color: '#4ADE80' }}>
+                🤖 {totalAuto} EM MODO AUTO
               </span>
             ) : (
               <span className="text-[11px] text-zinc-600 font-bold tracking-widest uppercase">AGUARDANDO ORDENS</span>
@@ -538,7 +637,6 @@ export default function EscritorioVirtual() {
         </div>
       </div>
 
-      {/* Conteúdo */}
       <div className={`relative z-10 transition-all duration-300 ${agenteAtual ? 'lg:mr-[440px]' : ''}`}>
         <div className="max-w-5xl mx-auto px-4 py-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -548,12 +646,13 @@ export default function EscritorioVirtual() {
                 agente={agente}
                 state={agentStates[agente.id] ?? { status: 'idle' }}
                 selected={selecionado === agente.id}
+                modoAuto={!!modoAuto[agente.id]}
+                nextRun={nextRunRef.current[agente.id] ?? null}
+                onToggleAuto={() => toggleAuto(agente.id)}
                 onClick={() => setSelecionado(selecionado === agente.id ? null : agente.id)}
               />
             ))}
           </div>
-
-          {/* Rodapé */}
           <div className="mt-16 pt-8 border-t border-white/[0.05] text-center">
             <p className="text-[10px] text-zinc-700 font-bold tracking-[4px] uppercase">
               Escritório Virtual • Equipe Makarios • By Felipe Makarios
@@ -562,24 +661,22 @@ export default function EscritorioVirtual() {
         </div>
       </div>
 
-      {/* Painel lateral */}
       <AnimatePresence>
         {agenteAtual && (
           <>
-            {/* Overlay mobile */}
             <motion.div
               className="fixed inset-0 bg-black/60 z-40 lg:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setSelecionado(null)}
             />
             <AgentPanel
               agente={agenteAtual}
               state={agentStates[agenteAtual.id] ?? { status: 'idle' }}
               log={log}
+              modoAuto={!!modoAuto[agenteAtual.id]}
               onClose={() => setSelecionado(null)}
-              onExecutar={(acao) => executarAcao(agenteAtual, acao)}
+              onExecutar={(acao) => executarAcao(agenteAtual, acao, false)}
+              onToggleAuto={() => toggleAuto(agenteAtual.id)}
             />
           </>
         )}

@@ -66,23 +66,41 @@ async function publicarPostagem(postagem: ReturnType<typeof gerarPostagem>) {
 
 // ─── GET — gera postagem a partir de jogo_id ─────────────────────────────────
 
+async function buscarUltimoJogoFinalizado(): Promise<JogoResultado | null> {
+  const url = `${SUPABASE_URL}/rest/v1/jogos?finalizado=eq.true&placar_mandante=not.is.null&select=id,rodada,competicao,mandante_slug,visitante_slug,placar_mandante,placar_visitante,data_hora,local&order=data_hora.desc&limit=1`;
+  const res = await fetch(url, { headers: anonHeaders, cache: 'no-store' });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data?.[0] ?? null;
+}
+
 export async function GET(req: NextRequest) {
   if (!autorizado(req)) {
     return NextResponse.json({ erro: 'Não autorizado.' }, { status: 401 });
   }
 
+  const auto   = req.nextUrl.searchParams.get('auto') === '1';
   const jogoId = req.nextUrl.searchParams.get('jogo_id');
-  if (!jogoId) {
-    return NextResponse.json({ erro: 'Parâmetro jogo_id obrigatório.' }, { status: 400 });
-  }
 
-  const jogo = await buscarJogo(Number(jogoId));
-  if (!jogo) {
-    return NextResponse.json({ erro: 'Jogo não encontrado ou placar não registrado.' }, { status: 404 });
+  let jogo: JogoResultado | null = null;
+
+  if (auto) {
+    jogo = await buscarUltimoJogoFinalizado();
+    if (!jogo) {
+      return NextResponse.json({ agente: 'Gabi', status: 'aguardando', mensagem: 'Nenhum jogo finalizado encontrado ainda.' });
+    }
+  } else {
+    if (!jogoId) {
+      return NextResponse.json({ erro: 'Parâmetro jogo_id obrigatório. Use ?auto=1 para busca automática.' }, { status: 400 });
+    }
+    jogo = await buscarJogo(Number(jogoId));
+    if (!jogo) {
+      return NextResponse.json({ erro: 'Jogo não encontrado ou placar não registrado.' }, { status: 404 });
+    }
   }
 
   const postagem = gerarPostagem(jogo, 'draft');
-  return NextResponse.json({ agente: 'Gabi', preview: postagem });
+  return NextResponse.json({ agente: 'Gabi', preview: postagem, jogo_id: jogo.id });
 }
 
 // ─── POST — gera e publica ────────────────────────────────────────────────────

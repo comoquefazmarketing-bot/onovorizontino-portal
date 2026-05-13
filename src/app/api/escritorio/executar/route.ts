@@ -1,11 +1,7 @@
-// Proxy seguro: recebe chamadas do cliente, injeta AGENTS_SECRET e encaminha ao agente.
+// Proxy seguro: recebe chamadas do cliente, injeta auth headers e encaminha ao agente.
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-
-const BASE =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,17 +16,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Caminho inválido.' }, { status: 400 });
     }
 
+    // Deriva BASE da própria request — funciona em dev e produção sem variável extra
+    const reqUrl = new URL(req.url);
+    const BASE = `${reqUrl.protocol}//${reqUrl.host}`;
+
     const url = new URL(path, BASE);
     if (params) {
       Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
     }
 
+    const secret = process.env.AGENTS_SECRET ?? '';
+    const cron   = process.env.CRON_SECRET   ?? '';
+
     const upstream = await fetch(url.toString(), {
       method,
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.AGENTS_SECRET ?? ''}`,
-        'x-cron-secret': process.env.CRON_SECRET ?? '',
+        'Content-Type':    'application/json',
+        'Authorization':   `Bearer ${secret}`,
+        'x-cron-secret':   cron,
+        'x-webhook-secret': secret,
+        'x-agents-secret':  secret,
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
