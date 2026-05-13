@@ -19,8 +19,20 @@ export default function TigreFCButton() {
     const count = parseInt(sessionStorage.getItem('tigre_fc_visits') || '0');
     setCopy(COPYS[count % COPYS.length]);
     sessionStorage.setItem('tigre_fc_visits', String(count + 1));
-    const timer = setTimeout(() => setVisible(true), 4000);
-    return () => clearTimeout(timer);
+
+    // Aparece só após o usuário interagir (scroll) OU após 12s mínimos
+    let scrolled = false;
+    const onScroll = () => { scrolled = true; };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    const timer = setTimeout(() => {
+      if (scrolled || true) setVisible(true); // mostra após 12s independente
+    }, 12000);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   if (!visible) return null;

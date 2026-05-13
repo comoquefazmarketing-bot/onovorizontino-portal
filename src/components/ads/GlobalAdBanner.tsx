@@ -20,6 +20,7 @@ const DURATION = 10000;
 export default function GlobalAdBanner() {
   const [slot, setSlot] = useState<Slot>('borala');
   const [isMobile, setIsMobile] = useState(false);
+  const [paused, setPaused] = useState(false);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function GlobalAdBanner() {
   }, []);
 
   useEffect(() => {
+    if (paused) return;
     const timer = setInterval(() => {
       setSlot(prev => {
         const idx = SEQUENCE.indexOf(prev);
@@ -37,7 +39,7 @@ export default function GlobalAdBanner() {
       });
     }, DURATION);
     return () => clearInterval(timer);
-  }, []);
+  }, [paused]);
 
   useEffect(() => {
     const videoKey = `${slot}-${isMobile ? 'mobile' : 'desktop'}`;
@@ -61,7 +63,11 @@ export default function GlobalAdBanner() {
   const videoSlots: Slot[] = SEQUENCE.filter(s => slotData[s] !== null);
 
   return (
-    <div style={{ width: '100%', background: '#000', borderBottom: '1px solid #18181b' }}>
+    <div
+      style={{ width: '100%', background: '#000', borderBottom: '1px solid #18181b' }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '8px 16px' }}>
 
         <p style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3em', color: '#3f3f46', textAlign: 'center', marginBottom: 4 }}>

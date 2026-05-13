@@ -13,6 +13,7 @@ export default function ModoDesespero() {
   const [jogo, setJogo] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [visible, setVisible] = useState(false);
+  const [fechado, setFechado] = useState(false);
 
   useEffect(() => {
     fetch('/api/proximo-jogo').then(r => r.json()).then(({ jogos }) => {
@@ -49,7 +50,7 @@ export default function ModoDesespero() {
     return () => clearInterval(timer);
   }, [jogo]);
 
-  if (!visible || timeLeft === null) return null;
+  if (!visible || timeLeft === null || fechado) return null;
 
   const h = Math.floor(timeLeft / 3600);
   const m = Math.floor((timeLeft % 3600) / 60);
@@ -72,6 +73,13 @@ export default function ModoDesespero() {
       <Link href="/tigre-fc" style={{ background: '#F5C400', color: '#000', padding: '6px 12px', borderRadius: '6px', fontSize: 10, fontWeight: 900, textDecoration: 'none' }}>
         ESCALAR
       </Link>
+      <button
+        onClick={() => setFechado(true)}
+        aria-label="Fechar"
+        style={{ background: 'none', border: 'none', color: '#555', fontSize: 16, cursor: 'pointer', lineHeight: 1, padding: '0 4px', flexShrink: 0 }}
+      >
+        ✕
+      </button>
     </div>
   );
 }
