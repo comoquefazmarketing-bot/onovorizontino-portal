@@ -9,6 +9,7 @@ import HomeFAB from '@/components/layout/HomeFAB';
 import TickerHomeOnly from '@/components/layout/TickerHomeOnly';
 import TigreFCButton from '@/components/tigre-fc/TigreFCButton';
 import ModoDesespero from '@/components/tigre-fc/ModoDesespero';
+import WhatsAppChannelCTA from '@/components/layout/WhatsAppChannelCTA';
 
 // O <Ticker /> não é importado diretamente aqui — usamos
 // <TickerHomeOnly /> que faz a verificação de rota e só renderiza
@@ -111,6 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LgpdBanner />
         <TigreFCButton />
         <ModoDesespero />
+        <WhatsAppChannelCTA />
 
         {/* ─── FAB de retorno à Home (mobile, aparece após scroll) ─── */}
         <HomeFAB />

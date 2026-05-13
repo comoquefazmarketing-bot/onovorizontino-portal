@@ -221,6 +221,20 @@ export async function GET(req: NextRequest) {
     });
   }
 
+  // ── 6. CANAL — Conteúdo WhatsApp (manhã 8–10h e tarde 17–19h BR) ─────────────
+  if ((horaBR >= 8 && horaBR <= 10) || (horaBR >= 17 && horaBR <= 19)) {
+    const turno = horaBR <= 10 ? 'manha' : 'tarde';
+    const r6 = await chamarAgente(BASE, `/api/agents/canal?turno=${turno}`, 'GET');
+    decisoes.push({
+      agente:    'Canal',
+      motivo:    `Turno ${turno} (${horaBR}h BR) — conteúdo para o Canal do WhatsApp`,
+      acao:      `Gerar conteúdo: ${turno}`,
+      ok:        r6.ok,
+      resultado: r6.data,
+    });
+    if (r6.ok) alertas.push(`📱 Canal: conteúdo ${turno} enviado ao admin via Telegram`);
+  }
+
   if (decisoes.length === 0) {
     decisoes.push({
       agente: 'Supervisor',
