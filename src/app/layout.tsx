@@ -102,7 +102,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PortalHeader />
 
         {/* ─── TICKER (renderiza APENAS em "/") ─── */}
-        <TickerHomeOnly />
+        {/* <TickerHomeOnly /> */}
 
         {/* Main wrapper para empurrar o footer para baixo */}
         <main className="flex-grow">{children}</main>
