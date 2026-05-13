@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
       body?: Record<string, unknown>;
     };
 
-    if (!path?.startsWith('/api/agents/')) {
+    const ALLOWED = ['/api/agents/', '/api/tigre-fc/sofascore-'];
+    if (!ALLOWED.some(prefix => path?.startsWith(prefix))) {
       return NextResponse.json({ error: 'Caminho inválido.' }, { status: 400 });
     }
 

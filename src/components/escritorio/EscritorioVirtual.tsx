@@ -64,7 +64,8 @@ const AGENTES: Agente[] = [
     corBg: 'rgba(245,196,0,0.06)',
     scheduleMs: 30 * 60 * 1000, // 30 min
     acoes: [
-      { id: 'auto', label: '📰 Verificar último resultado', method: 'GET', path: '/api/agents/gabi', params: { auto: 1 }, primary: true },
+      { id: 'auto',    label: '📰 Verificar último resultado', method: 'GET', path: '/api/agents/gabi', params: { auto: 1 }, primary: true },
+      { id: 'ratings', label: '⭐ Ratings SofaScore (último jogo)', method: 'GET', path: '/api/tigre-fc/sofascore-ultimo-jogo-ratings' },
     ],
   },
   {
@@ -78,12 +79,13 @@ const AGENTES: Agente[] = [
     corBg: 'rgba(0,243,255,0.04)',
     scheduleMs: 60 * 60 * 1000, // 1h
     acoes: [
-      { id: 'rodada', label: '📅 Status da Rodada', method: 'GET', path: '/api/agents/ana/rodada', primary: true },
-      { id: 'sug433', label: '⚽ Sugerir 4-3-3', method: 'GET', path: '/api/agents/ana', params: { formacao: '4-3-3' } },
-      { id: 'sug442', label: '⚽ Sugerir 4-4-2', method: 'GET', path: '/api/agents/ana', params: { formacao: '4-4-2' } },
-      { id: 'sug4231', label: '⚽ Sugerir 4-2-3-1', method: 'GET', path: '/api/agents/ana', params: { formacao: '4-2-3-1' } },
-      { id: 'rankATA', label: '🏃 Top Atacantes', method: 'GET', path: '/api/agents/ana', params: { ranking: 'ATA' } },
-      { id: 'rankZAG', label: '🛡 Top Zagueiros', method: 'GET', path: '/api/agents/ana', params: { ranking: 'ZAG' } },
+      { id: 'rodada',   label: '📅 Status da Rodada', method: 'GET', path: '/api/agents/ana/rodada', primary: true },
+      { id: 'ratings',  label: '⭐ Capitão & Herói (SofaScore)', method: 'GET', path: '/api/tigre-fc/sofascore-ultimo-jogo-ratings' },
+      { id: 'sug433',   label: '⚽ Sugerir 4-3-3', method: 'GET', path: '/api/agents/ana', params: { formacao: '4-3-3' } },
+      { id: 'sug442',   label: '⚽ Sugerir 4-4-2', method: 'GET', path: '/api/agents/ana', params: { formacao: '4-4-2' } },
+      { id: 'sug4231',  label: '⚽ Sugerir 4-2-3-1', method: 'GET', path: '/api/agents/ana', params: { formacao: '4-2-3-1' } },
+      { id: 'rankATA',  label: '🏃 Top Atacantes', method: 'GET', path: '/api/agents/ana', params: { ranking: 'ATA' } },
+      { id: 'rankZAG',  label: '🛡 Top Zagueiros', method: 'GET', path: '/api/agents/ana', params: { ranking: 'ZAG' } },
     ],
   },
   {

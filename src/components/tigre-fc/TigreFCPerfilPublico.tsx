@@ -291,12 +291,12 @@ export default function TigreFCPerfilPublico({
       if (cancelled) return;
       if (u) setPerfil(u);
 
-      // 2. Escalação — user_id = google_id do tigre_fc_usuarios
-      if (u?.google_id) {
+      // 2. Escalação — usuario_id = id interno do tigre_fc_usuarios (não o google_id)
+      if (u?.id) {
         const { data: e } = await supabase
           .from('tigre_fc_escalacoes')
-          .select('formacao, slots, capitao_id, heroi_id, palpite_mandante, palpite_visitante, updated_at')
-          .eq('user_id', u.google_id)
+          .select('formacao, lineup, capitao_id, heroi_id, palpite_tigre, palpite_adv, jogo_id, updated_at')
+          .eq('usuario_id', u.id)
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -319,7 +319,7 @@ export default function TigreFCPerfilPublico({
   const pontos    = perfil?.pontos_total ?? 0;
   const xp        = perfil?.xp        ?? 0;
   const displayNm = perfil?.apelido   ?? perfil?.nome ?? 'TORCEDOR';
-  const slots     = esc?.slots        ?? {};
+  const slots     = esc?.lineup       ?? {};
   const formacao  = esc?.formacao     ?? '4-3-3';
   const capId     = esc?.capitao_id   ?? null;
   const heroId    = esc?.heroi_id     ?? null;
@@ -420,12 +420,12 @@ export default function TigreFCPerfilPublico({
                     </div>
 
                     {/* Palpite */}
-                    {(esc.palpite_mandante != null && esc.palpite_visitante != null) && (
+                    {(esc.palpite_tigre != null && esc.palpite_adv != null) && (
                       <div className="mt-2 rounded-xl py-2 text-center"
                         style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>
                         <div className="text-[9px] text-zinc-500 font-black tracking-wider mb-0.5">PALPITE</div>
                         <div className="text-2xl font-black italic" style={{ color:GOLD }}>
-                          {esc.palpite_mandante} <span className="text-zinc-600">×</span> {esc.palpite_visitante}
+                          {esc.palpite_tigre} <span className="text-zinc-600">×</span> {esc.palpite_adv}
                         </div>
                       </div>
                     )}
