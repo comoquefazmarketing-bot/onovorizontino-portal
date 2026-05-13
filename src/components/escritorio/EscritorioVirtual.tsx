@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 const FONT = "'Barlow Condensed', sans-serif";
 const STORAGE_LOG  = 'escritorio_log_v3';
@@ -476,18 +477,54 @@ function AgentPanel({
   );
 }
 
+// ── Tela de acesso negado ─────────────────────────────────────────────────────
+function AcessoNegado() {
+  return (
+    <main className="min-h-screen bg-[#050505] flex items-center justify-center" style={{ fontFamily: FONT }}>
+      <div className="text-center px-6">
+        <div className="text-6xl mb-6">🔒</div>
+        <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white mb-2">
+          ACESSO <span className="text-[#FF2244]">RESTRITO</span>
+        </h1>
+        <p className="text-zinc-600 text-sm font-bold tracking-widest uppercase">
+          Área exclusiva do administrador
+        </p>
+      </div>
+    </main>
+  );
+}
+
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function EscritorioVirtual() {
-  const [mounted, setMounted]       = useState(false);
-  const [agentStates, setAgentStates] = useState<Record<string, AgentState>>({});
-  const [log, setLog]               = useState<LogItem[]>([]);
-  const [modoAuto, setModoAuto]     = useState<Record<string, boolean>>({});
-  const [selecionado, setSelecionado] = useState<string | null>(null);
-  const [tick, setTick]             = useState(0); // força re-render para countdown
+  const [mounted, setMounted]           = useState(false);
+  const [acesso, setAcesso]             = useState<'verificando' | 'ok' | 'negado'>('verificando');
+  const [agentStates, setAgentStates]   = useState<Record<string, AgentState>>({});
+  const [log, setLog]                   = useState<LogItem[]>([]);
+  const [modoAuto, setModoAuto]         = useState<Record<string, boolean>>({});
+  const [selecionado, setSelecionado]   = useState<string | null>(null);
+  const [tick, setTick]                 = useState(0);
   const nextRunRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     setMounted(true);
+
+    async function verificarAcesso() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) { setAcesso('negado'); return; }
+
+        const res = await fetch('/api/escritorio/is-admin', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const { admin } = await res.json();
+        setAcesso(admin ? 'ok' : 'negado');
+      } catch {
+        setAcesso('negado');
+      }
+    }
+
+    verificarAcesso();
+
     const savedLog  = loadLog();
     const savedAuto = loadAuto();
     setLog(savedLog);
@@ -507,7 +544,6 @@ export default function EscritorioVirtual() {
     });
     setAgentStates(states);
 
-    // Tick a cada segundo para atualizar countdown
     const tickId = setInterval(() => setTick(t => t + 1), 1000);
     return () => clearInterval(tickId);
   }, []);
@@ -592,7 +628,8 @@ export default function EscritorioVirtual() {
   const totalWorking = Object.values(agentStates).filter(s => s.status === 'working').length;
   const totalAuto    = Object.values(modoAuto).filter(Boolean).length;
 
-  if (!mounted) return <div className="min-h-screen bg-[#050505]" />;
+  if (!mounted || acesso === 'verificando') return <div className="min-h-screen bg-[#050505]" />;
+  if (acesso === 'negado') return <AcessoNegado />;
 
   return (
     <main className="min-h-screen bg-[#050505] text-white overflow-x-hidden" style={{ fontFamily: FONT }}>
