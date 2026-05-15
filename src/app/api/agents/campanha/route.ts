@@ -15,6 +15,8 @@ function autorizado(req: NextRequest): boolean {
   const cronSecret   = process.env.CRON_SECRET;
   const agentsSecret = process.env.AGENTS_SECRET;
 
+  if (!cronSecret && !agentsSecret) return true;
+
   const headerCron   = req.headers.get('x-cron-secret');
   const headerBearer = req.headers.get('authorization')?.replace('Bearer ', '');
 
