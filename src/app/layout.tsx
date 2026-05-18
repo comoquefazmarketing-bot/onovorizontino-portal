@@ -6,9 +6,6 @@ import Analytics from '@/components/layout/Analytics';
 import LgpdBanner from '@/components/layout/LgpdBanner';
 import PortalHeader from '@/components/layout/PortalHeader';
 import HomeFAB from '@/components/layout/HomeFAB';
-import TickerHomeOnly from '@/components/layout/TickerHomeOnly';
-import TigreFCButton from '@/components/tigre-fc/TigreFCButton';
-import ModoDesespero from '@/components/tigre-fc/ModoDesespero';
 
 // O <Ticker /> não é importado diretamente aqui — usamos
 // <TickerHomeOnly /> que faz a verificação de rota e só renderiza
@@ -101,16 +98,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* ─── HEADER GLOBAL (sticky, em todas as páginas) ─── */}
         <PortalHeader />
 
-        {/* ─── TICKER (renderiza APENAS em "/") ─── */}
-        <TickerHomeOnly />
-
         {/* Main wrapper para empurrar o footer para baixo */}
         <main className="flex-grow">{children}</main>
 
         <Analytics />
         <LgpdBanner />
-        <TigreFCButton />
-        <ModoDesespero />
 
         {/* ─── FAB de retorno à Home (mobile, aparece após scroll) ─── */}
         <HomeFAB />

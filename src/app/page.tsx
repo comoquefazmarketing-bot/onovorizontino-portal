@@ -1,5 +1,4 @@
 // src/app/page.tsx
-import Ticker from '@/components/layout/Ticker';
 import { Suspense } from 'react';
 import HomeHero from '@/components/home/HomeHero';
 import PostagensGrid from '@/components/layout/NewsGrid';
@@ -12,8 +11,54 @@ import CTCarousel from '@/components/sections/CTCarousel';
 import Footer from '@/components/layout/Footer';
 import Manifesto from '@/components/sections/Manifesto';
 import GlobalAdBanner from '@/components/ads/GlobalAdBanner';
-import EscalacaoPopup from '@/components/home/EscalacaoPopup';
-import LgpdBanner from '@/components/layout/LgpdBanner';
+
+/* ─── JSON-LD: Organization + WebSite ───────────────────────────
+   Sinaliza ao Google que este é um veículo jornalístico legítimo.
+   Colocado na home (raiz) para máxima cobertura de indexação.
+────────────────────────────────────────────────────────────────── */
+const jsonLdOrganization = {
+  '@context': 'https://schema.org',
+  '@type': 'NewsMediaOrganization',
+  '@id': 'https://www.onovorizontino.com.br/#organization',
+  name: 'Portal O Novorizontino',
+  alternateName: 'O Novorizontino',
+  url: 'https://www.onovorizontino.com.br',
+  logo: {
+    '@type': 'ImageObject',
+    url: 'https://www.onovorizontino.com.br/assets/logos/LOGO%20-%20O%20NOVORIZONTINO.png',
+    width: 512,
+    height: 512,
+  },
+  description:
+    'Portal de jornalismo digital independente dedicado à cobertura do Grêmio Novorizontino — o Tigre do Vale.',
+  foundingDate: '2021',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Novo Horizonte',
+    addressRegion: 'SP',
+    addressCountry: 'BR',
+  },
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'comoquefazmarketing@gmail.com',
+    contactType: 'editorial',
+  },
+  sameAs: ['https://www.onovorizontino.com.br'],
+};
+
+const jsonLdWebSite = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': 'https://www.onovorizontino.com.br/#website',
+  url: 'https://www.onovorizontino.com.br',
+  name: 'Portal O Novorizontino',
+  publisher: { '@id': 'https://www.onovorizontino.com.br/#organization' },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://www.onovorizontino.com.br/noticias?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
+  },
+};
 
 // ── Skeleton do grid de notícias ─────────────────────────────
 function GridSkeleton() {
@@ -92,6 +137,16 @@ function TVSkeleton() {
 export default async function Home() {
   return (
     <main className="min-h-screen bg-black flex flex-col scroll-smooth">
+      {/* ── JSON-LD: Organization + WebSite ── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
+      />
+
       <HomeHero />
       <CategoryNav />
 
@@ -196,8 +251,6 @@ export default async function Home() {
       </div>
 
       <Footer />
-      <EscalacaoPopup />
-      <LgpdBanner />
     </main>
   );
 }

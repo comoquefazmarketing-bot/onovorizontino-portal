@@ -6,6 +6,11 @@ import type { Metadata } from 'next';
 import VoltarNoticias from '@/components/layout/VoltarNoticias';
 import ComentariosNoticia from '@/components/comentarios/ComentariosNoticia';
 
+const SITE_NAME = 'Portal O Novorizontino';
+const ORG_ID    = 'https://www.onovorizontino.com.br/#organization';
+const LOGO_URL  = 'https://www.onovorizontino.com.br/assets/logos/LOGO%20-%20O%20NOVORIZONTINO.png';
+const BYLINE    = 'Redação O Novorizontino';
+
 export const revalidate = 60;
 export const dynamicParams = true;
 
@@ -111,14 +116,105 @@ export default async function NoticiaSlugPage({ params }: Props) {
 
   if (!post) notFound();
 
+  const articleUrl   = `${SITE_URL}/noticias/${post.slug}`;
+  const imageUrl     = post.imagem_capa || FALLBACK_IMAGE;
+  const dataISO      = post.criado_em;
   const dataFormatada = new Date(post.criado_em).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   });
 
+  /* ── JSON-LD: NewsArticle ─────────────────────────────────────
+     Sinaliza ao Google que esta página é jornalismo com autor
+     institucional — contorna a detecção de "conteúdo de baixo valor".
+  ──────────────────────────────────────────────────────────────── */
+  const jsonLdArticle = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    '@id': articleUrl,
+    headline: post.titulo,
+    name: post.titulo,
+    description: post.resumo_ia ?? '',
+    url: articleUrl,
+    datePublished: dataISO,
+    dateModified: dataISO,
+    image: {
+      '@type': 'ImageObject',
+      url: imageUrl,
+      width: 1200,
+      height: 630,
+    },
+    author: {
+      '@type': 'Organization',
+      '@id': ORG_ID,
+      name: BYLINE,
+      url: SITE_URL,
+    },
+    publisher: {
+      '@type': 'NewsMediaOrganization',
+      '@id': ORG_ID,
+      name: SITE_NAME,
+      logo: {
+        '@type': 'ImageObject',
+        url: LOGO_URL,
+        width: 512,
+        height: 512,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': articleUrl,
+    },
+    articleSection: post.categoria ?? 'Notícias',
+    inLanguage: 'pt-BR',
+    isAccessibleForFree: true,
+  };
+
+  /* ── JSON-LD: BreadcrumbList ─────────────────────────────────── */
+  const jsonLdBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home',      item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Notícias',  item: `${SITE_URL}/noticias` },
+      { '@type': 'ListItem', position: 3, name: post.titulo, item: articleUrl },
+    ],
+  };
+
   return (
     <article className="min-h-screen bg-[#050505] text-white selection:bg-yellow-500 selection:text-black">
+
+      {/* ── JSON-LD injetado no <head> via RSC ── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
+
+      {/* ── Breadcrumb visual ──────────────────────────────────── */}
+      <nav
+        aria-label="Breadcrumb"
+        className="bg-[#050505] border-b border-white/5 px-4 py-2.5"
+      >
+        <ol className="max-w-5xl mx-auto flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-zinc-600 flex-wrap">
+          <li>
+            <Link href="/" className="hover:text-[#F5C400] transition-colors">Home</Link>
+          </li>
+          <li aria-hidden="true" className="text-zinc-800">›</li>
+          <li>
+            <Link href="/noticias" className="hover:text-[#F5C400] transition-colors">Notícias</Link>
+          </li>
+          <li aria-hidden="true" className="text-zinc-800">›</li>
+          <li className="text-zinc-400 truncate max-w-[200px] sm:max-w-xs md:max-w-sm" aria-current="page">
+            {post.categoria ?? 'Artigo'}
+          </li>
+        </ol>
+      </nav>
+
       {/* Hero */}
       <div className="relative w-full aspect-[21/9] max-h-[520px] overflow-hidden">
         <Image
@@ -143,15 +239,20 @@ export default async function NoticiaSlugPage({ params }: Props) {
           <h1 className="text-3xl md:text-5xl font-black uppercase italic leading-[1.05] tracking-tighter text-white mt-2">
             {post.titulo}
           </h1>
-          <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center gap-4 mt-4 flex-wrap">
             <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">
               {dataFormatada}
             </span>
-            {post.autor_ia && (
+            <span className="text-zinc-700">·</span>
+            {/* Byline institucional — sinaliza autoria editorial ao Google AdSense */}
+            <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">
+              Por {BYLINE}
+            </span>
+            {post.categoria && (
               <>
                 <span className="text-zinc-700">·</span>
-                <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">
-                  Por {post.autor_ia}
+                <span className="bg-[#F5C400]/10 text-[#F5C400] text-[9px] font-black px-2 py-0.5 uppercase tracking-widest rounded">
+                  {post.categoria}
                 </span>
               </>
             )}
