@@ -11,6 +11,7 @@ import CTCarousel from '@/components/sections/CTCarousel';
 import Footer from '@/components/layout/Footer';
 import Manifesto from '@/components/sections/Manifesto';
 import GlobalAdBanner from '@/components/ads/GlobalAdBanner';
+import SelecaoBanner from '@/components/sections/SelecaoBanner';
 
 /* ─── JSON-LD: Organization + WebSite ───────────────────────────
    Sinaliza ao Google que este é um veículo jornalístico legítimo.
@@ -156,6 +157,9 @@ export default async function Home() {
           <PostagensGrid />
         </Suspense>
       </section>
+
+      {/* ── 🇧🇷 BANNER VERDE E AMARELO — SELEÇÃO BRASILEIRA ─── */}
+      <SelecaoBanner />
 
       {/* BANNER PUBLICITÁRIO */}
       <GlobalAdBanner />
