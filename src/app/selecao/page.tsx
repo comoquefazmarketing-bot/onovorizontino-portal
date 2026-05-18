@@ -49,45 +49,51 @@ interface Curiosidade {
 ───────────────────────────────────────────── */
 const jogadores: Jogador[] = [
   // Goleiros
-  { nome: 'Alisson Becker', apelido: 'Alisson', posicao: 'Goleiro', clube: 'Liverpool', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 1, iniciais: 'AL' },
-  { nome: 'Ederson Moraes', apelido: 'Ederson', posicao: 'Goleiro', clube: 'Man. City', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 12, iniciais: 'ED' },
-  { nome: 'Bento Krepski', apelido: 'Bento', posicao: 'Goleiro', clube: 'Al-Nassr', bandeira: '🇸🇦', camisa: 23, iniciais: 'BE' },
-  // Defensores
-  { nome: 'Danilo Luiz', apelido: 'Danilo', posicao: 'Defensor', clube: 'Juventus', bandeira: '🇮🇹', camisa: 2, iniciais: 'DA' },
-  { nome: 'Marquinhos', apelido: 'Marquinhos', posicao: 'Defensor', clube: 'PSG', bandeira: '🇫🇷', camisa: 4, destaque: true, iniciais: 'MA' },
-  { nome: 'Éder Militão', apelido: 'Militão', posicao: 'Defensor', clube: 'Real Madrid', bandeira: '🇪🇸', camisa: 3, iniciais: 'EM' },
-  { nome: 'Gabriel Magalhães', apelido: 'Gabriel M.', posicao: 'Defensor', clube: 'Arsenal', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 5, iniciais: 'GM' },
-  { nome: 'Bremer', apelido: 'Bremer', posicao: 'Defensor', clube: 'Juventus', bandeira: '🇮🇹', camisa: 14, iniciais: 'BR' },
-  { nome: 'Guilherme Arana', apelido: 'Arana', posicao: 'Defensor', clube: 'Atlético-MG', bandeira: '🇧🇷', camisa: 6, iniciais: 'AR' },
-  { nome: 'Vanderson', apelido: 'Vanderson', posicao: 'Defensor', clube: 'Monaco', bandeira: '🇫🇷', camisa: 22, iniciais: 'VA' },
-  { nome: 'Abner Vinicius', apelido: 'Abner', posicao: 'Defensor', clube: 'Lyon', bandeira: '🇫🇷', camisa: 13, iniciais: 'AB' },
+  { nome: 'Alisson Becker',     apelido: 'Alisson',     posicao: 'Goleiro',    clube: 'Liverpool',       bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 1,  iniciais: 'AL' },
+  { nome: 'Ederson Moraes',     apelido: 'Ederson',     posicao: 'Goleiro',    clube: 'Fenerbahçe',      bandeira: '🇹🇷', camisa: 12, iniciais: 'ED' },
+  { nome: 'Weverton',           apelido: 'Weverton',    posicao: 'Goleiro',    clube: 'Grêmio',          bandeira: '🇧🇷', camisa: 23, iniciais: 'WV' },
+  // Defensores — Zagueiros
+  { nome: 'Marquinhos',         apelido: 'Marquinhos',  posicao: 'Defensor',   clube: 'PSG',             bandeira: '🇫🇷', camisa: 4,  destaque: true, iniciais: 'MA' },
+  { nome: 'Gabriel Magalhães',  apelido: 'Gabriel M.',  posicao: 'Defensor',   clube: 'Arsenal',         bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 3,  iniciais: 'GM' },
+  { nome: 'Bremer',             apelido: 'Bremer',      posicao: 'Defensor',   clube: 'Juventus',        bandeira: '🇮🇹', camisa: 5,  iniciais: 'BR' },
+  { nome: 'Ibañez',             apelido: 'Ibañez',      posicao: 'Defensor',   clube: 'Al-Ahli',         bandeira: '🇸🇦', camisa: 13, iniciais: 'IB' },
+  { nome: 'Léo Pereira',        apelido: 'Léo Pereira', posicao: 'Defensor',   clube: 'Flamengo',        bandeira: '🇧🇷', camisa: 14, iniciais: 'LP' },
+  // Defensores — Laterais
+  { nome: 'Wesley Andrade',     apelido: 'Wesley',      posicao: 'Defensor',   clube: 'Roma',            bandeira: '🇮🇹', camisa: 2,  iniciais: 'WE' },
+  { nome: 'Alex Sandro',        apelido: 'Alex Sandro', posicao: 'Defensor',   clube: 'Flamengo',        bandeira: '🇧🇷', camisa: 6,  iniciais: 'AS' },
+  { nome: 'Douglas Santos',     apelido: 'D. Santos',   posicao: 'Defensor',   clube: 'Zenit',           bandeira: '🇷🇺', camisa: 22, iniciais: 'DS' },
+  { nome: 'Danilo Luiz',        apelido: 'Danilo',      posicao: 'Defensor',   clube: 'Flamengo',        bandeira: '🇧🇷', camisa: 25, iniciais: 'DA' },
   // Meio-campo
-  { nome: 'Bruno Guimarães', apelido: 'Bruno G.', posicao: 'Meio-campo', clube: 'Newcastle', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 8, destaque: true, iniciais: 'BG' },
-  { nome: 'Casemiro', apelido: 'Casemiro', posicao: 'Meio-campo', clube: 'Man. United', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 17, iniciais: 'CA' },
-  { nome: 'Lucas Paquetá', apelido: 'Paquetá', posicao: 'Meio-campo', clube: 'West Ham', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 10, iniciais: 'LP' },
-  { nome: 'Gerson Santos', apelido: 'Gerson', posicao: 'Meio-campo', clube: 'Flamengo', bandeira: '🇧🇷', camisa: 16, iniciais: 'GE' },
-  { nome: 'Andreas Pereira', apelido: 'Andreas', posicao: 'Meio-campo', clube: 'Fulham', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 18, iniciais: 'AP' },
+  { nome: 'Casemiro',           apelido: 'Casemiro',    posicao: 'Meio-campo', clube: 'Man. United',     bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 16, iniciais: 'CA' },
+  { nome: 'Bruno Guimarães',    apelido: 'Bruno G.',    posicao: 'Meio-campo', clube: 'Newcastle',       bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 8,  destaque: true, iniciais: 'BG' },
+  { nome: 'Danilo Santos',      apelido: 'D. Santos',   posicao: 'Meio-campo', clube: 'Botafogo',        bandeira: '🇧🇷', camisa: 15, iniciais: 'DN' },
+  { nome: 'Lucas Paquetá',      apelido: 'Paquetá',     posicao: 'Meio-campo', clube: 'Flamengo',        bandeira: '🇧🇷', camisa: 21, iniciais: 'PQ' },
+  { nome: 'Fabinho',            apelido: 'Fabinho',     posicao: 'Meio-campo', clube: 'Al-Ittihad',      bandeira: '🇸🇦', camisa: 17, iniciais: 'FA' },
   // Atacantes
-  { nome: 'Vinícius Júnior', apelido: 'Vini Jr.', posicao: 'Atacante', clube: 'Real Madrid', bandeira: '🇪🇸', camisa: 7, destaque: true, iniciais: 'VJ' },
-  { nome: 'Rodrygo Goes', apelido: 'Rodrygo', posicao: 'Atacante', clube: 'Real Madrid', bandeira: '🇪🇸', camisa: 11, iniciais: 'RO' },
-  { nome: 'Raphinha', apelido: 'Raphinha', posicao: 'Atacante', clube: 'Barcelona', bandeira: '🇪🇸', camisa: 19, destaque: true, iniciais: 'RA' },
-  { nome: 'Endrick Felipe', apelido: 'Endrick', posicao: 'Atacante', clube: 'Real Madrid', bandeira: '🇪🇸', camisa: 9, destaque: true, iniciais: 'EN' },
-  { nome: 'Gabriel Martinelli', apelido: 'Martinelli', posicao: 'Atacante', clube: 'Arsenal', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 20, iniciais: 'MT' },
-  { nome: 'Savinho', apelido: 'Savinho', posicao: 'Atacante', clube: 'Man. City', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 21, iniciais: 'SA' },
-  { nome: 'Pedro Guilherme', apelido: 'Pedro', posicao: 'Atacante', clube: 'Flamengo', bandeira: '🇧🇷', camisa: 15, iniciais: 'PE' },
-  { nome: 'Luiz Henrique', apelido: 'Luiz H.', posicao: 'Atacante', clube: 'Botafogo', bandeira: '🇧🇷', camisa: 24, iniciais: 'LH' },
-  { nome: 'João Pedro', apelido: 'João Pedro', posicao: 'Atacante', clube: 'Brighton', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 25, iniciais: 'JP' },
-  { nome: 'Gabriel Barbosa', apelido: 'Gabigol', posicao: 'Atacante', clube: 'Cruzeiro', bandeira: '🇧🇷', camisa: 26, iniciais: 'GG' },
+  { nome: 'Vinícius Júnior',    apelido: 'Vini Jr.',    posicao: 'Atacante',   clube: 'Real Madrid',     bandeira: '🇪🇸', camisa: 7,  destaque: true, iniciais: 'VJ' },
+  { nome: 'Neymar Jr.',         apelido: 'Neymar',      posicao: 'Atacante',   clube: 'Santos',          bandeira: '🇧🇷', camisa: 10, destaque: true, iniciais: 'NJ' },
+  { nome: 'Raphinha',           apelido: 'Raphinha',    posicao: 'Atacante',   clube: 'Barcelona',       bandeira: '🇪🇸', camisa: 11, destaque: true, iniciais: 'RA' },
+  { nome: 'Endrick Felipe',     apelido: 'Endrick',     posicao: 'Atacante',   clube: 'Lyon',            bandeira: '🇫🇷', camisa: 9,  destaque: true, iniciais: 'EN' },
+  { nome: 'Gabriel Martinelli', apelido: 'Martinelli',  posicao: 'Atacante',   clube: 'Arsenal',         bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 19, iniciais: 'MT' },
+  { nome: 'Luiz Henrique',      apelido: 'Luiz H.',     posicao: 'Atacante',   clube: 'Zenit',           bandeira: '🇷🇺', camisa: 18, iniciais: 'LH' },
+  { nome: 'Matheus Cunha',      apelido: 'M. Cunha',    posicao: 'Atacante',   clube: 'Man. United',     bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 20, iniciais: 'MC' },
+  { nome: 'Rayan',              apelido: 'Rayan',       posicao: 'Atacante',   clube: 'Bournemouth',     bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 26, iniciais: 'RY' },
+  { nome: 'Igor Thiago',        apelido: 'Igor Thiago', posicao: 'Atacante',   clube: 'Brentford',       bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', camisa: 24, iniciais: 'IT' },
 ];
 
 const jogos: Jogo[] = [
-  { data: '13 Jun', hora: '18:00', adversario: 'México', bandeiraAdv: '🇲🇽', fase: 'Fase de Grupos – Rodada 1', estadio: 'Allegiant Stadium', cidade: 'Las Vegas, EUA' },
-  { data: '17 Jun', hora: '21:00', adversario: 'Equador', bandeiraAdv: '🇪🇨', fase: 'Fase de Grupos – Rodada 2', estadio: 'AT&T Stadium', cidade: 'Dallas, EUA' },
-  { data: '21 Jun', hora: '18:00', adversario: 'Polônia', bandeiraAdv: '🇵🇱', fase: 'Fase de Grupos – Rodada 3', estadio: 'MetLife Stadium', cidade: 'Nova York, EUA' },
-  { data: '28 Jun', hora: '18:00', adversario: 'Oitavas de Final', bandeiraAdv: '🏆', fase: 'Mata-mata', estadio: 'A definir', cidade: 'EUA / Canadá / México' },
-  { data: '05 Jul', hora: '21:00', adversario: 'Quartas de Final', bandeiraAdv: '🏆', fase: 'Mata-mata', estadio: 'A definir', cidade: 'EUA / Canadá / México' },
-  { data: '14 Jul', hora: '21:00', adversario: 'SEMIFINAL', bandeiraAdv: '🌟', fase: 'Semifinal', estadio: 'A definir', cidade: 'EUA' },
-  { data: '19 Jul', hora: '18:00', adversario: 'GRANDE FINAL', bandeiraAdv: '🏆', fase: 'Final — Copa do Mundo 2026', estadio: 'MetLife Stadium', cidade: 'Nova York, EUA' },
+  // Amistosos preparatórios (i=0, i=1)
+  { data: '31 Mai', hora: 'A def.', adversario: 'Panamá',        bandeiraAdv: '🇵🇦', fase: 'Amistoso Preparatório',   estadio: 'Maracanã',                  cidade: 'Rio de Janeiro, Brasil' },
+  { data: '06 Jun', hora: 'A def.', adversario: 'Egito',         bandeiraAdv: '🇪🇬', fase: 'Amistoso Preparatório',   estadio: 'Huntington Bank Field',      cidade: 'Cleveland, EUA' },
+  // Fase de grupos — Grupo C: Brasil, Marrocos, Haiti, Escócia (i=2, i=3, i=4)
+  { data: '13 Jun', hora: '19:00',  adversario: 'Marrocos',      bandeiraAdv: '🇲🇦', fase: 'Grupo C – Rodada 1',      estadio: 'MetLife Stadium',            cidade: 'Nova Iorque/NJ, EUA' },
+  { data: '19 Jun', hora: '21:30',  adversario: 'Haiti',         bandeiraAdv: '🇭🇹', fase: 'Grupo C – Rodada 2',      estadio: 'Lincoln Financial Field',    cidade: 'Filadélfia, EUA' },
+  { data: '24 Jun', hora: 'A def.', adversario: 'Escócia',       bandeiraAdv: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', fase: 'Grupo C – Rodada 3',      estadio: 'Hard Rock Stadium',          cidade: 'Miami, EUA' },
+  // Mata-mata (i=5, i=6, i=7, i=8)
+  { data: '29 Jun', hora: 'A def.', adversario: 'Oitavas de Final', bandeiraAdv: '🏆', fase: 'Mata-mata',             estadio: 'A definir',                  cidade: 'EUA / Canadá / México' },
+  { data: '05 Jul', hora: 'A def.', adversario: 'Quartas de Final', bandeiraAdv: '🏆', fase: 'Mata-mata',             estadio: 'A definir',                  cidade: 'EUA / Canadá / México' },
+  { data: '15 Jul', hora: 'A def.', adversario: 'SEMIFINAL',        bandeiraAdv: '🌟', fase: 'Semifinal',             estadio: 'A definir',                  cidade: 'EUA' },
+  { data: '19 Jul', hora: '18:00',  adversario: 'GRANDE FINAL',     bandeiraAdv: '🏆', fase: 'Final — Copa do Mundo 2026', estadio: 'MetLife Stadium',       cidade: 'Nova York, EUA' },
 ];
 
 const noticias: Noticia[] = [
@@ -110,9 +116,9 @@ const curiosidades: Curiosidade[] = [
 
 const opcoesPoll = [
   { id: 1, nome: 'Vinícius Jr.', emoji: '⚡' },
-  { id: 2, nome: 'Endrick', emoji: '🔥' },
-  { id: 3, nome: 'Raphinha', emoji: '🎯' },
-  { id: 4, nome: 'Rodrygo', emoji: '✨' },
+  { id: 2, nome: 'Neymar',       emoji: '✨' },
+  { id: 3, nome: 'Endrick',      emoji: '🔥' },
+  { id: 4, nome: 'Raphinha',     emoji: '🎯' },
 ];
 
 /* ─────────────────────────────────────────────
@@ -584,7 +590,7 @@ export default function VerdeEAmarelo() {
                   role="listitem"
                 >
                   {/* Indicador de fase */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ background: i >= 3 ? '#ffdf00' : '#009c3b' }} aria-hidden="true" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ background: i >= 5 ? '#ffdf00' : '#009c3b' }} aria-hidden="true" />
 
                   <div className="flex flex-wrap items-center gap-3 pl-3">
                     {/* Data/Hora */}
@@ -616,12 +622,12 @@ export default function VerdeEAmarelo() {
                     <div
                       className="flex-shrink-0 text-[10px] font-bold px-3 py-1 rounded-full ve-subtitulo uppercase tracking-wider"
                       style={{
-                        background: i >= 3 ? 'rgba(255,223,0,0.12)' : 'rgba(0,156,59,0.12)',
-                        color: i >= 3 ? '#ffdf00' : '#00c94a',
-                        border: `1px solid ${i >= 3 ? 'rgba(255,223,0,0.3)' : 'rgba(0,156,59,0.3)'}`,
+                        background: i >= 5 ? 'rgba(255,223,0,0.12)' : 'rgba(0,156,59,0.12)',
+                        color: i >= 5 ? '#ffdf00' : '#00c94a',
+                        border: `1px solid ${i >= 5 ? 'rgba(255,223,0,0.3)' : 'rgba(0,156,59,0.3)'}`,
                       }}
                     >
-                      {i < 3 ? 'Grupos' : i === 6 ? '🏆 Final' : 'Mata-mata'}
+                      {i < 2 ? 'Amistoso' : i < 5 ? 'Grupos' : i === 8 ? '🏆 Final' : 'Mata-mata'}
                     </div>
                   </div>
                 </article>
