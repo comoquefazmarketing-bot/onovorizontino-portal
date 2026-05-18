@@ -1,7 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+
+// Rotas onde o ModoDesespero NÃO deve aparecer (seções especiais, editoriais)
+const ROTAS_EXCLUIDAS = ['/selecao'];
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
@@ -10,15 +14,20 @@ const MINUTOS_FECHAMENTO = 90;
 function pad(n: number) { return String(n).padStart(2, '0'); }
 
 export default function ModoDesespero() {
+  const pathname = usePathname();
+  const excluida = ROTAS_EXCLUIDAS.some(r => pathname.startsWith(r));
+
   const [jogo, setJogo] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [visible, setVisible] = useState(false);
 
+  // Todos os hooks ANTES de qualquer return condicional (Rules of Hooks)
   useEffect(() => {
+    if (excluida) return; // não busca dados em rotas excluídas
     fetch('/api/proximo-jogo').then(r => r.json()).then(({ jogos }) => {
       if (jogos?.[0]) setJogo(jogos[0]);
     });
-  }, []);
+  }, [excluida]);
 
   useEffect(() => {
     if (!jogo?.data_hora) return;
@@ -49,7 +58,8 @@ export default function ModoDesespero() {
     return () => clearInterval(timer);
   }, [jogo]);
 
-  if (!visible || timeLeft === null) return null;
+  // Guard pós-hooks: não renderiza em seções especiais
+  if (excluida || !visible || timeLeft === null) return null;
 
   const h = Math.floor(timeLeft / 3600);
   const m = Math.floor((timeLeft % 3600) / 60);

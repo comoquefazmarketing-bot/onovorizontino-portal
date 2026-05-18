@@ -1,6 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+// Rotas onde o TigreFCButton NÃO deve aparecer (seções especiais, editoriais)
+const ROTAS_EXCLUIDAS = ['/selecao'];
 
 const LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 
@@ -11,19 +15,25 @@ const COPYS = [
 ];
 
 export default function TigreFCButton() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [copy, setCopy] = useState(COPYS[0]);
 
+  const excluida = ROTAS_EXCLUIDAS.some(r => pathname.startsWith(r));
+
+  // Todos os hooks ANTES de qualquer return condicional (Rules of Hooks)
   useEffect(() => {
+    if (excluida) return; // não agenda timer em rotas excluídas
     const count = parseInt(sessionStorage.getItem('tigre_fc_visits') || '0');
     setCopy(COPYS[count % COPYS.length]);
     sessionStorage.setItem('tigre_fc_visits', String(count + 1));
     const timer = setTimeout(() => setVisible(true), 4000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [excluida]);
 
-  if (!visible) return null;
+  // Guard pós-hooks: não renderiza em seções especiais
+  if (excluida || !visible) return null;
 
   return (
     <>
@@ -37,7 +47,7 @@ export default function TigreFCButton() {
       {expanded && (
         <div className="tigre-popup" style={{ position:'fixed', bottom:90, right:16, zIndex:9998, background:'linear-gradient(135deg,#111,#1a1200)', border:'1px solid #F5C400', borderRadius:16, padding:'16px', width:240, boxShadow:'0 8px 32px rgba(0,0,0,0.6)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
-            <img src={LOGO} style={{ width:36, height:36, objectFit:'contain' }} />
+            <img src={LOGO} alt="Tigre FC" style={{ width:36, height:36, objectFit:'contain' }} />
             <div>
               <div style={{ fontSize:14, fontWeight:900, color:'#F5C400', letterSpacing:-0.5 }}>TIGRE FC</div>
               <div style={{ fontSize:10, color:'#555', letterSpacing:2, textTransform:'uppercase' }}>Fantasy League</div>
@@ -57,8 +67,9 @@ export default function TigreFCButton() {
       )}
 
       <button className="tigre-btn" onClick={() => setExpanded(e => !e)}
-        style={{ position:'fixed', bottom:24, right:16, zIndex:9999, width:56, height:56, borderRadius:'50%', background:'#F5C400', border:'2px solid #1a1a1a', cursor:'pointer', padding:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <img src={LOGO} style={{ width:36, height:36, objectFit:'contain' }} />
+        style={{ position:'fixed', bottom:24, right:16, zIndex:9999, width:56, height:56, borderRadius:'50%', background:'#F5C400', border:'2px solid #1a1a1a', cursor:'pointer', padding:0, display:'flex', alignItems:'center', justifyContent:'center' }}
+        aria-label="Abrir Tigre FC">
+        <img src={LOGO} alt="Tigre FC" style={{ width:36, height:36, objectFit:'contain' }} />
       </button>
     </>
   );
