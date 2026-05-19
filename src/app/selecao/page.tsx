@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { Metadata } from 'next';
+import SelecaoNewsGrid from '@/components/sections/SelecaoNewsGrid';
 
 /* ─────────────────────────────────────────────
    TIPOS
@@ -30,13 +31,6 @@ interface Jogo {
   resultado?: string;
 }
 
-interface Noticia {
-  titulo: string;
-  resumo: string;
-  tag: string;
-  tempo: string;
-  cor: string;
-}
 
 interface Curiosidade {
   numero: string;
@@ -96,14 +90,6 @@ const jogos: Jogo[] = [
   { data: '19 Jul', hora: '18:00',  adversario: 'GRANDE FINAL',     bandeiraAdv: '🏆', fase: 'Final — Copa do Mundo 2026', estadio: 'MetLife Stadium',       cidade: 'Nova York, EUA' },
 ];
 
-const noticias: Noticia[] = [
-  { titulo: 'Ancelotti divulga lista final: 26 guerreiros para o Mundial', resumo: 'O técnico italiano anunciou hoje os convocados para a Copa do Mundo 2026. Endrick e Gabigol são as surpresas da lista.', tag: 'CONVOCAÇÃO', tempo: 'Há 2 horas', cor: '#009c3b' },
-  { titulo: 'Vini Jr. chega ao Brasil e é recebido como rei pela torcida', resumo: 'Centenas de fãs foram ao aeroporto para recepcionar o camisa 7, favorito ao prêmio de melhor do mundo.', tag: 'SELEÇÃO', tempo: 'Há 5 horas', cor: '#ffdf00' },
-  { titulo: 'Raphinha faz treino especial e deve ser titular na estreia', resumo: 'O capitão e principal armador da Seleção participou de treino coletivo e mostrou estar 100% recuperado.', tag: 'TREINO', tempo: 'Há 8 horas', cor: '#002776' },
-  { titulo: '"Vamos trazer a taça de volta", diz Ancelotti em coletiva', resumo: 'O técnico falou sobre a preparação da equipe e a missão de conquistar o hexacampeonato para o Brasil.', tag: 'ENTREVISTA', tempo: 'Há 1 dia', cor: '#009c3b' },
-  { titulo: 'Endrick, o fenômeno de 19 anos que pode ser a arma secreta do Brasil', resumo: 'Análise tática: como o jovem atacante pode ser decisivo nos jogos de mata-mata da Copa do Mundo.', tag: 'ANÁLISE', tempo: 'Há 1 dia', cor: '#ffdf00' },
-  { titulo: 'Brasil treina formação 4-3-3 com Paquetá no meio e Raphinha pela esquerda', resumo: 'Ancelotti testou novo esquema no treino fechado desta manhã no CT da Granja Comary.', tag: 'TÁTICO', tempo: 'Há 2 dias', cor: '#002776' },
-];
 
 const curiosidades: Curiosidade[] = [
   { numero: '5×', descricao: 'Maior campeão do mundo. Brasil é o único país pentacampeão e busca o hexatítulo.', icone: '🏆' },
@@ -648,44 +634,8 @@ export default function VerdeEAmarelo() {
               <div className="w-24 h-1 mx-auto rounded-full" style={{ background: 'linear-gradient(90deg, #009c3b, #ffdf00)' }} />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {noticias.map((n, i) => (
-                <article
-                  key={i}
-                  className="card-jogador rounded-xl overflow-hidden border border-white/8 cursor-pointer group"
-                  style={{ background: 'rgba(0,15,8,0.9)' }}
-                >
-                  {/* Topo colorido */}
-                  <div className="h-1.5" style={{ background: n.cor }} aria-hidden="true" />
-
-                  <div className="p-5">
-                    {/* Tag e tempo */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span
-                        className="ve-subtitulo text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider"
-                        style={{ background: `${n.cor}22`, color: n.cor, border: `1px solid ${n.cor}44` }}
-                      >
-                        {n.tag}
-                      </span>
-                      <span className="text-white/30 text-[11px] ve-subtitulo">{n.tempo}</span>
-                    </div>
-
-                    {/* Título */}
-                    <h3 className="ve-subtitulo font-bold text-white text-sm leading-snug mb-2 group-hover:text-[#009c3b] transition-colors">
-                      {n.titulo}
-                    </h3>
-
-                    {/* Resumo */}
-                    <p className="text-white/50 text-xs leading-relaxed line-clamp-3">{n.resumo}</p>
-
-                    {/* Ler mais */}
-                    <div className="mt-4 flex items-center gap-1 text-[#009c3b] text-xs font-semibold ve-subtitulo group-hover:gap-2 transition-all">
-                      Ler mais <span aria-hidden="true">→</span>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+            {/* Grid dinâmico — busca da tabela postagens, categoria "Seleção Brasileira" */}
+            <SelecaoNewsGrid />
           </div>
         </section>
 
