@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Metadata } from 'next';
 import SelecaoNewsGrid from '@/components/sections/SelecaoNewsGrid';
+import CopaSubnav from '@/components/layout/CopaSubnav';
+import CopaFerramentasTeaser from '@/components/sections/CopaFerramentasTeaser';
 
 /* ─────────────────────────────────────────────
    TIPOS
@@ -282,6 +284,9 @@ export default function VerdeEAmarelo() {
           transform: translateX(4px);
         }
       `}</style>
+
+      {/* Sub-nav Copa 2026 — link para /copa */}
+      <CopaSubnav />
 
       <div className="bg-[#030a04] min-h-screen text-white overflow-x-hidden">
 
@@ -621,6 +626,11 @@ export default function VerdeEAmarelo() {
             </div>
           </div>
         </section>
+
+        {/* ══════════════════════════════════════
+            FERRAMENTAS DA COPA
+        ══════════════════════════════════════ */}
+        <CopaFerramentasTeaser />
 
         {/* ══════════════════════════════════════
             NOTÍCIAS DA SELEÇÃO

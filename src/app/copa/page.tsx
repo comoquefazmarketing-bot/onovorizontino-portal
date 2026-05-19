@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import CopaSubnav from '@/components/layout/CopaSubnav';
 
 /* ══════════════════════════════════════════════════════
    TIPOS
@@ -689,6 +690,9 @@ export default function CopaPage() {
         select option { background: #18181b; }
         select optgroup { color: #F5C400; font-weight: 900; }
       `}</style>
+
+      {/* Sub-nav Copa 2026 — link para /selecao */}
+      <CopaSubnav />
 
       <div className="min-h-screen bg-[#09090b] text-white">
 
