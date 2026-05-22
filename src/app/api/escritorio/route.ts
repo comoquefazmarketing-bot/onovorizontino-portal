@@ -28,6 +28,41 @@ async function adminOuNulo() {
   return user?.email === ADMIN_EMAIL ? user : null;
 }
 
+// ─── Mapa de nomes e lógica de contexto ──────────────────────────────────────
+
+const NOMES_EXIB: Record<string, string> = {
+  'novorizontino': 'Novorizontino', 'gremio-novorizontino': 'Novorizontino',
+  'chapecoense': 'Chapecoense', 'avai': 'Avaí', 'botafogo-sp': 'Botafogo-SP',
+  'america-mg': 'América-MG', 'ceara': 'Ceará', 'criciuma': 'Criciúma',
+  'cuiaba': 'Cuiabá', 'crb': 'CRB', 'sport': 'Sport', 'londrina': 'Londrina',
+  'juventude': 'Juventude', 'ponte-preta': 'Ponte Preta', 'vila-nova': 'Vila Nova',
+  'operario-pr': 'Operário', 'goias': 'Goiás', 'sao-bernardo': 'São Bernardo',
+  'coritiba': 'Coritiba', 'santos': 'Santos', 'paysandu': 'Paysandu',
+  'athletico-pr': 'Athletico', 'guarani': 'Guarani', 'mirassol': 'Mirassol',
+  'amazonas': 'Amazonas', 'volta-redonda': 'Volta Redonda',
+};
+
+function isNovo(slug: string) {
+  return slug === 'novorizontino' || slug === 'gremio-novorizontino';
+}
+
+function nomePor(slug: string) {
+  return NOMES_EXIB[slug] ?? slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function derivarEvento(j: JogoResultado): string {
+  const novoM = isNovo(j.mandante_slug);
+  const novoG = novoM ? j.placar_mandante : j.placar_visitante;
+  const advG  = novoM ? j.placar_visitante : j.placar_mandante;
+  if (novoG === advG) return 'empate';
+  if (novoG > advG)  return 'vitória';
+  const diff = advG - novoG;
+  if (diff >= 3) return 'goleada_sofrida';
+  if (j.competicao?.toLowerCase().includes('copa') && j.rodada?.toLowerCase().includes('jogo 1'))
+    return 'reacao_necessaria';
+  return 'derrota';
+}
+
 // ─── Helpers Gabi ─────────────────────────────────────────────────────────────
 
 async function buscarJogo(jogoId: number): Promise<JogoResultado | null> {
@@ -102,6 +137,60 @@ export async function POST(req: NextRequest) {
   const { agente } = body as { agente?: string };
 
   try {
+    // ── Contexto compartilhado ─────────────────────────────────────────────
+    // Retorna o último jogo + evento derivado para pré-preencher todos os agentes
+    if (agente === 'contexto') {
+      const jogo = await buscarUltimoJogo();
+      if (!jogo) return NextResponse.json({ jogo: null });
+      const novoM = isNovo(jogo.mandante_slug);
+      return NextResponse.json({
+        jogo,
+        evento:             derivarEvento(jogo),
+        nomeNovorizontino:  nomePor(novoM ? jogo.mandante_slug : jogo.visitante_slug),
+        nomeAdversario:     nomePor(novoM ? jogo.visitante_slug : jogo.mandante_slug),
+        placarNovo:         novoM ? jogo.placar_mandante : jogo.placar_visitante,
+        placarAdv:          novoM ? jogo.placar_visitante : jogo.placar_mandante,
+        mando:              novoM ? 'casa' : 'fora',
+        competicao:         jogo.competicao,
+        rodada:             jogo.rodada,
+      });
+    }
+
+    // ── Workflow: Cobrir Jogo (Gabi + Léo encadeados) ──────────────────────
+    // Um clique → artigo publicado + copy social gerado sobre o mesmo jogo
+    if (agente === 'cobrir_jogo') {
+      const jogo = body.jogo_id
+        ? await buscarJogo(Number(body.jogo_id))
+        : await buscarUltimoJogo();
+      if (!jogo) return NextResponse.json({ erro: 'Nenhum jogo com placar encontrado.' }, { status: 404 });
+
+      const status    = (body.status as 'draft' | 'published') ?? 'published';
+      const evento    = derivarEvento(jogo);
+      const novoM     = isNovo(jogo.mandante_slug);
+
+      // 1️⃣ Gabi: gera e publica o artigo
+      const postagem = gerarPostagem(jogo, status);
+      const { data: postagemData, error: gabiError } = await publicarPostagem(postagem);
+
+      // 2️⃣ Léo: gera copy social com o contexto do mesmo jogo
+      const hype = generateHypeScript(evento, {
+        evento,
+        placarMandante:  jogo.placar_mandante,
+        placarVisitante: jogo.placar_visitante,
+        mandante:        nomePor(jogo.mandante_slug),
+        visitante:       nomePor(jogo.visitante_slug),
+      });
+
+      return NextResponse.json({
+        agente:   'Workflow',
+        mando:    novoM ? 'casa' : 'fora',
+        jogo:     { id: jogo.id, competicao: jogo.competicao, rodada: jogo.rodada,
+                    placar: `${nomePor(jogo.mandante_slug)} ${jogo.placar_mandante}×${jogo.placar_visitante} ${nomePor(jogo.visitante_slug)}` },
+        gabi:     { ok: !gabiError, titulo: postagem.titulo, status, erro: gabiError ?? undefined },
+        leo:      { ok: true, evento, titulo: hype.titulo, copy: hype.copy, hashtags: hype.hashtags },
+      });
+    }
+
     // ── Ana ────────────────────────────────────────────────────────────────
     if (agente === 'ana') {
       if (body.ranking !== undefined) {

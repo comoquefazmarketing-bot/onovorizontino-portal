@@ -21,9 +21,35 @@ function now() { return new Date().toLocaleTimeString('pt-BR'); }
 
 // ─── Página ───────────────────────────────────────────────────────────────────
 
+// ─── Tipo do contexto compartilhado ──────────────────────────────────────────
+
+interface JogoCtx {
+  jogo: { id: number; competicao: string; rodada: string;
+          mandante_slug: string; visitante_slug: string;
+          placar_mandante: number; placar_visitante: number; data_hora: string; };
+  evento: string;
+  nomeNovorizontino: string;
+  nomeAdversario: string;
+  placarNovo: number;
+  placarAdv: number;
+  mando: 'casa' | 'fora';
+  competicao: string;
+  rodada: string;
+}
+
+const EMOJI_EVENTO: Record<string, string> = {
+  vitória: '🏆', derrota: '😤', empate: '🤝',
+  goleada_sofrida: '🔴', reacao_necessaria: '⚠️',
+};
+
 export default function EscritorioPage() {
   const [email,     setEmail]     = useState<string | null>(null);
   const [checking,  setChecking]  = useState(true);
+
+  // ─── Contexto compartilhado ────────────────────────────────────────────────
+  const [jogoCtx,    setJogoCtx]    = useState<JogoCtx | null>(null);
+  const [ctxLoading, setCtxLoading] = useState(false);
+  const [loadWorkflow, setLoadWorkflow] = useState(false);
 
   const [logs,      setLogs]      = useState<LogEntry[]>([]);
   const logRef                    = useRef<HTMLDivElement>(null);
@@ -44,7 +70,7 @@ export default function EscritorioPage() {
   const [leoPlacarV,   setLeoPlacarV]  = useState('');
   const [brunoHoras,   setBrunoHoras]  = useState('48');
 
-  // ─── Auth ─────────────────────────────────────────────────────────────────
+  // ─── Auth + carrega contexto após login ───────────────────────────────────
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -56,6 +82,47 @@ export default function EscritorioPage() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Carrega contexto do último jogo automaticamente assim que o admin entra
+  useEffect(() => {
+    if (email === ADMIN_EMAIL) carregarContexto();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email]);
+
+  async function carregarContexto() {
+    setCtxLoading(true);
+    try {
+      const r = await fetch('/api/escritorio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agente: 'contexto' }),
+      });
+      const data = await r.json();
+      if (data.jogo) {
+        setJogoCtx(data as JogoCtx);
+        // Pré-preenche todos os agentes com o contexto carregado
+        setGabiJogoId(String(data.jogo.id));
+        setLeoEvento(data.evento ?? 'vitória');
+        setLeoPlacarM(String(data.jogo.placar_mandante));
+        setLeoPlacarV(String(data.jogo.placar_visitante));
+      }
+    } catch { /* silencioso */ }
+    setCtxLoading(false);
+  }
+
+  async function cobrirJogoCompleto() {
+    setLoadWorkflow(true);
+    try {
+      const r = await fetch('/api/escritorio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agente: 'cobrir_jogo', status: gabiStatus,
+                               jogo_id: gabiJogoId ? Number(gabiJogoId) : undefined }),
+      });
+      appendLog('Workflow', '#ffffff', r.ok, await r.json());
+    } catch (e) { appendLog('Workflow', '#ffffff', false, String(e)); }
+    setLoadWorkflow(false);
+  }
 
   async function entrar() {
     await supabase.auth.signInWithOAuth({
@@ -200,6 +267,73 @@ export default function EscritorioPage() {
           </div>
         </div>
       </header>
+
+      {/* ── Contexto Atual ───────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-6 pt-6">
+        <div className="rounded-2xl border p-5 mb-2"
+          style={{ background: 'rgba(245,196,0,0.04)', borderColor: 'rgba(245,196,0,0.18)' }}>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[.4em] text-yellow-500 mb-2">
+                ⚡ Contexto Atual — carregado automaticamente
+              </p>
+              {ctxLoading && (
+                <p className="text-zinc-600 text-sm font-bold">Carregando último jogo...</p>
+              )}
+              {!ctxLoading && jogoCtx && (
+                <div>
+                  <p className="text-white font-black text-xl italic leading-tight">
+                    {jogoCtx.nomeNovorizontino}
+                    <span className="text-yellow-500 mx-2">
+                      {jogoCtx.placarNovo}×{jogoCtx.placarAdv}
+                    </span>
+                    {jogoCtx.nomeAdversario}
+                    <span className="ml-3 text-base not-italic">
+                      {EMOJI_EVENTO[jogoCtx.evento] ?? '⚽'}
+                    </span>
+                  </p>
+                  <p className="text-zinc-500 text-xs mt-1">
+                    {jogoCtx.competicao} · {jogoCtx.rodada} · {jogoCtx.mando === 'casa' ? '🏠 Casa' : '✈️ Fora'}
+                    <span className="ml-3 font-black" style={{ color:
+                      jogoCtx.evento === 'vitória' ? '#4ade80' :
+                      jogoCtx.evento === 'empate'  ? '#facc15' : '#f87171' }}>
+                      Evento: {jogoCtx.evento}
+                    </span>
+                  </p>
+                  <p className="text-zinc-700 text-[10px] mt-1">
+                    Jogo ID #{jogoCtx.jogo.id} · todos os agentes pré-preenchidos com este contexto
+                  </p>
+                </div>
+              )}
+              {!ctxLoading && !jogoCtx && (
+                <p className="text-zinc-600 text-sm">Nenhum jogo com placar encontrado.</p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2 flex-shrink-0">
+              {/* Workflow principal */}
+              <button
+                className="btn btn-primary text-sm px-5 py-3"
+                style={{ fontSize: '12px', letterSpacing: '.08em' }}
+                disabled={loadWorkflow || !jogoCtx}
+                onClick={cobrirJogoCompleto}
+              >
+                {loadWorkflow
+                  ? <span className="spin">◌</span>
+                  : `▶ Cobrir Jogo · ${gabiStatus === 'published' ? 'Publicar' : 'Rascunho'}`}
+              </button>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '10px' }}
+                disabled={ctxLoading}
+                onClick={carregarContexto}
+              >
+                {ctxLoading ? <span className="spin">◌</span> : '🔄 Atualizar Contexto'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ── Grid de agentes ──────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
