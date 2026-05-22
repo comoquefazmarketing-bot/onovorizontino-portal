@@ -170,10 +170,13 @@ export default function EscritorioPage() {
         .btn-primary:hover:not(:disabled) { background:#fff; }
         .btn-ghost { background:rgba(255,255,255,0.06); color:#aaa; border:1px solid rgba(255,255,255,0.1); }
         .btn-ghost:hover:not(:disabled) { background:rgba(255,255,255,0.1); color:#fff; }
-        .input { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px 12px; color:#fff; font-family:inherit; font-size:13px; width:100%; outline:none; }
-        .input:focus { border-color:rgba(245,196,0,0.5); }
-        .select { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px 12px; color:#fff; font-family:inherit; font-size:13px; outline:none; }
-        .select:focus { border-color:rgba(245,196,0,0.5); }
+        .input { background:#141414; border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:8px 12px; color:#fff; font-family:inherit; font-size:13px; width:100%; outline:none; }
+        .input:focus { border-color:rgba(245,196,0,0.5); background:#1a1a1a; }
+        .input::placeholder { color:#555; }
+        .select { background:#141414; border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:8px 12px; color:#fff; font-family:inherit; font-size:13px; outline:none; -webkit-appearance:none; -moz-appearance:none; appearance:none; cursor:pointer; }
+        .select:focus { border-color:rgba(245,196,0,0.5); background:#1a1a1a; }
+        .select option { background:#141414; color:#fff; }
+        .select optgroup { background:#0a0a0a; color:#f5c400; font-weight:900; }
         .label { font-size:9px; font-weight:900; letter-spacing:.3em; text-transform:uppercase; color:#666; margin-bottom:4px; display:block; }
         .spin { animation:spin .8s linear infinite; display:inline-block; }
         @keyframes spin { to { transform:rotate(360deg); } }
