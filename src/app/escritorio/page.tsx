@@ -60,7 +60,11 @@ export default function EscritorioPage() {
   async function entrar() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/escritorio` },
+      options: {
+        // Aponta para a rota de callback que troca o code por sessão,
+        // passando o destino final como query param ?next=
+        redirectTo: `${window.location.origin}/auth/callback?next=/escritorio`,
+      },
     });
   }
 
@@ -125,101 +129,29 @@ export default function EscritorioPage() {
     setTimeout(() => logRef.current?.scrollTo({ top: 99999, behavior: 'smooth' }), 50);
   }
 
-  // ─── Dispatchers ─────────────────────────────────────────────────────────
+  // ─── Dispatcher central ──────────────────────────────────────────────────
 
-  async function dispararAna() {
-    setLoadAna(true);
+  async function dispatch(agente: string, cor: string, payload: Record<string, unknown>, setter: (v: boolean) => void) {
+    setter(true);
     try {
-      const res  = await fetch(`/api/agents/ana?formacao=${anaFormacao}`);
-      appendLog('Ana', '#a78bfa', res.ok, await res.json());
-    } catch (e) { appendLog('Ana', '#a78bfa', false, String(e)); }
-    setLoadAna(false);
-  }
-
-  async function rankingAna() {
-    setLoadAna(true);
-    try {
-      const res  = await fetch('/api/agents/ana?ranking=');
-      appendLog('Ana', '#a78bfa', res.ok, await res.json());
-    } catch (e) { appendLog('Ana', '#a78bfa', false, String(e)); }
-    setLoadAna(false);
-  }
-
-  async function dispararGabi() {
-    if (!gabiJogoId) return;
-    setLoadGabi(true);
-    try {
-      const res  = await fetch(`/api/agents/gabi?jogo_id=${gabiJogoId}`);
-      appendLog('Gabi', '#f472b6', res.ok, await res.json());
-    } catch (e) { appendLog('Gabi', '#f472b6', false, String(e)); }
-    setLoadGabi(false);
-  }
-
-  async function publicarGabi() {
-    if (!gabiJogoId) return;
-    setLoadGabi(true);
-    try {
-      const res  = await fetch('/api/agents/gabi', {
+      const res  = await fetch('/api/escritorio', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ jogo_id: Number(gabiJogoId), status: gabiStatus }),
+        body:    JSON.stringify({ agente, ...payload }),
       });
-      appendLog('Gabi', '#f472b6', res.ok, await res.json());
-    } catch (e) { appendLog('Gabi', '#f472b6', false, String(e)); }
-    setLoadGabi(false);
+      appendLog(agente.charAt(0).toUpperCase() + agente.slice(1), cor, res.ok, await res.json());
+    } catch (e) { appendLog(agente, cor, false, String(e)); }
+    setter(false);
   }
 
-  async function dispararLeo() {
-    setLoadLeo(true);
-    try {
-      const body: Record<string, unknown> = { evento: leoEvento };
-      if (leoJogador) body.jogador        = leoJogador;
-      if (leoPlacarM) body.placarMandante  = Number(leoPlacarM);
-      if (leoPlacarV) body.placarVisitante = Number(leoPlacarV);
-      const res  = await fetch('/api/agents/hype', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(body),
-      });
-      appendLog('Léo', '#fb923c', res.ok, await res.json());
-    } catch (e) { appendLog('Léo', '#fb923c', false, String(e)); }
-    setLoadLeo(false);
-  }
-
-  async function dispararCarlos(tabela?: 'escalacoes' | 'jogadores') {
-    setLoadCarlos(true);
-    try {
-      const res  = await fetch('/api/agents/audit', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(tabela ? { tabela } : {}),
-      });
-      appendLog('Carlos', '#34d399', res.ok, await res.json());
-    } catch (e) { appendLog('Carlos', '#34d399', false, String(e)); }
-    setLoadCarlos(false);
-  }
-
-  async function dispararBruno(apenasContar = false) {
-    setLoadBruno(true);
-    try {
-      const res  = await fetch('/api/agents/campanha', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ horas: Number(brunoHoras) || 48, apenas_contar: apenasContar }),
-      });
-      appendLog('Bruno', '#60a5fa', res.ok, await res.json());
-    } catch (e) { appendLog('Bruno', '#60a5fa', false, String(e)); }
-    setLoadBruno(false);
-  }
-
-  async function dispararRafael() {
-    setLoadRafael(true);
-    try {
-      const res  = await fetch('/api/agents/rafael');
-      appendLog('Rafael', '#facc15', res.ok, await res.json());
-    } catch (e) { appendLog('Rafael', '#facc15', false, String(e)); }
-    setLoadRafael(false);
-  }
+  const dispararAna    = ()              => dispatch('ana',    '#a78bfa', { formacao: anaFormacao }, setLoadAna);
+  const rankingAna     = ()              => dispatch('ana',    '#a78bfa', { ranking: true },         setLoadAna);
+  const dispararGabi   = ()              => gabiJogoId && dispatch('gabi',   '#f472b6', { jogo_id: Number(gabiJogoId), preview: true },              setLoadGabi);
+  const publicarGabi   = ()              => gabiJogoId && dispatch('gabi',   '#f472b6', { jogo_id: Number(gabiJogoId), status: gabiStatus },          setLoadGabi);
+  const dispararLeo    = ()              => dispatch('leo',    '#fb923c', { evento: leoEvento, jogador: leoJogador || undefined, placarMandante: leoPlacarM ? Number(leoPlacarM) : undefined, placarVisitante: leoPlacarV ? Number(leoPlacarV) : undefined }, setLoadLeo);
+  const dispararCarlos = (tabela?: string) => dispatch('carlos', '#34d399', tabela ? { tabela } : {},                                                 setLoadCarlos);
+  const dispararBruno  = (apenasContar = false) => dispatch('bruno', '#60a5fa', { horas: Number(brunoHoras) || 48, apenas_contar: apenasContar },     setLoadBruno);
+  const dispararRafael = ()              => dispatch('rafael', '#facc15', {},                                                                          setLoadRafael);
 
   // ─── UI ───────────────────────────────────────────────────────────────────
 
