@@ -148,6 +148,7 @@ export default function EscritorioPage() {
   const rankingAna     = ()              => dispatch('ana',    '#a78bfa', { ranking: true },         setLoadAna);
   const dispararGabi   = ()              => gabiJogoId && dispatch('gabi',   '#f472b6', { jogo_id: Number(gabiJogoId), preview: true },              setLoadGabi);
   const publicarGabi   = ()              => gabiJogoId && dispatch('gabi',   '#f472b6', { jogo_id: Number(gabiJogoId), status: gabiStatus },          setLoadGabi);
+  const ultimoJogoGabi = ()              => dispatch('gabi', '#f472b6', { ultimo_jogo: true, status: gabiStatus }, setLoadGabi);
   const dispararLeo    = ()              => dispatch('leo',    '#fb923c', { evento: leoEvento, jogador: leoJogador || undefined, placarMandante: leoPlacarM ? Number(leoPlacarM) : undefined, placarVisitante: leoPlacarV ? Number(leoPlacarV) : undefined }, setLoadLeo);
   const dispararCarlos = (tabela?: string) => dispatch('carlos', '#34d399', tabela ? { tabela } : {},                                                 setLoadCarlos);
   const dispararBruno  = (apenasContar = false) => dispatch('bruno', '#60a5fa', { horas: Number(brunoHoras) || 48, apenas_contar: apenasContar },     setLoadBruno);
@@ -251,6 +252,9 @@ export default function EscritorioPage() {
             </button>
             <button className="btn btn-ghost" disabled={loadGabi || !gabiJogoId} onClick={dispararGabi}>Preview</button>
           </div>
+          <button className="btn btn-ghost w-full" style={{borderColor:'rgba(244,114,182,0.3)',color:'#f472b6'}} disabled={loadGabi} onClick={ultimoJogoGabi}>
+            {loadGabi ? <span className="spin">◌</span> : '⚡ Último Jogo'}
+          </button>
         </div>
 
         {/* Léo */}
@@ -265,7 +269,7 @@ export default function EscritorioPage() {
           <div className="flex flex-col gap-1">
             <span className="label">Evento</span>
             <select value={leoEvento} onChange={e => setLeoEvento(e.target.value)} className="select">
-              {['gol','vitória','derrota','empate','pênalti','intervalo','clima','default'].map(ev =>
+              {['gol','vitória','derrota','goleada_sofrida','reacao_necessaria','empate','pênalti','intervalo','clima','default'].map(ev =>
                 <option key={ev} value={ev}>{ev}</option>)}
             </select>
           </div>

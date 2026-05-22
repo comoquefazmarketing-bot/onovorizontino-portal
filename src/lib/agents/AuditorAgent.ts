@@ -17,10 +17,10 @@ export interface AuditLog {
 
 export interface EscalacaoRow {
   id: string;
-  user_id: string;
+  usuario_id: string;   // coluna real na tabela (antes: user_id)
   jogo_id: number;
   formacao: string;
-  slots: Record<string, unknown>;
+  lineup: Record<string, unknown>; // coluna real na tabela (antes: slots)
   criado_em: string;
 }
 
@@ -54,7 +54,7 @@ export async function validarEscalacoes(): Promise<AuditLog[]> {
 
   const { data, error } = await supabase
     .from('tigre_fc_escalacoes')
-    .select('id, user_id, jogo_id, formacao, slots, criado_em')
+    .select('id, usuario_id, jogo_id, formacao, lineup, criado_em')
     .order('criado_em', { ascending: false })
     .limit(200);
 
@@ -73,22 +73,22 @@ export async function validarEscalacoes(): Promise<AuditLog[]> {
   const duplicatas: string[] = [];
 
   for (const row of data as EscalacaoRow[]) {
-    const chave = `${row.user_id}::${row.jogo_id}`;
+    const chave = `${row.usuario_id}::${row.jogo_id}`;
     if (seen.has(chave)) {
       duplicatas.push(row.id);
       sessaoLogs.push(registrar('erro', 'tigre_fc_escalacoes',
-        `Duplicidade detectada — user ${row.user_id}, jogo ${row.jogo_id}. Isso não é Nível Makarios. Corrigindo...`,
+        `Duplicidade detectada — user ${row.usuario_id}, jogo ${row.jogo_id}. Isso não é Nível Makarios. Corrigindo...`,
         { id_duplicado: row.id, id_original: seen.get(chave) }
       ));
     } else {
       seen.set(chave, row.id);
     }
 
-    // Valida slots preenchidos
-    const slots = row.slots as Record<string, { player?: unknown }> | null;
-    if (!slots || Object.keys(slots).length === 0) {
+    // Valida lineup preenchido
+    const lineup = row.lineup as Record<string, unknown> | null;
+    if (!lineup || Object.keys(lineup).length === 0) {
       sessaoLogs.push(registrar('aviso', 'tigre_fc_escalacoes',
-        `Escalação ${row.id} sem slots — possível gravação incompleta.`));
+        `Escalação ${row.id} sem lineup — possível gravação incompleta.`));
     }
   }
 

@@ -42,6 +42,9 @@ const NOMES: Record<string, string> = {
   'paysandu': 'Paysandu', 'remo': 'Remo', 'athletico-pr': 'Athletico',
   'chapecoense': 'Chapecoense', 'guarani': 'Guarani', 'ituano': 'Ituano',
   'mirassol': 'Mirassol', 'volta-redonda': 'Volta Redonda', 'amazonas': 'Amazonas',
+  'palmeiras': 'Palmeiras', 'corinthians': 'Corinthians', 'sao-paulo': 'São Paulo',
+  'flamengo': 'Flamengo', 'fluminense': 'Fluminense', 'botafogo': 'Botafogo',
+  'santos-fc': 'Santos', 'gremio': 'Grêmio', 'internacional': 'Internacional',
 };
 
 function nome(slug: string): string {
@@ -79,6 +82,7 @@ const LOGOS_CAPA: Record<string, string> = {
   'ceara':                `${WK}/2/27/Ceara_Sporting_Club_logo.svg`,
   'sao-bernardo':         `${WK}/7/7d/S%C3%A3o_Bernardo_Futebol_Clube.png`,
   'operario-pr':          `${WK}/0/00/Operar%C3%A1rio_Ferroviario_Esporte_Clube.svg`,
+  'chapecoense':          `${WK}/0/0f/Chapecoense_crest.svg`,
   'goias':                `${WK}/b/bd/Goias_logo.svg`,
   'vila-nova':            `${WK}/4/48/Vila_Nova_Futebol_Clube.png`,
   'ponte-preta':          `${WK}/2/29/Associacao_Atletica_Ponte_Preta_logo.svg`,

@@ -43,6 +43,18 @@ async function buscarJogo(jogoId: number): Promise<JogoResultado | null> {
   return j as JogoResultado;
 }
 
+/** Busca o último jogo finalizado com placar (qualquer competição) */
+async function buscarUltimoJogo(): Promise<JogoResultado | null> {
+  const url = `${SUPABASE_URL}/rest/v1/jogos?placar_mandante=not.is.null&placar_visitante=not.is.null&select=id,rodada,competicao,mandante_slug,visitante_slug,placar_mandante,placar_visitante,data_hora,local&order=data_hora.desc&limit=1`;
+  const res = await fetch(url, {
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}`, Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data?.[0] ?? null;
+}
+
 async function publicarPostagem(postagem: ReturnType<typeof gerarPostagem>) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/postagens`, {
     method:  'POST',
@@ -102,11 +114,17 @@ export async function POST(req: NextRequest) {
 
     // ── Gabi ───────────────────────────────────────────────────────────────
     if (agente === 'gabi') {
-      const jogoId = Number(body.jogo_id);
-      if (!jogoId) return NextResponse.json({ erro: 'jogo_id obrigatório.' }, { status: 400 });
-
-      const jogo = await buscarJogo(jogoId);
-      if (!jogo) return NextResponse.json({ erro: 'Jogo não encontrado ou sem placar.' }, { status: 404 });
+      // Suporte a "último jogo" automático — não precisa do jogo_id
+      let jogo: JogoResultado | null = null;
+      if (body.ultimo_jogo) {
+        jogo = await buscarUltimoJogo();
+        if (!jogo) return NextResponse.json({ erro: 'Nenhum jogo finalizado com placar encontrado.' }, { status: 404 });
+      } else {
+        const jogoId = Number(body.jogo_id);
+        if (!jogoId) return NextResponse.json({ erro: 'jogo_id obrigatório (ou use ultimo_jogo: true).' }, { status: 400 });
+        jogo = await buscarJogo(jogoId);
+        if (!jogo) return NextResponse.json({ erro: 'Jogo não encontrado ou sem placar.' }, { status: 404 });
+      }
 
       const status   = (body.status as 'draft' | 'published') ?? 'draft';
       const postagem = gerarPostagem(jogo, status);
