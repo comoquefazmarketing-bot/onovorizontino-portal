@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
+// Registro profissional de jornalista (MTE)
 const REGISTRO_MTE = 'em processo — Solicitação SRP202241/2026';
 
 type Membro = {
@@ -48,6 +49,7 @@ export default function ExpedientePage() {
   return (
     <main className="min-h-screen bg-black text-white selection:bg-yellow-500 selection:text-black"
       style={{ fontFamily: "'Barlow Condensed', system-ui, sans-serif" }}>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,700;1,900&display=swap');
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:none } }
@@ -57,7 +59,7 @@ export default function ExpedientePage() {
         .fade-4 { animation: fadeUp .6s .55s both }
       `}</style>
 
-      {/* Botão voltar */}
+      {/* Botão Voltar */}
       <div className="fixed top-6 left-5 z-50">
         <Link href="/" className="flex items-center gap-2 bg-black/50 hover:bg-yellow-500 border border-white/15 hover:border-yellow-500 backdrop-blur-md px-4 py-2 rounded-full text-white hover:text-black text-[10px] font-black uppercase tracking-widest transition-all duration-300">
           ← Início
@@ -87,7 +89,115 @@ export default function ExpedientePage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-5 py-16 space-y-16">
-        {/* ... (mantive as seções anteriores: Identificação, Equipe, Missão, Política Editorial) */}
+
+        {/* IDENTIFICAÇÃO INSTITUCIONAL */}
+        <section className="fade-1">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-yellow-500 rounded-full" />
+            <h2 className="text-2xl font-black uppercase italic tracking-tight text-white">
+              Identificação Institucional
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { label: 'Veículo', valor: 'Portal O Novorizontino' },
+              { label: 'CNPJ', valor: '43.945.464/0001-83' },
+              { label: 'Empresa Mantenedora', valor: 'Como Que Faz Marketing Digital LTDA' },
+              { label: 'Fundação da Empresa', valor: '2021' },
+              { label: 'Início da Cobertura Jornalística', valor: '2026' },
+              { label: 'Sede', valor: 'Novo Horizonte – SP, Brasil' },
+              { label: 'Abrangência', valor: 'Nacional (digital)' },
+              { label: 'Periodicidade', valor: 'Diária' },
+              { label: 'Formato', valor: 'Portal de Jornalismo Digital' },
+            ].map(({ label, valor }) => (
+              <div key={label} className="flex items-start gap-4 p-5 bg-white/[0.025] border border-white/5 rounded-2xl">
+                <div className="flex-1">
+                  <p className="text-yellow-500 text-[9px] font-black uppercase tracking-[0.3em] mb-1">{label}</p>
+                  <p className="text-white font-black text-base uppercase tracking-tight">{valor}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* EQUIPE EDITORIAL */}
+        <section>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-yellow-500 rounded-full" />
+            <h2 className="text-2xl font-black uppercase italic tracking-tight text-white">
+              Equipe Editorial
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {EQUIPE.map(p => (
+              <div key={p.nome} className="relative overflow-hidden p-7 rounded-3xl border border-white/8 bg-gradient-to-br from-white/[0.03] to-transparent group hover:border-yellow-500/30 transition-all duration-500">
+                <div className="absolute top-4 right-5 text-5xl opacity-10 group-hover:opacity-20 transition-opacity">
+                  {p.emoji}
+                </div>
+                <div className="relative z-10">
+                  <div className="mb-4">
+                    <h3 className="text-white text-2xl font-black italic uppercase tracking-tight leading-none mb-1">
+                      {p.nome}
+                    </h3>
+                    {p.nomeRegistro && (
+                      <p className="text-zinc-500 text-[11px] font-semibold italic tracking-wide mb-1 normal-case">
+                        nome de registro: {p.nomeRegistro}
+                      </p>
+                    )}
+                    <p className="text-yellow-500 text-[10px] font-black uppercase tracking-[0.25em]">{p.cargo}</p>
+                    {p.registro && (
+                      <p className="text-zinc-400 text-[9px] font-black uppercase tracking-[0.2em] mt-2">
+                        Registro Profissional MTE: <span className="text-white">{p.registro}</span>
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-zinc-400 text-sm leading-relaxed mb-5">{p.bio}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {p.areas.map(a => (
+                      <span key={a} className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-white/5 border border-white/8 text-zinc-500">
+                        {a}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* POLÍTICA EDITORIAL - NOVA SEÇÃO COMPLETA */}
+        <section>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-yellow-500 rounded-full" />
+            <h2 className="text-2xl font-black uppercase italic tracking-tight text-white">
+              Política Editorial
+            </h2>
+          </div>
+          <div className="prose prose-invert max-w-none text-zinc-300 leading-relaxed space-y-6">
+            <p>
+              O <strong>Portal O Novorizontino</strong> é um veículo de jornalismo digital independente lançado em 2026, mantido pela <strong>Como Que Faz Marketing Digital LTDA</strong> (CNPJ 43.945.464/0001-83), empresa fundada em 2021.
+            </p>
+
+            <h3 className="text-yellow-500 text-xl font-bold mt-8">Princípios Fundamentais</h3>
+            <ul className="list-disc pl-6 space-y-3">
+              <li><strong>Independência:</strong> Não temos vínculo financeiro, político ou institucional com o Grêmio Novorizontino ou qualquer outra entidade. Nossa única lealdade é com o leitor e com a verdade.</li>
+              <li><strong>Precisão e Rigor:</strong> Todo conteúdo é checado antes da publicação. Priorizamos a exatidão à velocidade.</li>
+              <li><strong>Transparência:</strong> Erros são corrigidos de forma clara, com nota de correção e data da alteração.</li>
+              <li><strong>Separação entre Jornalismo e Publicidade:</strong> Conteúdos patrocinados ou publi-editoriais são sempre identificados de forma explícita.</li>
+              <li><strong>Respeito à Torcida:</strong> Criticamos quando necessário, mas sempre com base em fatos e de forma construtiva.</li>
+            </ul>
+
+            <h3 className="text-yellow-500 text-xl font-bold mt-8">Uso de Inteligência Artificial</h3>
+            <p>
+              Utilizamos ferramentas de IA como apoio na produção de conteúdo (rascunhos, ideias e otimização). No entanto, <strong>toda matéria publicada passa por revisão humana</strong> antes de ir ao ar. O Supervisor Editorial é o responsável final pela qualidade e veracidade das informações.
+            </p>
+
+            <h3 className="text-yellow-500 text-xl font-bold mt-8">Compromisso com o Leitor</h3>
+            <p>
+              Nosso objetivo é entregar jornalismo sério, ágil e apaixonado pelo Grêmio Novorizontino, sem abrir mão da independência e da ética profissional.
+            </p>
+          </div>
+        </section>
 
         {/* CONTATO & TRANSPARÊNCIA */}
         <section>
