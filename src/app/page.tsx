@@ -5,7 +5,6 @@ import PostagensGrid from '@/components/layout/NewsGrid';
 import MainVideoSection from '@/components/sections/MainVideoSection';
 import MainShortsSection from '@/components/videos/MainShortsSection';
 import TVNovorizontino from '@/components/videos/TVNovorizontino';
-import CentralJogos from '@/components/sections/CentralJogos';
 import CategoryNav from '@/components/layout/CategoryNav';
 import CTCarousel from '@/components/sections/CTCarousel';
 import Footer from '@/components/layout/Footer';
@@ -15,7 +14,6 @@ import SelecaoBanner from '@/components/sections/SelecaoBanner';
 
 /* ─── JSON-LD: Organization + WebSite ───────────────────────────
    Sinaliza ao Google que este é um veículo jornalístico legítimo.
-   Colocado na home (raiz) para máxima cobertura de indexação.
 ────────────────────────────────────────────────────────────────── */
 const jsonLdOrganization = {
   '@context': 'https://schema.org',
@@ -60,6 +58,184 @@ const jsonLdWebSite = {
     'query-input': 'required name=search_term_string',
   },
 };
+
+/* ═══ CENTRAL DE JOGOS (inline, conteúdo próprio, sem iframe) ═══
+   Editável: mexa só no array JOGOS abaixo a cada rodada.
+   Escudos extras: adicione a URL em escudoMandante/escudoVisitante,
+   ou deixe em branco que aparece um badge com as iniciais.
+──────────────────────────────────────────────────────────────── */
+type Jogo = {
+  id: string;
+  competicao: string;
+  rodada?: string;
+  data: string;
+  mandante: string;
+  visitante: string;
+  escudoMandante?: string;
+  escudoVisitante?: string;
+  local?: string;
+  status: 'agendado' | 'encerrado';
+  placarMandante?: number;
+  placarVisitante?: number;
+};
+
+const ESCUDO = {
+  novorizontino:
+    'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png',
+  ceara:
+    'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20CEARA.png',
+};
+
+const JOGOS: Jogo[] = [
+  {
+    id: 'chapecoense-novorizontino-2705',
+    competicao: 'Copa Sul-Sudeste',
+    rodada: 'Semifinal · Volta',
+    data: 'Qua, 27/05',
+    mandante: 'Chapecoense',
+    visitante: 'Novorizontino',
+    escudoVisitante: ESCUDO.novorizontino,
+    local: 'Arena Condá',
+    status: 'agendado',
+  },
+  {
+    id: 'novorizontino-ceara-2305',
+    competicao: 'Série B',
+    rodada: '10ª Rodada',
+    data: 'Sáb, 23/05 · 16h',
+    mandante: 'Novorizontino',
+    visitante: 'Ceará',
+    escudoMandante: ESCUDO.novorizontino,
+    escudoVisitante: ESCUDO.ceara,
+    local: 'Jorjão',
+    status: 'encerrado',
+    placarMandante: 2,
+    placarVisitante: 1,
+  },
+  {
+    id: 'novorizontino-botafogosp-1105',
+    competicao: 'Série B',
+    rodada: '8ª Rodada',
+    data: 'Seg, 11/05',
+    mandante: 'Novorizontino',
+    visitante: 'Botafogo-SP',
+    escudoMandante: ESCUDO.novorizontino,
+    local: 'Jorjão',
+    status: 'encerrado',
+    placarMandante: 1,
+    placarVisitante: 0,
+  },
+];
+
+function Escudo({ src, nome }: { src?: string; nome: string }) {
+  if (src) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt={nome} className="w-9 h-9 object-contain" />;
+  }
+  const ini = nome.replace(/[^A-Za-zÀ-ÿ]/g, '').slice(0, 3).toUpperCase();
+  return (
+    <div className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+      <span className="text-[9px] font-black text-white tracking-tight">{ini}</span>
+    </div>
+  );
+}
+
+function CardJogo({ jogo }: { jogo: Jogo }) {
+  const encerrado = jogo.status === 'encerrado';
+  return (
+    <div className="flex flex-col gap-3 p-5 bg-white/[0.03] border border-white/8 rounded-2xl">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-yellow-500 text-[9px] font-black uppercase tracking-[0.25em]">
+          {jogo.competicao}
+          {jogo.rodada ? ` · ${jogo.rodada}` : ''}
+        </span>
+        <span
+          className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full shrink-0 ${
+            encerrado ? 'bg-white/10 text-zinc-400' : 'bg-yellow-500 text-black'
+          }`}
+        >
+          {encerrado ? 'Encerrado' : jogo.data}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Escudo src={jogo.escudoMandante} nome={jogo.mandante} />
+          <span className="text-white text-sm font-black uppercase tracking-tight truncate">
+            {jogo.mandante}
+          </span>
+        </div>
+
+        <div className="shrink-0 px-2">
+          {encerrado ? (
+            <span className="text-white text-xl font-black italic whitespace-nowrap">
+              {jogo.placarMandante} <span className="text-yellow-500">×</span> {jogo.placarVisitante}
+            </span>
+          ) : (
+            <span className="text-zinc-500 text-sm font-black italic">VS</span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+          <span className="text-white text-sm font-black uppercase tracking-tight truncate text-right">
+            {jogo.visitante}
+          </span>
+          <Escudo src={jogo.escudoVisitante} nome={jogo.visitante} />
+        </div>
+      </div>
+
+      {jogo.local && (
+        <div className="flex items-center gap-1.5 text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+          <span>📍</span>
+          <span>{jogo.local}</span>
+          {!encerrado && <span>· {jogo.data}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CentralJogos() {
+  const proximos = JOGOS.filter(j => j.status === 'agendado');
+  const resultados = JOGOS.filter(j => j.status === 'encerrado');
+
+  return (
+    <section id="agenda" className="py-12">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-1 h-8 bg-yellow-500 rounded-full" />
+        <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-tight text-white">
+          Central de Jogos
+        </h2>
+      </div>
+
+      {proximos.length > 0 && (
+        <div className="mb-10">
+          <h3 className="text-zinc-500 text-[11px] font-black uppercase tracking-[0.3em] mb-4">
+            Próximos jogos
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {proximos.map(j => (
+              <CardJogo key={j.id} jogo={j} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {resultados.length > 0 && (
+        <div>
+          <h3 className="text-zinc-500 text-[11px] font-black uppercase tracking-[0.3em] mb-4">
+            Últimos resultados
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {resultados.map(j => (
+              <CardJogo key={j.id} jogo={j} />
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
 
 // ── Skeleton do grid de notícias ─────────────────────────────
 function GridSkeleton() {
@@ -232,7 +408,6 @@ export default async function Home() {
 
       {/* ── SEÇÃO DE VÍDEOS ──────────────────────────────────── */}
       <section id="videos">
-
         {/* 1. Vídeos principais do portal */}
         <MainVideoSection />
 
@@ -243,7 +418,6 @@ export default async function Home() {
 
         {/* 3. Shorts — vídeos neutros de futebol / bastidores */}
         <MainShortsSection />
-
       </section>
 
       {/* ── AGENDA / CENTRAL DE JOGOS (conteúdo próprio, sem iframes) ── */}
