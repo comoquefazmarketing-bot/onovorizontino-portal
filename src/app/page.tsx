@@ -2,9 +2,6 @@
 import { Suspense } from 'react';
 import HomeHero from '@/components/home/HomeHero';
 import PostagensGrid from '@/components/layout/NewsGrid';
-import MainVideoSection from '@/components/sections/MainVideoSection';
-import MainShortsSection from '@/components/videos/MainShortsSection';
-import TVNovorizontino from '@/components/videos/TVNovorizontino';
 import CategoryNav from '@/components/layout/CategoryNav';
 import CTCarousel from '@/components/sections/CTCarousel';
 import Footer from '@/components/layout/Footer';
