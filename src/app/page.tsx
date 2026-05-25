@@ -5,7 +5,7 @@ import PostagensGrid from '@/components/layout/NewsGrid';
 import MainVideoSection from '@/components/sections/MainVideoSection';
 import MainShortsSection from '@/components/videos/MainShortsSection';
 import TVNovorizontino from '@/components/videos/TVNovorizontino';
-import NovorizontinoWidget from '@/components/widgets/NovorizontinoWidget';
+import CentralJogos from '@/components/sections/CentralJogos';
 import CategoryNav from '@/components/layout/CategoryNav';
 import CTCarousel from '@/components/sections/CTCarousel';
 import Footer from '@/components/layout/Footer';
@@ -161,9 +161,6 @@ export default async function Home() {
       {/* ── 🇧🇷 BANNER VERDE E AMARELO — SELEÇÃO BRASILEIRA ─── */}
       <SelecaoBanner />
 
-      {/* BANNER PUBLICITÁRIO */}
-      <GlobalAdBanner />
-
       {/* ── REPORTAGEM CT GINO DE BIASI ──────────────────────── */}
       <article className="max-w-7xl mx-auto px-4 w-full py-16 border-b border-white/5">
         <header className="max-w-4xl mb-12">
@@ -249,10 +246,13 @@ export default async function Home() {
 
       </section>
 
-      {/* AGENDA */}
-      <div id="agenda" className="px-4 pb-10">
-        <NovorizontinoWidget />
+      {/* ── AGENDA / CENTRAL DE JOGOS (conteúdo próprio, sem iframes) ── */}
+      <div className="max-w-7xl mx-auto px-4 w-full pb-10">
+        <CentralJogos />
       </div>
+
+      {/* ── BANNER PUBLICITÁRIO — movido para o final da página ── */}
+      <GlobalAdBanner />
 
       <Footer />
     </main>
