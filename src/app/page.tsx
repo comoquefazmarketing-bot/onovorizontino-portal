@@ -9,9 +9,7 @@ import Manifesto from '@/components/sections/Manifesto';
 import GlobalAdBanner from '@/components/ads/GlobalAdBanner';
 import SelecaoBanner from '@/components/sections/SelecaoBanner';
 
-/* ─── JSON-LD: Organization + WebSite ───────────────────────────
-   Sinaliza ao Google que este é um veículo jornalístico legítimo.
-────────────────────────────────────────────────────────────────── */
+/* ─── JSON-LD: Organization + WebSite ─────────────────────────── */
 const jsonLdOrganization = {
   '@context': 'https://schema.org',
   '@type': 'NewsMediaOrganization',
@@ -58,8 +56,6 @@ const jsonLdWebSite = {
 
 /* ═══ CENTRAL DE JOGOS (inline, conteúdo próprio, sem iframe) ═══
    Editável: mexa só no array JOGOS abaixo a cada rodada.
-   Escudos extras: adicione a URL em escudoMandante/escudoVisitante,
-   ou deixe em branco que aparece um badge com as iniciais.
 ──────────────────────────────────────────────────────────────── */
 type Jogo = {
   id: string;
@@ -270,44 +266,6 @@ function GridSkeleton() {
   );
 }
 
-// ── Skeleton da TV Novorizontino ──────────────────────────────
-function TVSkeleton() {
-  return (
-    <section className="max-w-7xl mx-auto px-4 py-16 animate-pulse">
-      <div className="flex items-end justify-between mb-8">
-        <div className="space-y-2">
-          <div className="h-3 w-24 bg-red-600/20 rounded" />
-          <div className="h-8 w-52 bg-white/5 rounded-lg" />
-        </div>
-        <div className="h-10 w-32 bg-red-600/20 rounded-xl" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="md:col-span-2 aspect-video rounded-2xl bg-white/5" />
-        <div className="md:col-span-2 grid grid-cols-1 gap-4">
-          {[0, 1].map(i => (
-            <div key={i} className="rounded-2xl bg-white/5 overflow-hidden">
-              <div className="aspect-video bg-white/[0.03]" />
-              <div className="p-4 space-y-2">
-                <div className="h-3 bg-white/5 rounded w-full" />
-                <div className="h-3 bg-white/5 rounded w-3/4" />
-              </div>
-            </div>
-          ))}
-        </div>
-        {[0, 1, 2, 3].map(i => (
-          <div key={i} className="rounded-2xl bg-white/5 overflow-hidden">
-            <div className="aspect-video bg-white/[0.03]" />
-            <div className="p-4 space-y-2">
-              <div className="h-3 bg-white/5 rounded w-full" />
-              <div className="h-3 bg-white/5 rounded w-2/3" />
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export default async function Home() {
   return (
     <main className="min-h-screen bg-black flex flex-col scroll-smooth">
@@ -403,26 +361,12 @@ export default async function Home() {
       {/* MANIFESTO */}
       <Manifesto />
 
-      {/* ── SEÇÃO DE VÍDEOS ──────────────────────────────────── */}
-      <section id="videos">
-        {/* 1. Vídeos principais do portal */}
-        <MainVideoSection />
-
-        {/* 2. TV Novorizontino — RSS do canal oficial do clube */}
-        <Suspense fallback={<TVSkeleton />}>
-          <TVNovorizontino />
-        </Suspense>
-
-        {/* 3. Shorts — vídeos neutros de futebol / bastidores */}
-        <MainShortsSection />
-      </section>
-
       {/* ── AGENDA / CENTRAL DE JOGOS (conteúdo próprio, sem iframes) ── */}
       <div className="max-w-7xl mx-auto px-4 w-full pb-10">
         <CentralJogos />
       </div>
 
-      {/* ── BANNER PUBLICITÁRIO — movido para o final da página ── */}
+      {/* ── BANNER PUBLICITÁRIO — no final da página ── */}
       <GlobalAdBanner />
 
       <Footer />
