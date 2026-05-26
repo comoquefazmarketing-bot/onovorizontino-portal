@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-
 export const metadata: Metadata = {
   title: 'Verde e Amarelo — Seleção Brasileira | Portal O Novorizontino',
   description:
@@ -15,6 +14,7 @@ export const metadata: Metadata = {
     'Raphinha',
     'Brasil 2026',
   ],
+  robots: { index: false, follow: true },
   openGraph: {
     title: 'Verde e Amarelo — Seleção Brasileira | Portal O Novorizontino',
     description: 'Convocação de Ancelotti, agenda, elenco e notícias da Seleção Brasileira na Copa do Mundo 2026.',
@@ -27,7 +27,6 @@ export const metadata: Metadata = {
     canonical: 'https://www.onovorizontino.com.br/selecao',
   },
 };
-
 export default function SelecaoLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
