@@ -135,7 +135,6 @@ const LEDMatrixBackground: React.FC<{ active?: boolean }> = ({ active = true }) 
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Grid de LEDs pulsantes */}
       {active && dots.map((dot) => (
         <motion.div
           key={dot.id}
@@ -159,7 +158,6 @@ const LEDMatrixBackground: React.FC<{ active?: boolean }> = ({ active = true }) 
         />
       ))}
       
-      {/* Scanlines overlay */}
       <div 
         className="absolute inset-0 opacity-10"
         style={{
@@ -173,7 +171,6 @@ const LEDMatrixBackground: React.FC<{ active?: boolean }> = ({ active = true }) 
         }}
       />
       
-      {/* Vignette */}
       <div 
         className="absolute inset-0"
         style={{
@@ -191,7 +188,6 @@ const LEDBorder: React.FC<{ color?: string; intensity?: number }> = ({
 }) => {
   return (
     <>
-      {/* Outer glow */}
       <motion.div
         className="absolute -inset-0.5 rounded-3xl opacity-75"
         style={{
@@ -208,7 +204,6 @@ const LEDBorder: React.FC<{ color?: string; intensity?: number }> = ({
         }}
       />
       
-      {/* Inner sharp border */}
       <div 
         className="absolute inset-0 rounded-3xl border-2"
         style={{
@@ -220,7 +215,6 @@ const LEDBorder: React.FC<{ color?: string; intensity?: number }> = ({
         }}
       />
       
-      {/* Corner LED bulbs */}
       {['top-0 left-0', 'top-0 right-0', 'bottom-0 left-0', 'bottom-0 right-0'].map((pos, i) => (
         <motion.div
           key={i}
@@ -277,12 +271,7 @@ const TeamDisplay: React.FC<{
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      {/* Logo com glow dinâmico */}
-      <motion.div
-        className="relative mb-3"
-        animate={controls}
-      >
-        {/* Glow ring */}
+      <motion.div className="relative mb-3" animate={controls}>
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{
@@ -305,7 +294,6 @@ const TeamDisplay: React.FC<{
           }}
         />
         
-        {/* Live indicator pulse */}
         {isLive && isNovorizontino && (
           <motion.div
             className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-black"
@@ -318,7 +306,6 @@ const TeamDisplay: React.FC<{
         )}
       </motion.div>
 
-      {/* Nome do time com efeito neon */}
       <motion.div 
         className={`font-black text-2xl uppercase tracking-tight ${
           isNovorizontino ? 'text-[#F5C400]' : 'text-white'
@@ -333,12 +320,10 @@ const TeamDisplay: React.FC<{
         {name}
       </motion.div>
       
-      {/* Label */}
       <div className="text-xs text-white/50 font-bold tracking-wider mt-1">
         {side === 'home' ? '⬅ MANDANTE' : 'VISITANTE ➡'}
       </div>
 
-      {/* Score display (se disponível) */}
       {score !== undefined && (
         <motion.div 
           className="mt-3 px-6 py-2 bg-black/60 rounded-xl border border-white/10"
@@ -377,7 +362,6 @@ const LEDCountdown: React.FC<{ countdown: ReturnType<typeof useCountdown> }> = (
       transition={{ delay: 0.4 }}
     >
       <div className="bg-black/80 border border-white/10 rounded-2xl py-4 px-2 backdrop-blur-sm">
-        {/* LED strip top */}
         <div className="h-1 w-full mb-3 rounded-full overflow-hidden">
           <motion.div 
             className="h-full"
@@ -394,7 +378,6 @@ const LEDCountdown: React.FC<{ countdown: ReturnType<typeof useCountdown> }> = (
               className="text-center relative group"
               whileHover={{ scale: 1.1 }}
             >
-              {/* LED digit background */}
               <div className="relative">
                 <motion.div
                   className="absolute inset-0 rounded-lg opacity-50"
@@ -423,7 +406,6 @@ const LEDCountdown: React.FC<{ countdown: ReturnType<typeof useCountdown> }> = (
                 {item.label}
               </div>
               
-              {/* Separator dots */}
               {i < units.length - 1 && (
                 <div className="absolute -right-2 md:-right-4 top-1/2 -translate-y-1/2 flex flex-col gap-1">
                   {[0, 1].map((dot) => (
@@ -440,7 +422,6 @@ const LEDCountdown: React.FC<{ countdown: ReturnType<typeof useCountdown> }> = (
           ))}
         </div>
         
-        {/* LED strip bottom */}
         <div className="h-1 w-full mt-3 rounded-full overflow-hidden">
           <motion.div 
             className="h-full"
@@ -460,11 +441,13 @@ export default function JumbotronJogo({
   onEscalar,
   loading = false,
   mercadoFechado = false,
+  totalEscalacoes,
 }: {
   jogo?: any;
   onEscalar?: () => void;
   loading?: boolean;
   mercadoFechado?: boolean;
+  totalEscalacoes?: number;
 }) {
   const safeJogo = jogo ?? {};
   const rodada = safeJogo.rodada ?? '11';
@@ -595,7 +578,6 @@ export default function JumbotronJogo({
         <div className="flex items-center justify-around gap-4">
           <TeamDisplay slug={mandanteSlug} side="home" score={safeJogo.placar_mandante} isLive={isLive} />
           
-          {/* VS Badge com efeito LED */}
           <motion.div 
             className="relative"
             animate={{ 
@@ -610,7 +592,6 @@ export default function JumbotronJogo({
           >
             <div className="text-4xl md:text-6xl font-black italic text-[#F5C400] relative">
               VS
-              {/* Glow overlay */}
               <div 
                 className="absolute inset-0 blur-xl opacity-60"
                 style={{ background: C.gold }}
@@ -621,7 +602,6 @@ export default function JumbotronJogo({
           <TeamDisplay slug={visitanteSlug} side="away" score={safeJogo.placar_visitante} isLive={isLive} />
         </div>
 
-        {/* 📍 Local do jogo */}
         <motion.div 
           className="text-center mt-6 text-sm text-white/70"
           initial={{ opacity: 0 }}
@@ -637,6 +617,27 @@ export default function JumbotronJogo({
       {/* ⏱️ Countdown LED Display */}
       {!isLive && <LEDCountdown countdown={countdown} />}
 
+      {/* 📊 Stats: Total de Escalações */}
+      {totalEscalacoes !== undefined && (
+        <motion.div 
+          className="relative z-20 mx-8 mb-4 text-center"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="inline-flex items-center gap-3 px-5 py-2 bg-black/50 rounded-full border border-white/10 backdrop-blur-sm">
+            <motion.div 
+              className="w-2 h-2 rounded-full bg-green-400"
+              animate={{ scale: [1, 1.5, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+            <span className="text-sm font-bold text-white/80">
+              <span className="text-[#F5C400] font-black">{totalEscalacoes}</span> escalações até agora
+            </span>
+          </div>
+        </motion.div>
+      )}
+
       {/* 🎯 CTA Button com efeito hover LED */}
       <div className="relative z-20 px-6 md:px-8 pb-6 md:pb-8">
         <motion.button
@@ -646,7 +647,6 @@ export default function JumbotronJogo({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          {/* Animated shine effect */}
           <motion.div
             className="absolute inset-0 opacity-0 group-hover:opacity-100"
             style={{
@@ -656,7 +656,6 @@ export default function JumbotronJogo({
             transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
           />
           
-          {/* Button text with glow */}
           <span className="relative z-10 flex items-center justify-center gap-2">
             {ctaLabel}
             {!mercadoFechado && (
@@ -669,7 +668,6 @@ export default function JumbotronJogo({
             )}
           </span>
           
-          {/* Border glow on hover */}
           <motion.div
             className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100"
             style={{
@@ -679,7 +677,6 @@ export default function JumbotronJogo({
           />
         </motion.button>
         
-        {/* Secondary info */}
         <div className="text-center mt-4 text-xs text-white/40 font-medium tracking-wide">
           {isLive 
             ? 'Clique para acessar a transmissão oficial' 
