@@ -1,11 +1,10 @@
-// src/components/tigre-fc/JumbotronJogo.tsx
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 // ════════════════════════════════════════════════════════════════════════════
-// IDENTIDADE VISUAL — BROADCAST STATION
+// IDENTIDADE VISUAL
 // ════════════════════════════════════════════════════════════════════════════
 export const C = {
   gold: '#F5C400',
@@ -40,7 +39,6 @@ const LOGOS: Record<string, string> = {
   'crb': 'https://logodownload.org/wp-content/uploads/2017/02/crb-logo-escudo.png',
   'america-mg': 'https://logodownload.org/wp-content/uploads/2017/02/america-mg-logo-escudo.png',
   'athletic-mg': 'https://logodownload.org/wp-content/uploads/2017/02/athletic-club-mg-logo-escudo.png',
-  'athletic': 'https://logodownload.org/wp-content/uploads/2017/02/athletic-club-mg-logo-escudo.png',
   'botafogo-sp': 'https://logodownload.org/wp-content/uploads/2017/02/botafogo-sp-logo-escudo.png',
   'sport': 'https://logodownload.org/wp-content/uploads/2017/02/sport-logo-escudo.png',
   'londrina': 'https://logodownload.org/wp-content/uploads/2017/02/londrina-logo-escudo.png',
@@ -69,7 +67,6 @@ const NOMES: Record<string, string> = {
   'crb': 'CRB',
   'america-mg': 'AMÉRICA-MG',
   'athletic-mg': 'ATHLETIC',
-  'athletic': 'ATHLETIC',
   'botafogo-sp': 'BOTAFOGO-SP',
   'sport': 'SPORT',
   'londrina': 'LONDRINA',
@@ -84,18 +81,11 @@ const slugToNome = (slug?: string | null) =>
 const slugToLogo = (slug?: string | null) => 
   slug ? LOGOS[slug] ?? ESCUDO_NOVORIZONTINO : ESCUDO_NOVORIZONTINO;
 
-// ════════════════════════════════════════════════════════════════════════════
-// NORMALIZA NOME DA COMPETIÇÃO
-// ════════════════════════════════════════════════════════════════════════════
 const normalizarCompeticao = (raw?: string | null): string => {
   if (!raw) return 'PRÓXIMA RODADA';
   const s = raw.toString().toUpperCase();
-  if (s.includes('SÉRIE B') || s.includes('SERIE B') || s.includes('BRASILEIR')) {
-    return 'BRASILEIRÃO SÉRIE B';
-  }
-  if (s.includes('SUL-SUDESTE') || s.includes('SUL SUDESTE')) {
-    return 'COPA SUL-SUDESTE';
-  }
+  if (s.includes('SÉRIE B') || s.includes('SERIE B') || s.includes('BRASILEIR')) return 'BRASILEIRÃO SÉRIE B';
+  if (s.includes('SUL-SUDESTE') || s.includes('SUL SUDESTE')) return 'COPA SUL-SUDESTE';
   return s;
 };
 
@@ -258,16 +248,6 @@ export default function JumbotronJogo({
         fontFamily: FONT_FAMILY,
       }}
     >
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
-        style={{ backgroundImage: `repeating-linear-gradient(45deg, ${C.gold} 0, ${C.gold} 1px, transparent 1px, transparent 14px)` }} />
-
-      <motion.div
-        className="absolute top-0 left-0 right-0 h-[2px]"
-        style={{ background: `linear-gradient(90deg, transparent, ${C.gold}, ${C.cyan}, ${C.gold}, transparent)` }}
-        animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-      />
-
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2 relative z-10">
         <div className="flex items-center gap-2">
@@ -278,47 +258,39 @@ export default function JumbotronJogo({
             style={{ background: C.red, boxShadow: `0 0 10px ${C.red}, 0 0 20px ${C.red}80` }} />
           <span className="text-[10px] font-black tracking-[3px]" style={{ color: C.red }}>AO VIVO</span>
         </div>
-        <div className="text-[9px] font-black tracking-[3px] text-zinc-500 truncate max-w-[60%] text-right">
+        <div className="text-[9px] font-black tracking-[3px] text-zinc-500">
           R{rodada} • {competicaoDisplay}
         </div>
       </div>
 
       {/* VS Section */}
-      <div className="flex items-center justify-around px-4 sm:px-6 pb-4 relative z-10">
+      <div className="flex items-center justify-around px-4 sm:px-6 pb-6 relative z-10">
         <div className="flex flex-col items-center flex-1">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full blur-xl" style={{ background: `${C.gold}40` }} />
-            <img src={mandanteLogo} alt={mandanteNome}
-              className="relative w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)]"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_NOVORIZONTINO; }} />
-          </div>
-          <div className="text-center mt-2">
-            <div className="text-sm sm:text-base font-black uppercase tracking-tight leading-none">{mandanteNome}</div>
+          <img src={mandanteLogo} alt={mandanteNome}
+            className="w-20 h-20 object-contain drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)]"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_NOVORIZONTINO; }} />
+          <div className="text-center mt-3">
+            <div className="text-base font-black uppercase tracking-tight">{mandanteNome}</div>
             <div className="text-[8px] text-zinc-500 tracking-[3px] mt-0.5">CASA</div>
           </div>
         </div>
 
-        <div className="flex flex-col items-center px-2 sm:px-4">
+        <div className="flex flex-col items-center px-4">
           {finalizado && placarMandante !== null && placarVisitante !== null ? (
-            <div className="text-3xl sm:text-4xl font-black tabular-nums" style={{ color: C.gold }}>
-              {placarMandante}<span className="text-zinc-700 mx-2">-</span>{placarVisitante}
+            <div className="text-4xl font-black tabular-nums" style={{ color: C.gold }}>
+              {placarMandante} <span className="text-zinc-700 mx-2">-</span> {placarVisitante}
             </div>
           ) : (
-            <div className="text-4xl sm:text-5xl font-black italic" style={{ color: C.gold, textShadow: `0 0 20px ${C.gold}60` }}>
-              VS
-            </div>
+            <div className="text-5xl font-black italic" style={{ color: C.gold }}>VS</div>
           )}
         </div>
 
         <div className="flex flex-col items-center flex-1">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full blur-xl" style={{ background: `${C.cyan}30` }} />
-            <img src={visitanteLogo} alt={visitanteNome}
-              className="relative w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)]"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_NOVORIZONTINO; }} />
-          </div>
-          <div className="text-center mt-2">
-            <div className="text-sm sm:text-base font-black uppercase tracking-tight leading-none">{visitanteNome}</div>
+          <img src={visitanteLogo} alt={visitanteNome}
+            className="w-20 h-20 object-contain drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)]"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_NOVORIZONTINO; }} />
+          <div className="text-center mt-3">
+            <div className="text-base font-black uppercase tracking-tight">{visitanteNome}</div>
             <div className="text-[8px] text-zinc-500 tracking-[3px] mt-0.5">FORA</div>
           </div>
         </div>
@@ -326,71 +298,45 @@ export default function JumbotronJogo({
 
       {/* Countdown */}
       {countdown && !finalizado && (
-        <div className="mx-4 mb-4 relative z-10">
-          <div className="flex items-center justify-center gap-2 sm:gap-3 bg-black/60 rounded-xl py-2 border"
-            style={{ borderColor: `${C.cyan}30` }}>
-            <span className="text-[9px] tracking-[3px] font-black mr-2" style={{ color: C.cyan }}>FALTAM</span>
+        <div className="mx-4 mb-6 relative z-10">
+          <div className="flex items-center justify-center gap-3 bg-black/70 rounded-2xl py-3 px-4">
             {[
-              { v: countdown.days, l: 'DIAS' },
-              { v: countdown.hours, l: 'HRS' },
-              { v: countdown.minutes, l: 'MIN' },
-              { v: countdown.seconds, l: 'SEG' },
-            ].map((u, i) => (
-              <React.Fragment key={u.l}>
-                <div className="flex flex-col items-center min-w-[28px]">
-                  <span className="text-base sm:text-lg font-black tabular-nums leading-none" style={{ color: C.gold }}>
-                    {u.v.toString().padStart(2, '0')}
-                  </span>
-                  <span className="text-[7px] tracking-widest text-zinc-500">{u.l}</span>
-                </div>
-                {i < 3 && <span className="text-zinc-700">:</span>}
-              </React.Fragment>
+              { label: 'DIAS', value: countdown.days },
+              { label: 'HRS', value: countdown.hours },
+              { label: 'MIN', value: countdown.minutes },
+              { label: 'SEG', value: countdown.seconds },
+            ].map((item, i) => (
+              <div key={i} className="text-center min-w-[50px]">
+                <div className="text-2xl font-black text-white tabular-nums">{item.value}</div>
+                <div className="text-[10px] text-zinc-500 tracking-widest">{item.label}</div>
+              </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Escalação / CTA */}
-      <div className="mx-4 mb-4 rounded-2xl p-3 sm:p-4 relative z-10"
-        style={{
-          background: 'rgba(0,0,0,0.5)',
-          border: hasEscalacao ? `1.5px solid ${C.gold}66` : `1.5px solid ${C.red}80`,
-        }}>
-        {hasEscalacao ? (
-          /* ... seu código de escalação ... */
-          <div>ESCALAÇÃO MONTADA</div>
-        ) : (
-          <div className="text-center py-4">
-            <div className="text-base font-black mb-1" style={{ color: C.red }}>
-              VOCÊ AINDA NÃO ESCALOU!
-            </div>
-            <div className="text-[10px] text-zinc-400 tracking-wider">
-              Monte seu time antes do jogo e dispute o ranking 🏆
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Botão Principal */}
+      {/* CTA Button */}
       {onEscalar ? (
         <button
           onClick={ctaDisabled ? undefined : onEscalar}
           disabled={ctaDisabled}
-          className="block w-full py-4 font-black tracking-[3px] text-sm uppercase active:scale-[0.99] transition-transform relative z-10 disabled:cursor-not-allowed"
+          className="block w-full py-5 font-black tracking-[3px] text-base uppercase active:scale-[0.98] transition-transform"
           style={{
-            background: ctaDisabled ? '#2a2a2a' : hasEscalacao ? `linear-gradient(90deg, ${C.cyan}, ${C.gold})` : `linear-gradient(90deg, ${C.gold}, #ffaa00, ${C.gold})`,
-            color: ctaDisabled ? '#666' : C.black,
-          }}>
+            background: ctaDisabled ? '#2a2a2a' : `linear-gradient(90deg, ${C.gold}, #ffdd00)`,
+            color: ctaDisabled ? '#888' : '#000',
+          }}
+        >
           {ctaLabel}
         </button>
       ) : (
         <Link
           href={id ? `/tigre-fc/escalar/${id}` : '/tigre-fc'}
-          className="block w-full py-4 font-black tracking-[3px] text-sm uppercase text-center active:scale-[0.99] transition-transform relative z-10"
+          className="block w-full py-5 font-black tracking-[3px] text-base uppercase text-center active:scale-[0.98] transition-transform"
           style={{
-            background: hasEscalacao ? `linear-gradient(90deg, ${C.cyan}, ${C.gold})` : `linear-gradient(90deg, ${C.gold}, #ffaa00, ${C.gold})`,
-            color: C.black,
-          }}>
+            background: `linear-gradient(90deg, ${C.gold}, #ffdd00)`,
+            color: '#000',
+          }}
+        >
           {ctaLabel}
         </Link>
       )}
