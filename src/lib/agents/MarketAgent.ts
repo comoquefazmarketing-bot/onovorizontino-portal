@@ -141,18 +141,52 @@ function buildTitulo(ctx: GameContext): string {
   return placar ? `${base} — ${placar}` : base;
 }
 
+// ─── Parágrafos de contexto e análise (para enriquecer o copy) ───────────────
+
+const CONTEXTO_PARAGRAFO: Record<string, string[]> = {
+  vitória: [
+    'O resultado não veio de graça. Veio de semana de trabalho, de esquema bem montado e de jogadores que entraram em campo sabendo o que precisavam fazer. Três pontos assim pesam mais do que os que aparecem de graça.',
+    'Ganhar com mérito tem sabor diferente. O Novorizontino não esperou o adversário errar — foi em cima, pressionou e construiu o resultado. Isso é identidade. Isso é o Tigre do Vale.',
+    'Vitória que anima, que dá confiança e que confirma: esse grupo tem qualidade para incomodar qualquer um na competição. A campanha ganha mais um capítulo positivo.',
+  ],
+  derrota: [
+    'Não tem desculpa que explique por completo — às vezes o adversário é melhor no dia e ponto. Mas tem coisas que dependem só do Novorizontino, e é aí que precisa melhorar antes do próximo jogo.',
+    'Resultado ruim, semana difícil. Mas é exatamente nessas horas que o caráter de um grupo aparece. O Tigre já saiu do buraco antes — e a torcida sabe disso.',
+    'Essa derrota tem que doer. Não para paralisar, mas para acender. Time que não sente a derrota não muda. Time que sente e reage é time de verdade.',
+  ],
+  empate: [
+    'Ponto dividido, sentimento dividido. O Novorizontino teve chances para mais, mas o gol não saiu. Em competição longa, esses pontos que ficam pelo caminho podem fazer diferença lá na frente.',
+    'Empate justo? Pode ser. Mas o Tigre criou e podia ter convertido. Eficiência é uma coisa que precisa melhorar — e o grupo sabe disso.',
+  ],
+  goleada_sofrida: [
+    'Quando leva goleada, não tem análise que resolva na hora. Precisa de silêncio, de honestidade e de trabalho. O Novorizontino sabe se levantar — mas primeiro precisa encarar o espelho.',
+    'Resultado para não esquecer — não por saudade, mas para não repetir. Tudo o que não pode acontecer, aconteceu neste jogo. Hora de corrigir sem rodeios.',
+  ],
+  reacao_necessaria: [
+    'Perdeu o primeiro jogo, mas o confronto não acabou. Agora é a parte mais difícil: ganhar fora de casa com desvantagem no placar agregado. Impossível? O Tigre já fez coisa mais difícil.',
+    'Reverter um placar ruim fora de casa exige mais do que talento — exige mentalidade. O Novorizontino vai precisar das suas melhores qualidades no jogo de volta: garra, coletivo e crença.',
+    'Dois gols de desvantagem. Jogo fora de casa. A situação não é boa, mas não é irreversível. Quem apostar contra o Tigre do Vale normalmente se arrepende.',
+  ],
+};
+
+const CHAMADA_TORCIDA: string[] = [
+  'A arquibancada faz parte do jogo. Seja no Jorjão ou viajando 500km, a torcida do Tigre faz diferença — e o time sabe disso.',
+  'De torcedor pra torcedor: acredite no processo. Esse grupo tem mais pra dar do que o que se vê em um jogo só.',
+  'O Novorizontino é assim — quando a coisa aperta, o Jorjão responde. E quando o time entrega, a festa é do tamanho da cidade.',
+  'Torcedor do Tigre não larga o time quando o resultado é ruim. É aí que a torcida mais aparece. E o time sente.',
+];
+
 // ─── generateHypeScript ───────────────────────────────────────────────────────
 
 /**
- * Gera um HypeScript completo a partir de um evento de jogo.
- * Se ctx.temperatura < 16, ativa automaticamente o modo "Polo Sul Paulista".
+ * Gera um HypeScript completo com no mínimo 1.000 caracteres.
+ * Tom: torcedor pra torcedor — celebra vitória com honestidade,
+ * critica derrota sem catastrofismo, nunca é só puxação de saco.
  */
 export function generateHypeScript(evento: string, ctx: Partial<GameContext> = {}): HypeScript {
   const context: GameContext = { evento, ...ctx };
-
   const isPoloSul = (context.temperatura ?? 99) < 16;
 
-  // Seleciona template: Polo Sul tem prioridade se temperatura < 16 e evento for clima/default
   let template: string;
   if (isPoloSul && (evento === 'clima' || evento === 'default' || !TEMPLATES[evento])) {
     template = pick(POLO_SUL_TEMPLATES);
@@ -161,7 +195,31 @@ export function generateHypeScript(evento: string, ctx: Partial<GameContext> = {
     template = pick(pool);
   }
 
-  const copy = interpolate(template, context);
+  const copyBase    = interpolate(template, context);
+  const contextoP   = pick((CONTEXTO_PARAGRAFO[evento] ?? CONTEXTO_PARAGRAFO.derrota));
+  const chamadaP    = pick(CHAMADA_TORCIDA);
+
+  // Parágrafo de situação do confronto (quando há placar)
+  const placar = buildPlacar(context);
+  const situacao = placar
+    ? `O placar de ${placar} ${
+        evento === 'vitória'  ? 'fica registrado como mais uma vitória do Tigre do Vale nesta temporada.' :
+        evento === 'derrota'  ? 'fica marcado como um resultado que exige resposta imediata do grupo.' :
+        evento === 'empate'   ? 'divide os pontos e mantém o Novorizontino na corrida.' :
+        evento === 'reacao_necessaria' ? 'abre a desvantagem no confronto — mas o jogo de volta ainda está por vir.' :
+        'fica registrado na tabela da competição.'
+      }`
+    : '';
+
+  // Monta o copy com múltiplos parágrafos (~1.000+ chars)
+  const partes = [
+    copyBase,
+    situacao,
+    contextoP,
+    chamadaP,
+    ASSINATURA,
+  ].filter(Boolean);
+
   const hashtags = [
     ...HASHTAGS_BASE,
     ...(HASHTAGS_EVENTO[evento] ?? []),
@@ -169,11 +227,11 @@ export function generateHypeScript(evento: string, ctx: Partial<GameContext> = {
   ];
 
   return {
-    titulo:    buildTitulo(context),
-    copy:      `${copy}\n\n${ASSINATURA}`,
-    hashtags:  [...new Set(hashtags)],
+    titulo:     buildTitulo(context),
+    copy:       partes.join('\n\n'),
+    hashtags:   [...new Set(hashtags)],
     assinatura: ASSINATURA,
-    timestamp: new Date().toISOString(),
+    timestamp:  new Date().toISOString(),
   };
 }
 

@@ -23,7 +23,8 @@ type Postagem = {
 
 async function getPostagens(): Promise<Postagem[]> {
   try {
-    const url = `${SUPABASE_URL}/rest/v1/postagens?select=id,titulo,slug,imagem_capa,categoria,criado_em&status=eq.published&order=criado_em.desc&limit=9`;
+    // offset=1 — pula a matéria mais recente (já exibida pelo HeroDestaque acima)
+    const url = `${SUPABASE_URL}/rest/v1/postagens?select=id,titulo,slug,imagem_capa,categoria,criado_em&status=eq.published&order=criado_em.desc&limit=9&offset=1`;
 
     const res = await fetch(url, {
       headers: {

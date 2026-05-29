@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 
+// Número de registro MTE ainda em processo — altere aqui quando sair o registro final
+const REGISTRO_MTE = 'em processo — Solicitação SRP202241/2026';
+
 export const metadata: Metadata = {
   title: 'Expediente | Portal O Novorizontino',
   description: 'Conheça a equipe, a missão e as informações institucionais do Portal O Novorizontino.',
@@ -11,9 +14,6 @@ export const metadata: Metadata = {
     type: 'website',
   },
 };
-
-// Registro profissional de jornalista (MTE)
-const REGISTRO_MTE = 'em processo — Solicitação SRP202241/2026';
 
 type Membro = {
   nome: string;
@@ -27,21 +27,21 @@ type Membro = {
 
 const EQUIPE: Membro[] = [
   {
-    nome: 'Felipe Makarios',
+    nome:         'Felipe Makarios',
     nomeRegistro: 'Felipe Tadeu da Motta',
-    cargo: 'Editor-Chefe, Jornalista & Desenvolvedor',
-    registro: REGISTRO_MTE,
-    bio: 'Responsável pela linha editorial, produção de conteúdo e desenvolvimento técnico da plataforma. Cobre o Grêmio Novorizontino desde 2026 com foco em jornalismo digital independente.',
-    emoji: '✍️',
-    areas: ['Jornalismo Esportivo', 'Desenvolvimento Web', 'Gestão Editorial'],
+    cargo:        'Editor-Chefe, Jornalista & Desenvolvedor',
+    registro:     REGISTRO_MTE,
+    bio:          'Responsável pela linha editorial, produção de conteúdo e desenvolvimento técnico da plataforma. Cobre o Grêmio Novorizontino desde 2026 com foco em jornalismo digital independente.',
+    emoji:        '✍️',
+    areas:        ['Jornalismo Esportivo', 'Desenvolvimento Web', 'Gestão Editorial'],
   },
   {
-    nome: 'Karen Makarios',
+    nome:         'Karen Makarios',
     nomeRegistro: 'Karen Dayane Espirito da Motta',
-    cargo: 'Diretora Administrativa',
-    bio: 'Responsável pela gestão administrativa, financeira e pelas parcerias institucionais do veículo.',
-    emoji: '📋',
-    areas: ['Gestão Administrativa', 'Parcerias', 'Compliance'],
+    cargo:        'Diretora Administrativa',
+    bio:          'Responsável pela gestão administrativa, financeira e pelas parcerias institucionais do veículo. Garante a sustentabilidade e o cumprimento das obrigações legais do portal.',
+    emoji:        '📋',
+    areas:        ['Gestão Administrativa', 'Parcerias', 'Compliance'],
   },
 ];
 
@@ -71,7 +71,6 @@ export default function ExpedientePage() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(245,196,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(245,196,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-yellow-500/8 blur-[80px] rounded-full" />
-
         <div className="relative z-10 max-w-3xl mx-auto">
           <div className="fade-1 inline-flex items-center gap-3 mb-8 px-5 py-2 rounded-full border border-yellow-500/30 bg-yellow-500/5">
             <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
@@ -100,15 +99,16 @@ export default function ExpedientePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              { label: 'Veículo', valor: 'Portal O Novorizontino' },
-              { label: 'CNPJ', valor: '43.945.464/0001-83' },
-              { label: 'Empresa Mantenedora', valor: 'Como Que Faz Marketing Digital LTDA' },
-              { label: 'Fundação da Empresa', valor: '2021' },
-              { label: 'Início da Cobertura Jornalística', valor: '2026' },
-              { label: 'Sede', valor: 'Novo Horizonte – SP, Brasil' },
-              { label: 'Abrangência', valor: 'Nacional (digital)' },
-              { label: 'Periodicidade', valor: 'Diária' },
-              { label: 'Formato', valor: 'Portal de Jornalismo Digital' },
+              { label: 'Veículo',                        valor: 'Portal O Novorizontino'                          },
+              { label: 'CNPJ',                           valor: '43.945.464/0001-83'                              },
+              { label: 'Empresa Mantenedora',            valor: 'Como Que Faz Marketing Digital LTDA'             },
+              { label: 'Fundação da Empresa',            valor: '2021'                                            },
+              { label: 'Início da Cobertura Jornalística', valor: '2026'                                          },
+              { label: 'Sede',                           valor: 'Novo Horizonte – SP, Brasil'                     },
+              { label: 'Abrangência',                    valor: 'Nacional (digital)'                              },
+              { label: 'Periodicidade',                  valor: 'Diária'                                          },
+              { label: 'Formato',                        valor: 'Portal de Jornalismo Digital'                    },
+              { label: 'Situação',                       valor: 'Empresa ativa'                                   },
             ].map(({ label, valor }) => (
               <div key={label} className="flex items-start gap-4 p-5 bg-white/[0.025] border border-white/5 rounded-2xl">
                 <div className="flex-1">
@@ -136,7 +136,7 @@ export default function ExpedientePage() {
                 </div>
                 <div className="relative z-10">
                   <div className="mb-4">
-                    <h3 className="text-white text-2xl font-black italic uppercase tracking-tight leading-none mb-1">
+                    <h3 className="text-white text-2xl font-black italic uppercase tracking-tight leading-none mb-0.5">
                       {p.nome}
                     </h3>
                     {p.nomeRegistro && (
@@ -165,7 +165,7 @@ export default function ExpedientePage() {
           </div>
         </section>
 
-        {/* POLÍTICA EDITORIAL - NOVA SEÇÃO COMPLETA */}
+        {/* POLÍTICA EDITORIAL */}
         <section>
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-8 bg-yellow-500 rounded-full" />
@@ -177,7 +177,6 @@ export default function ExpedientePage() {
             <p>
               O <strong>Portal O Novorizontino</strong> é um veículo de jornalismo digital independente lançado em 2026, mantido pela <strong>Como Que Faz Marketing Digital LTDA</strong> (CNPJ 43.945.464/0001-83), empresa fundada em 2021.
             </p>
-
             <h3 className="text-yellow-500 text-xl font-bold mt-8">Princípios Fundamentais</h3>
             <ul className="list-disc pl-6 space-y-3">
               <li><strong>Independência:</strong> Não temos vínculo financeiro, político ou institucional com o Grêmio Novorizontino ou qualquer outra entidade. Nossa única lealdade é com o leitor e com a verdade.</li>
@@ -186,12 +185,10 @@ export default function ExpedientePage() {
               <li><strong>Separação entre Jornalismo e Publicidade:</strong> Conteúdos patrocinados ou publi-editoriais são sempre identificados de forma explícita.</li>
               <li><strong>Respeito à Torcida:</strong> Criticamos quando necessário, mas sempre com base em fatos e de forma construtiva.</li>
             </ul>
-
             <h3 className="text-yellow-500 text-xl font-bold mt-8">Uso de Inteligência Artificial</h3>
             <p>
               Utilizamos ferramentas de IA como apoio na produção de conteúdo (rascunhos, ideias e otimização). No entanto, <strong>toda matéria publicada passa por revisão humana</strong> antes de ir ao ar. O Supervisor Editorial é o responsável final pela qualidade e veracidade das informações.
             </p>
-
             <h3 className="text-yellow-500 text-xl font-bold mt-8">Compromisso com o Leitor</h3>
             <p>
               Nosso objetivo é entregar jornalismo sério, ágil e apaixonado pelo Grêmio Novorizontino, sem abrir mão da independência e da ética profissional.
@@ -218,7 +215,6 @@ export default function ExpedientePage() {
                 </p>
               </div>
             </a>
-
             <a href="https://wa.me/5517988031679" target="_blank" rel="noopener noreferrer"
               className="flex flex-col gap-3 p-6 bg-white/[0.025] border border-white/5 rounded-2xl hover:border-green-500/30 transition-all group cursor-pointer no-underline">
               <span className="text-3xl">📱</span>

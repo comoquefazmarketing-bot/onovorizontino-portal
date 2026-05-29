@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer';
 import Manifesto from '@/components/sections/Manifesto';
 import GlobalAdBanner from '@/components/ads/GlobalAdBanner';
 import SelecaoBanner from '@/components/sections/SelecaoBanner';
+import HeroDestaque from '@/components/home/HeroDestaque';
 
 /* ─── JSON-LD: Organization + WebSite ─────────────────────────── */
 const jsonLdOrganization = {
@@ -281,6 +282,9 @@ export default async function Home() {
 
       <HomeHero />
       <CategoryNav />
+
+      {/* ── ÚLTIMA HORA — matéria mais recente em destaque ───── */}
+      <HeroDestaque />
 
       {/* ── GRID DE NOTÍCIAS ─────────────────────────────────── */}
       <section id="noticias">
