@@ -1,7 +1,6 @@
 // src/components/home/HeroDestaque.tsx
-// SERVER COMPONENT — exibe a matéria mais recente em destaque máximo.
-// Busca limit=1 ordenado por criado_em desc. O NewsGrid usa offset=1
-// para não duplicar esta matéria.
+// SERVER COMPONENT — mesma estrutura do CardDestaque (que já funciona),
+// mas ocupando a largura total da área de conteúdo, com texto maior.
 
 import Link  from 'next/link';
 import Image from 'next/image';
@@ -17,13 +16,12 @@ type Postagem = {
   slug:        string;
   imagem_capa: string | null;
   categoria:   string | null;
-  resumo_ia:   string | null;
   criado_em:   string;
 };
 
 async function getUltimaPostagem(): Promise<Postagem | null> {
   try {
-    const url = `${SUPABASE_URL}/rest/v1/postagens?select=id,titulo,slug,imagem_capa,categoria,resumo_ia,criado_em&status=eq.published&order=criado_em.desc&limit=1`;
+    const url = `${SUPABASE_URL}/rest/v1/postagens?select=id,titulo,slug,imagem_capa,categoria,criado_em&status=eq.published&order=criado_em.desc&limit=1`;
     const res = await fetch(url, {
       headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}`, Accept: 'application/json' },
       next: { revalidate: 300 },
@@ -48,30 +46,22 @@ export default async function HeroDestaque() {
   if (!post) return null;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 pt-8 pb-2" aria-label="Matéria em destaque">
-
-      {/* Cabeçalho da seção */}
-      <div className="flex items-center gap-3 mb-4">
-        <span className="w-1 h-7 bg-yellow-500 rounded-full block flex-shrink-0" />
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-          <h2 className="text-white text-xl font-black italic uppercase tracking-tighter">
-            Última Hora
-          </h2>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 pt-6 pb-0">
+      {/* Label */}
+      <div className="flex items-center gap-3 mb-3">
+        <span className="w-1 h-6 bg-yellow-500 rounded-full block" />
+        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+        <span className="text-white text-sm font-black italic uppercase tracking-tighter">Última Hora</span>
         <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">
           {dataRelativa(post.criado_em)}
         </span>
       </div>
 
-      {/* Hero card — mesma estrutura do CardDestaque, mas maior */}
+      {/* Card — padrão idêntico ao CardDestaque, mas texto maior */}
       <Link
         href={`/noticias/${post.slug}`}
-        className="group relative block w-full rounded-2xl overflow-hidden bg-zinc-900 border border-white/5 hover:border-yellow-500/40 transition-all duration-300"
-        style={{ aspectRatio: '21/9', maxHeight: '480px' }}
-        aria-label={`Ler: ${post.titulo}`}
+        className="group relative block rounded-2xl overflow-hidden aspect-video bg-zinc-900 border border-white/5 hover:border-yellow-500/40 transition-all duration-300"
       >
-        {/* Imagem de fundo */}
         {post.imagem_capa && (
           <Image
             src={post.imagem_capa}
@@ -82,31 +72,18 @@ export default async function HeroDestaque() {
             priority
           />
         )}
-
-        {/* Overlay gradiente */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-
-        {/* Conteúdo sobre a imagem */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 md:max-w-3xl">
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
           {post.categoria && (
-            <span className="bg-yellow-500 text-black text-[9px] font-black uppercase px-3 py-1 rounded-full tracking-widest mb-4 inline-block">
+            <span className="bg-yellow-500 text-black text-[9px] font-black uppercase px-3 py-1 rounded-full tracking-widest mb-3 inline-block">
               {post.categoria}
             </span>
           )}
-          <h3 className="text-white text-2xl md:text-4xl font-black italic uppercase leading-tight tracking-tighter mb-3 group-hover:text-yellow-500 transition-colors line-clamp-3">
+          <h3 className="text-white text-2xl md:text-4xl lg:text-5xl font-black italic uppercase leading-tight tracking-tighter group-hover:text-yellow-500 transition-colors line-clamp-2">
             {post.titulo}
           </h3>
-          {post.resumo_ia && (
-            <p className="text-zinc-300 text-sm leading-relaxed line-clamp-2 hidden md:block mb-4">
-              {post.resumo_ia}
-            </p>
-          )}
-          <span className="text-yellow-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all w-fit">
-            Ler matéria completa <span aria-hidden="true">→</span>
-          </span>
         </div>
       </Link>
-
-    </section>
+    </div>
   );
 }
