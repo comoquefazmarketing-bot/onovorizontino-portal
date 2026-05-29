@@ -18,8 +18,8 @@ const RARITIES: Record<Rar, { bg: string; scrim: string; txt: string; stat: stri
 
 type Player = { nome: string; rating: number; pos: string; role: string; foto: string; rar: Rar };
 const topPlayers: Player[] = [
-  { nome: 'Bianqui', rating: 7.6, pos: 'MC', role: 'MELHOR EM CAMPO',  foto: 'MATHEUS-BIANQUI.jpg.webp', rar: 'toty' },
-  { nome: 'Juninho', rating: 7.3, pos: 'MC', role: 'HERÓI DA PARTIDA', foto: 'JUNINHO.jpg.webp',        rar: 'gold' },
+  { nome: 'Bianqui', rating: 7.6, pos: 'MC', role: 'MELHOR EM CAMPO',  foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/MATHEUS%20BIANQUI%20FUNDO%20TRANSPARENTE.png', rar: 'toty' },
+  { nome: 'Juninho', rating: 7.3, pos: 'MC', role: 'HERÓI DA PARTIDA', foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JUNINHO%20FUNDO%20TRANSPARENTE.png',        rar: 'gold' },
 ];
 
 const STAT_LABELS = ['PAC', 'SHO', 'PAS', 'DRI', 'DEF', 'PHY'];
