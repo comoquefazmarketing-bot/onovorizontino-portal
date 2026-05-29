@@ -50,6 +50,9 @@ const LOGOS: Record<string, string> = {
 };
 
 const NOMES: Record<string, string> = {
+  'novorizontino': 'NOVORIZONTINO',
+
+const NOMES: Record<string, string> = {
 
 const NOMES: Record<string, string> = {
   'novorizontino': 'NOVORIZONTINO',
