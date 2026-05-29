@@ -1,11 +1,12 @@
 // src/components/home/HeroDestaque.tsx
-// SERVER COMPONENT — exibe a matéria mais recente em destaque máximo,
-// acima do grid de notícias. Usa o mesmo endpoint Supabase REST do NewsGrid.
+// SERVER COMPONENT — exibe a matéria mais recente em destaque máximo.
+// Busca limit=1 ordenado por criado_em desc. O NewsGrid usa offset=1
+// para não duplicar esta matéria.
 
 import Link  from 'next/link';
 import Image from 'next/image';
 
-export const revalidate = 300; // ISR 5 min
+export const revalidate = 300;
 
 const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -47,11 +48,9 @@ export default async function HeroDestaque() {
   if (!post) return null;
 
   return (
-    <section
-      className="max-w-7xl mx-auto px-4 pt-8 pb-2"
-      aria-label="Matéria em destaque"
-    >
-      {/* Label da seção */}
+    <section className="max-w-7xl mx-auto px-4 pt-8 pb-2" aria-label="Matéria em destaque">
+
+      {/* Cabeçalho da seção */}
       <div className="flex items-center gap-3 mb-4">
         <span className="w-1 h-7 bg-yellow-500 rounded-full block flex-shrink-0" />
         <div className="flex items-center gap-2">
@@ -60,55 +59,54 @@ export default async function HeroDestaque() {
             Última Hora
           </h2>
         </div>
-        <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest ml-1">
+        <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">
           {dataRelativa(post.criado_em)}
         </span>
       </div>
 
-      {/* Card hero */}
+      {/* Hero card — mesma estrutura do CardDestaque, mas maior */}
       <Link
         href={`/noticias/${post.slug}`}
-        className="group relative flex flex-col md:flex-row rounded-2xl overflow-hidden border border-white/5 hover:border-yellow-500/50 transition-all duration-300 bg-zinc-900"
+        className="group relative block w-full rounded-2xl overflow-hidden bg-zinc-900 border border-white/5 hover:border-yellow-500/40 transition-all duration-300"
+        style={{ aspectRatio: '21/9', maxHeight: '480px' }}
         aria-label={`Ler: ${post.titulo}`}
       >
-        {/* Imagem */}
-        <div className="relative w-full md:w-[60%] aspect-video md:aspect-auto md:min-h-[320px] bg-zinc-800 flex-shrink-0 overflow-hidden">
-          {post.imagem_capa ? (
-            <Image
-              src={post.imagem_capa}
-              alt={post.titulo}
-              fill
-              sizes="(max-width: 768px) 100vw, 60vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              priority
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
-          )}
-          {/* Overlay gradiente lateral no desktop */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-black/80" />
-        </div>
+        {/* Imagem de fundo */}
+        {post.imagem_capa && (
+          <Image
+            src={post.imagem_capa}
+            alt={post.titulo}
+            fill
+            sizes="(max-width: 768px) 100vw, 1280px"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            priority
+          />
+        )}
 
-        {/* Conteúdo */}
-        <div className="flex flex-col justify-center p-6 md:p-10 flex-1 bg-[#0a0a0a] md:bg-transparent md:absolute md:right-0 md:top-0 md:bottom-0 md:w-[45%] md:bg-gradient-to-l md:from-black md:via-black/95 md:to-transparent">
+        {/* Overlay gradiente */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+
+        {/* Conteúdo sobre a imagem */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 md:max-w-3xl">
           {post.categoria && (
-            <span className="bg-yellow-500 text-black text-[9px] font-black uppercase px-3 py-1 rounded-full tracking-widest mb-4 inline-block w-fit">
+            <span className="bg-yellow-500 text-black text-[9px] font-black uppercase px-3 py-1 rounded-full tracking-widest mb-4 inline-block">
               {post.categoria}
             </span>
           )}
-          <h3 className="text-white text-2xl md:text-3xl lg:text-4xl font-black italic uppercase leading-tight tracking-tighter mb-4 group-hover:text-yellow-500 transition-colors">
+          <h3 className="text-white text-2xl md:text-4xl font-black italic uppercase leading-tight tracking-tighter mb-3 group-hover:text-yellow-500 transition-colors line-clamp-3">
             {post.titulo}
           </h3>
           {post.resumo_ia && (
-            <p className="text-zinc-400 text-sm leading-relaxed line-clamp-3 mb-5 hidden md:block">
+            <p className="text-zinc-300 text-sm leading-relaxed line-clamp-2 hidden md:block mb-4">
               {post.resumo_ia}
             </p>
           )}
-          <span className="text-yellow-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-2 flex items-center gap-1 transition-all">
+          <span className="text-yellow-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all w-fit">
             Ler matéria completa <span aria-hidden="true">→</span>
           </span>
         </div>
       </Link>
+
     </section>
   );
 }
