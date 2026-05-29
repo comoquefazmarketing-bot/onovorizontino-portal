@@ -3,9 +3,6 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
-// ════════════════════════════════════════════════════════════════════════════
-// IDENTIDADE VISUAL
-// ════════════════════════════════════════════════════════════════════════════
 export const C = {
   gold: '#F5C400',
   cyan: '#00F3FF',
@@ -86,22 +83,13 @@ const normalizarCompeticao = (raw?: string | null): string => {
   return s;
 };
 
-// ════════════════════════════════════════════════════════════════════════════
-// COUNTDOWN HOOK
-// ════════════════════════════════════════════════════════════════════════════
 function useCountdown(targetDate: string | null | undefined) {
   const [time, setTime] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
 
   useEffect(() => {
-    if (!targetDate) {
-      setTime(null);
-      return;
-    }
+    if (!targetDate) { setTime(null); return; }
     const target = new Date(targetDate).getTime();
-    if (isNaN(target)) {
-      setTime(null);
-      return;
-    }
+    if (isNaN(target)) { setTime(null); return; }
 
     const tick = () => {
       const diff = target - Date.now();
@@ -125,9 +113,6 @@ function useCountdown(targetDate: string | null | undefined) {
   return time;
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// COMPONENTE PRINCIPAL
-// ════════════════════════════════════════════════════════════════════════════
 export default function JumbotronJogo({
   jogo,
   onEscalar,
@@ -151,32 +136,21 @@ export default function JumbotronJogo({
 
   const ctaLabel = mercadoFechado ? '🔒 MERCADO FECHADO' : '⚡ ESCALAR AGORA';
 
-  if (loading) {
-    return <div className="h-96 bg-black/50 animate-pulse rounded-3xl" />;
-  }
+  if (loading) return <div className="h-96 bg-black/50 animate-pulse rounded-3xl" />;
 
   return (
-    <div
-      className="relative w-full mx-auto rounded-3xl overflow-hidden border border-white/10"
-      style={{
-        background: `linear-gradient(135deg, ${C.black} 0%, #0a0a0a 50%, #0f0f0f 100%)`,
-        boxShadow: `0 0 50px ${C.gold}20, 0 8px 30px rgba(0,0,0,0.6)`,
-      }}
-    >
-      {/* Top Bar */}
+    <div className="relative w-full mx-auto rounded-3xl overflow-hidden border border-white/10" style={{
+      background: `linear-gradient(135deg, ${C.black} 0%, #0a0a0a 50%, #0f0f0f 100%)`,
+      boxShadow: `0 0 50px ${C.gold}20`,
+    }}>
       <div className="flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/60">
         <div className="flex items-center gap-3">
-          <motion.div
-            animate={{ opacity: [1, 0.4, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-3 h-3 rounded-full bg-red-500"
-          />
+          <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-3 h-3 rounded-full bg-red-500" />
           <span className="text-xs font-black tracking-[3px] text-red-500">AO VIVO</span>
         </div>
         <div className="text-xs font-black tracking-widest text-white/70">RODADA {rodada}</div>
       </div>
 
-      {/* VS Section */}
       <div className="p-8 pb-6">
         <div className="flex items-center justify-around">
           <div className="text-center flex-1">
@@ -185,9 +159,7 @@ export default function JumbotronJogo({
             <div className="text-xs text-white/50">MANDANTE</div>
           </div>
 
-          <div className="text-center">
-            <div className="text-6xl font-black italic text-[#F5C400]">VS</div>
-          </div>
+          <div className="text-6xl font-black italic text-[#F5C400]">VS</div>
 
           <div className="text-center flex-1">
             <img src={visitanteLogo} alt={visitanteNome} className="w-24 h-24 mx-auto mb-3 object-contain" />
@@ -199,7 +171,6 @@ export default function JumbotronJogo({
         <div className="text-center mt-6 text-sm text-white/70">📍 {local}</div>
       </div>
 
-      {/* Countdown */}
       {countdown && (
         <div className="mx-8 mb-8">
           <div className="bg-black/70 border border-white/10 rounded-2xl py-6 flex justify-center gap-10">
@@ -218,22 +189,13 @@ export default function JumbotronJogo({
         </div>
       )}
 
-      {/* CTA */}
       <div className="px-8 pb-8">
         {onEscalar ? (
-          <button
-            onClick={onEscalar}
-            className="w-full py-6 font-black text-xl tracking-widest rounded-2xl transition-all active:scale-95"
-            style={{ background: `linear-gradient(90deg, ${C.gold}, #ffea00)`, color: '#000' }}
-          >
+          <button onClick={onEscalar} className="w-full py-6 font-black text-xl tracking-widest rounded-2xl" style={{ background: `linear-gradient(90deg, ${C.gold}, #ffea00)`, color: '#000' }}>
             {ctaLabel}
           </button>
         ) : (
-          <Link
-            href="/tigre-fc/escalar/16"
-            className="block w-full py-6 font-black text-xl tracking-widest text-center rounded-2xl transition-all active:scale-95"
-            style={{ background: `linear-gradient(90deg, ${C.gold}, #ffea00)`, color: '#000' }}
-          >
+          <Link href="/tigre-fc/escalar/16" className="block w-full py-6 font-black text-xl tracking-widest text-center rounded-2xl" style={{ background: `linear-gradient(90deg, ${C.gold}, #ffea00)`, color: '#000' }}>
             {ctaLabel}
           </Link>
         )}
