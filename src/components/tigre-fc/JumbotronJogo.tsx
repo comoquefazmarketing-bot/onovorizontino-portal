@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -100,8 +101,8 @@ function useCountdown(targetDate: string | null | undefined) {
 const emissive = (color: string, strong = false): React.CSSProperties => ({
   color,
   textShadow: strong
-    ? `1.2px 0 0 ${C.red}66, -1.2px 0 0 ${C.cyan}66, 0 0 6px ${color}, 0 0 16px ${color}cc, 0 0 34px ${color}66`
-    : `0.8px 0 0 ${C.red}55, -0.8px 0 0 ${C.cyan}55, 0 0 5px ${color}, 0 0 14px ${color}99`,
+    ? `0.5px 0 0 ${C.red}55, -0.5px 0 0 ${C.cyan}55, 0 0 5px ${color}, 0 0 14px ${color}, 0 0 30px ${color}88`
+    : `0.4px 0 0 ${C.red}44, -0.4px 0 0 ${C.cyan}44, 0 0 4px ${color}, 0 0 12px ${color}aa`,
 });
 
 export default function JumbotronJogo({
@@ -118,6 +119,8 @@ export default function JumbotronJogo({
   totalEscalacoes?: number;
 }) {
   const safeJogo = jogo ?? {};
+  const router = useRouter();
+  const id = safeJogo.id ?? 0;
   const rodada = safeJogo.rodada ?? '—';
   const competicaoDisplay = normalizarCompeticao(safeJogo.competicao);
   const mandanteSlug = safeJogo.mandante_slug ?? 'sao-bernardo';
@@ -134,6 +137,12 @@ export default function JumbotronJogo({
   const temPlacar = safeJogo.placar_mandante != null && safeJogo.placar_visitante != null;
   const countdown = useCountdown(isLive || finalizado ? null : dataJogo);
   const accent = isLive ? C.red : C.gold;
+
+  const handleEscalar = () => {
+    if (mercadoFechado) return;
+    if (onEscalar) return onEscalar();
+    router.push(id ? `/tigre-fc/escalar/${id}` : '/tigre-fc');
+  };
 
   const tickerTxt = useMemo(
     () => `${competicaoDisplay}  ●  RODADA ${rodada}  ●  ${mandanteNome}  X  ${visitanteNome}  ●  ${local}  ●  `,
@@ -207,10 +216,10 @@ export default function JumbotronJogo({
                   <div className="flex-1 flex flex-col items-center justify-start gap-2 min-w-0">
                     <img src={slugToLogo(t.slug)} alt={t.nome}
                       className="w-20 h-20 md:w-24 md:h-24 object-contain"
-                      style={{ filter: `contrast(1.15) saturate(1.2) drop-shadow(0 0 14px ${cor}aa)` }}
+                      style={{ filter: `brightness(1.18) contrast(1.12) saturate(1.25) drop-shadow(0 0 16px ${cor})` }}
                       onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_NOVORIZONTINO; }} />
                     <div className="text-center font-black uppercase tracking-tight leading-none"
-                      style={{ fontSize: 'clamp(16px,4.5vw,26px)', ...emissive(cor, isNovo) }}>{t.nome}</div>
+                      style={{ fontSize: 'clamp(18px,5vw,30px)', ...emissive(cor, isNovo) }}>{t.nome}</div>
                     <div className="text-[9px] font-black tracking-[2px]" style={{ color: '#ffffff66' }}>{t.lado}</div>
                   </div>
 
@@ -290,7 +299,7 @@ export default function JumbotronJogo({
             </span>
           </div>
         )}
-        <motion.button onClick={onEscalar} disabled={mercadoFechado}
+        <motion.button onClick={handleEscalar} disabled={mercadoFechado}
           className="relative w-full py-5 font-black tracking-[2px] rounded-2xl overflow-hidden group"
           style={{
             background: mercadoFechado ? '#222' : `linear-gradient(90deg, ${accent}, ${isLive ? '#ff5577' : '#ffe04d'})`,
@@ -341,21 +350,21 @@ const styles = `
   /* (1) GRADE DE PIXELS — o que faz tudo parecer LED. Escurece os "vãos". */
   .led-grid {
     position:absolute; inset:0; z-index:30; pointer-events:none;
-    background-image: radial-gradient(circle at center, rgba(0,0,0,0) 0.9px, rgba(2,4,8,.62) 1.5px);
-    background-size: 4.5px 4.5px;
+    background-image: radial-gradient(circle at center, rgba(0,0,0,0) 1.3px, rgba(2,4,8,.40) 2px);
+    background-size: 5px 5px;
     mix-blend-mode: multiply;
   }
   /* (2) EMENDAS DOS MÓDULOS — as placas parafusadas do telão */
   .led-modules {
     position:absolute; inset:0; z-index:31; pointer-events:none;
     background-image:
-      repeating-linear-gradient(0deg,  transparent 0 47px, rgba(0,0,0,.45) 47px 48px),
-      repeating-linear-gradient(90deg, transparent 0 47px, rgba(0,0,0,.45) 47px 48px);
+      repeating-linear-gradient(0deg,  transparent 0 47px, rgba(0,0,0,.28) 47px 48px),
+      repeating-linear-gradient(90deg, transparent 0 47px, rgba(0,0,0,.28) 47px 48px);
   }
   /* scanlines finas */
   .led-scan {
     position:absolute; inset:0; z-index:31; pointer-events:none;
-    background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.16) 2px 3px);
+    background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.10) 2px 3px);
   }
   /* (3) FLICKER — respiração de brilho global */
   .led-flicker {
@@ -370,7 +379,7 @@ const styles = `
   }
   .led-vignette {
     position:absolute; inset:0; z-index:34; pointer-events:none;
-    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
+    background: radial-gradient(ellipse at center, transparent 70%, rgba(0,0,0,.30) 100%);
   }
   .led-bezel { position:absolute; inset:0; z-index:35; border-radius:16px; pointer-events:none; }
 
