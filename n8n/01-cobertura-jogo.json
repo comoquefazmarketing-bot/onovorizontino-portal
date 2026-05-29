@@ -28,7 +28,7 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indob2dsbnB2cWpiYWN6Z25lYmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODA2MTksImV4cCI6MjA4OTM1NjYxOX0.4JMjKuE3G5aBIIP-VEa8qc9M6c1NMKiSe0ZfgjIXY_Y" },
+            { "name": "apikey",        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indob2dsbnB2cWpiYWN6Z25lYmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODA2MTksImV4cCI6MjA4OTM1NjYxOX0.4JMjKuE3G5aBIIP-VEa8qc9M6c1NMKiSe0ZfgjIXY_Y" },
             { "name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indob2dsbnB2cWpiYWN6Z25lYmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODA2MTksImV4cCI6MjA4OTM1NjYxOX0.4JMjKuE3G5aBIIP-VEa8qc9M6c1NMKiSe0ZfgjIXY_Y" }
           ]
         },
@@ -46,10 +46,10 @@
           "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
           "conditions": [
             {
-              "id": "check-jogo",
-              "leftValue": "={{ $json.length }}",
-              "rightValue": 0,
-              "operator": { "type": "number", "operation": "gt" }
+              "id": "check-jogo-id",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "exists" }
             }
           ],
           "combinator": "and"
@@ -65,11 +65,11 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://whoglnpvqjbaczgnebbn.supabase.co/rest/v1/postagens?slug=like.*{{ $('Busca Último Jogo Finalizado').item.json[0].mandante_slug }}*{{ $('Busca Último Jogo Finalizado').item.json[0].visitante_slug }}*&select=id,slug&limit=1",
+        "url": "=https://whoglnpvqjbaczgnebbn.supabase.co/rest/v1/postagens?slug=like.*{{ $json.mandante_slug }}*&select=id,slug&limit=1",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indob2dsbnB2cWpiYWN6Z25lYmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODA2MTksImV4cCI6MjA4OTM1NjYxOX0.4JMjKuE3G5aBIIP-VEa8qc9M6c1NMKiSe0ZfgjIXY_Y" },
+            { "name": "apikey",        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indob2dsbnB2cWpiYWN6Z25lYmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODA2MTksImV4cCI6MjA4OTM1NjYxOX0.4JMjKuE3G5aBIIP-VEa8qc9M6c1NMKiSe0ZfgjIXY_Y" },
             { "name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indob2dsbnB2cWpiYWN6Z25lYmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODA2MTksImV4cCI6MjA4OTM1NjYxOX0.4JMjKuE3G5aBIIP-VEa8qc9M6c1NMKiSe0ZfgjIXY_Y" }
           ]
         },
@@ -87,8 +87,8 @@
           "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
           "conditions": [
             {
-              "id": "check-artigo",
-              "leftValue": "={{ $json.length }}",
+              "id": "check-artigo-vazio",
+              "leftValue": "={{ $input.all().length }}",
               "rightValue": 0,
               "operator": { "type": "number", "operation": "equals" }
             }
@@ -111,12 +111,12 @@
         "headerParameters": {
           "parameters": [
             { "name": "Authorization", "value": "Bearer WkltA2CFxI6d3RDqEzHva4y1Xs8Y0TmcjOfZurSG" },
-            { "name": "Content-Type", "value": "application/json" }
+            { "name": "Content-Type",  "value": "application/json" }
           ]
         },
         "sendBody": true,
         "contentType": "json",
-        "jsonBody": "={{ JSON.stringify({ jogo_id: $('Busca Último Jogo Finalizado').item.json[0].id, status: 'published' }) }}",
+        "jsonBody": "={{ JSON.stringify({ jogo_id: $('Busca Último Jogo Finalizado').item.json.id, status: 'published' }) }}",
         "options": {}
       },
       "id": "gabi-publicar",
@@ -137,7 +137,7 @@
         },
         "sendBody": true,
         "contentType": "json",
-        "jsonBody": "={{ JSON.stringify({ evento: $('Busca Último Jogo Finalizado').item.json[0].placar_mandante > $('Busca Último Jogo Finalizado').item.json[0].placar_visitante ? 'vitória' : $('Busca Último Jogo Finalizado').item.json[0].placar_mandante < $('Busca Último Jogo Finalizado').item.json[0].placar_visitante ? 'derrota' : 'empate', placarMandante: $('Busca Último Jogo Finalizado').item.json[0].placar_mandante, placarVisitante: $('Busca Último Jogo Finalizado').item.json[0].placar_visitante, mandante: $('Busca Último Jogo Finalizado').item.json[0].mandante_slug, visitante: $('Busca Último Jogo Finalizado').item.json[0].visitante_slug }) }}",
+        "jsonBody": "={{ (function(){ const j = $('Busca Último Jogo Finalizado').item.json; const gm = j.placar_mandante; const gv = j.placar_visitante; const ev = gm > gv ? 'vitória' : gm < gv ? 'derrota' : 'empate'; return JSON.stringify({ evento: ev, placarMandante: gm, placarVisitante: gv, mandante: j.mandante_slug, visitante: j.visitante_slug }); })() }}",
         "options": {}
       },
       "id": "leo-copy",
@@ -152,7 +152,7 @@
         "url": "https://api.telegram.org/bot8564078131:AAFXL10HzW-9trv4SpAoZF-C37GJ_0guXeY/sendMessage",
         "sendBody": true,
         "contentType": "json",
-        "jsonBody": "={{ JSON.stringify({ chat_id: '8597307408', text: '📰 *Artigo publicado!*\\n\\n' + $('Gabi — Publicar Artigo').item.json.postagem?.titulo + '\\n\\n✍️ *Copy social (Léo):*\\n' + $('Léo — Gerar Copy Social').item.json.script?.copy, parse_mode: 'Markdown' }) }}",
+        "jsonBody": "={{ (function(){ const titulo = $('Gabi — Publicar Artigo').item.json?.postagem?.titulo || 'Artigo publicado'; const copy = $('Léo — Gerar Copy Social').item.json?.script?.copy || ''; return JSON.stringify({ chat_id: '8597307408', text: '📰 <b>' + titulo + '</b>\\n\\n' + copy, parse_mode: 'HTML' }); })() }}",
         "options": {}
       },
       "id": "telegram-cobertura",
@@ -163,27 +163,27 @@
     }
   ],
   "connections": {
-    "A cada 30 minutos": { "main": [[{ "node": "Busca Último Jogo Finalizado", "type": "main", "index": 0 }]] },
-    "Disparo Manual":    { "main": [[{ "node": "Busca Último Jogo Finalizado", "type": "main", "index": 0 }]] },
-    "Busca Último Jogo Finalizado": { "main": [[{ "node": "Jogo encontrado?", "type": "main", "index": 0 }]] },
+    "A cada 30 minutos":             { "main": [[{ "node": "Busca Último Jogo Finalizado",    "type": "main", "index": 0 }]] },
+    "Disparo Manual":                { "main": [[{ "node": "Busca Último Jogo Finalizado",    "type": "main", "index": 0 }]] },
+    "Busca Último Jogo Finalizado":  { "main": [[{ "node": "Jogo encontrado?",                "type": "main", "index": 0 }]] },
     "Jogo encontrado?": {
       "main": [
-        [{ "node": "Artigo já existe?", "type": "main", "index": 0 }],
+        [{ "node": "Artigo já existe?",             "type": "main", "index": 0 }],
         []
       ]
     },
-    "Artigo já existe?": { "main": [[{ "node": "Artigo ainda não publicado?", "type": "main", "index": 0 }]] },
+    "Artigo já existe?":             { "main": [[{ "node": "Artigo ainda não publicado?",     "type": "main", "index": 0 }]] },
     "Artigo ainda não publicado?": {
       "main": [
         [
-          { "node": "Gabi — Publicar Artigo", "type": "main", "index": 0 },
-          { "node": "Léo — Gerar Copy Social", "type": "main", "index": 0 }
+          { "node": "Gabi — Publicar Artigo",       "type": "main", "index": 0 },
+          { "node": "Léo — Gerar Copy Social",      "type": "main", "index": 0 }
         ],
         []
       ]
     },
-    "Gabi — Publicar Artigo": { "main": [[{ "node": "Telegram — Notifica Publicação", "type": "main", "index": 0 }]] },
-    "Léo — Gerar Copy Social": { "main": [[{ "node": "Telegram — Notifica Publicação", "type": "main", "index": 0 }]] }
+    "Gabi — Publicar Artigo":        { "main": [[{ "node": "Telegram — Notifica Publicação", "type": "main", "index": 0 }]] },
+    "Léo — Gerar Copy Social":       { "main": [[{ "node": "Telegram — Notifica Publicação", "type": "main", "index": 0 }]] }
   },
   "active": false,
   "settings": { "executionOrder": "v1" },
