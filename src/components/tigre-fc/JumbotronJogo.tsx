@@ -75,17 +75,14 @@ const NOMES: Record<string, string> = {
   'sao-bernardo': 'SÃO BERNARDO',
 };
 
-const slugToNome = (slug?: string | null) =>
-  slug ? NOMES[slug] ?? slug.replace(/-/g, ' ').toUpperCase() : '---';
-
-const slugToLogo = (slug?: string | null) =>
-  slug ? LOGOS[slug] ?? ESCUDO_NOVORIZONTINO : ESCUDO_NOVORIZONTINO;
+const slugToNome = (slug?: string | null) => slug ? NOMES[slug] ?? slug.replace(/-/g, ' ').toUpperCase() : '---';
+const slugToLogo = (slug?: string | null) => slug ? LOGOS[slug] ?? ESCUDO_NOVORIZONTINO : ESCUDO_NOVORIZONTINO;
 
 const normalizarCompeticao = (raw?: string | null): string => {
   if (!raw) return 'BRASILEIRÃO SÉRIE B';
   const s = raw.toString().toUpperCase();
-  if (s.includes('SÉRIE B') || s.includes('SERIE B') || s.includes('BRASILEIR')) return 'BRASILEIRÃO SÉRIE B';
-  if (s.includes('SUL-SUDESTE') || s.includes('SUL SUDESTE')) return 'COPA SUL-SUDESTE';
+  if (s.includes('SÉRIE B')) return 'BRASILEIRÃO SÉRIE B';
+  if (s.includes('SUL-SUDESTE')) return 'COPA SUL-SUDESTE';
   return s;
 };
 
@@ -155,9 +152,7 @@ export default function JumbotronJogo({
   const ctaLabel = mercadoFechado ? '🔒 MERCADO FECHADO' : '⚡ ESCALAR AGORA';
 
   if (loading) {
-    return (
-      <div className="w-full max-w-2xl mx-auto rounded-3xl p-8 border border-white/10 animate-pulse bg-black/50" />
-    );
+    return <div className="h-96 bg-black/50 animate-pulse rounded-3xl" />;
   }
 
   return (
@@ -178,44 +173,30 @@ export default function JumbotronJogo({
           />
           <span className="text-xs font-black tracking-[3px] text-red-500">AO VIVO</span>
         </div>
-        <div className="text-xs font-black tracking-widest text-white/70">
-          RODADA {rodada}
-        </div>
+        <div className="text-xs font-black tracking-widest text-white/70">RODADA {rodada}</div>
       </div>
 
       {/* VS Section */}
       <div className="p-8 pb-6">
         <div className="flex items-center justify-around">
           <div className="text-center flex-1">
-            <img 
-              src={mandanteLogo} 
-              alt={mandanteNome}
-              className="w-24 h-24 mx-auto mb-3 object-contain drop-shadow-xl"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_NOVORIZONTINO; }}
-            />
+            <img src={mandanteLogo} alt={mandanteNome} className="w-24 h-24 mx-auto mb-3 object-contain" />
             <div className="font-black text-2xl uppercase tracking-tight">{mandanteNome}</div>
-            <div className="text-xs text-white/50 mt-1">MANDANTE</div>
+            <div className="text-xs text-white/50">MANDANTE</div>
           </div>
 
-          <div className="text-center px-6">
+          <div className="text-center">
             <div className="text-6xl font-black italic text-[#F5C400]">VS</div>
           </div>
 
           <div className="text-center flex-1">
-            <img 
-              src={visitanteLogo} 
-              alt={visitanteNome}
-              className="w-24 h-24 mx-auto mb-3 object-contain drop-shadow-xl"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = ESCUDO_NOVORIZONTINO; }}
-            />
+            <img src={visitanteLogo} alt={visitanteNome} className="w-24 h-24 mx-auto mb-3 object-contain" />
             <div className="font-black text-2xl uppercase tracking-tight">{visitanteNome}</div>
-            <div className="text-xs text-white/50 mt-1">VISITANTE</div>
+            <div className="text-xs text-white/50">VISITANTE</div>
           </div>
         </div>
 
-        <div className="text-center mt-6 text-sm text-white/70">
-          📍 {local}
-        </div>
+        <div className="text-center mt-6 text-sm text-white/70">📍 {local}</div>
       </div>
 
       {/* Countdown */}
@@ -229,25 +210,21 @@ export default function JumbotronJogo({
               { value: countdown.seconds, label: 'SEG' },
             ].map((item, i) => (
               <div key={i} className="text-center">
-                <div className="text-4xl font-black text-white tabular-nums">{item.value}</div>
-                <div className="text-[10px] font-bold tracking-widest text-white/50">{item.label}</div>
+                <div className="text-4xl font-black text-white">{item.value}</div>
+                <div className="text-xs tracking-widest text-white/50">{item.label}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* CTA Button */}
+      {/* CTA */}
       <div className="px-8 pb-8">
         {onEscalar ? (
           <button
             onClick={onEscalar}
             className="w-full py-6 font-black text-xl tracking-widest rounded-2xl transition-all active:scale-95"
-            style={{
-              background: `linear-gradient(90deg, ${C.gold}, #ffea00)`,
-              color: '#000',
-              boxShadow: `0 0 30px ${C.gold}60`,
-            }}
+            style={{ background: `linear-gradient(90deg, ${C.gold}, #ffea00)`, color: '#000' }}
           >
             {ctaLabel}
           </button>
@@ -255,11 +232,7 @@ export default function JumbotronJogo({
           <Link
             href="/tigre-fc/escalar/16"
             className="block w-full py-6 font-black text-xl tracking-widest text-center rounded-2xl transition-all active:scale-95"
-            style={{
-              background: `linear-gradient(90deg, ${C.gold}, #ffea00)`,
-              color: '#000',
-              boxShadow: `0 0 30px ${C.gold}60`,
-            }}
+            style={{ background: `linear-gradient(90deg, ${C.gold}, #ffea00)`, color: '#000' }}
           >
             {ctaLabel}
           </Link>
