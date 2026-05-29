@@ -47,6 +47,9 @@ const LOGOS: Record<string, string> = {
   'juventude': 'https://logodownload.org/wp-content/uploads/2017/02/juventude-logo-escudo.png',
   'ceara': 'https://logodownload.org/wp-content/uploads/2017/02/ceara-logo-escudo.png',
   'sao-bernardo': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20SAO%20BERNARDO.png',
+};
+
+const NOMES: Record<string, string> = {
 
 const NOMES: Record<string, string> = {
   'novorizontino': 'NOVORIZONTINO',
