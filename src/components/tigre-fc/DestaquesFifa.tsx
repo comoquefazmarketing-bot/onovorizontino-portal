@@ -2,7 +2,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 
-const ESCUDO  = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+// ── Config de Imagens ───────────────────────────────────────────────────────
+const ESCUDO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/Escudo%20Novorizontino.png';
+const STORAGE_BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal';
 
 // caminho da silhueta FUT (viewBox 300x430) — usado na moldura
 const FRAME = `M150 8 C110 8 70 14 40 26 C30 30 22 38 22 50 L22 360
@@ -17,17 +19,37 @@ const RARITIES: Record<Rar, { bg: string; scrim: string; txt: string; stat: stri
 };
 
 type Player = { nome: string; rating: number; pos: string; role: string; foto: string; rar: Rar };
+
+// ── Jogadores com URLs ATUALIZADAS ──────────────────────────────────────────
 const topPlayers: Player[] = [
-  { nome: 'Bianqui', rating: 7.6, pos: 'MC', role: 'MELHOR EM CAMPO',  foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/MATHEUS%20BIANQUI%20FUNDO%20TRANSPARENTE.png', rar: 'toty' },
-  { nome: 'Juninho', rating: 7.3, pos: 'MC', role: 'HERÓI DA PARTIDA', foto: 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JUNINHO%20FUNDO%20TRANSPARENTE.png',        rar: 'gold' },
+  { 
+    nome: 'Bianqui', 
+    rating: 7.6, 
+    pos: 'MC', 
+    role: 'MELHOR EM CAMPO',  
+    foto: `${STORAGE_BASE}/MATHEUS%20BIANQUI%20FUNDO%20TRANSPARENTE.png`, 
+    rar: 'toty' 
+  },
+  { 
+    nome: 'Juninho', 
+    rating: 7.3, 
+    pos: 'MC', 
+    role: 'HERÓI DA PARTIDA', 
+    foto: `${STORAGE_BASE}/JUNINHO%20FUNDO%20TRANSPARENTE.png`,        
+    rar: 'gold' 
+  },
 ];
 
 const STAT_LABELS = ['PAC', 'SHO', 'PAS', 'DRI', 'DEF', 'PHY'];
+
 function deriveStats(rating: number, nome: string) {
   const seed = [...nome].reduce((a, c) => a + c.charCodeAt(0), 0);
   const base = Math.round(rating * 10);
   const offs = [6, 1, 9, 11, -10, 2]; // perfil de meio-campo (PAS/DRI altos)
-  return STAT_LABELS.map((l, i) => ({ l, v: Math.max(54, Math.min(99, base + offs[i] + (((seed >> i) & 7) - 3))) }));
+  return STAT_LABELS.map((l, i) => ({ 
+    l, 
+    v: Math.max(54, Math.min(99, base + offs[i] + (((seed >> i) & 7) - 3))) 
+  }));
 }
 
 function useCountUp(target: number, duration = 1000, decimals = 0) {
@@ -46,7 +68,9 @@ function useCountUp(target: number, duration = 1000, decimals = 0) {
 }
 
 const StatNum = ({ v, color }: { v: number; color: string }) => (
-  <span className="tabular-nums font-black" style={{ color, fontSize: 22, lineHeight: 1 }}>{useCountUp(v, 900)}</span>
+  <span className="tabular-nums font-black" style={{ color, fontSize: 22, lineHeight: 1 }}>
+    {useCountUp(v, 900)}
+  </span>
 );
 
 function FutCard({ player, index }: { player: Player; index: number }) {
@@ -103,8 +127,10 @@ function FutCard({ player, index }: { player: Player; index: number }) {
               }} />
             ))}
 
-            {/* JOGADOR */}
-            <img src={`${STORAGE}${player.foto}`} alt={player.nome}
+            {/* JOGADOR - IMG COM URL COMPLETA */}
+            <img 
+              src={player.foto} 
+              alt={player.nome}
               className="absolute left-1/2 -translate-x-1/2 object-cover object-top"
               style={{
                 top: '4%', height: '66%', width: '78%',
@@ -112,7 +138,8 @@ function FutCard({ player, index }: { player: Player; index: number }) {
                 WebkitMaskImage: 'linear-gradient(#000 78%, transparent)',
                 filter: 'drop-shadow(0 10px 20px rgba(0,0,0,.5))',
               }}
-              onError={(e) => { (e.target as HTMLImageElement).src = ESCUDO; }} />
+              onError={(e) => { (e.target as HTMLImageElement).src = ESCUDO; }} 
+            />
 
             {/* scrim inferior p/ legibilidade dos atributos */}
             <div className="absolute inset-0" style={{ background: `linear-gradient(transparent 46%, ${r.scrim} 72%)` }} />
@@ -218,7 +245,14 @@ export default function DestaquesFifa() {
               <span className="text-xs font-black tracking-[3px] text-emerald-400">SOFASCORE LIVE</span>
             </div>
             <div className="rounded-3xl overflow-hidden border border-white/10 bg-black/90 shadow-2xl h-[520px] md:h-[640px]">
-              <iframe src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526098&widgetTheme=dark" className="w-full h-full" frameBorder="0" scrolling="no" />
+              <iframe 
+                src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526098&widgetTheme=dark" 
+                className="w-full h-full" 
+                frameBorder="0" 
+                scrolling="no" 
+                title="SofaScore Lineup"
+                loading="lazy"
+              />
             </div>
           </div>
         </div>
