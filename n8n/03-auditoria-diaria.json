@@ -1,0 +1,109 @@
+{
+  "name": "03 · Auditoria Diária — Carlos",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 6 * * *" }]
+        }
+      },
+      "id": "cron-carlos",
+      "name": "Todo Dia às 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [200, 300],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {},
+      "id": "manual-carlos",
+      "name": "Disparo Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [200, 460],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.onovorizontino.com.br/api/agents/audit",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer WkltA2CFxI6d3RDqEzHva4y1Xs8Y0TmcjOfZurSG" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "carlos-audit",
+      "name": "Carlos — Auditoria Completa",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [440, 380],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "check-erros",
+              "leftValue": "={{ $json.escalacoes.filter(l => l.tipo === 'erro').length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-erros",
+      "name": "Há erros?",
+      "type": "n8n-nodes-base.if",
+      "position": [660, 380],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8564078131:AAFXL10HzW-9trv4SpAoZF-C37GJ_0guXeY/sendMessage",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: '8597307408', text: '🔴 <b>Carlos — Erros detectados</b>\\n\\n' + $('Carlos — Auditoria Completa').item.json.escalacoes.filter(l => l.tipo === 'erro').map(e => '• ' + e.mensagem).join('\\n'), parse_mode: 'HTML' }) }}",
+        "options": {}
+      },
+      "id": "telegram-carlos-erro",
+      "name": "Telegram — Alerta de Erros",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [880, 240],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8564078131:AAFXL10HzW-9trv4SpAoZF-C37GJ_0guXeY/sendMessage",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: '8597307408', text: '✅ <b>Carlos — Auditoria OK</b>\\nNenhum erro encontrado. Nível Makarios confirmado. 🐯', parse_mode: 'HTML' }) }}",
+        "options": {}
+      },
+      "id": "telegram-carlos-ok",
+      "name": "Telegram — Tudo OK",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [880, 520],
+      "typeVersion": 4.2
+    }
+  ],
+  "connections": {
+    "Todo Dia às 6h":  { "main": [[{ "node": "Carlos — Auditoria Completa", "type": "main", "index": 0 }]] },
+    "Disparo Manual":  { "main": [[{ "node": "Carlos — Auditoria Completa", "type": "main", "index": 0 }]] },
+    "Carlos — Auditoria Completa": { "main": [[{ "node": "Há erros?", "type": "main", "index": 0 }]] },
+    "Há erros?": {
+      "main": [
+        [{ "node": "Telegram — Alerta de Erros", "type": "main", "index": 0 }],
+        [{ "node": "Telegram — Tudo OK",        "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "portal" }, { "name": "carlos" }, { "name": "tigrefc" }]
+}

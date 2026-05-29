@@ -1,0 +1,66 @@
+{
+  "name": "02 · Relatório Semanal — Rafael",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 8 * * 1" }]
+        }
+      },
+      "id": "cron-rafael",
+      "name": "Toda Segunda-feira 8h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [200, 300],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {},
+      "id": "manual-rafael",
+      "name": "Disparo Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [200, 460],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.onovorizontino.com.br/api/agents/rafael",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer WkltA2CFxI6d3RDqEzHva4y1Xs8Y0TmcjOfZurSG" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "rafael-relatorio",
+      "name": "Rafael — Gerar Relatório",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [440, 380],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8564078131:AAFXL10HzW-9trv4SpAoZF-C37GJ_0guXeY/sendMessage",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: '8597307408', text: $json.resumo || '⚠️ Rafael: sem dados no relatório.', parse_mode: 'HTML' }) }}",
+        "options": {}
+      },
+      "id": "telegram-rafael",
+      "name": "Telegram — Enviar Relatório",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [660, 380],
+      "typeVersion": 4.2
+    }
+  ],
+  "connections": {
+    "Toda Segunda-feira 8h": { "main": [[{ "node": "Rafael — Gerar Relatório", "type": "main", "index": 0 }]] },
+    "Disparo Manual":        { "main": [[{ "node": "Rafael — Gerar Relatório", "type": "main", "index": 0 }]] },
+    "Rafael — Gerar Relatório": { "main": [[{ "node": "Telegram — Enviar Relatório", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "portal" }, { "name": "rafael" }]
+}
