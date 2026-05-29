@@ -23,8 +23,7 @@ type Postagem = {
 
 async function getPostagens(): Promise<Postagem[]> {
   try {
-    // offset=1 — pula a matéria mais recente (já exibida pelo HeroDestaque acima)
-    const url = `${SUPABASE_URL}/rest/v1/postagens?select=id,titulo,slug,imagem_capa,categoria,criado_em&status=eq.published&order=criado_em.desc&limit=9&offset=1`;
+    const url = `${SUPABASE_URL}/rest/v1/postagens?select=id,titulo,slug,imagem_capa,categoria,criado_em&status=eq.published&order=criado_em.desc&limit=9`;
 
     const res = await fetch(url, {
       headers: {
@@ -146,9 +145,12 @@ export default async function PostagensGrid() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <span className="w-1 h-7 bg-yellow-500 rounded-full block" />
-          <h2 className="text-white text-xl font-black italic uppercase tracking-tighter">
-            Últimas Notícias
-          </h2>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <h2 className="text-white text-xl font-black italic uppercase tracking-tighter">
+              Última Hora
+            </h2>
+          </div>
         </div>
         <Link href="/noticias" className="text-yellow-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
           Ver todas →
