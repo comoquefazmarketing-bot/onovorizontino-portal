@@ -101,8 +101,8 @@ function useCountdown(targetDate: string | null | undefined) {
 const emissive = (color: string, strong = false): React.CSSProperties => ({
   color,
   textShadow: strong
-    ? `0.5px 0 0 ${C.red}55, -0.5px 0 0 ${C.cyan}55, 0 0 5px ${color}, 0 0 14px ${color}, 0 0 30px ${color}88`
-    : `0.4px 0 0 ${C.red}44, -0.4px 0 0 ${C.cyan}44, 0 0 4px ${color}, 0 0 12px ${color}aa`,
+    ? `0.4px 0 0 ${C.red}44, -0.4px 0 0 ${C.cyan}44, 0 0 3px ${color}, 0 0 9px ${color}cc, 0 1px 2px rgba(0,0,0,.55)`
+    : `0 0 3px ${color}, 0 0 7px ${color}aa, 0 1px 1px rgba(0,0,0,.45)`,
 });
 
 export default function JumbotronJogo({
@@ -350,7 +350,7 @@ const styles = `
   /* (1) GRADE DE PIXELS — o que faz tudo parecer LED. Escurece os "vãos". */
   .led-grid {
     position:absolute; inset:0; z-index:30; pointer-events:none;
-    background-image: radial-gradient(circle at center, rgba(0,0,0,0) 1.3px, rgba(2,4,8,.40) 2px);
+    background-image: radial-gradient(circle at center, rgba(0,0,0,0) 1.5px, rgba(2,4,8,.34) 2px);
     background-size: 5px 5px;
     mix-blend-mode: multiply;
   }
@@ -364,7 +364,7 @@ const styles = `
   /* scanlines finas */
   .led-scan {
     position:absolute; inset:0; z-index:31; pointer-events:none;
-    background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.10) 2px 3px);
+    background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.07) 2px 3px);
   }
   /* (3) FLICKER — respiração de brilho global */
   .led-flicker {
