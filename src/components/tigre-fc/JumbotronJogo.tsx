@@ -350,7 +350,7 @@ const styles = `
   /* (1) GRADE DE PIXELS — o que faz tudo parecer LED. Escurece os "vãos". */
   .led-grid {
     position:absolute; inset:0; z-index:30; pointer-events:none;
-    background-image: radial-gradient(circle at center, rgba(0,0,0,0) 1.5px, rgba(2,4,8,.34) 2px);
+    background-image: radial-gradient(circle at center, rgba(0,0,0,0) 2.1px, rgba(2,4,8,.24) 2.5px);
     background-size: 5px 5px;
     mix-blend-mode: multiply;
   }
@@ -358,13 +358,13 @@ const styles = `
   .led-modules {
     position:absolute; inset:0; z-index:31; pointer-events:none;
     background-image:
-      repeating-linear-gradient(0deg,  transparent 0 47px, rgba(0,0,0,.28) 47px 48px),
-      repeating-linear-gradient(90deg, transparent 0 47px, rgba(0,0,0,.28) 47px 48px);
+      repeating-linear-gradient(0deg,  transparent 0 47px, rgba(0,0,0,.12) 47px 48px),
+      repeating-linear-gradient(90deg, transparent 0 47px, rgba(0,0,0,.12) 47px 48px);
   }
   /* scanlines finas */
   .led-scan {
     position:absolute; inset:0; z-index:31; pointer-events:none;
-    background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.07) 2px 3px);
+    background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.03) 2px 3px);
   }
   /* (3) FLICKER — respiração de brilho global */
   .led-flicker {
@@ -379,7 +379,7 @@ const styles = `
   }
   .led-vignette {
     position:absolute; inset:0; z-index:34; pointer-events:none;
-    background: radial-gradient(ellipse at center, transparent 70%, rgba(0,0,0,.30) 100%);
+    background: radial-gradient(ellipse at center, transparent 72%, rgba(0,0,0,.24) 100%);
   }
   .led-bezel { position:absolute; inset:0; z-index:35; border-radius:16px; pointer-events:none; }
 
