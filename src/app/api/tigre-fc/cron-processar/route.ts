@@ -48,10 +48,12 @@ export async function GET(req: NextRequest) {
   log.push(`🕐 Cron iniciado: ${new Date().toISOString()}`);
 
   try {
+    // FIX: jogos finalizados têm finalizado=true e ativo=false
+    // O critério anterior (ativo=true) nunca encontrava jogos encerrados
     const { data: jogosAtivos } = await supabase
       .from('jogos')
       .select('id, competicao, data_hora, mandante_slug, visitante_slug')
-      .eq('ativo', true)
+      .eq('finalizado', true)
       .lt('data_hora', new Date().toISOString())
       .order('data_hora', { ascending: false })
       .limit(5);
@@ -83,12 +85,14 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
+      // Jogo finalizado=true: não precisa mais aguardar os 90 minutos
+      // O check de tempo é mantido apenas como segurança para partidas muito recentes
       const inicio = new Date(jogo.data_hora);
       const agora = new Date();
       const minutosDecorridos = (agora.getTime() - inicio.getTime()) / 60000;
 
-      if (minutosDecorridos < 90) {
-        log.push(`⏳ Jogo ${jogo.id} ainda em andamento (${Math.round(minutosDecorridos)} min) — aguardando`);
+      if (minutosDecorridos < 85) {
+        log.push(`⏳ Jogo ${jogo.id} finalizado há ${Math.round(minutosDecorridos)} min — aguardando margem de segurança`);
         continue;
       }
 

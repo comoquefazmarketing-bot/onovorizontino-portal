@@ -150,23 +150,30 @@ export default function TigreFCPerfilPublico({
     async function loadPerfil() {
       setLoading(true);
 
+      // Busca perfil — inclui google_id para resolver a escalação corretamente
       const { data: u } = await supabase
         .from('tigre_fc_usuarios')
-        .select('*')
+        .select('*, google_id')
         .eq('id', targetUsuarioId)
         .maybeSingle();
 
       if (u) setPerfil(u);
 
-      const { data: esc } = await supabase
-        .from('tigre_fc_escalacoes')
-        .select('*')
-        .eq('usuario_id', targetUsuarioId)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // FIX: tigre_fc_escalacoes.usuario_id armazena auth.uid (= google_id),
+      // NÃO o tigre_fc_usuarios.id (PK interna).
+      // Usar u.google_id como chave de leitura.
+      const authUid = u?.google_id;
+      if (authUid) {
+        const { data: esc } = await supabase
+          .from('tigre_fc_escalacoes')
+          .select('*')
+          .eq('usuario_id', authUid)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (esc) setEscalacao(esc as EscalacaoData);
+        if (esc) setEscalacao(esc as EscalacaoData);
+      }
 
       setLoading(false);
     }
@@ -210,10 +217,11 @@ export default function TigreFCPerfilPublico({
               </div>
             </div>
 
+            {/* FIX: colunas reais são 'lineup' e 'capitao_id', não lineup_json/capitan_id */}
             <CampoVisual
               formacao={escalacao?.formacao || '4-2-3-1'}
-              lineup={escalacao?.lineup_json || {}}
-              captainId={escalacao?.capitan_id}
+              lineup={(escalacao as any)?.lineup || {}}
+              captainId={(escalacao as any)?.capitao_id ?? escalacao?.capitan_id}
             />
 
             <button

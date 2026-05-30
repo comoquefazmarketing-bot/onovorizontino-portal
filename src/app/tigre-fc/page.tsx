@@ -23,7 +23,7 @@ export default function TigreFCPage() {
     if (!mounted) return;
 
     async function loadData() {
-      // Auth
+      // Auth — meuId é tigre_fc_usuarios.id (PK interna), resolvido via google_id
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user?.id) {
         const { data: profile } = await sb
@@ -92,6 +92,7 @@ export default function TigreFCPage() {
           animate={{ scale: 1, opacity: 1 }}
           src={PATA_LOGO}
           className="w-20 mx-auto mb-4 drop-shadow-2xl"
+          alt="Tigre FC"
         />
         <h1 className="text-7xl md:text-8xl font-black italic uppercase tracking-[-2px]">
           TIGRE <span className="text-[#F5C400]">FC</span>
@@ -120,7 +121,7 @@ export default function TigreFCPage() {
                 className="flex items-center gap-4 p-5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 cursor-pointer transition-all border border-white/5"
               >
                 <span className="text-3xl font-black text-yellow-400 w-10">#{i + 1}</span>
-                <img src={u.avatar_url || PATA_LOGO} className="w-12 h-12 rounded-xl object-cover" />
+                <img src={u.avatar_url || PATA_LOGO} className="w-12 h-12 rounded-xl object-cover" alt={u.apelido || u.nome} />
                 <div className="flex-1">
                   <p className="font-bold text-lg">{u.apelido || u.nome}</p>
                 </div>
