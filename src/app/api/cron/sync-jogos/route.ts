@@ -54,21 +54,29 @@ function espnStatusToLocal(state: string, completed: boolean, description: strin
   return 'agendado';
 }
 
-// Busca todos os jogos do Novorizontino na temporada via ESPN
+// Busca jogos do Novorizontino: passados via /schedule, futuros via scoreboard faixa de datas
 async function fetchNovorizontinoFixtures() {
-  // ESPN: /teams/{id}/schedule retorna calendário completo do time
-  const url = `${ESPN_BASE}/teams/${NOV_TEAM_ID}/schedule`;
-  const res = await fetch(url, {
-    headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
-    cache: 'no-store',
-  });
+  const headers = { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' };
 
-  if (!res.ok) throw new Error(`ESPN schedule error: ${res.status}`);
+  // 1. Jogos passados e em andamento
+  const schedRes = await fetch(`${ESPN_BASE}/teams/${NOV_TEAM_ID}/schedule`, { headers, cache: 'no-store' });
+  const schedData = schedRes.ok ? await schedRes.json() : {};
+  const past: any[] = schedData?.events ?? [];
 
-  const data = await res.json();
-  // Estrutura: data.events[] ou data.team.schedule[] dependendo do endpoint
-  const events: any[] = data?.events ?? data?.team?.nextEvent ?? [];
-  return events;
+  // 2. Próximos 45 dias via scoreboard com faixa de datas
+  const hoje  = new Date();
+  const fim   = new Date(hoje); fim.setDate(fim.getDate() + 45);
+  const fmt   = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '');
+  const sbRes = await fetch(`${ESPN_BASE}/scoreboard?dates=${fmt(hoje)}-${fmt(fim)}&limit=50`, { headers, cache: 'no-store' });
+  const sbData = sbRes.ok ? await sbRes.json() : {};
+  const future: any[] = (sbData?.events ?? []).filter((ev: any) =>
+    ev?.competitions?.[0]?.competitors?.some((c: any) => c.team?.id === NOV_TEAM_ID || c.id === NOV_TEAM_ID)
+  );
+
+  // Deduplica por id
+  const map = new Map<string, any>();
+  for (const ev of [...past, ...future]) map.set(String(ev.id), ev);
+  return Array.from(map.values());
 }
 
 // Busca jogos ao_vivo ou recentes pelo scoreboard do dia
