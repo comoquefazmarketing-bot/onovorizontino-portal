@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { calcularPontuacao, type EstatisticasJogador } from '@/lib/tigre-fc/regras-pontuacao';
-import { getEventLineups } from '@/lib/tigre-fc/sofascore-client';
+import { getEventLineups, findSofaEventId } from '@/lib/tigre-fc/sofascore-client';
 
 function auth(req: NextRequest): boolean {
   const secret = req.headers.get('authorization')?.replace('Bearer ', '');
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   // Busca jogos encerrados ainda não pontuados
   const { data: jogos, error: errJogos } = await supabaseAdmin
     .from('jogos')
-    .select('id, external_id, placar_mandante, placar_visitante, mandante_slug')
+    .select('id, external_id, sofa_id, data_hora, placar_mandante, placar_visitante, mandante_slug')
     .eq('status', 'encerrado')
     .eq('pontuado', false)
     .not('placar_mandante', 'is', null)
@@ -56,10 +56,20 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      // Busca stats do SofaScore se tiver external_id
+      // Resolve sofa_id (ESPN external_id ≠ SofaScore id)
+      let sofaId: number | null = jogo.sofa_id ? Number(jogo.sofa_id) : null;
+      if (!sofaId && jogo.data_hora) {
+        sofaId = await findSofaEventId(jogo.data_hora);
+        if (sofaId) {
+          // Persiste para não precisar buscar na próxima execução
+          await supabaseAdmin.from('jogos').update({ sofa_id: String(sofaId) }).eq('id', jogo.id);
+        }
+      }
+
+      // Busca stats do SofaScore
       const statsMap = new Map<string, EstatisticasJogador>();
-      if (jogo.external_id) {
-        const lineups = await getEventLineups(Number(jogo.external_id));
+      if (sofaId) {
+        const lineups = await getEventLineups(sofaId);
         if (lineups) {
           const isNovorizontinoHome = jogo.mandante_slug === 'novorizontino';
           const teamLineup = isNovorizontinoHome ? lineups.home : lineups.away;

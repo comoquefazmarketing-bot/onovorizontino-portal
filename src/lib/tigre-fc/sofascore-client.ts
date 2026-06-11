@@ -132,6 +132,34 @@ export async function getEventDetail(eventId: number): Promise<SofaEvent> {
   return event;
 }
 
+const NOVORIZONTINO_SOFA_ID = 5594;
+
+/**
+ * Descobre o eventId do SofaScore para um jogo pelo contexto (data ± 1 dia).
+ * Útil quando só temos o ESPN external_id mas precisamos do Sofa event.
+ */
+export async function findSofaEventId(dataHora: string): Promise<number | null> {
+  try {
+    // SofaScore retorna jogos do Novorizontino por data
+    const date = dataHora.slice(0, 10); // YYYY-MM-DD
+    const data = await fetchWithRetry(
+      `${BASE_URL}/team/${NOVORIZONTINO_SOFA_ID}/events/search?date=${date}`
+    ) as { events?: SofaEvent[] };
+
+    const events = data?.events ?? [];
+    if (events.length === 1) return events[0].id;
+
+    // Se mais de um evento, pega o mais próximo da data
+    const target = new Date(dataHora).getTime() / 1000;
+    events.sort((a, b) =>
+      Math.abs((a.startTimestamp ?? 0) - target) - Math.abs((b.startTimestamp ?? 0) - target)
+    );
+    return events[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Escalação e ratings dos jogadores de um evento */
 export async function getEventLineups(eventId: number): Promise<SofaLineups | null> {
   try {
