@@ -61,7 +61,10 @@ export async function GET(req: Request) {
   const teamId = process.env.API_FOOTBALL_NOVORIZONTINO_ID;
 
   if (!apiKey || !teamId) {
-    return NextResponse.json({ error: 'Faltam variáveis: API_FOOTBALL_KEY e/ou API_FOOTBALL_NOVORIZONTINO_ID' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Faltam variáveis: API_FOOTBALL_KEY e/ou API_FOOTBALL_NOVORIZONTINO_ID' },
+      { status: 500 }
+    );
   }
 
   const supabase = createClient(
@@ -87,8 +90,8 @@ export async function GET(req: Request) {
   for (const fx of fixtures) {
     if (fx?.league?.id !== LEAGUE_SERIE_B) { result.ignorados++; continue; }
 
-    const extId    = fx?.fixture?.id;
-    const mandante = toSlug(fx?.teams?.home?.name ?? '');
+    const extId     = fx?.fixture?.id;
+    const mandante  = toSlug(fx?.teams?.home?.name ?? '');
     const visitante = toSlug(fx?.teams?.away?.name ?? '');
     const dataHora  = fx?.fixture?.date;
     const local     = [fx?.fixture?.venue?.name, fx?.fixture?.venue?.city].filter(Boolean).join(' — ');
@@ -100,19 +103,19 @@ export async function GET(req: Request) {
     if (!extId || !mandante || !visitante || !dataHora) { result.ignorados++; continue; }
 
     const payload = {
-      external_id:          extId,
-      competicao:           COMPETICAO,
+      external_id:         extId,
+      competicao:          COMPETICAO,
       rodada,
-      mandante_slug:        mandante,
-      visitante_slug:       visitante,
-      data_hora:            dataHora,
-      local:                local || null,
-      ativo:                !finalizado,
-      placar_mandante:      fx?.goals?.home ?? null,
-      placar_visitante:     fx?.goals?.away ?? null,
+      mandante_slug:       mandante,
+      visitante_slug:      visitante,
+      data_hora:           dataHora,
+      local:               local || null,
+      ativo:               !finalizado,
+      placar_mandante:     fx?.goals?.home ?? null,
+      placar_visitante:    fx?.goals?.away ?? null,
       finalizado,
       status,
-      external_updated_at:  new Date().toISOString(),
+      external_updated_at: new Date().toISOString(),
     };
 
     const { data: existing } = await supabase
@@ -144,7 +147,6 @@ export async function GET(req: Request) {
     else result.ignorados++;
   }
 
-  // Log
   await supabase.from('tigre_fc_jobs_log').insert({
     job: 'sync-jogos',
     finalizado_em: new Date().toISOString(),

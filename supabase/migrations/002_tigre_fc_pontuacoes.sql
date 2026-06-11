@@ -17,10 +17,12 @@ CREATE INDEX IF NOT EXISTS tigre_fc_pontuacoes_jogo_idx    ON tigre_fc_pontuacoe
 -- RLS: usuário lê as próprias pontuações; leitura pública do ranking
 ALTER TABLE tigre_fc_pontuacoes ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "pontuacoes_select_own"
+DROP POLICY IF EXISTS "pontuacoes_select_own" ON tigre_fc_pontuacoes;
+CREATE POLICY "pontuacoes_select_own"
   ON tigre_fc_pontuacoes FOR SELECT
-  USING (auth.uid() = (SELECT google_id FROM tigre_fc_usuarios WHERE id = usuario_id));
+  USING (auth.uid()::text = (SELECT google_id FROM tigre_fc_usuarios WHERE id = usuario_id));
 
-CREATE POLICY IF NOT EXISTS "pontuacoes_select_public"
+DROP POLICY IF EXISTS "pontuacoes_select_public" ON tigre_fc_pontuacoes;
+CREATE POLICY "pontuacoes_select_public"
   ON tigre_fc_pontuacoes FOR SELECT
   USING (true);

@@ -61,7 +61,7 @@ export async function getProximoJogoEscalavel(): Promise<JogoAtivo | null> {
     .from('jogos')
     .select('id,competicao,rodada,data_hora,mandante_slug,visitante_slug,local,transmissao,placar_mandante,placar_visitante,status,pontuado')
     .eq('pontuado', false)
-    .not('status', 'eq', 'adiado')
+    .eq('status', 'agendado')
     .order('data_hora', { ascending: true })
     .limit(5);
 

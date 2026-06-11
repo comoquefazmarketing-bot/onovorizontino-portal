@@ -154,7 +154,7 @@ export async function GET(req: NextRequest) {
     atualizados: processados,
     erros,
     detalhes: { duracao_ms: Date.now() - inicio },
-  }).catch(() => {});
+  }).then(null, () => {});
 
   return NextResponse.json({ ok: true, processados, erros });
 }

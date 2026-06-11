@@ -13,6 +13,12 @@ export default function NewsGrid() {
       .catch(err => console.error("Erro ao buscar noticias:", err))
   }, [])
 
+<Link 
+  key={post.id} 
+  href={`/noticias/${post.slug}`} // Isso vai levar para /noticias/o-acesso-e-honra...
+  className="..."
+>
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {posts.map((post: any) => (
