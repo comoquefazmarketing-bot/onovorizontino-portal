@@ -111,8 +111,15 @@ function parseEvent(ev: any) {
   const extId        = String(ev?.id ?? '');
   const dataHora     = ev?.date ?? competition?.date ?? '';
 
-  const placarHome   = home?.score != null ? Number(home.score) : null;
-  const placarAway   = away?.score != null ? Number(away.score) : null;
+  // ESPN schedule: score é objeto { value, displayValue }, scoreboard: score é string
+  const scoreVal = (s: any) => {
+    if (s == null) return null;
+    if (typeof s === 'number') return s;
+    if (typeof s === 'string') return s !== '' ? Number(s) : null;
+    return s?.value != null ? Number(s.value) : null;
+  };
+  const placarHome   = scoreVal(home?.score);
+  const placarAway   = scoreVal(away?.score);
 
   const localStatus  = espnStatusToLocal(stateStr, completed, desc);
   const finalizado   = localStatus === 'encerrado';
@@ -208,6 +215,16 @@ export async function GET(req: Request) {
       if (!error) result.inseridos++;
       else { result.erros++; console.error('[sync-jogos] insert error:', error.message); }
     }
+
+    // Cleanup: marca como encerrado jogos do Novorizontino cuja data passou há mais de 3h
+    // Garante que jogos não retornados pela ESPN (ex: cancelados) não fiquem travados
+    const corte = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+    await supabase
+      .from('jogos')
+      .update({ finalizado: true, status: 'encerrado' })
+      .lt('data_hora', corte)
+      .in('status', ['agendado', 'ao_vivo'])
+      .or('mandante_slug.eq.novorizontino,visitante_slug.eq.novorizontino');
 
   } catch (err) {
     const msg = (err as Error).message;

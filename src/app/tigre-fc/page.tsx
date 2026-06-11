@@ -34,28 +34,26 @@ export default function TigreFCPage() {
         if (profile) setMeuId(profile.id);
       }
 
-      // Próximo Jogo
+      // Próximo jogo: ao_vivo primeiro, senão próximo agendado
       try {
-        const { data } = await sb
+        const { data: aoVivo } = await sb
           .from('jogos')
           .select('*')
-          .eq('finalizado', false)
+          .eq('status', 'ao_vivo')
+          .eq('pontuado', false)
           .order('data_hora', { ascending: true })
           .limit(1);
 
-        if (data && data.length > 0) {
-          setJogo(data[0]);
+        if (aoVivo && aoVivo.length > 0) {
+          setJogo(aoVivo[0]);
         } else {
-          setJogo({
-            id: 16,
-            rodada: '11',
-            competicao: 'Série B 2026',
-            mandante_slug: 'sao-bernardo',
-            visitante_slug: 'novorizontino',
-            data_hora: '2026-05-31 14:00:00+00',
-            local: 'Estádio 1º de Maio — São Bernardo do Campo, SP',
-            finalizado: false,
-          });
+          const { data: proximo } = await sb
+            .from('jogos')
+            .select('*')
+            .eq('status', 'agendado')
+            .order('data_hora', { ascending: true })
+            .limit(1);
+          if (proximo && proximo.length > 0) setJogo(proximo[0]);
         }
       } catch (e) {
         console.error(e);
