@@ -1,122 +1,154 @@
-import { getProximoJogoEscalavel, getJogoAtivo } from '@/lib/tigre-fc/jogo-estado';
-import Link from 'next/link';
+﻿'use client';
+import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { supabase as sb } from '@/lib/supabase';
+import TigreFCPerfilPublico from '@/components/tigre-fc/TigreFCPerfilPublico';
+import TigreFCChat from '@/components/tigre-fc/TigreFCChat';
+import JumbotronJogo from '@/components/tigre-fc/JumbotronJogo';
+import DestaquesFifa from '@/components/tigre-fc/DestaquesFifa';
 
-export const revalidate = 60;
+const PATA_LOGO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/GARRA%20LOGO.png';
 
-export default async function TigreFCHub() {
-  let jogoEscalavel = null;
-  let jogoAtivo = null;
+export default function TigreFCPage() {
+  const [mounted, setMounted] = useState(false);
+  const [jogo, setJogo] = useState<any>(null);
+  const [ranking, setRanking] = useState<any[]>([]);
+  const [meuId, setMeuId] = useState<string | null>(null);
+  const [perfilAberto, setPerfilAberto] = useState<string | null>(null);
+  const [totalEscalacoes, setTotalEscalacoes] = useState(0);
 
-  try {
-    jogoEscalavel = await getProximoJogoEscalavel();
-    if (!jogoEscalavel) jogoAtivo = await getJogoAtivo();
-  } catch {
-    // degradação graciosa
-  }
+  useEffect(() => { setMounted(true); }, []);
 
-  const jogo = jogoEscalavel ?? jogoAtivo;
+  useEffect(() => {
+    if (!mounted) return;
+
+    async function loadData() {
+      // Auth — meuId é tigre_fc_usuarios.id (PK interna), resolvido via google_id
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user?.id) {
+        const { data: profile } = await sb
+          .from('tigre_fc_usuarios')
+          .select('id')
+          .eq('google_id', session.user.id)
+          .maybeSingle();
+        if (profile) setMeuId(profile.id);
+      }
+
+      // Próximo Jogo
+      try {
+        const { data } = await sb
+          .from('jogos')
+          .select('*')
+          .eq('finalizado', false)
+          .order('data_hora', { ascending: true })
+          .limit(1);
+
+        if (data && data.length > 0) {
+          setJogo(data[0]);
+        } else {
+          setJogo({
+            id: 16,
+            rodada: '11',
+            competicao: 'Série B 2026',
+            mandante_slug: 'sao-bernardo',
+            visitante_slug: 'novorizontino',
+            data_hora: '2026-05-31 14:00:00+00',
+            local: 'Estádio 1º de Maio — São Bernardo do Campo, SP',
+            finalizado: false,
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      // Ranking
+      const { data: resRank } = await sb
+        .from('tigre_fc_usuarios')
+        .select('id, nome, apelido, avatar_url, pontos_total')
+        .order('pontos_total', { ascending: false })
+        .limit(10);
+
+      if (resRank) setRanking(resRank);
+
+      // Total de escalações
+      if (jogo?.id) {
+        const { count } = await sb
+          .from('tigre_fc_escalacoes')
+          .select('*', { count: 'exact', head: true })
+          .eq('jogo_id', jogo.id);
+        setTotalEscalacoes(count || 0);
+      }
+    }
+
+    loadData();
+  }, [mounted, jogo?.id]);
 
   return (
-    <main className="min-h-screen bg-black text-white font-['Barlow_Condensed',sans-serif]">
-      {/* HEADER */}
-      <div className="border-b border-yellow-500/20 px-4 py-6 text-center">
-        <p className="text-xs uppercase tracking-[0.4em] text-yellow-500 mb-1">Arena</p>
-        <h1 className="text-5xl font-black italic uppercase tracking-tight">
-          Tigre <span className="text-yellow-500">FC</span>
+    <main className="min-h-screen bg-[#050505] text-white pb-20">
+      {/* HERO HEADER */}
+      <div className="relative pt-20 pb-16 text-center">
+        <motion.img
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          src={PATA_LOGO}
+          className="w-20 mx-auto mb-4 drop-shadow-2xl"
+          alt="Tigre FC"
+        />
+        <h1 className="text-7xl md:text-8xl font-black italic uppercase tracking-[-2px]">
+          TIGRE <span className="text-[#F5C400]">FC</span>
         </h1>
-        <p className="text-gray-400 text-sm mt-1 uppercase tracking-widest">Fantasy · Série B 2026</p>
+        <p className="text-xl text-white/60 mt-3">O jogo oficial da torcida do Novorizontino</p>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 space-y-12">
+        {/* JUMBOTRON */}
+        {jogo && <JumbotronJogo jogo={jogo} totalEscalacoes={totalEscalacoes} />}
 
-        {/* JOGO DA RODADA */}
-        {jogo ? (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-            <p className="text-xs uppercase tracking-widest text-yellow-500 mb-3">
-              {jogo.competicao} · Rodada {jogo.rodada}
-            </p>
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <span className="text-2xl font-black uppercase">{jogo.mandante_slug.replace(/-/g, ' ')}</span>
-              {(jogo.estado === 'encerrado' || jogo.estado === 'ao_vivo' || jogo.estado === 'pontuado') ? (
-                <span className="text-3xl font-black text-yellow-500">
-                  {jogo.placar_mandante ?? '–'} × {jogo.placar_visitante ?? '–'}
-                </span>
-              ) : (
-                <span className="text-xl font-black text-gray-500">×</span>
-              )}
-              <span className="text-2xl font-black uppercase text-right">{jogo.visitante_slug.replace(/-/g, ' ')}</span>
-            </div>
-            <p className="text-gray-500 text-xs uppercase tracking-widest">
-              {new Date(jogo.data_hora).toLocaleString('pt-BR', {
-                timeZone: 'America/Sao_Paulo',
-                weekday: 'long', day: '2-digit', month: 'long',
-                hour: '2-digit', minute: '2-digit',
-              })}
-            </p>
-            {jogo.transmissao && (
-              <p className="text-gray-600 text-xs mt-1">{jogo.transmissao}</p>
-            )}
+        {/* SOFASCORE + DESTAQUES */}
+        <DestaquesFifa />
+
+        {/* RANKING */}
+        <section>
+          <h3 className="text-2xl font-black mb-6 flex items-center gap-3">
+            🏆 Ranking Geral
+            <span className="text-sm font-normal text-zinc-500">({ranking.length} torcedores)</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {ranking.map((u, i) => (
+              <div
+                key={u.id}
+                onClick={() => setPerfilAberto(u.id)}
+                className="flex items-center gap-4 p-5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 cursor-pointer transition-all border border-white/5"
+              >
+                <span className="text-3xl font-black text-yellow-400 w-10">#{i + 1}</span>
+                <img src={u.avatar_url || PATA_LOGO} className="w-12 h-12 rounded-xl object-cover" alt={u.apelido || u.nome} />
+                <div className="flex-1">
+                  <p className="font-bold text-lg">{u.apelido || u.nome}</p>
+                </div>
+                <p className="text-3xl font-black text-yellow-400">{u.pontos_total ?? 0}</p>
+              </div>
+            ))}
           </div>
-        ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center text-gray-500">
-            Nenhum jogo agendado no momento
+        </section>
+
+        {/* VESTIÁRIO */}
+        <section>
+          <h3 className="text-2xl font-black mb-4">💬 Vestiário ao Vivo</h3>
+          <div className="rounded-3xl overflow-hidden border border-white/10 bg-black/80 h-[520px]">
+            <TigreFCChat usuarioId={meuId} />
           </div>
-        )}
-
-        {/* AÇÕES */}
-        <div className="grid grid-cols-1 gap-3">
-          {jogoEscalavel ? (
-            <Link
-              href="/tigre-fc/escalar"
-              className="block bg-yellow-500 text-black text-center font-black uppercase tracking-widest py-4 rounded-xl text-lg hover:bg-yellow-400 transition-colors"
-            >
-              ⚡ Escalar agora
-            </Link>
-          ) : jogoAtivo?.estado === 'encerrado' || jogoAtivo?.estado === 'pontuado' ? (
-            <Link
-              href="/tigre-fc/ranking"
-              className="block bg-yellow-500/10 border border-yellow-500/40 text-yellow-500 text-center font-black uppercase tracking-widest py-4 rounded-xl text-lg hover:bg-yellow-500/20 transition-colors"
-            >
-              🏆 Ver pontuação
-            </Link>
-          ) : (
-            <div className="bg-zinc-900 border border-zinc-800 text-gray-500 text-center font-black uppercase tracking-widest py-4 rounded-xl text-sm">
-              Escalação encerrada
-            </div>
-          )}
-
-          <Link
-            href="/tigre-fc/ranking"
-            className="block bg-zinc-900 border border-zinc-800 text-center font-black uppercase tracking-widest py-3 rounded-xl text-sm text-gray-300 hover:border-yellow-500/40 transition-colors"
-          >
-            Ranking geral
-          </Link>
-        </div>
-
-        {/* STATUS DO JOGO */}
-        {jogo && (
-          <div className="text-center">
-            <EstadoBadge estado={jogo.estado} />
-          </div>
-        )}
+        </section>
       </div>
+
+      <AnimatePresence>
+        {perfilAberto && (
+          <TigreFCPerfilPublico
+            targetUsuarioId={perfilAberto}
+            viewerUsuarioId={meuId || undefined}
+            onClose={() => setPerfilAberto(null)}
+          />
+        )}
+      </AnimatePresence>
     </main>
-  );
-}
-
-function EstadoBadge({ estado }: { estado: string }) {
-  const map: Record<string, { label: string; cor: string }> = {
-    escalacao_aberta:  { label: 'ESCALAÇÃO ABERTA',   cor: 'bg-green-500/20 text-green-400 border-green-500/40' },
-    escalacao_fechada: { label: 'ESCALAÇÃO ENCERRADA', cor: 'bg-red-500/20 text-red-400 border-red-500/40' },
-    ao_vivo:           { label: 'AO VIVO',             cor: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40 animate-pulse' },
-    encerrado:         { label: 'ENCERRADO',           cor: 'bg-zinc-700 text-gray-400 border-zinc-600' },
-    pontuado:          { label: 'PONTUADO',            cor: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40' },
-    agendado:          { label: 'AGENDADO',            cor: 'bg-zinc-800 text-gray-500 border-zinc-700' },
-  };
-  const { label, cor } = map[estado] ?? { label: estado.toUpperCase(), cor: 'bg-zinc-800 text-gray-500 border-zinc-700' };
-  return (
-    <span className={`inline-block border px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest ${cor}`}>
-      {label}
-    </span>
   );
 }

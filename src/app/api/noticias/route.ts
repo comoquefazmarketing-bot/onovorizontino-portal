@@ -1,21 +1,24 @@
-﻿import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
 
 export async function GET() {
   try {
+    const supabase = await createClient();
     const { data, error } = await supabase
-      .from('noticias')
-      .select('*')
-      .order('created_at', { ascending: false }) // Verifique se sua coluna chama 'created_at' ou 'criado_em'
+      .from('postagens')
+      .select('id, titulo, slug, categoria, imagem_capa, criado_em, autor_ia, conteudo, resumo_ia')
+      .eq('status', 'published')
+      .order('criado_em', { ascending: false })
       .limit(10);
 
     if (error) {
       console.error('Erro Supabase:', error);
-      return NextResponse.json([]); // Retorna lista vazia em vez de erro 500
+      return NextResponse.json([]);
     }
 
     return NextResponse.json(data || []);
   } catch (err) {
-    return NextResponse.json([]); 
+    console.error('Erro Interno:', err);
+    return NextResponse.json([]);
   }
 }

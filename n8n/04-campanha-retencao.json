@@ -1,0 +1,136 @@
+{
+  "name": "04 · Campanha de Retenção — Bruno",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 22 * * *" }]
+        }
+      },
+      "id": "cron-bruno",
+      "name": "Todo Dia às 22h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [200, 300],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {},
+      "id": "manual-bruno",
+      "name": "Disparo Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [200, 460],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.onovorizontino.com.br/api/agents/campanha",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer WkltA2CFxI6d3RDqEzHva4y1Xs8Y0TmcjOfZurSG" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "{\"horas\": 48, \"apenas_contar\": true}",
+        "options": {}
+      },
+      "id": "bruno-contar",
+      "name": "Bruno — Contar Inativos",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [440, 380],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "check-inativos",
+              "leftValue": "={{ $json.total_inativos }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-inativos",
+      "name": "Há inativos?",
+      "type": "n8n-nodes-base.if",
+      "position": [660, 380],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.onovorizontino.com.br/api/agents/campanha",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer WkltA2CFxI6d3RDqEzHva4y1Xs8Y0TmcjOfZurSG" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ horas: 48 }) }}",
+        "options": {}
+      },
+      "id": "bruno-campanha",
+      "name": "Bruno — Rodar Campanha",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [880, 240],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8564078131:AAFXL10HzW-9trv4SpAoZF-C37GJ_0guXeY/sendMessage",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: '8597307408', text: '📲 <b>Bruno — Campanha Disparada</b>\\n\\n👥 Inativos notificados: ' + $('Bruno — Contar Inativos').item.json.total_inativos + '\\n⏰ Janela: 48h', parse_mode: 'HTML' }) }}",
+        "options": {}
+      },
+      "id": "telegram-bruno-disparou",
+      "name": "Telegram — Campanha Disparada",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1100, 240],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8564078131:AAFXL10HzW-9trv4SpAoZF-C37GJ_0guXeY/sendMessage",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: '8597307408', text: '✅ <b>Bruno — Sem inativos</b>\\nTodos os usuários do TigreFC estão ativos nas últimas 48h. 🐯', parse_mode: 'HTML' }) }}",
+        "options": {}
+      },
+      "id": "telegram-bruno-ok",
+      "name": "Telegram — Todos Ativos",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [880, 520],
+      "typeVersion": 4.2
+    }
+  ],
+  "connections": {
+    "Todo Dia às 22h": { "main": [[{ "node": "Bruno — Contar Inativos", "type": "main", "index": 0 }]] },
+    "Disparo Manual":  { "main": [[{ "node": "Bruno — Contar Inativos", "type": "main", "index": 0 }]] },
+    "Bruno — Contar Inativos": { "main": [[{ "node": "Há inativos?", "type": "main", "index": 0 }]] },
+    "Há inativos?": {
+      "main": [
+        [{ "node": "Bruno — Rodar Campanha",    "type": "main", "index": 0 }],
+        [{ "node": "Telegram — Todos Ativos",    "type": "main", "index": 0 }]
+      ]
+    },
+    "Bruno — Rodar Campanha": { "main": [[{ "node": "Telegram — Campanha Disparada", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "tigrefc" }, { "name": "bruno" }]
+}
