@@ -23,16 +23,18 @@ export default function TigreFCPage() {
     if (!mounted) return;
 
     async function loadData() {
-      // Auth — meuId é tigre_fc_usuarios.id (PK interna), resolvido via google_id
-      const { data: { session } } = await sb.auth.getSession();
-      if (session?.user?.id) {
-        const { data: profile } = await sb
-          .from('tigre_fc_usuarios')
-          .select('id')
-          .eq('google_id', session.user.id)
-          .maybeSingle();
-        if (profile) setMeuId(profile.id);
-      }
+      // Auth
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.user?.id) {
+          const { data: profile } = await sb
+            .from('tigre_fc_usuarios')
+            .select('id')
+            .eq('google_id', session.user.id)
+            .maybeSingle();
+          if (profile) setMeuId(profile.id);
+        }
+      } catch { /* sem sessão, continua */ }
 
       // Próximo jogo: ao_vivo primeiro, senão próximo agendado
       try {
