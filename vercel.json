@@ -4,27 +4,11 @@
   "crons": [
     {
       "path": "/api/cron/sync-jogos",
-      "schedule": "0 6,14 * * *"
-    },
-    {
-      "path": "/api/cron/processar-rodada",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/tigre-fc/cron-processar",
       "schedule": "0 23 * * *"
-    },
-    {
-      "path": "/api/agents/audit",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/agents/campanha",
-      "schedule": "0 14 * * *"
-    },
-    {
-      "path": "/api/agents/rafael",
-      "schedule": "0 8 * * *"
     }
   ]
 }
