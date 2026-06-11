@@ -40,7 +40,6 @@ export default function TigreFCPage() {
           .from('jogos')
           .select('*')
           .eq('status', 'ao_vivo')
-          .eq('pontuado', false)
           .order('data_hora', { ascending: true })
           .limit(1);
 
