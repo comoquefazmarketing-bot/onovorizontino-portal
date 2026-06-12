@@ -22,21 +22,21 @@ type Player = { nome: string; rating: number; pos: string; role: string; foto: s
 
 // ── Jogadores com URLs ATUALIZADAS ──────────────────────────────────────────
 const topPlayers: Player[] = [
-  { 
-    nome: 'Bianqui', 
-    rating: 7.6, 
-    pos: 'MC', 
-    role: 'MELHOR EM CAMPO',  
-    foto: `${STORAGE_BASE}/MATHEUS%20BIANQUI%20FUNDO%20TRANSPARENTE.png`, 
-    rar: 'toty' 
+  {
+    nome: 'Jordi',
+    rating: 9.2,
+    pos: 'LD',
+    role: 'CAPITÃO DA RODADA',
+    foto: `${STORAGE_BASE}/JORDI%20FUNDO%20TRANSPARENTE.png`,
+    rar: 'toty'
   },
-  { 
-    nome: 'Juninho', 
-    rating: 7.3, 
-    pos: 'MC', 
-    role: 'HERÓI DA PARTIDA', 
-    foto: `${STORAGE_BASE}/JUNINHO%20FUNDO%20TRANSPARENTE.png`,        
-    rar: 'gold' 
+  {
+    nome: 'Rômulo',
+    rating: 8.5,
+    pos: 'MEI',
+    role: 'HERÓI DA PARTIDA',
+    foto: `${STORAGE_BASE}/ROMULO%20FUNDO%20TRANSPARENTE.png`,
+    rar: 'gold'
   },
 ];
 
@@ -246,7 +246,7 @@ export default function DestaquesFifa() {
             </div>
             <div className="rounded-3xl overflow-hidden border border-white/10 bg-black/90 shadow-2xl h-[520px] md:h-[640px]">
               <iframe 
-                src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526098&widgetTheme=dark" 
+                src="https://widgets.sofascore.com/pt-BR/embed/lineups?id=15526122&widgetTheme=dark" 
                 className="w-full h-full" 
                 frameBorder="0" 
                 scrolling="no" 
