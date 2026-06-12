@@ -48,12 +48,12 @@ export async function GET(req: NextRequest) {
   log.push(`🕐 Cron iniciado: ${new Date().toISOString()}`);
 
   try {
-    // FIX: jogos finalizados têm finalizado=true e ativo=false
-    // O critério anterior (ativo=true) nunca encontrava jogos encerrados
+    // Busca jogos encerrados ainda não pontuados (status='encerrado' OU finalizado=true)
     const { data: jogosAtivos } = await supabase
       .from('jogos')
       .select('id, competicao, data_hora, mandante_slug, visitante_slug')
-      .eq('finalizado', true)
+      .or('status.eq.encerrado,finalizado.eq.true')
+      .eq('pontuado', false)
       .lt('data_hora', new Date().toISOString())
       .order('data_hora', { ascending: false })
       .limit(5);
@@ -200,6 +200,10 @@ export async function GET(req: NextRequest) {
       if (processData.error) {
         log.push(`❌ Erro ao processar: ${processData.error}`);
       } else {
+        // Marca jogo como pontuado para não reprocessar
+        await supabase.from('jogos')
+          .update({ pontuado: true, status: 'encerrado', finalizado: true })
+          .eq('id', jogo.id);
         log.push(`✅ Jogo ${jogo.id} processado! ${processData.processados} usuários pontuados · ${processData.badges_gerados} badges`);
       }
     }
