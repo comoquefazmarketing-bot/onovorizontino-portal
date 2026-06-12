@@ -36,25 +36,12 @@ export default function TigreFCPage() {
         }
       } catch { /* sem sessão, continua */ }
 
-      // Próximo jogo: ao_vivo primeiro, senão próximo agendado
+      // Próximo jogo via API server-side
       try {
-        const { data: aoVivo } = await sb
-          .from('jogos')
-          .select('*')
-          .eq('status', 'ao_vivo')
-          .order('data_hora', { ascending: true })
-          .limit(1);
-
-        if (aoVivo && aoVivo.length > 0) {
-          setJogo(aoVivo[0]);
-        } else {
-          const { data: proximo } = await sb
-            .from('jogos')
-            .select('*')
-            .eq('status', 'agendado')
-            .order('data_hora', { ascending: true })
-            .limit(1);
-          if (proximo && proximo.length > 0) setJogo(proximo[0]);
+        const res = await fetch('/api/tigre-fc/jogo-ativo');
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.id) setJogo(data);
         }
       } catch (e) {
         console.error(e);
