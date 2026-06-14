@@ -1,9 +1,9 @@
 // src/app/noticias/page.tsx
-// CORREÇÃO: fetch REST direto (sem createClient) + sem filtro de status
-
 import Image from 'next/image';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import BuscaNoticia from '@/components/portal/BuscaNoticia';
 
 export const revalidate = 60;
 
@@ -20,16 +20,19 @@ const CATEGORIAS = ['Todas', 'Copa Sul-Sudeste', 'Mercado', 'Crônica', 'Anális
 export default async function NoticiasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ categoria?: string }>;
+  searchParams: Promise<{ categoria?: string; q?: string }>;
 }) {
-  const { categoria } = await searchParams;
+  const { categoria, q } = await searchParams;
+  const query = q?.trim() ?? '';
 
-  // ── Fetch REST sem createClient e SEM filtro de status ──
-  // Motivo: muitas postagens têm status=null e seriam excluídas
   let url = `${SUPA_URL}/rest/v1/postagens?select=id,titulo,slug,categoria,imagem_capa,criado_em,resumo_ia,autor_ia&order=criado_em.desc&limit=40`;
 
   if (categoria && categoria !== 'Todas') {
     url += `&categoria=eq.${encodeURIComponent(categoria)}`;
+  }
+
+  if (query) {
+    url += `&titulo=ilike.${encodeURIComponent(`*${query}*`)}`;
   }
 
   let postagens: any[] = [];
@@ -53,6 +56,10 @@ export default async function NoticiasPage({
       {/* Cabeçalho */}
       <div className="border-b border-zinc-900 py-16 px-4 bg-gradient-to-b from-yellow-500/5 to-transparent">
         <div className="max-w-7xl mx-auto">
+          <Link href="/" className="inline-flex items-center gap-2 text-zinc-600 hover:text-yellow-500 text-[10px] font-black uppercase tracking-widest mb-6 transition-colors group">
+            <span className="group-hover:-translate-x-1 transition-transform duration-200">←</span>
+            Voltar ao início
+          </Link>
           <span className="text-yellow-500 text-[10px] font-black uppercase tracking-[0.5em] mb-4 block">
             Portal O Novorizontino
           </span>
@@ -60,30 +67,46 @@ export default async function NoticiasPage({
             RADAR <span className="text-yellow-500">TIGRE</span>
           </h1>
           <p className="text-zinc-500 mt-4 text-sm font-medium uppercase tracking-widest">
-            Temporada 2026 · {postagens.length} matérias
+            Temporada 2026 · {postagens.length} matéria{postagens.length !== 1 ? 's' : ''}
+            {query && <> · busca: "<span className="text-yellow-500">{query}</span>"</>}
           </p>
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-zinc-800 py-4 px-4">
-        <div className="max-w-7xl mx-auto flex gap-3 overflow-x-auto no-scrollbar">
-          {CATEGORIAS.map((cat) => {
-            const ativo = (!categoria && cat === 'Todas') || categoria === cat;
-            return (
-              <Link
-                key={cat}
-                href={cat === 'Todas' ? '/noticias' : `/noticias?categoria=${encodeURIComponent(cat)}`}
-                className={`flex-shrink-0 px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full border ${
-                  ativo
-                    ? 'bg-yellow-500 border-yellow-500 text-black shadow-[0_0_16px_rgba(245,196,0,0.25)]'
-                    : 'border-zinc-800 text-zinc-500 hover:border-yellow-500 hover:text-yellow-500'
-                }`}
-              >
-                {cat}
-              </Link>
-            );
-          })}
+      {/* Filtros + busca */}
+      <div className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-zinc-800 py-3 px-4">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          {/* Categorias — scroll horizontal */}
+          <div className="flex gap-3 overflow-x-auto no-scrollbar flex-1 min-w-0">
+            {CATEGORIAS.map((cat) => {
+              const ativo = (!categoria && cat === 'Todas') || categoria === cat;
+              const href = cat === 'Todas'
+                ? (query ? `/noticias?q=${encodeURIComponent(query)}` : '/noticias')
+                : `/noticias?categoria=${encodeURIComponent(cat)}${query ? `&q=${encodeURIComponent(query)}` : ''}`;
+              return (
+                <Link
+                  key={cat}
+                  href={href}
+                  className={`flex-shrink-0 px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-full border ${
+                    ativo
+                      ? 'bg-yellow-500 border-yellow-500 text-black shadow-[0_0_16px_rgba(245,196,0,0.25)]'
+                      : 'border-zinc-800 text-zinc-500 hover:border-yellow-500 hover:text-yellow-500'
+                  }`}
+                >
+                  {cat}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Campo de busca */}
+          <div className="flex-shrink-0">
+            <Suspense fallback={
+              <div className="h-9 w-48 rounded-full border border-white/10 bg-white/5 animate-pulse" />
+            }>
+              <BuscaNoticia />
+            </Suspense>
+          </div>
         </div>
       </div>
 
@@ -91,7 +114,14 @@ export default async function NoticiasPage({
       <div className="max-w-7xl mx-auto px-4 mt-12">
         {postagens.length === 0 ? (
           <div className="text-center py-32 opacity-20">
-            <p className="text-2xl font-black uppercase italic">Nenhuma matéria encontrada</p>
+            <p className="text-2xl font-black uppercase italic">
+              {query ? `Nenhum resultado para "${query}"` : 'Nenhuma matéria encontrada'}
+            </p>
+            {query && (
+              <Link href="/noticias" className="mt-4 inline-block text-xs text-yellow-500 font-bold uppercase tracking-widest hover:underline">
+                Limpar busca
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -144,7 +174,7 @@ export default async function NoticiasPage({
           </div>
         )}
 
-        {/* Botão voltar home — rodapé da listagem */}
+        {/* Botão voltar home */}
         <div className="mt-20 flex justify-center">
           <Link
             href="/"

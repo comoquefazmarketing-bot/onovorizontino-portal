@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* ============================================================
+   DESIGN TOKENS — sistema aurinegro do portal
+   Tailwind v4: @theme gera utilitários bg-*, text-*, font-*
+   ============================================================ */
+@theme {
+  /* Paleta */
+  --color-bg:      #070707;
+  --color-panel:   #101012;
+  --color-panel-2: #16181d;
+  --color-gold:    #f5c400;
+  --color-cyan:    #00f3ff;
+  --color-ink:     #ececee;
+  --color-muted:   #8b8f98;
+  --color-live:    #ef4444;
+
+  /* Fontes (registradas via next/font — ver layout.tsx) */
+  --font-display: var(--font-barlow), "Barlow Condensed", system-ui, sans-serif;
+  --font-body:    var(--font-inter),  "Inter",             system-ui, sans-serif;
+}
+
 :root {
   background-color: #09090b; /* zinc-950 */
   color: white;
