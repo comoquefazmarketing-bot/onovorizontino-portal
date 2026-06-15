@@ -222,6 +222,7 @@ export default async function NoticiaSlugPage({ params }: Props) {
           alt={post.titulo}
           fill
           priority
+          unoptimized
           className="object-cover opacity-60"
           sizes="100vw"
         />
