@@ -215,48 +215,50 @@ export default async function NoticiaSlugPage({ params }: Props) {
         </ol>
       </nav>
 
-      {/* Hero */}
-      <div className="relative w-full aspect-[21/9] max-h-[520px] overflow-hidden">
-        <Image
-          src={post.imagem_capa || FALLBACK_IMAGE}
-          alt={post.titulo}
-          fill
-          priority
-          unoptimized
-          className="object-cover opacity-60"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
+      {/* Hero — título à esquerda, imagem à direita com fade */}
+      <div className="relative w-full overflow-hidden bg-[#050505]" style={{ minHeight: '340px' }}>
 
-        {/* Voltar sobreposto */}
-        <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
-          <VoltarNoticias />
+        {/* Imagem — metade direita, fade para a esquerda */}
+        <div className="absolute inset-y-0 right-0 w-full md:w-3/5 lg:w-1/2">
+          <Image
+            src={post.imagem_capa || FALLBACK_IMAGE}
+            alt={post.titulo}
+            fill
+            priority
+            unoptimized
+            className="object-cover object-center"
+            sizes="(max-width: 768px) 100vw, 55vw"
+          />
+          {/* Fade da direita para a esquerda */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/70 to-transparent" />
+          {/* Fade inferior */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/80 via-transparent to-transparent" />
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 max-w-5xl mx-auto">
-          <span className="bg-[#F5C400] text-black text-[9px] font-black px-3 py-1 uppercase tracking-tighter italic mb-4 inline-block">
+        {/* Conteúdo — lado esquerdo */}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 py-10 md:py-16 flex flex-col justify-end md:w-3/5 lg:w-1/2">
+
+          {/* Voltar */}
+          <div className="mb-6">
+            <VoltarNoticias />
+          </div>
+
+          <span className="bg-[#F5C400] text-black text-[9px] font-black px-3 py-1 uppercase tracking-tighter italic mb-4 inline-block self-start">
             {post.categoria || 'TIGRE'}
           </span>
-          <h1 className="text-3xl md:text-5xl font-black uppercase italic leading-[1.05] tracking-tighter text-white mt-2">
+
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase italic leading-[1.05] tracking-tighter text-white">
             {post.titulo}
           </h1>
-          <div className="flex items-center gap-4 mt-4 flex-wrap">
+
+          <div className="flex items-center gap-4 mt-5 flex-wrap">
             <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">
               {dataFormatada}
             </span>
             <span className="text-zinc-700">·</span>
-            {/* Byline institucional — sinaliza autoria editorial ao Google AdSense */}
             <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">
               Por {BYLINE}
             </span>
-            {post.categoria && (
-              <>
-                <span className="text-zinc-700">·</span>
-                <span className="bg-[#F5C400]/10 text-[#F5C400] text-[9px] font-black px-2 py-0.5 uppercase tracking-widest rounded">
-                  {post.categoria}
-                </span>
-              </>
-            )}
           </div>
         </div>
       </div>
