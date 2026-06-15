@@ -70,8 +70,24 @@ export default function TigreFCPage() {
 
   return (
     <main className="min-h-screen bg-[#050505] text-white pb-20">
+
+      {/* ── Barra de retorno ao portal — topo ── */}
+      <div className="sticky top-0 z-50 bg-[#050505]/95 backdrop-blur border-b border-white/5">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <a href="/" className="flex items-center gap-2 text-[#F5C400] font-black text-xs uppercase tracking-widest hover:brightness-110 transition-all group">
+            <span className="transition-transform group-hover:-translate-x-1">←</span>
+            Portal O Novorizontino
+          </a>
+          <div className="flex items-center gap-3">
+            <a href="/tigre-fc/ranking" className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-[#F5C400] transition-colors">Ranking</a>
+            <span className="text-zinc-700">·</span>
+            <a href="/tigre-fc/perfil" className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-[#F5C400] transition-colors">Meu Perfil</a>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
-      <div className="relative pt-20 pb-16 text-center">
+      <div className="relative pt-16 pb-16 text-center">
         <motion.img
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -120,6 +136,25 @@ export default function TigreFCPage() {
           </div>
         </section>
       </div>
+
+      {/* ── Rodapé de retorno ao portal ── */}
+      <div className="mt-20 border-t border-white/5 bg-black/40">
+        <div className="max-w-4xl mx-auto px-4 py-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.4em] text-zinc-500 mb-1">Tigre FC é um produto</p>
+            <a href="/" className="text-lg font-black uppercase italic tracking-tight text-white hover:text-[#F5C400] transition-colors">
+              Portal O Novorizontino →
+            </a>
+          </div>
+          <a
+            href="/"
+            className="flex items-center gap-3 bg-[#F5C400] text-black font-black text-sm uppercase tracking-widest px-6 py-4 rounded-xl hover:brightness-110 transition-all"
+          >
+            ← Voltar ao Portal
+          </a>
+        </div>
+      </div>
+
     </main>
   );
 }
