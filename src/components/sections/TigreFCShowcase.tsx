@@ -6,13 +6,19 @@ import Link from 'next/link';
 const STORAGE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal';
 const BASE    = `${STORAGE}/JOGADORES/`;
 
-/* ── Jogadores destaque para o showcase ──────────────────────────────────── */
-const CARDS = [
-  { name: 'JORDI',   pos: 'GOL', ovr: 92, num: 93, rar: 'toty' as const,   foto: `${STORAGE}/JORDI%20FUNDO%20TRANSPARENTE.png` },
-  { name: 'RÔMULO',  pos: 'MEI', ovr: 85, num: 21, rar: 'gold' as const,   foto: `${STORAGE}/ROMULO%20FUNDO%20TRANSPARENTE.png` },
-  { name: 'ROBSON',  pos: 'ATA', ovr: 85, num: 9,  rar: 'gold' as const,   foto: `${BASE}ROBSON.jpg.webp` },
-  { name: 'CARLÃO',  pos: 'ATA', ovr: 84, num: 90, rar: 'gold' as const,   foto: `${BASE}CARLAO.jpg.webp` },
-  { name: 'OYAMA',   pos: 'MEI', ovr: 80, num: 5,  rar: 'purple' as const, foto: `${BASE}LUIS-OYAMA.jpg.webp` },
+/* ── FIFA cards: só jogadores com foto fundo transparente ─────────────────── */
+const FIFA_CARDS = [
+  { name: 'JORDI',  pos: 'GOL', ovr: 92, num: 93, rar: 'toty' as const, foto: `${STORAGE}/JORDI%20FUNDO%20TRANSPARENTE.png` },
+  { name: 'RÔMULO', pos: 'MEI', ovr: 85, num: 21, rar: 'gold' as const, foto: `${STORAGE}/ROMULO%20FUNDO%20TRANSPARENTE.png` },
+];
+
+/* ── Jogadores no campo: igual à escalação ─────────────────────────────── */
+const CAMPO_PLAYERS = [
+  { name: 'ROBSON',  short: 'ROBSON', pos: 'ATA', num: 9,  foto: `${BASE}ROBSON.jpg.webp` },
+  { name: 'CARLÃO',  short: 'CARLÃO', pos: 'ATA', num: 90, foto: `${BASE}CARLAO.jpg.webp` },
+  { name: 'JORDI',   short: 'JORDI',  pos: 'GOL', num: 93, foto: `${STORAGE}/JORDI%20FUNDO%20TRANSPARENTE.png` },
+  { name: 'OYAMA',   short: 'OYAMA',  pos: 'MEI', num: 5,  foto: `${BASE}LUIS-OYAMA.jpg.webp` },
+  { name: 'BROCK',   short: 'BROCK',  pos: 'ZAG', num: 4,  foto: `${BASE}EDUARDO-BROCK.jpg.webp` },
 ];
 const LOGO_TIGRE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 
@@ -28,7 +34,7 @@ const FORMACAO_POS = [
 export default function TigreFCShowcase() {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
-  const [activeCard, setActiveCard] = useState(0);
+  const [activeFifa, setActiveFifa] = useState(0);
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -45,9 +51,9 @@ export default function TigreFCShowcase() {
     return () => clearInterval(iv);
   }, [visible]);
 
-  // Rotação automática de card ativo
+  // Rotação automática de card FIFA
   useEffect(() => {
-    const iv = setInterval(() => setActiveCard(p => (p + 1) % CARDS.length), 2200);
+    const iv = setInterval(() => setActiveFifa(p => (p + 1) % FIFA_CARDS.length), 2800);
     return () => clearInterval(iv);
   }, []);
 
@@ -259,24 +265,20 @@ export default function TigreFCShowcase() {
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(0deg, #030303, transparent)' }} />
 
                 {/* Cards de jogadores no campo */}
-                {CARDS.map((card, i) => {
+                {CAMPO_PLAYERS.map((player, i) => {
                   const pos = FORMACAO_POS[i];
-                  const isActive = activeCard === i;
                   return (
-                    <button
+                    <div
                       key={i}
-                      onClick={() => setActiveCard(i)}
-                      className="tfc-card-hover"
                       style={{
                         position: 'absolute',
                         top: pos.top, left: pos.left,
                         transform: 'translate(-50%, -50%)',
-                        background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                        zIndex: isActive ? 5 : 1,
+                        zIndex: 2,
                       }}
                     >
-                      <MiniCard card={card} active={isActive} />
-                    </button>
+                      <MiniCard player={player} />
+                    </div>
                   );
                 })}
 
@@ -286,14 +288,9 @@ export default function TigreFCShowcase() {
                 </div>
               </div>
 
-              {/* Card destaque flutuante — jogador ativo */}
-              <div style={{
-                position: 'absolute',
-                top: -24, right: -24,
-                zIndex: 10,
-                animation: 'tfc-float 3s ease infinite',
-              }}>
-                <FifaCard card={CARDS[activeCard]} />
+              {/* Card FIFA flutuante */}
+              <div style={{ position: 'absolute', top: -24, right: -24, zIndex: 10, animation: 'tfc-float 3s ease infinite' }}>
+                <FifaCard card={FIFA_CARDS[activeFifa]} />
               </div>
             </div>
           </div>
@@ -330,41 +327,47 @@ export default function TigreFCShowcase() {
   );
 }
 
-/* ── Mini card no campo ──────────────────────────────────────────────────── */
-function MiniCard({ card, active }: { card: typeof CARDS[0]; active: boolean }) {
+/* ── Mini card no campo — mesmo estilo da escalação ─────────────────────── */
+function MiniCard({ player }: { player: typeof CAMPO_PLAYERS[0] }) {
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-      transition: 'all 0.3s ease',
-    }}>
-      {/* Avatar */}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, position: 'relative' }}>
+      {/* Círculo igual à escalação */}
       <div style={{
-        width: active ? 52 : 40, height: active ? 52 : 40,
+        width: 48, height: 48,
         borderRadius: '50%', overflow: 'hidden',
-        border: `2px solid ${active ? '#F5C400' : '#2a4a2a'}`,
-        boxShadow: active ? '0 0 16px rgba(245,196,0,0.6)' : 'none',
-        background: '#0a1f0a',
-        transition: 'all 0.3s ease',
-        flexShrink: 0,
+        border: '2px solid #F5C400',
+        boxShadow: '0 0 12px rgba(245,196,0,0.45)',
+        background: 'rgba(0,0,0,0.6)',
+        position: 'relative', flexShrink: 0,
       }}>
         <img
-          src={`${BASE}${card.foto}`}
-          alt={card.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          src={player.foto}
+          alt={player.name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 15%' }}
+          onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0'; }}
         />
+        {/* Badge número */}
+        <div style={{
+          position: 'absolute', bottom: 1, right: 1,
+          width: 14, height: 14, borderRadius: '50%',
+          background: '#000', border: '1.5px solid #F5C400',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{ color: '#F5C400', fontSize: 7, fontWeight: 900 }}>{player.num}</span>
+        </div>
       </div>
-      {/* Nome + pos */}
+      {/* Nome */}
       <div style={{
-        background: active ? '#F5C400' : 'rgba(0,0,0,0.8)',
-        color: active ? '#111' : '#fff',
-        fontSize: 8, fontWeight: 900,
-        padding: '1px 5px', borderRadius: 3,
+        background: 'rgba(0,0,0,0.85)',
+        color: '#fff', fontSize: 8, fontWeight: 900,
+        padding: '2px 6px', borderRadius: 3,
         textTransform: 'uppercase', letterSpacing: 0.5,
-        transition: 'all 0.3s ease',
+        whiteSpace: 'nowrap',
       }}>
-        {card.name}
+        {player.short}
       </div>
+      {/* Posição */}
+      <div style={{ fontSize: 7, color: '#F5C400', fontWeight: 900, marginTop: -2 }}>{player.pos}</div>
     </div>
   );
 }
