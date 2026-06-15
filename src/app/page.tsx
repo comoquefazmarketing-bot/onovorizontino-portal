@@ -4,8 +4,9 @@ import PortalHeader  from '@/components/layout/PortalHeader';
 import HomeHero      from '@/components/home/HomeHero';
 import HomeNewsGrid  from '@/components/layout/HomeNewsGrid';
 import ProximoJogo, { type JogoData } from '@/components/portal/ProximoJogo';
-import Manifesto     from '@/components/sections/Manifesto';
-import CTSection     from '@/components/sections/CTSection';
+import Manifesto        from '@/components/sections/Manifesto';
+import CTSection        from '@/components/sections/CTSection';
+import TigreFCShowcase  from '@/components/sections/TigreFCShowcase';
 import Footer        from '@/components/layout/Footer';
 
 /* ── Metadata estática da home ──────────────────────────────────────────── */
@@ -167,6 +168,7 @@ export default async function Home() {
         <ProximoJogo jogo={jogo} />
         <HomeHero />
         <HomeNewsGrid />
+        <TigreFCShowcase />
         <Manifesto />
         <CTSection />
         <Footer />
