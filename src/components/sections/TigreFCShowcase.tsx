@@ -3,16 +3,17 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
+const STORAGE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal';
+const BASE    = `${STORAGE}/JOGADORES/`;
+
 /* ── Jogadores destaque para o showcase ──────────────────────────────────── */
 const CARDS = [
-  { name: 'ROBSON',  pos: 'ATA', ovr: 85, num: 9,  foto: 'ROBSON.jpg.webp',          stars: [true,true,true,true,true]  },
-  { name: 'CARLÃO',  pos: 'ATA', ovr: 84, num: 90, foto: 'CARLAO.jpg.webp',           stars: [true,true,true,true,true]  },
-  { name: 'JORDI',   pos: 'GOL', ovr: 82, num: 93, foto: 'JORDI.jpg.webp',            stars: [true,true,true,true,false] },
-  { name: 'OYAMA',   pos: 'MEI', ovr: 80, num: 5,  foto: 'LUIS-OYAMA.jpg.webp',       stars: [true,true,true,true,false] },
-  { name: 'BROCK',   pos: 'ZAG', ovr: 79, num: 4,  foto: 'EDUARDO-BROCK.jpg.webp',    stars: [true,true,true,false,false] },
+  { name: 'JORDI',   pos: 'GOL', ovr: 92, num: 93, rar: 'toty' as const,   foto: `${STORAGE}/JORDI%20FUNDO%20TRANSPARENTE.png` },
+  { name: 'RÔMULO',  pos: 'MEI', ovr: 85, num: 21, rar: 'gold' as const,   foto: `${STORAGE}/ROMULO%20FUNDO%20TRANSPARENTE.png` },
+  { name: 'ROBSON',  pos: 'ATA', ovr: 85, num: 9,  rar: 'gold' as const,   foto: `${BASE}ROBSON.jpg.webp` },
+  { name: 'CARLÃO',  pos: 'ATA', ovr: 84, num: 90, rar: 'gold' as const,   foto: `${BASE}CARLAO.jpg.webp` },
+  { name: 'OYAMA',   pos: 'MEI', ovr: 80, num: 5,  rar: 'purple' as const, foto: `${BASE}LUIS-OYAMA.jpg.webp` },
 ];
-
-const BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const LOGO_TIGRE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/tigre-fc-logo.png';
 
 /* ── Posições no campo ───────────────────────────────────────────────────── */
@@ -368,83 +369,106 @@ function MiniCard({ card, active }: { card: typeof CARDS[0]; active: boolean }) 
   );
 }
 
-/* ── Card FIFA Ultimate Team ─────────────────────────────────────────────── */
+/* ── Raridades estilo DestaquesFifa ─────────────────────────────────────── */
+const FRAME_PATH = `M150 8 C110 8 70 14 40 26 C30 30 22 38 22 50 L22 360 C22 388 60 410 150 424 C240 410 278 388 278 360 L278 50 C278 38 270 30 260 26 C230 14 190 8 150 8 Z`;
+const RARITIES = {
+  toty:   { bg: 'radial-gradient(120% 85% at 50% 16%, #1f2f66 0%, #0b1430 52%, #04030d 100%)', scrim: '#04030d', txt: '#ffe6a3', accent: '#FFD66B', flare: '#FFC24B', frame: 'frame-sc-toty' },
+  gold:   { bg: 'radial-gradient(120% 85% at 50% 20%, #fbe7a0 0%, #d6a52a 46%, #b07d12 100%)', scrim: '#b8841a', txt: '#3a2900', accent: '#7a5800', flare: '#fff3c4', frame: 'frame-sc-gold' },
+  purple: { bg: 'radial-gradient(120% 85% at 50% 18%, #6a2fb0 0%, #3b1170 54%, #160427 100%)', scrim: '#160427', txt: '#ffffff', accent: '#E9B6FF', flare: '#C77DFF', frame: 'frame-sc-purple' },
+};
+
+/* ── Card FIFA Ultimate Team — estilo DestaquesFifa ─────────────────────── */
 function FifaCard({ card }: { card: typeof CARDS[0] }) {
-  const isGold = card.ovr >= 83;
-  const isSilver = card.ovr >= 78 && card.ovr < 83;
-
-  const cardBg = isGold
-    ? 'linear-gradient(160deg, #2a1f00 0%, #1a1200 30%, #0f0900 60%, #1a1200 100%)'
-    : isSilver
-    ? 'linear-gradient(160deg, #1a1a2e 0%, #111128 100%)'
-    : 'linear-gradient(160deg, #1a1000 0%, #100a00 100%)';
-
-  const cardBorder = isGold ? '#c9900020' : isSilver ? '#a78bfa20' : '#f9731620';
-  const accentColor = isGold ? '#F5C400' : isSilver ? '#a78bfa' : '#f97316';
-
+  const r = RARITIES[card.rar];
   return (
-    <div className="tfc-fifa-card" style={{
-      width: 130, padding: '12px 10px 10px',
-      background: cardBg,
-      border: `1px solid ${cardBorder}`,
-      borderRadius: 12,
-      boxShadow: `0 8px 40px rgba(0,0,0,0.6), 0 0 30px ${accentColor}20, inset 0 1px 0 ${accentColor}30`,
-      animation: 'tfc-card-in 0.5s ease both',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      {/* Brilho canto */}
-      <div style={{ position: 'absolute', top: 0, right: 0, width: 60, height: 60, background: `radial-gradient(circle at top right, ${accentColor}25, transparent 70%)` }} />
+    <div className="tfc-fifa-card" style={{ width: 160, position: 'relative', animation: 'tfc-card-in 0.5s ease both' }}>
+      {/* SVG defs exclusivos do showcase */}
+      <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden>
+        <defs>
+          <clipPath id="sc-futShape" clipPathUnits="objectBoundingBox">
+            <path d="M.5 .0186 C.3667 .0186 .2333 .0326 .1333 .0605 C.1 .0698 .0733 .0884 .0733 .1163 L.0733 .8372 C.0733 .9023 .2 .9535 .5 .986 C.8 .9535 .9267 .9023 .9267 .8372 L.9267 .1163 C.9267 .0884 .9 .0698 .8667 .0605 C.7667 .0326 .6333 .0186 .5 .0186 Z" />
+          </clipPath>
+          <linearGradient id="frame-sc-toty" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#fff4c2"/><stop offset=".5" stopColor="#d4ab2e"/><stop offset="1" stopColor="#9a7414"/>
+          </linearGradient>
+          <linearGradient id="frame-sc-gold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#fff6cf"/><stop offset=".5" stopColor="#e7be4a"/><stop offset="1" stopColor="#a87d18"/>
+          </linearGradient>
+          <linearGradient id="frame-sc-purple" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#f3e8ff"/><stop offset=".5" stopColor="#b89bd6"/><stop offset="1" stopColor="#6c4f8c"/>
+          </linearGradient>
+        </defs>
+      </svg>
 
-      {/* OVR + POS */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-        <div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: accentColor, lineHeight: 1, fontStyle: 'italic' }}>{card.ovr}</div>
-          <div style={{ fontSize: 8, fontWeight: 900, color: accentColor, textTransform: 'uppercase', letterSpacing: 1 }}>{card.pos}</div>
+      {/* Glow externo */}
+      <div style={{ position: 'absolute', inset: -12, borderRadius: 32, filter: 'blur(20px)', background: `radial-gradient(50% 50% at 50% 40%, ${r.flare}88, transparent 70%)`, animation: 'tfc-glow 3s ease infinite' }} />
+
+      {/* Card */}
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '300/430' }}>
+        {/* Conteúdo recortado na silhueta */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', clipPath: 'url(#sc-futShape)' }}>
+          <div style={{ position: 'absolute', inset: 0, background: r.bg }} />
+
+          {/* Flares */}
+          <div style={{ position: 'absolute', inset: 0, background: `conic-gradient(from 200deg at 62% 30%, transparent, ${r.flare}55, transparent 30%, ${r.flare}33, transparent 55%)`, mixBlendMode: 'screen', opacity: 0.8 }} />
+
+          {/* Foto do jogador — centralizada, fundo transparente */}
+          <img
+            src={card.foto}
+            alt={card.name}
+            style={{
+              position: 'absolute',
+              left: '50%', transform: 'translateX(-50%)',
+              top: '4%', height: '66%', width: '78%',
+              objectFit: 'contain', objectPosition: 'center top',
+              maskImage: 'linear-gradient(#000 75%, transparent)',
+              WebkitMaskImage: 'linear-gradient(#000 75%, transparent)',
+              filter: 'drop-shadow(0 8px 16px rgba(0,0,0,.6))',
+            }}
+            onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0'; }}
+          />
+
+          {/* Scrim inferior */}
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(transparent 44%, ${r.scrim} 70%)` }} />
+
+          {/* Brilho holográfico */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(115deg, transparent 36%, rgba(255,255,255,.22) 48%, transparent 60%)',
+            mixBlendMode: 'overlay',
+            animation: 'futShineCard 5s ease-in-out infinite',
+          }} />
         </div>
-        <div style={{ fontSize: 16, fontWeight: 900, color: accentColor + '60' }}>#{card.num}</div>
+
+        {/* Moldura SVG */}
+        <svg viewBox="0 0 300 430" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+          <path d={FRAME_PATH} fill="none" stroke={`url(#${r.frame})`} strokeWidth={5} vectorEffect="non-scaling-stroke" />
+          <path d={FRAME_PATH} fill="none" stroke={`url(#${r.frame})`} strokeWidth={2} vectorEffect="non-scaling-stroke" transform="translate(11 15.8) scale(.926)" />
+        </svg>
+
+        {/* Overlays de texto */}
+        <div style={{ position: 'absolute', inset: 0 }}>
+          {/* OVR + POS */}
+          <div style={{ position: 'absolute', left: '11%', top: '11%' }}>
+            <div style={{ fontSize: 32, fontWeight: 900, fontStyle: 'italic', color: r.txt, lineHeight: 1 }}>{card.ovr}</div>
+            <div style={{ fontSize: 13, fontWeight: 900, color: r.txt, letterSpacing: 1 }}>{card.pos}</div>
+          </div>
+
+          {/* Nome */}
+          <div style={{ position: 'absolute', left: 0, right: 0, textAlign: 'center', top: '63%' }}>
+            <div style={{ fontSize: 17, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, color: r.txt }}>{card.name}</div>
+          </div>
+
+          {/* Bandeira + liga */}
+          <div style={{ position: 'absolute', left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, top: '74%' }}>
+            <span style={{ fontSize: 12 }}>🇧🇷</span>
+            <span style={{ fontSize: 7, fontWeight: 900, color: r.txt, opacity: 0.7, letterSpacing: 1 }}>SÉRIE B</span>
+            <span style={{ fontSize: 12 }}>🐯</span>
+          </div>
+        </div>
       </div>
 
-      {/* Foto — alinhada à direita, vaza para fora do card como FIFA */}
-      <div style={{ width: '100%', height: 90, position: 'relative', marginBottom: 6, overflow: 'visible' }}>
-        <img
-          src={`${BASE}${card.foto}`}
-          alt={card.name}
-          style={{
-            position: 'absolute',
-            right: -10, bottom: 0,
-            height: 110,
-            width: 'auto',
-            objectFit: 'contain',
-            objectPosition: 'right bottom',
-            filter: 'drop-shadow(-4px 0 8px rgba(0,0,0,0.8))',
-          }}
-          onError={(e) => {
-            const el = e.target as HTMLImageElement;
-            el.style.display = 'none';
-            const fb = document.createElement('div');
-            fb.style.cssText = 'width:100%;height:90px;display:flex;align-items:center;justify-content:center;font-size:40px';
-            fb.textContent = '🐯';
-            el.parentElement!.appendChild(fb);
-          }}
-        />
-        {/* Gradiente esquerda para proteger OVR */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.5) 30%, transparent 70%)', pointerEvents: 'none' }} />
-      </div>
-
-      {/* Nome */}
-      <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 900, color: '#fff', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {card.name}
-      </div>
-
-      {/* Linha dourada */}
-      <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${accentColor}60, transparent)`, marginBottom: 8 }} />
-
-      {/* Stars */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-        {card.stars.map((lit, i) => (
-          <span key={i} style={{ fontSize: 9, color: lit ? accentColor : '#333' }}>★</span>
-        ))}
-      </div>
+      <style>{`@keyframes futShineCard { 0%,74%{transform:translateX(-130%)} 90%,100%{transform:translateX(130%)} }`}</style>
     </div>
   );
 }
