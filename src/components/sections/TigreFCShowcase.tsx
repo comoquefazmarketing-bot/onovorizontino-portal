@@ -404,15 +404,31 @@ function FifaCard({ card }: { card: typeof CARDS[0] }) {
         <div style={{ fontSize: 16, fontWeight: 900, color: accentColor + '60' }}>#{card.num}</div>
       </div>
 
-      {/* Foto */}
-      <div style={{ width: '100%', height: 80, borderRadius: 8, overflow: 'hidden', background: '#0a0a0a', marginBottom: 8, position: 'relative' }}>
+      {/* Foto — alinhada à direita, vaza para fora do card como FIFA */}
+      <div style={{ width: '100%', height: 90, position: 'relative', marginBottom: 6, overflow: 'visible' }}>
         <img
           src={`${BASE}${card.foto}`}
           alt={card.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
-          onError={(e) => { (e.target as HTMLImageElement).parentElement!.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px">🐯</div>`; }}
+          style={{
+            position: 'absolute',
+            right: -10, bottom: 0,
+            height: 110,
+            width: 'auto',
+            objectFit: 'contain',
+            objectPosition: 'right bottom',
+            filter: 'drop-shadow(-4px 0 8px rgba(0,0,0,0.8))',
+          }}
+          onError={(e) => {
+            const el = e.target as HTMLImageElement;
+            el.style.display = 'none';
+            const fb = document.createElement('div');
+            fb.style.cssText = 'width:100%;height:90px;display:flex;align-items:center;justify-content:center;font-size:40px';
+            fb.textContent = '🐯';
+            el.parentElement!.appendChild(fb);
+          }}
         />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.6) 100%)' }} />
+        {/* Gradiente esquerda para proteger OVR */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.5) 30%, transparent 70%)', pointerEvents: 'none' }} />
       </div>
 
       {/* Nome */}
