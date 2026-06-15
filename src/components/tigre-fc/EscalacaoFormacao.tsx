@@ -6,6 +6,8 @@ import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import * as htmlToImage from 'html-to-image';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
+import CompartilharEscalacao from './CompartilharEscalacao';
+import WhatsAppCaptureModal from './WhatsAppCaptureModal';
 
 const BASE_STORAGE   = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/JOGADORES/';
 const STADIUM_BG     = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ARENA%20TIGRE%20FC%20FRONT.png';
@@ -14,45 +16,58 @@ const ESCUDO_NOVORIZONTINO = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v
 const ESCUDO_DEFAULT = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%231a1a1a'/%3E%3Cpath d='M20 5 L33 10 L33 20 C33 28 27 34 20 36 C13 34 7 28 7 20 L7 10 Z' fill='%23282828' stroke='%23444' stroke-width='1.5'/%3E%3Ctext x='20' y='24' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23555' font-family='sans-serif'%3E%3F%3C/text%3E%3C/svg%3E";
 
 // ─── Logos e nomes — mesma fonte do JumbotronJogo ───────────────────────────
+const LD = 'https://logodownload.org/wp-content/uploads';
 const SB = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal';
-const WK = 'https://upload.wikimedia.org/wikipedia/commons';
+// Mesma lógica do JumbotronJogo — logodownload.org para todos os times
 const LOGOS: Record<string, string> = {
   'novorizontino':        ESCUDO_NOVORIZONTINO,
   'gremio-novorizontino': ESCUDO_NOVORIZONTINO,
-  // Supabase-hosted (CORS-safe, canvas-safe)
-  'avai':                 `${SB}/Avai_Futebol_Clube_logo.svg.png`,
-  'botafogo-sp':          `${SB}/Botafogo_sp.svg`,
-  'america-mg':           `${SB}/ESCUDO%20AMERICA%20MINEIRO.png`,
-  // Wikipedia SVGs (CORS-safe, canvas-safe)
-  'criciuma':             `${WK}/2/24/Crici%C3%BAma_EC_logo.svg`,
-  'cuiaba':               `${WK}/9/9e/Cuiab%C3%A1_EC.svg`,
-  'crb':                  `${WK}/7/73/CRB_logo.svg`,
-  'athletic-mg':          `${WK}/thumb/f/f8/Athletic_Club_%28Minas_Gerais%29.svg/320px-Athletic_Club_%28Minas_Gerais%29.svg.png`,
-  'athletic':             `${WK}/thumb/f/f8/Athletic_Club_%28Minas_Gerais%29.svg/320px-Athletic_Club_%28Minas_Gerais%29.svg.png`,
-  'sport':                `${WK}/1/17/Sport_Club_do_Recife.png`,
-  'londrina':             `${WK}/a/a2/Londrina_Esporte_Clube.svg`,
-  'juventude':            `${WK}/8/8b/Esporte_Clube_Juventude.svg`,
-  'ceara':                `${WK}/2/27/Ceara_Sporting_Club_logo.svg`,
-  'sao-bernardo':         `${WK}/7/7d/S%C3%A3o_Bernardo_Futebol_Clube.png`,
-  'operario-pr':          `${WK}/0/00/Operar%C3%A1rio_Ferroviario_Esporte_Clube.svg`,
-  'operario':             `${WK}/0/00/Operar%C3%A1rio_Ferroviario_Esporte_Clube.svg`,
-  'goias':                `${WK}/b/bd/Goias_logo.svg`,
-  'vila-nova':            `${WK}/4/48/Vila_Nova_Futebol_Clube.png`,
-  'ponte-preta':          `${WK}/2/29/Associacao_Atletica_Ponte_Preta_logo.svg`,
-  // logodownload fallbacks (display-only, not canvas-safe)
-  'athletico-pr':         'https://logodownload.org/wp-content/uploads/2017/02/athletico-pr-logo-escudo.png',
-  'coritiba':             'https://logodownload.org/wp-content/uploads/2017/02/coritiba-logo-escudo.png',
-  'chapecoense':          'https://logodownload.org/wp-content/uploads/2017/02/chapecoense-logo-escudo.png',
-  'paysandu':             'https://logodownload.org/wp-content/uploads/2017/02/paysandu-logo-escudo.png',
-  'remo':                 'https://logodownload.org/wp-content/uploads/2017/02/remo-logo-escudo.png',
-  'amazonas':             'https://logodownload.org/wp-content/uploads/2017/02/amazonas-fc-logo-escudo.png',
-  'volta-redonda':        'https://logodownload.org/wp-content/uploads/2017/02/volta-redonda-logo-escudo.png',
-  'santos':               'https://logodownload.org/wp-content/uploads/2017/02/santos-logo-escudo.png',
-  'guarani':              'https://logodownload.org/wp-content/uploads/2017/02/guarani-logo-escudo.png',
-  'ituano':               'https://logodownload.org/wp-content/uploads/2018/07/ituano-logo-escudo.png',
-  'mirassol':             'https://logodownload.org/wp-content/uploads/2017/02/mirassol-logo-escudo.png',
-  'csa':                  'https://logodownload.org/wp-content/uploads/2017/02/csa-logo-escudo.png',
-  'figueirense':          'https://logodownload.org/wp-content/uploads/2017/02/figueirense-logo-escudo.png',
+  'avai':                 `${LD}/2017/02/avai-fc-logo-escudo.png`,
+  'botafogo-sp':          `${LD}/2017/02/botafogo-sp-logo-escudo.png`,
+  'america-mg':           `${LD}/2017/02/america-mg-logo-escudo.png`,
+  'criciuma':             `${LD}/2018/06/criciuma-logo-escudo-1.png`,
+  'cuiaba':               `${LD}/2020/07/cuiaba-logo-escudo.png`,
+  'crb':                  `${LD}/2017/02/crb-logo-escudo.png`,
+  'athletic-mg':          `${LD}/2017/02/athletic-club-mg-logo-escudo.png`,
+  'athletic':             `${LD}/2017/02/athletic-club-mg-logo-escudo.png`,
+  'sport':                `${LD}/2017/02/sport-logo-escudo.png`,
+  'londrina':             `${LD}/2017/02/londrina-logo-escudo.png`,
+  'juventude':            `${LD}/2017/02/juventude-logo-escudo.png`,
+  'ceara':                `${LD}/2017/02/ceara-logo-escudo.png`,
+  'sao-bernardo':         `${SB}/ESCUDO%20SAO%20BERNARDO.png`,
+  'operario-pr':          `${LD}/2017/02/operario-pr-logo-escudo.png`,
+  'operario':             `${LD}/2017/02/operario-pr-logo-escudo.png`,
+  'goias':                `${LD}/2017/02/goias-logo-escudo.png`,
+  'vila-nova':            `${LD}/2017/02/vila-nova-logo-escudo.png`,
+  'ponte-preta':          `${LD}/2017/02/ponte-preta-logo-escudo.png`,
+  'nautico':              `${SB}/escudo-nautico.png`,
+  'atletico-go':          `${LD}/2017/02/atletico-goianiense-logo-escudo.png`,
+  'botafogo':             `${LD}/2017/02/botafogo-logo-escudo.png`,
+  'fluminense':           `${LD}/2017/02/fluminense-logo-escudo.png`,
+  'vasco':                `${LD}/2017/02/vasco-logo-escudo.png`,
+  'flamengo':             `${LD}/2017/02/flamengo-logo-escudo.png`,
+  'santos':               `${LD}/2017/02/santos-logo-escudo.png`,
+  'corinthians':          `${LD}/2017/02/corinthians-logo-escudo.png`,
+  'palmeiras':            `${LD}/2017/02/palmeiras-logo-escudo.png`,
+  'sao-paulo':            `${LD}/2017/02/sao-paulo-logo-escudo.png`,
+  'internacional':        `${LD}/2017/02/internacional-logo-escudo.png`,
+  'gremio':               `${LD}/2017/02/gremio-logo-escudo.png`,
+  'atletico-mg':          `${LD}/2017/02/atletico-mg-logo-escudo.png`,
+  'cruzeiro':             `${LD}/2017/02/cruzeiro-logo-escudo.png`,
+  'bahia':                `${LD}/2017/02/bahia-logo-escudo.png`,
+  'fortaleza':            `${LD}/2017/02/fortaleza-logo-escudo.png`,
+  'athletico-pr':         `${LD}/2017/02/athletico-pr-logo-escudo.png`,
+  'coritiba':             `${LD}/2017/02/coritiba-logo-escudo.png`,
+  'chapecoense':          `${LD}/2017/02/chapecoense-logo-escudo.png`,
+  'paysandu':             `${LD}/2017/02/paysandu-logo-escudo.png`,
+  'remo':                 `${LD}/2017/02/remo-logo-escudo.png`,
+  'amazonas':             `${LD}/2017/02/amazonas-fc-logo-escudo.png`,
+  'volta-redonda':        `${LD}/2017/02/volta-redonda-logo-escudo.png`,
+  'guarani':              `${LD}/2017/02/guarani-logo-escudo.png`,
+  'ituano':               `${LD}/2021/04/ituano-logo-escudo.png`,
+  'mirassol':             `${LD}/2021/04/mirassol-logo-escudo.png`,
+  'csa':                  `${LD}/2017/02/csa-logo-escudo.png`,
+  'figueirense':          `${LD}/2017/02/figueirense-logo-escudo.png`,
 };
 
 const NOMES: Record<string, string> = {
@@ -72,6 +87,21 @@ const NOMES: Record<string, string> = {
   'amazonas':             'Amazonas',
   'operario-pr':          'Operário',
   'volta-redonda':        'Volta Redonda',
+  'nautico':              'Náutico',
+  'atletico-go':          'Atlético-GO',
+  'botafogo':             'Botafogo',
+  'fluminense':           'Fluminense',
+  'vasco':                'Vasco',
+  'flamengo':             'Flamengo',
+  'corinthians':          'Corinthians',
+  'palmeiras':            'Palmeiras',
+  'sao-paulo':            'São Paulo',
+  'internacional':        'Internacional',
+  'gremio':               'Grêmio',
+  'atletico-mg':          'Atlético-MG',
+  'cruzeiro':             'Cruzeiro',
+  'bahia':                'Bahia',
+  'fortaleza':            'Fortaleza',
   'crb':                  'CRB',
   'america-mg':           'América-MG',
   'athletic-mg':          'Athletic',
@@ -144,68 +174,67 @@ interface JogoData {
   visitanteSlug: string;
 }
 
+// IDs obrigatoriamente iguais à tabela tigre_fc_jogadores para o motor de pontuação funcionar
 const PLAYERS_DATA: Player[] = [
   // --- GOLEIROS ---
-  { id: 23, name: 'Jordi Martins',       short: 'JORDI',      num: 93, pos: 'GOL', foto: 'JORDI.jpg.webp',           ovr: 82 },
-  { id: 1,  name: 'César Augusto',      short: 'CÉSAR',      num: 31, pos: 'GOL', foto: 'CESAR-AUGUSTO.jpg.webp',   ovr: 78 },
-  { id: 22, name: 'João Scapin',        short: 'SCAPIN',     num: 12, pos: 'GOL', foto: 'JOAO-SCAPIN.jpg.webp',      ovr: 72 },
-  { id: 62, name: 'Lucas Ribeiro',      short: 'LUCAS',      num: 1,  pos: 'GOL', foto: 'LUCAS-RIBEIRO.jpg.webp',    ovr: 70 },
-  { id: 101, name: 'Paulo Henrique',    short: 'P. HENRIQUE', num: 29, pos: 'GOL', foto: 'PAULO-HENRIQUE.jpg.webp',  ovr: 71 },
+  { id: 2,  name: 'Jordi Martins',      short: 'JORDI',      num: 93, pos: 'GOL', foto: 'JORDI.jpg.webp',            ovr: 82 },
+  { id: 1,  name: 'César Augusto',      short: 'CÉSAR',      num: 31, pos: 'GOL', foto: 'CESAR-AUGUSTO.jpg.webp',    ovr: 78 },
+  { id: 3,  name: 'João Scapin',        short: 'SCAPIN',     num: 12, pos: 'GOL', foto: 'JOAO-SCAPIN.jpg.webp',      ovr: 72 },
+  { id: 4,  name: 'Lucas Ribeiro',      short: 'LUCAS',      num: 1,  pos: 'GOL', foto: 'LUCAS-RIBEIRO.jpg.webp',    ovr: 70 },
 
-  // --- DEFESAS (Zagueiros e Laterais) ---
-  { id: 8,  name: 'Patrick Marcos',     short: 'PATRICK',    num: 4,  pos: 'ZAG', foto: 'PATRICK.jpg.webp',          ovr: 84 },
-  { id: 38, name: 'Renato Palm',        short: 'R. PALM',    num: 33, pos: 'ZAG', foto: 'RENATO-PALM.jpg.webp',      ovr: 81 },
-  { id: 34, name: 'Eduardo Brock',      short: 'BROCK',      num: 8,  pos: 'ZAG', foto: 'EDUARDO-BROCK.jpg.webp',    ovr: 80 },
-  { id: 66, name: 'Alexis Alvariño',    short: 'ALVARÍÑO',   num: 22, pos: 'ZAG', foto: 'IVAN-ALVARINO.jpg.webp',    ovr: 79 },
-  { id: 6,  name: 'Carlinhos',          short: 'CARLINHOS',  num: 44, pos: 'ZAG', foto: 'CARLINHOS.jpg.webp',        ovr: 76 },
-  { id: 3,  name: 'João Vitor Dantas',  short: 'DANTAS',     num: 25, pos: 'ZAG', foto: 'DANTAS.jpg.webp',           ovr: 75 },
-  { id: 102, name: 'Arthur Barbosa',    short: 'ARTHUR',     num: 3,  pos: 'ZAG', foto: 'ARTHUR-BARBOSA.jpg.webp',   ovr: 73 },
-  { id: 103, name: 'Antony Gustavo',    short: 'ANTONY',     num: 38, pos: 'ZAG', foto: 'ANTONY.jpg.webp',          ovr: 70 },
-  { id: 104, name: 'Kauã Rocha',        short: 'ALEMÃO',     num: 21, pos: 'ZAG', foto: 'ALEMAO.jpg.webp',           ovr: 72 },
-  
-  { id: 9,  name: 'Sander Bortolotto',  short: 'SANDER',     num: 36, pos: 'LAT', foto: 'SANDER (1).jpg',             ovr: 81 },
-  { id: 28, name: 'Maykon Jesus',       short: 'MAYKON',     num: 66, pos: 'LAT', foto: 'MAYKON-JESUS.jpg.webp',     ovr: 78 },
-  { id: 27, name: 'Nilson Castrillón',  short: 'CASTRILLÓN', num: 20, pos: 'LAT', foto: 'CASTRILLON.jpg.webp',       ovr: 77 },
-  { id: 75, name: 'Jhilmar Lora',       short: 'LORA',       num: 2,  pos: 'LAT', foto: 'LORA.jpg.webp',             ovr: 74 },
-  { id: 105, name: 'Carlos Roberto',    short: 'ESQUERDA',   num: 26, pos: 'LAT', foto: 'CARLOS-ESQUERDA.jpg.webp',  ovr: 71 },
+  // --- ZAGUEIROS ---
+  { id: 12, name: 'Patrick Marcos',     short: 'PATRICK',    num: 4,  pos: 'ZAG', foto: 'PATRICK.jpg.webp',          ovr: 84 },
+  { id: 16, name: 'Renato Palm',        short: 'R. PALM',    num: 24, pos: 'ZAG', foto: 'RENATO-PALM.jpg.webp',      ovr: 81 },
+  { id: 11, name: 'Eduardo Brock',      short: 'BROCK',      num: 5,  pos: 'ZAG', foto: 'EDUARDO-BROCK.jpg.webp',    ovr: 80 },
+  { id: 17, name: 'Alexis Alvariño',    short: 'ALVARÍÑO',   num: 35, pos: 'ZAG', foto: 'IVAN-ALVARINO.jpg.webp',    ovr: 79 },
+  { id: 14, name: 'Carlinhos',          short: 'CARLINHOS',  num: 25, pos: 'ZAG', foto: 'CARLINHOS.jpg.webp',        ovr: 76 },
+  { id: 10, name: 'João Vitor Dantas',  short: 'DANTAS',     num: 3,  pos: 'ZAG', foto: 'DANTAAS.jpg.webp',          ovr: 75 },
+  { id: 7,  name: 'Arthur Barbosa',     short: 'ARTHUR',     num: 22, pos: 'ZAG', foto: 'ARTHUR-BARBOSA.jpg.webp',   ovr: 73 },
+  { id: 15, name: 'Alemão',             short: 'ALEMÃO',     num: 28, pos: 'ZAG', foto: 'ALEMAO.jpg.webp',           ovr: 72 },
 
-  // --- MEIO-CAMPO ---
-  { id: 41, name: 'Luís Oyama',         short: 'OYAMA',      num: 6,  pos: 'VOL', foto: 'LUIS-OYAMA.jpg.webp',       ovr: 83 },
-  { id: 46, name: 'Marlon Adriano',     short: 'MARLON',     num: 28, pos: 'VOL', foto: 'MARLON.jpg.webp',           ovr: 80 },
-  { id: 40, name: 'Léo Naldi',          short: 'NALDI',      num: 18, pos: 'VOL', foto: 'LEO-NALDI.jpg.webp',        ovr: 78 },
-  { id: 106, name: 'Gabriel Bahia',     short: 'G. BAHIA',   num: 5,  pos: 'VOL', foto: 'GABRIEL-BAHIA.jpg.webp',    ovr: 74 },
-  
-  { id: 47, name: 'Matheus Bianqui',    short: 'BIANQUI',    num: 17, pos: 'MEI', foto: 'MATHEUS-BIANQUI.jpg.webp',  ovr: 82 },
-  { id: 10, name: 'Rômulo Azevedo',     short: 'RÔMULO',     num: 10, pos: 'MEI', foto: 'ROMULO.jpg.webp',           ovr: 86 },
-  { id: 12, name: 'Alexandre Silva',    short: 'JUNINHO',    num: 50, pos: 'MEI', foto: 'JUNINHO.jpg.webp',          ovr: 79 },
-  { id: 17, name: 'Luiz Otavio',        short: 'TAVINHO',    num: 15, pos: 'MEI', foto: 'TAVINHO.jpg.webp',          ovr: 78 },
-  { id: 86, name: 'Christian Ortíz',    short: 'TITI ORTÍZ', num: 77, pos: 'MEI', foto: 'TITI-ORTIZ.jpg.webp',       ovr: 84 },
-  { id: 13, name: 'Diego Galo',         short: 'D. GALO',    num: 19, pos: 'MEI', foto: 'DIEGO-GALO.jpg.webp',       ovr: 75 },
-  { id: 107, name: 'Gabriel Correia',   short: 'G. CORREIA', num: 14, pos: 'MEI', foto: 'GABRIEL-CORREIA.jpg.webp',  ovr: 72 },
-  { id: 108, name: 'Luiz Gabriel',      short: 'L. GABRIEL', num: 23, pos: 'MEI', foto: 'LUIZ-GABRIEL.jpg.webp',     ovr: 70 },
-  { id: 109, name: 'Hector Bianchi',    short: 'HECTOR',     num: 32, pos: 'MEI', foto: 'HECTOR-BIACHI.jpg.webp',    ovr: 73 },
-  { id: 110, name: 'Miguel Contiero',   short: 'CONTIERO',   num: 35, pos: 'MEI', foto: 'MIGUEL CONTIERO.webp',      ovr: 69 },
-  { id: 111, name: 'Edson Junior',      short: 'NOGUEIRA',   num: 37, pos: 'MEI', foto: 'NOGUEIRA.jpg.webp',         ovr: 68 },
+  // --- LATERAIS ---
+  { id: 8,  name: 'Sander Bortolotto',  short: 'SANDER',     num: 33, pos: 'LAT', foto: 'SANDER.jpg.webp',           ovr: 81 },
+  { id: 9,  name: 'Maykon Jesus',       short: 'MAYKON',     num: 27, pos: 'LAT', foto: 'MAYKON-JESUS.jpg.webp',     ovr: 78 },
+  { id: 6,  name: 'Nilson Castrillón',  short: 'CASTRILLÓN', num: 6,  pos: 'LAT', foto: 'CASTRILLON.jpg.webp',       ovr: 77 },
+  { id: 5,  name: 'Jhilmar Lora',       short: 'LORA',       num: 2,  pos: 'LAT', foto: 'LORA.jpg.webp',             ovr: 74 },
+
+  // --- VOLANTES ---
+  { id: 19, name: 'Luís Oyama',         short: 'OYAMA',      num: 8,  pos: 'VOL', foto: 'LUIS-OYAMA.jpg.webp',       ovr: 83 },
+  { id: 26, name: 'Marlon Adriano',     short: 'MARLON',     num: 30, pos: 'VOL', foto: 'MARLON.jpg.webp',           ovr: 80 },
+  { id: 20, name: 'Léo Naldi',          short: 'NALDI',      num: 7,  pos: 'VOL', foto: 'LEO-NALDI.jpg.webp',        ovr: 78 },
+  { id: 13, name: 'Gabriel Bahia',      short: 'G. BAHIA',   num: 14, pos: 'VOL', foto: 'GABRIEL-BAHIA.jpg.webp',    ovr: 74 },
+
+  // --- MEIAS ---
+  { id: 22, name: 'Matheus Bianqui',    short: 'BIANQUI',    num: 11, pos: 'MEI', foto: 'MATHEUS-BIANQUI.jpg.webp',  ovr: 82 },
+  { id: 21, name: 'Rômulo Azevedo',     short: 'RÔMULO',     num: 10, pos: 'MEI', foto: 'ROMULO.jpg.webp',           ovr: 86 },
+  { id: 23, name: 'Alexandre Silva',    short: 'JUNINHO',    num: 20, pos: 'MEI', foto: 'JUNINHO.jpg.webp',          ovr: 79 },
+  { id: 24, name: 'Luiz Otavio',        short: 'TAVINHO',    num: 17, pos: 'MEI', foto: 'TAVINHO.jpg.webp',          ovr: 78 },
+  { id: 36, name: 'Christian Ortíz',    short: 'TITI ORTÍZ', num: 15, pos: 'MEI', foto: 'TITI-ORTIZ.jpg.webp',       ovr: 84 },
+  { id: 25, name: 'Diego Galo',         short: 'D. GALO',    num: 29, pos: 'MEI', foto: 'DIEGO-GALO.jpg.webp',       ovr: 75 },
+  { id: 27, name: 'Hector Bianchi',     short: 'HECTOR',     num: 16, pos: 'MEI', foto: 'HECTOR-BIACHI.jpg.webp',    ovr: 73 },
+  { id: 29, name: 'Luiz Gabriel',       short: 'L. GABRIEL', num: 37, pos: 'MEI', foto: 'LUIZ-GABRIEL.jpg.webp',     ovr: 70 },
+  { id: 28, name: 'Nogueira',           short: 'NOGUEIRA',   num: 36, pos: 'MEI', foto: 'NOGUEIRA.jpg.webp',         ovr: 68 },
+  { id: 30, name: 'Jhones Kauê',        short: 'J. KAUÊ',    num: 50, pos: 'MEI', foto: 'JHONES-KAUE.jpg.webp',      ovr: 71 },
 
   // --- ATACANTES ---
-  { id: 15, name: 'Robson Fernandes',   short: 'ROBSON',     num: 11, pos: 'ATA', foto: 'ROBSON.jpg.webp',           ovr: 85 },
-  { id: 59, name: 'Vinícius Paiva',     short: 'V. PAIVA',   num: 16, pos: 'ATA', foto: 'VINICIUS-PAIVA.jpg.webp',   ovr: 79 },
-  { id: 57, name: 'Ronald Barcellos',   short: 'RONALD',     num: 7,  pos: 'ATA', foto: 'RONALD-BARCELLOS.jpg.webp',  ovr: 82 },
-  { id: 55, name: 'Nicolas Careca',     short: 'CARECA',     num: 16, pos: 'ATA', foto: 'NICOLAS-CARECA.jpg.webp',   ovr: 80 }, // Obs: Vinícius Paiva assumiu a 16
-  { id: 50, name: 'Carlos Henrique',    short: 'CARLÃO',     num: 9,  pos: 'ATA', foto: 'CARLAO.jpg.webp',           ovr: 84 },
-  { id: 52, name: 'Hélio Borges',       short: 'HÉLIO',      num: 41, pos: 'ATA', foto: 'HELIO-BORGES.jpg.webp',     ovr: 76 },
-  { id: 53, name: 'Jardiel Marciel',    short: 'JARDIEL',    num: 30, pos: 'ATA', foto: 'JARDIEL.jpg.webp',          ovr: 75 },
-  { id: 112, name: 'Diego Mathias',     short: 'D. MATHIAS', num: 27, pos: 'ATA', foto: 'DIEGO-MATHIAS.jpg.webp',    ovr: 76 },
-  { id: 113, name: 'Jhones Kauê',       short: 'J. KAUÊ',    num: 47, pos: 'ATA', foto: 'JHONES-KAUE.jpg.webp',      ovr: 71 }
+  { id: 31, name: 'Robson Fernandes',   short: 'ROBSON',     num: 9,  pos: 'ATA', foto: 'ROBSON.jpg.webp',           ovr: 85 },
+  { id: 32, name: 'Vinícius Paiva',     short: 'V. PAIVA',   num: 13, pos: 'ATA', foto: 'VINICIUS-PAIVA.jpg.webp',   ovr: 79 },
+  { id: 39, name: 'Ronald Barcellos',   short: 'RONALD',     num: 23, pos: 'ATA', foto: 'RONALD-BARCELLOS.jpg.webp', ovr: 82 },
+  { id: 35, name: 'Nicolas Careca',     short: 'CARECA',     num: 21, pos: 'ATA', foto: 'NICOLAS-CARECA.jpg.webp',   ovr: 80 },
+  { id: 38, name: 'Carlão',             short: 'CARLÃO',     num: 90, pos: 'ATA', foto: 'CARLAO.jpg.webp',           ovr: 84 },
+  { id: 33, name: 'Hélio Borges',       short: 'HÉLIO',      num: 18, pos: 'ATA', foto: 'HELIO-BORGES.jpg.webp',     ovr: 76 },
+  { id: 34, name: 'Jardiel Marciel',    short: 'JARDIEL',    num: 19, pos: 'ATA', foto: 'JARDIEL.jpg.webp',          ovr: 75 },
+  { id: 37, name: 'Diego Mathias',      short: 'D. MATHIAS', num: 41, pos: 'ATA', foto: 'DIEGO-MATHIAS.jpg.webp',    ovr: 76 },
 ];
 
 const formationConfigs: Record<string, Record<string, SlotCoord>> = {
-  '4-3-3':   { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, m1:{x:50,y:48}, m2:{x:30,y:42}, m3:{x:70,y:42}, st:{x:50,y:15}, lw:{x:22,y:22}, rw:{x:78,y:22} },
-  '4-4-2':   { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, m1:{x:35,y:45}, m2:{x:65,y:45}, m3:{x:15,y:38}, m4:{x:85,y:38}, st1:{x:40,y:18}, st2:{x:60,y:18} },
-  '3-5-2':   { gk:{x:50,y:85}, cb1:{x:30,y:70}, cb2:{x:50,y:73}, cb3:{x:70,y:70}, lm:{x:15,y:45}, rm:{x:85,y:45}, m1:{x:35,y:50}, m2:{x:65,y:50}, am:{x:50,y:32}, st1:{x:40,y:15}, st2:{x:60,y:15} },
-  '4-5-1':   { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, m1:{x:30,y:48}, m2:{x:50,y:48}, m3:{x:70,y:48}, am1:{x:35,y:30}, am2:{x:65,y:30}, st:{x:50,y:15} },
-  '4-2-3-1': { gk:{x:50,y:85}, lb:{x:15,y:62}, cb1:{x:38,y:70}, cb2:{x:62,y:70}, rb:{x:85,y:62}, v1:{x:40,y:52}, v2:{x:60,y:52}, am:{x:50,y:35}, lw:{x:20,y:28}, rw:{x:80,y:28}, st:{x:50,y:12} },
-  '5-3-2':   { gk:{x:50,y:85}, lb:{x:12,y:52}, cb1:{x:30,y:70}, cb2:{x:50,y:73}, cb3:{x:70,y:70}, rb:{x:88,y:52}, m1:{x:50,y:48}, m2:{x:30,y:40}, m3:{x:70,y:40}, st1:{x:42,y:18}, st2:{x:58,y:18} },
+  // y: 10 = topo do ataque → 85 = GK — mínimo 15 unidades entre linhas para não aglomerar
+  '4-3-3':   { gk:{x:50,y:86}, lb:{x:14,y:67}, cb1:{x:37,y:74}, cb2:{x:63,y:74}, rb:{x:86,y:67}, m1:{x:50,y:50}, m2:{x:28,y:50}, m3:{x:72,y:50}, st:{x:50,y:12}, lw:{x:22,y:20}, rw:{x:78,y:20} },
+  '4-4-2':   { gk:{x:50,y:86}, lb:{x:14,y:67}, cb1:{x:37,y:74}, cb2:{x:63,y:74}, rb:{x:86,y:67}, m1:{x:30,y:48}, m2:{x:70,y:48}, m3:{x:14,y:40}, m4:{x:86,y:40}, st1:{x:38,y:14}, st2:{x:62,y:14} },
+  '3-5-2':   { gk:{x:50,y:86}, cb1:{x:26,y:72}, cb2:{x:50,y:76}, cb3:{x:74,y:72}, lm:{x:12,y:50}, rm:{x:88,y:50}, m1:{x:32,y:52}, m2:{x:68,y:52}, am:{x:50,y:34}, st1:{x:38,y:14}, st2:{x:62,y:14} },
+  '4-5-1':   { gk:{x:50,y:86}, lb:{x:14,y:67}, cb1:{x:37,y:74}, cb2:{x:63,y:74}, rb:{x:86,y:67}, m1:{x:26,y:50}, m2:{x:50,y:50}, m3:{x:74,y:50}, am1:{x:34,y:32}, am2:{x:66,y:32}, st:{x:50,y:12} },
+  '4-2-3-1': { gk:{x:50,y:86}, lb:{x:14,y:67}, cb1:{x:37,y:74}, cb2:{x:63,y:74}, rb:{x:86,y:67}, v1:{x:38,y:52}, v2:{x:62,y:52}, lw:{x:18,y:32}, am:{x:50,y:32}, rw:{x:82,y:32}, st:{x:50,y:10} },
+  '5-3-2':   { gk:{x:50,y:86}, lb:{x:10,y:56}, cb1:{x:28,y:72}, cb2:{x:50,y:76}, cb3:{x:72,y:72}, rb:{x:90,y:56}, m1:{x:50,y:50}, m2:{x:28,y:42}, m3:{x:72,y:42}, st1:{x:38,y:14}, st2:{x:62,y:14} },
 };
 
 const SLOT_W_MOBILE  = 60;
@@ -532,13 +561,18 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
   const [palpiteVisitante, setPalpiteVisitante] = useState(2);
   const [finalImageUri, setFinalImageUri]     = useState<string | null>(null);
   const [isGenerating, setIsGenerating]       = useState(false);
+  const [waToast, setWaToast]                 = useState(false);
 
-  const [userId, setUserId]         = useState<string | null>(null);
+  const [userId, setUserId]         = useState<string | null>(null); // google_id (auth.uid)
+  const [tfcUserId, setTfcUserId]   = useState<string | null>(null); // tigre_fc_usuarios.id
   const [userName, setUserName]     = useState<string>('TORCEDOR');
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
-  const [hadSaved, setHadSaved]     = useState(false);
-  const [saveError, setSaveError]   = useState<string | null>(null);
-  const [isSavingDb, setIsSavingDb] = useState(false);
+  const [hadSaved, setHadSaved]         = useState(false);
+  const [saveError, setSaveError]       = useState<string | null>(null);
+  const [isSavingDb, setIsSavingDb]     = useState(false);
+  const [showWaModal, setShowWaModal]   = useState(false);
+  const [waSolicitado, setWaSolicitado] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const [isDesktop, setIsDesktop] = useState(false);
   const [posFiltro, setPosFiltro] = useState<Posicao>('TODOS');
@@ -558,56 +592,82 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
 
     const blobUrls: string[] = [];
     const origSrcs = new Map<HTMLImageElement, string>();
-
-    const race = <T,>(p: Promise<T>, ms: number): Promise<T | null> =>
-      Promise.race([p, new Promise<null>(r => setTimeout(() => r(null), ms))]) as Promise<T | null>;
+    const origCross = new Map<HTMLImageElement, string | null>();
+    let captureStyle: HTMLStyleElement | null = null;
 
     try {
       const imgs = Array.from(el.querySelectorAll<HTMLImageElement>('img'));
 
-      // Aguarda carregamento visual (max 3 s por imagem)
+      // Aguarda carregamento visual (max 3s)
       await Promise.all(imgs.map(img =>
         img.complete ? Promise.resolve() :
-        race(new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res(); }), 3000)
+        new Promise<void>(res => {
+          const t = setTimeout(res, 3000);
+          img.onload = () => { clearTimeout(t); res(); };
+          img.onerror = () => { clearTimeout(t); res(); };
+        })
       ));
 
-      // Pré-fetch Supabase → blob: URLs (garante acesso ao canvas sem CORS taint)
+      // Pré-fetch TODAS as imagens → blob: ou ESCUDO_DEFAULT (evita CORS taint no canvas)
       await Promise.allSettled(imgs.map(async (img) => {
         const src = img.getAttribute('src') ?? '';
         if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
-        if (!src.includes('supabase.co') && !src.startsWith('/')) return;
-        const res = await race(fetch(src, { mode: 'cors', credentials: 'omit' }), 5000);
-        if (!res?.ok) return;
-        const blob = await (res as Response).blob();
-        const blobUrl = URL.createObjectURL(blob);
-        blobUrls.push(blobUrl);
         origSrcs.set(img, img.src);
-        img.src = blobUrl;
+        origCross.set(img, img.getAttribute('crossOrigin'));
+        img.removeAttribute('crossOrigin');
+        try {
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 5000);
+          const res = await fetch(src, { mode: 'cors', credentials: 'omit', signal: ctrl.signal });
+          clearTimeout(t);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          blobUrls.push(blobUrl);
+          img.src = blobUrl;
+        } catch {
+          // Fallback: placeholder neutro (data: URI → canvas sempre aceita)
+          img.src = ESCUDO_DEFAULT;
+        }
       }));
 
-      if (origSrcs.size > 0) await new Promise<void>(r => setTimeout(r, 120));
+      if (origSrcs.size > 0) await new Promise<void>(r => setTimeout(r, 300));
 
-      // pixelRatio 2 = boa qualidade sem estouro de memória em mobile
-      const filter = (node: HTMLElement) => {
-        if (node instanceof HTMLImageElement) {
-          const s = node.getAttribute('src') ?? '';
-          // Inclui apenas data:, blob: e imagens Supabase (sem CORS externo no canvas)
-          return s.startsWith('data:') || s.startsWith('blob:') || s.includes('supabase.co');
+      // Desabilita CSS filter/backdrop-filter durante a captura:
+      // drop-shadow e blur causam falha silenciosa no html-to-image (requerem compositing GPU)
+      captureStyle = document.createElement('style');
+      captureStyle.textContent = `
+        [data-capture-root] *, [data-capture-root] {
+          filter: none !important;
+          -webkit-filter: none !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+          animation: none !important;
+          transition: none !important;
         }
-        return true;
-      };
+      `;
+      el.setAttribute('data-capture-root', '1');
+      document.head.appendChild(captureStyle);
 
-      const opts = {
-        cacheBust: true, quality: 0.95, pixelRatio: 2,
-        backgroundColor: '#0a0a0a', skipFonts: true, filter,
-      };
+      const withTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+        Promise.race([p, new Promise<never>((_, rej) =>
+          setTimeout(() => rej(new Error(`timeout ${label} ${ms}ms`)), ms)
+        )]) as Promise<T>;
+
+      // cacheBust: false → blob URLs ficam intactos (cacheBust appends ?v=X que invalida blob: protocol)
+      const opts = { cacheBust: false, quality: 0.95, pixelRatio: 2, backgroundColor: '#0a0a0a', skipFonts: true };
 
       let dataUrl: string;
       try {
-        dataUrl = await htmlToImage.toPng(el, opts);
+        dataUrl = await withTimeout(htmlToImage.toPng(el, opts), 15000, 'toPng-px2');
       } catch (e1) {
-        console.warn('[captureCard] toPng falhou, tentando pixelRatio 1:', e1);
-        dataUrl = await htmlToImage.toPng(el, { ...opts, pixelRatio: 1 });
+        console.warn('[captureCard] px2 falhou, tentando px1:', e1);
+        try {
+          dataUrl = await withTimeout(htmlToImage.toPng(el, { ...opts, pixelRatio: 1 }), 15000, 'toPng-px1');
+        } catch (e2) {
+          console.error('[captureCard] px1 falhou:', e2);
+          throw e2;
+        }
       }
       return dataUrl;
     } catch (e) {
@@ -615,7 +675,14 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
       return null;
     } finally {
       origSrcs.forEach((orig, img) => { img.src = orig; });
+      origCross.forEach((val, img) => {
+        if (val !== null && val !== undefined) img.setAttribute('crossOrigin', val ?? 'anonymous');
+        else img.removeAttribute('crossOrigin');
+      });
       blobUrls.forEach(u => URL.revokeObjectURL(u));
+      // Remove override de CSS e atributo de captura
+      el.removeAttribute('data-capture-root');
+      if (captureStyle?.parentNode) captureStyle.remove();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -648,9 +715,13 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
           setUserId(user.id);
           let profile: { apelido?: string | null; nome?: string | null; avatar_url?: string | null } | null = null;
           const { data: byGoogleId } = await supabase
-            .from(PROFILE_TABLE).select('apelido, nome, avatar_url').eq('google_id', user.id).maybeSingle();
+            .from(PROFILE_TABLE).select('id, apelido, nome, avatar_url, whatsapp_solicitado').eq('google_id', user.id).maybeSingle();
           if (byGoogleId) {
             profile = byGoogleId;
+            if (!cancelled) {
+              setTfcUserId((byGoogleId as any).id);
+              setWaSolicitado(!!(byGoogleId as any).whatsapp_solicitado);
+            }
           }
           if (!cancelled) {
             const meta = (user.user_metadata || {}) as Record<string, unknown>;
@@ -701,10 +772,19 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
           return;
         }
 
-        const { data, error } = await supabase
-          .from(TABLE)
-          .select('formacao, lineup, capitao_id, heroi_id, palpite_tigre, palpite_adv')
-          .eq('usuario_id', user.id).eq('jogo_id', Number(jogoId)).maybeSingle();
+        // Carrega via API route (usa supabaseAdmin — resolve usuario_id correto e bypassa RLS)
+        const escalacaoRes = await fetch(`/api/tigre-fc/salvar-escalacao?jogo_id=${jogoId}`);
+        if (cancelled) return;
+        const escalacaoJson = escalacaoRes.ok ? await escalacaoRes.json().catch(() => ({ data: null })) : { data: null };
+        const data = escalacaoJson.data as {
+          formacao?: string;
+          lineup?: Record<string, unknown>;
+          capitao_id?: number;
+          heroi_id?: number;
+          palpite_tigre?: number;
+          palpite_adv?: number;
+        } | null;
+        const error = !escalacaoRes.ok && escalacaoRes.status !== 401 ? { message: 'fetch error' } : null;
         if (cancelled) return;
         if (error || !data) {
           setSlotMap(buildEmptySlots('4-3-3'));
@@ -843,17 +923,6 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
 
   const saveEscalacao = async (): Promise<{ ok: boolean; reason?: string }> => {
     if (!jogoId) return { ok: false, reason: 'sem-jogo' };
-
-    // Re-busca o usuário se o state ainda não foi preenchido (race condition)
-    let uid = userId;
-    if (!uid) {
-      const { data: { user } } = await supabase.auth.getUser();
-      uid = user?.id ?? null;
-      if (uid) setUserId(uid);
-    }
-    if (!uid) return { ok: false, reason: 'sem-login' };
-
-    // capitao_id e heroi_id são NOT NULL no schema — garante valor antes de salvar
     if (!captainId || !heroId) return { ok: false, reason: 'sem-capitao-ou-heroi' };
 
     const lineup: Record<string, { id: number; x: number; y: number } | null> = {};
@@ -861,39 +930,64 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
       lineup[slotId] = state.player ? { id: state.player.id, x: state.x, y: state.y } : null;
     });
 
-    // palpite_tigre = Novorizontino, palpite_adv = adversário (independe de mandante/visitante)
     const isNovMand = (jogoData?.mandanteSlug ?? 'novorizontino') === 'novorizontino';
-    const payload = {
-      usuario_id: uid,
-      jogo_id: Number(jogoId),
-      formacao: formation,
-      lineup,
-      capitao_id: captainId,
-      heroi_id: heroId,
-      palpite_tigre: isNovMand ? palpiteMandante : palpiteVisitante,
-      palpite_adv:   isNovMand ? palpiteVisitante : palpiteMandante,
-      updated_at: new Date().toISOString(),
-    };
-    const { error } = await supabase.from(TABLE).upsert(payload, { onConflict: 'usuario_id,jogo_id' });
-    if (error) {
-      console.error('[saveEscalacao] erro Supabase:', { msg: error.message, code: error.code, details: error.details, hint: error.hint });
-      return { ok: false, reason: error.message };
+
+    // Usa a API route — ela resolve tigre_fc_usuarios.id a partir do google_id (evita FK violation)
+    try {
+      const res = await fetch('/api/tigre-fc/salvar-escalacao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jogo_id: Number(jogoId),
+          formacao: formation,
+          lineup,
+          capitao_id: captainId,
+          heroi_id: heroId,
+          palpite_tigre: isNovMand ? palpiteMandante : palpiteVisitante,
+          palpite_adv:   isNovMand ? palpiteVisitante : palpiteMandante,
+        }),
+      });
+      if (res.status === 401) return { ok: false, reason: 'sem-login' };
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error('[saveEscalacao] API error:', body);
+        return { ok: false, reason: body?.error ?? `HTTP ${res.status}` };
+      }
+      setHadSaved(true);
+      if (!waSolicitado) setTimeout(() => setShowWaModal(true), 800);
+      return { ok: true };
+    } catch (e) {
+      console.error('[saveEscalacao] fetch error:', e);
+      return { ok: false, reason: 'Erro de rede' };
     }
-    setHadSaved(true);
-    return { ok: true };
   };
 
   const generateFinalImage = async () => {
-    setSaveError(null);
-    setStep('saving');
-    const saveRes = await saveEscalacao();
-    if (!saveRes.ok && saveRes.reason !== 'sem-login' && saveRes.reason !== 'sem-capitao-ou-heroi') {
-      setSaveError(`Erro ao salvar no ranking: ${saveRes.reason}`);
+    // Bloqueia sem login — exige autenticação antes de gerar/salvar
+    if (!userId) {
+      setShowLoginModal(true);
+      return;
     }
-    // Vai direto para o card final — sem geração automática de imagem
-    setFinalImageUri(null);
-    setStep('final');
-    triggerCelebration();
+    try {
+      setSaveError(null);
+      setStep('saving');
+      const saveRes = await saveEscalacao();
+      if (!saveRes.ok && saveRes.reason !== 'sem-capitao-ou-heroi') {
+        if (saveRes.reason === 'sem-login') {
+          setStep('palpite'); // volta ao passo anterior
+          setShowLoginModal(true);
+          return;
+        }
+        setSaveError(`Erro ao salvar no ranking: ${saveRes.reason}`);
+      }
+      setFinalImageUri(null);
+      setStep('final');
+      try { triggerCelebration(); } catch {}
+    } catch (e) {
+      console.error('[generateFinalImage]', e);
+      setFinalImageUri(null);
+      setStep('final');
+    }
   };
 
   // Botão de salvar no ranking separado (para usar a partir do step final)
@@ -905,8 +999,9 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
     if (res.ok) {
       setSaveError(null);
       setHadSaved(true);
+      if (!waSolicitado) setTimeout(() => setShowWaModal(true), 800);
     } else if (res.reason === 'sem-login') {
-      setSaveError('Faça login para salvar no ranking.');
+      setShowLoginModal(true);
     } else {
       setSaveError(`Erro: ${res.reason}`);
     }
@@ -943,20 +1038,23 @@ export default function EscalacaoFormacao({ jogoId, mandanteSlug: propMandanteSl
     const { confronto } = formatJogoInfo();
     const placarMand = palpiteMandante;
     const placarVis  = palpiteVisitante;
+    const adversario = slugToNome(
+      (jogoData?.mandanteSlug ?? propMandanteSlug)?.includes('novorizontino')
+        ? jogoData?.visitanteSlug ?? propVisitanteSlug
+        : jogoData?.mandanteSlug ?? propMandanteSlug
+    );
     return (
-`🐯 ARENA TIGRE FC
+`🐯 *ARENA TIGRE FC*
 
-Acabei de escalar meu Tigrão pro ${confronto || 'Novorizontino'}!
-🛡️ Formação: ${formation}
-⭐ OVR do time: ${teamOvr}
-👑 Capitão: ${cap}
-🔥 Herói: ${hero}
-🎯 Palpite: ${placarMand} × ${placarVis}
+Escalei meu Tigrão pra enfrentar o ${adversario || 'adversário'}!
+🛡️ Formação: ${formation} | OVR ${teamOvr}
+👑 Capitão: ${cap} | 🔥 Herói: ${hero}
+🎯 Meu palpite: ${placarMand} × ${placarVis}
 
-DUVIDO VOCÊ ESCALAR MELHOR! 😤
+Consegue escalar melhor do que eu? 😤
+Desafio você! Monta o seu time agora 👇
 
-Monta a sua aqui:
-${SHARE_BASE_URL}/${jogoId ?? ''}`
+🔗 onovorizontino.com.br/tigre-fc/escalar/${jogoId ?? ''}`
     );
   };
 
@@ -970,16 +1068,16 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
         const a = document.createElement('a');
         a.download = `tigre-fc-escalacao-${formation}.png`;
         a.href = uri;
-        // Append to body required for Firefox compatibility
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
       } else {
-        alert('Não foi possível gerar a imagem. Tente novamente.');
+        alert('Não foi possível gerar a imagem. Tente novamente.\n\nDica: tira um screenshot da tela! 📸');
       }
     } catch (e) {
       console.error('[downloadImage] erro:', e);
-      alert('Erro ao gerar imagem. Tente novamente.');
+      const msg = (e as Error)?.message ?? String(e);
+      alert(`Erro ao gerar imagem: ${msg}\n\nTira um screenshot da tela! 📸`);
     } finally {
       setIsGenerating(false);
     }
@@ -1000,10 +1098,12 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
   const shareWhatsApp = async () => {
     const text = buildShareText();
     const uri = await ensureUri();
+
+    // Mobile: Web Share API com arquivo (Android Chrome, iOS Safari)
     if (uri && typeof navigator !== 'undefined' && (navigator as any).canShare) {
       try {
         const blob = await fetch(uri).then(r => r.blob());
-        const file = new File([blob], `tigre-fc-escalacao.png`, { type: 'image/png' });
+        const file = new File([blob], 'tigre-fc-escalacao.png', { type: 'image/png' });
         if ((navigator as any).canShare({ files: [file] })) {
           await (navigator as any).share({ files: [file], text, title: 'Arena Tigre FC' });
           return;
@@ -1012,8 +1112,23 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
         if ((e as Error).name === 'AbortError') return;
       }
     }
-    if (uri) downloadImage();
+
+    // Desktop: baixa a imagem primeiro, depois abre o WhatsApp
+    if (uri) {
+      const a = document.createElement('a');
+      a.href = uri;
+      a.download = 'tigre-fc-escalacao.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Aguarda início do download antes de abrir nova aba
+      await new Promise(r => setTimeout(r, 700));
+    }
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    if (uri) {
+      setWaToast(true);
+      setTimeout(() => setWaToast(false), 8000);
+    }
   };
 
   const shareInstagram = async () => {
@@ -1053,6 +1168,19 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
 
   return (
     <div className="fixed inset-0 bg-black text-white font-sans antialiased overflow-hidden flex flex-col select-none">
+      {/* Botão voltar — fixo no topo esquerdo, sempre visível */}
+      <button
+        onClick={() => router.push('/tigre-fc')}
+        className="fixed top-3 left-3 z-[300] flex items-center gap-1.5 rounded-full border border-white/15 bg-black/70 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 backdrop-blur-md transition-colors hover:border-yellow-500/40 hover:text-yellow-400 active:scale-95">
+        ← Home
+      </button>
+
+      {/* Toast WhatsApp desktop */}
+      {waToast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-2xl bg-green-500 text-black font-black text-sm shadow-2xl flex items-center gap-2 whitespace-nowrap">
+          📎 Imagem salva! Abra o WhatsApp e anexe a foto no chat.
+        </div>
+      )}
       <AnimatePresence mode="wait">
 
         {step === 'loading' && (
@@ -1135,7 +1263,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 <div className="grid grid-cols-4 md:grid-cols-7 gap-0.5 md:gap-1">
                   {POSICOES.map(p => (
                     <button key={p} onClick={() => setPosFiltro(p)}
-                      className={`text-[8px] md:text-[10px] font-black py-1 rounded tracking-wide transition-all ${
+                      className={`text-[8px] md:text-[10px] font-black py-1.5 rounded tracking-wide transition-all active:scale-95 ${
                         posFiltro === p
                           ? 'bg-yellow-400 text-black shadow-[0_0_10px_rgba(250,204,21,0.5)]'
                           : 'bg-zinc-900 text-zinc-500 hover:text-white hover:bg-zinc-800'
@@ -1191,7 +1319,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
               </div>
 
               {/* Dica contextual — muda conforme o estado */}
-              <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 px-3 py-1 backdrop-blur rounded-full border hidden sm:flex items-center gap-1.5"
+              <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 px-3 py-1 backdrop-blur rounded-full border flex items-center gap-1.5"
                 style={{
                   background: activeSlot
                     ? 'rgba(250,204,21,0.12)'
@@ -1482,251 +1610,265 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
 
         {step === 'palpite' && (() => {
           const { diaSemana, dataFmt, horario } = formatJogoInfo();
-          // Fallback para props SSR quando jogoData ainda não carregou
           const mandSlug      = jogoData?.mandanteSlug  ?? propMandanteSlug;
           const visitSlug     = jogoData?.visitanteSlug ?? propVisitanteSlug;
           const mandanteNome  = slugToNome(mandSlug);
           const visitanteNome = slugToNome(visitSlug);
           const mandanteLogo  = slugToLogo(mandSlug);
           const visitanteLogo = slugToLogo(visitSlug);
+          const novoIsMand    = (mandSlug ?? '').includes('novorizontino');
+
+          // Cores LED — espelho do JumbotronJogo
+          const CL = { gold: '#F5C400', cyan: '#00F3FF', white: '#FFFFFF', red: '#FF2244', green: '#00FF88' };
+          const emissive = (color: string, strong = false): React.CSSProperties => ({
+            color,
+            textShadow: strong
+              ? `0.4px 0 0 ${CL.red}44, -0.4px 0 0 ${CL.cyan}44, 0 0 3px ${color}, 0 0 9px ${color}cc, 0 1px 2px rgba(0,0,0,.55)`
+              : `0 0 3px ${color}, 0 0 7px ${color}aa, 0 1px 1px rgba(0,0,0,.45)`,
+          });
+
+          const resultado = palpiteMandante > palpiteVisitante
+            ? { label: `🏆 VITÓRIA DO ${mandanteNome.split(' ')[0].toUpperCase()}`, color: CL.green }
+            : palpiteMandante < palpiteVisitante
+            ? { label: `💀 VITÓRIA DO ${visitanteNome.split(' ')[0].toUpperCase()}`, color: CL.red }
+            : { label: '🤝 EMPATE', color: '#a1a1aa' };
+
+          const tickerTxt = `${jogoData?.competicao ?? 'SÉRIE B'} · RODADA ${jogoData?.rodada ?? '—'} · ${mandanteNome} × ${visitanteNome} · `;
+
+          const ScoreBtn = ({ onClick, children, color }: { onClick: () => void; children: React.ReactNode; color: string }) => (
+            <motion.button whileTap={{ scale: 0.75 }} onClick={onClick}
+              style={{ width: 48, height: 48, borderRadius: 12, background: `${color}14`, border: `1.5px solid ${color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, fontWeight: 900, fontSize: 24, lineHeight: 1, cursor: 'pointer' }}>
+              {children}
+            </motion.button>
+          );
+
           return (
             <motion.div key="palpite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col items-center justify-start bg-zinc-950 overflow-auto">
+              className="flex-1 flex flex-col bg-[#070707] overflow-auto">
 
-              {/* Hero banner do jogo */}
-              <div className="w-full relative overflow-hidden">
-                <div className="absolute inset-0">
-                  <img src={STADIUM_BG} alt="" className="w-full h-full object-cover opacity-20" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-zinc-950/80 to-zinc-950" />
-                </div>
-                <div className="relative z-10 px-5 pt-5 pb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-yellow-400 text-[10px] font-black tracking-[5px]">ETAPA 5 DE 5</div>
-                    <div className="px-2 py-0.5 bg-yellow-400/10 border border-yellow-400/30 rounded-full">
-                      <span className="text-yellow-400 text-[9px] font-black tracking-wider">
-                        {jogoData?.competicao ?? 'SÉRIE B 2026'} · R{jogoData?.rodada ?? '—'}
+              {/* ════ TELÃO LED ════ */}
+              <div className="palpite-board" style={{ fontFamily: "'Barlow Condensed','Barlow',system-ui,sans-serif" }}>
+                <div className="palpite-screen">
+
+                  {/* bloom emissivo de fundo */}
+                  <div className="palpite-bloom" style={{ background:
+                    `radial-gradient(60% 70% at 28% 45%, ${novoIsMand ? CL.gold : CL.cyan}1e, transparent 65%),
+                     radial-gradient(60% 70% at 72% 45%, ${novoIsMand ? CL.cyan : CL.gold}1e, transparent 65%)` }} />
+
+                  <div className="relative z-20">
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid #ffffff14' }}>
+                      <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.28em', ...emissive(CL.green) }}>
+                        ⚡ SEU PALPITE
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.2em', ...emissive(CL.gold) }}>
+                        R{jogoData?.rodada ?? '—'} · {jogoData?.competicao ?? 'SÉRIE B'}
                       </span>
                     </div>
-                  </div>
 
-                  {/* Confronto visual */}
-                  <div className="flex items-center justify-between gap-3">
-                    {/* Mandante */}
-                    <div className="flex-1 flex flex-col items-center gap-2">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center"
-                        style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.8))' }}>
+                    {/* Confronto — logo | stepper | logo */}
+                    <div className="flex items-stretch justify-between px-3 pt-5 pb-3 gap-2">
+
+                      {/* MANDANTE */}
+                      <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
                         <img src={mandanteLogo} alt={mandanteNome}
-                          className="w-full h-full object-contain"
+                          style={{ width: 80, height: 80, objectFit: 'contain', filter: `brightness(1.15) contrast(1.1) saturate(1.2) drop-shadow(0 0 14px ${novoIsMand ? CL.gold : CL.white}55)` }}
                           onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
-                      </div>
-                      <div className="text-white text-[11px] sm:text-sm font-black text-center leading-tight max-w-[80px] truncate">
-                        {mandanteNome}
-                      </div>
-                      <div className="text-[9px] text-zinc-500 font-bold tracking-wider">MANDANTE</div>
-                    </div>
-
-                    {/* Centro */}
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="text-yellow-400 text-3xl sm:text-4xl font-black italic tracking-tighter">VS</div>
-                      {diaSemana && (
-                        <div className="text-center">
-                          <div className="text-white text-[11px] font-black tracking-wide">{diaSemana}, {dataFmt}</div>
-                          <div className="text-yellow-400 text-base sm:text-lg font-black">{horario}</div>
+                        <div className="text-center font-black uppercase leading-none"
+                          style={{ fontSize: 'clamp(15px,4vw,22px)', ...emissive(novoIsMand ? CL.gold : CL.white, novoIsMand) }}>
+                          {mandanteNome}
                         </div>
-                      )}
-                    </div>
+                        <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.2em', color: '#ffffff55' }}>MANDANTE</div>
+                      </div>
 
-                    {/* Visitante */}
-                    <div className="flex-1 flex flex-col items-center gap-2">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center"
-                        style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.8))' }}>
+                      {/* PLACAR EDITÁVEL */}
+                      <div className="flex flex-col items-center justify-center gap-1 shrink-0 px-1">
+                        {/* Botões + */}
+                        <div className="flex items-center gap-3 mb-1">
+                          <ScoreBtn onClick={() => setPalpiteMandante(v => v + 1)} color={novoIsMand ? CL.gold : CL.white}>+</ScoreBtn>
+                          <div style={{ width: 28 }} />
+                          <ScoreBtn onClick={() => setPalpiteVisitante(v => v + 1)} color={novoIsMand ? CL.white : CL.gold}>+</ScoreBtn>
+                        </div>
+
+                        {/* Números */}
+                        <div className="flex items-center gap-2">
+                          <div style={{ width: 56, height: 72, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                            <AnimatePresence mode="popLayout">
+                              <motion.span key={palpiteMandante}
+                                initial={{ y: -35, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 35, opacity: 0 }}
+                                transition={{ type: 'spring', damping: 14, stiffness: 300 }}
+                                className="absolute tabular-nums font-black italic"
+                                style={{ fontSize: 'clamp(52px,14vw,80px)', lineHeight: 0.85, ...emissive(novoIsMand ? CL.gold : CL.white, true) }}>
+                                {palpiteMandante}
+                              </motion.span>
+                            </AnimatePresence>
+                          </div>
+                          <span className="font-black italic" style={{ fontSize: 'clamp(28px,7vw,44px)', color: '#ffffff30', lineHeight: 1 }}>:</span>
+                          <div style={{ width: 56, height: 72, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                            <AnimatePresence mode="popLayout">
+                              <motion.span key={palpiteVisitante}
+                                initial={{ y: -35, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 35, opacity: 0 }}
+                                transition={{ type: 'spring', damping: 14, stiffness: 300 }}
+                                className="absolute tabular-nums font-black italic"
+                                style={{ fontSize: 'clamp(52px,14vw,80px)', lineHeight: 0.85, ...emissive(novoIsMand ? CL.white : CL.gold, true) }}>
+                                {palpiteVisitante}
+                              </motion.span>
+                            </AnimatePresence>
+                          </div>
+                        </div>
+
+                        {/* Botões − */}
+                        <div className="flex items-center gap-3 mt-1">
+                          <ScoreBtn onClick={() => setPalpiteMandante(v => Math.max(0, v - 1))} color="#52525b">−</ScoreBtn>
+                          <div style={{ width: 28 }} />
+                          <ScoreBtn onClick={() => setPalpiteVisitante(v => Math.max(0, v - 1))} color="#52525b">−</ScoreBtn>
+                        </div>
+
+                        {/* Data / hora */}
+                        {diaSemana && (
+                          <div className="text-center mt-2">
+                            <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ffffff60' }}>{diaSemana} · {dataFmt}</div>
+                            <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: '0.1em', ...emissive(CL.gold) }}>{horario}</div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* VISITANTE */}
+                      <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
                         <img src={visitanteLogo} alt={visitanteNome}
-                          className="w-full h-full object-contain"
+                          style={{ width: 80, height: 80, objectFit: 'contain', filter: `brightness(1.15) contrast(1.1) saturate(1.2) drop-shadow(0 0 14px ${novoIsMand ? CL.white : CL.gold}55)` }}
                           onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
+                        <div className="text-center font-black uppercase leading-none"
+                          style={{ fontSize: 'clamp(15px,4vw,22px)', ...emissive(novoIsMand ? CL.white : CL.gold, !novoIsMand) }}>
+                          {visitanteNome}
+                        </div>
+                        <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.2em', color: '#ffffff55' }}>VISITANTE</div>
                       </div>
-                      <div className="text-white text-[11px] sm:text-sm font-black text-center leading-tight max-w-[80px] truncate">
-                        {visitanteNome}
+                    </div>
+
+                    {/* Resultado badge */}
+                    <div className="flex justify-center pb-3">
+                      <motion.div key={resultado.label} initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                        style={{ padding: '6px 20px', borderRadius: 99, fontSize: 10, fontWeight: 900, letterSpacing: '0.25em', ...emissive(resultado.color), border: `1px solid ${resultado.color}44`, background: `${resultado.color}0d` }}>
+                        {resultado.label}
+                      </motion.div>
+                    </div>
+
+                    {/* Ticker */}
+                    <div className="palpite-ticker-wrap">
+                      <div className="palpite-ticker" style={{ color: CL.gold }}>
+                        <span>{tickerTxt}{tickerTxt}{tickerTxt}</span>
+                        <span>{tickerTxt}{tickerTxt}{tickerTxt}</span>
                       </div>
-                      <div className="text-[9px] text-zinc-500 font-bold tracking-wider">VISITANTE</div>
                     </div>
                   </div>
 
-                  {/* Infos do jogo */}
-                  <div className="mt-3 grid grid-cols-1 gap-1.5">
-                    {jogoData?.local && (
-                      <div className="flex items-start gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/8">
-                        <span className="text-sm mt-px">📍</span>
-                        <span className="text-[10px] sm:text-xs text-zinc-300 leading-snug">{jogoData.local}</span>
-                      </div>
-                    )}
-                    {jogoData?.transmissao && (
-                      <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/8">
-                        <span className="text-sm">📺</span>
-                        <span className="text-[10px] sm:text-xs text-zinc-300 font-bold">{jogoData.transmissao}</span>
-                      </div>
-                    )}
-                  </div>
+                  {/* Overlays LED */}
+                  <div className="palpite-bloom-front" />
+                  <div className="palpite-grid" />
+                  <div className="palpite-modules" />
+                  <div className="palpite-scan" />
+                  <div className="palpite-flicker" />
+                  <div className="palpite-sweep" />
+                  <div className="palpite-vignette" />
+                  <div className="palpite-bezel" style={{ boxShadow: `inset 0 0 0 2px ${CL.gold}33, inset 0 0 40px ${CL.gold}1a, 0 0 50px ${CL.gold}26` }} />
                 </div>
               </div>
 
-              {/* Palpite — ScoreStepper AAA */}
-              <div className="flex-1 flex flex-col items-center justify-center px-4 pb-6 w-full max-w-sm">
+              {/* ════ AÇÕES (fora do telão) ════ */}
+              <div className="px-4 pt-4 pb-6 flex flex-col items-center gap-3">
 
-                {/* Título */}
-                <div className="text-center mt-2 mb-5">
-                  <p className="text-[9px] font-black uppercase tracking-[0.5em] text-zinc-600">⚡ Match Predictor</p>
-                  <h1 className="text-2xl font-black italic mt-1 leading-none">SEU PALPITE</h1>
-                  <p className="text-zinc-500 text-[10px] mt-1 font-bold tracking-widest">QUAL VAI SER O PLACAR?</p>
-                </div>
-
-                {/* ScoreStepper container */}
-                <div className="w-full rounded-3xl overflow-hidden"
-                  style={{
-                    background: 'rgba(10,10,10,0.85)',
-                    border: '1.5px solid rgba(255,255,255,0.07)',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
-                  }}>
-
-                  {/* Linha neon topo */}
-                  <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,196,0,0.5), transparent)' }} />
-
-                  <div className="px-4 py-6 flex items-center justify-center gap-3">
-
-                    {/* Stepper Mandante */}
-                    <div className="flex flex-col items-center gap-2 flex-1">
-                      <img src={mandanteLogo} alt={mandanteNome}
-                        className="w-14 h-14 object-contain"
-                        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }}
-                        onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
-                      <motion.button whileTap={{ scale: 0.82 }}
-                        onClick={() => setPalpiteMandante(v => v + 1)}
-                        className="w-10 h-10 rounded-2xl text-white font-black text-lg flex items-center justify-center"
-                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                        +
-                      </motion.button>
-                      <div className="relative h-16 flex items-center justify-center overflow-hidden w-full">
-                        <AnimatePresence mode="popLayout">
-                          <motion.span key={palpiteMandante}
-                            initial={{ y: -30, opacity: 0, scale: 0.7 }}
-                            animate={{ y: 0, opacity: 1, scale: 1 }}
-                            exit={{ y: 30, opacity: 0, scale: 0.7 }}
-                            transition={{ type: 'spring', damping: 14, stiffness: 300 }}
-                            className="absolute tabular-nums font-black italic leading-none text-center"
-                            style={{
-                              fontSize: 'clamp(48px, 12vw, 64px)',
-                              color: '#F5C400',
-                              textShadow: '0 0 30px rgba(245,196,0,0.5)',
-                            }}>
-                            {palpiteMandante}
-                          </motion.span>
-                        </AnimatePresence>
-                      </div>
-                      <motion.button whileTap={{ scale: 0.82 }}
-                        onClick={() => setPalpiteMandante(v => Math.max(0, v - 1))}
-                        className="w-10 h-10 rounded-2xl text-white font-black text-lg flex items-center justify-center"
-                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                        −
-                      </motion.button>
-                      <span className="text-[8px] font-black tracking-widest text-zinc-600 uppercase mt-1 truncate max-w-[80px] text-center">
-                        {mandanteNome}
-                      </span>
-                    </div>
-
-                    {/* Separador */}
-                    <div className="flex flex-col items-center gap-1 pb-2">
-                      <span className="font-black italic text-zinc-700"
-                        style={{ fontSize: 'clamp(28px, 6vw, 36px)' }}>:</span>
-                    </div>
-
-                    {/* Stepper Visitante */}
-                    <div className="flex flex-col items-center gap-2 flex-1">
-                      <img src={visitanteLogo} alt={visitanteNome}
-                        className="w-14 h-14 object-contain"
-                        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }}
-                        onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_DEFAULT; }} />
-                      <motion.button whileTap={{ scale: 0.82 }}
-                        onClick={() => setPalpiteVisitante(v => v + 1)}
-                        className="w-10 h-10 rounded-2xl text-white font-black text-lg flex items-center justify-center"
-                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                        +
-                      </motion.button>
-                      <div className="relative h-16 flex items-center justify-center overflow-hidden w-full">
-                        <AnimatePresence mode="popLayout">
-                          <motion.span key={palpiteVisitante}
-                            initial={{ y: -30, opacity: 0, scale: 0.7 }}
-                            animate={{ y: 0, opacity: 1, scale: 1 }}
-                            exit={{ y: 30, opacity: 0, scale: 0.7 }}
-                            transition={{ type: 'spring', damping: 14, stiffness: 300 }}
-                            className="absolute tabular-nums font-black italic leading-none text-center"
-                            style={{
-                              fontSize: 'clamp(48px, 12vw, 64px)',
-                              color: '#ffffff',
-                              textShadow: '0 0 20px rgba(255,255,255,0.15)',
-                            }}>
-                            {palpiteVisitante}
-                          </motion.span>
-                        </AnimatePresence>
-                      </div>
-                      <motion.button whileTap={{ scale: 0.82 }}
-                        onClick={() => setPalpiteVisitante(v => Math.max(0, v - 1))}
-                        className="w-10 h-10 rounded-2xl text-white font-black text-lg flex items-center justify-center"
-                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                        −
-                      </motion.button>
-                      <span className="text-[8px] font-black tracking-widest text-zinc-600 uppercase mt-1 truncate max-w-[80px] text-center">
-                        {visitanteNome}
-                      </span>
-                    </div>
+                {/* Bônus */}
+                <div className="w-full max-w-sm flex items-center gap-3 px-4 py-3 rounded-2xl"
+                  style={{ background: 'rgba(245,196,0,0.05)', border: '1px solid rgba(245,196,0,0.18)' }}>
+                  <span style={{ fontSize: 20 }}>🎯</span>
+                  <div>
+                    <div className="text-yellow-400 text-[10px] font-black tracking-widest">PLACAR EXATO</div>
+                    <div className="text-yellow-400/50 text-[9px] font-bold tracking-wider">+15 PONTOS BÔNUS SE ACERTAR</div>
                   </div>
-
-                  {/* Indicador de resultado */}
-                  <div className="flex justify-center pb-4">
-                    <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
-                      palpiteMandante > palpiteVisitante
-                        ? 'border-green-500/40 bg-green-500/10 text-green-400'
-                        : palpiteMandante < palpiteVisitante
-                        ? 'border-red-500/40 bg-red-500/10 text-red-400'
-                        : 'border-zinc-700 bg-zinc-900 text-zinc-500'
-                    }`}>
-                      {palpiteMandante > palpiteVisitante
-                        ? `🏆 Vitória do ${mandanteNome}`
-                        : palpiteMandante < palpiteVisitante
-                        ? `💀 Vitória do ${visitanteNome}`
-                        : '🤝 Empate'}
-                    </div>
-                  </div>
-
-                  {/* Linha neon base */}
-                  <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)' }} />
-                </div>
-
-                {/* Bônus pill */}
-                <div className="mt-4 px-4 py-2 rounded-xl text-center"
-                  style={{ background: 'rgba(245,196,0,0.07)', border: '1px solid rgba(245,196,0,0.2)' }}>
-                  <span className="text-yellow-400 text-[10px] font-black tracking-wider">
-                    🎯 ACERTE O PLACAR EXATO → +15 PONTOS BÔNUS
-                  </span>
                 </div>
 
                 {/* CTA */}
-                <motion.button
-                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }}
                   onClick={generateFinalImage} disabled={isGenerating}
-                  className="mt-5 w-full py-5 relative overflow-hidden rounded-2xl font-black text-sm tracking-[0.3em] uppercase disabled:opacity-50"
-                  style={{ background: 'white', color: 'black' }}>
-                  <motion.div
-                    className="absolute inset-0 -skew-x-12"
-                    style={{ background: 'linear-gradient(90deg, transparent, rgba(245,196,0,0.5), transparent)' }}
-                    animate={{ x: ['-100%', '200%'] }}
-                    transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.5 }} />
-                  <span className="relative">{isGenerating ? 'GERANDO ARTE ÉPICA...' : 'CONFIRMAR ESCALAÇÃO →'}</span>
+                  className="w-full max-w-sm py-5 relative overflow-hidden rounded-2xl font-black text-sm tracking-[0.3em] uppercase disabled:opacity-50"
+                  style={{ background: `linear-gradient(90deg, ${CL.gold}, #ffe04d)`, color: '#0a0a0a', boxShadow: `0 8px 30px ${CL.gold}40` }}>
+                  <motion.span className="absolute inset-0"
+                    style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)' }}
+                    animate={{ x: ['-120%', '220%'] }} transition={{ duration: 2, repeat: Infinity, ease: 'linear', repeatDelay: 1.2 }} />
+                  <span className="relative">{isGenerating ? '⏳ GERANDO...' : '⚡ CONFIRMAR ESCALAÇÃO →'}</span>
                 </motion.button>
 
                 <button onClick={() => setStep('hero')}
-                  className="mt-4 text-zinc-600 hover:text-white text-[10px] font-black tracking-[3px] uppercase transition-colors">
+                  className="text-zinc-700 hover:text-zinc-400 text-[10px] font-black tracking-[3px] uppercase transition-colors">
                   ← TROCAR HERÓI
                 </button>
               </div>
+
+              {/* CSS LED — espelho exato do JumbotronJogo */}
+              <style jsx>{`
+                .palpite-board {
+                  position: relative; width: 100%; margin: 0 auto;
+                  background: linear-gradient(145deg, #141414, #050505 60%);
+                  padding: 10px;
+                  box-shadow: 0 24px 60px rgba(0,0,0,.7), inset 0 0 0 1px #ffffff0d;
+                }
+                .palpite-screen {
+                  position: relative; width: 100%; border-radius: 16px; overflow: hidden;
+                  background: #04060a; isolation: isolate;
+                }
+                .palpite-bloom       { position:absolute; inset:0; z-index:5;  pointer-events:none; filter: blur(28px); }
+                .palpite-bloom-front { position:absolute; inset:0; z-index:24; pointer-events:none;
+                  background: radial-gradient(120% 60% at 50% 40%, transparent 55%, rgba(0,0,0,.35) 100%); }
+                .palpite-grid {
+                  position:absolute; inset:0; z-index:30; pointer-events:none;
+                  background-image: radial-gradient(circle at center, rgba(0,0,0,0) 2.1px, rgba(2,4,8,.24) 2.5px);
+                  background-size: 5px 5px; mix-blend-mode: multiply;
+                }
+                .palpite-modules {
+                  position:absolute; inset:0; z-index:31; pointer-events:none;
+                  background-image:
+                    repeating-linear-gradient(0deg,  transparent 0 47px, rgba(0,0,0,.12) 47px 48px),
+                    repeating-linear-gradient(90deg, transparent 0 47px, rgba(0,0,0,.12) 47px 48px);
+                }
+                .palpite-scan {
+                  position:absolute; inset:0; z-index:31; pointer-events:none;
+                  background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.03) 2px 3px);
+                }
+                .palpite-flicker {
+                  position:absolute; inset:0; z-index:32; pointer-events:none; background:#fff;
+                  mix-blend-mode: overlay; animation: pFlicker 3.5s steps(2,end) infinite; opacity:.04;
+                }
+                .palpite-sweep {
+                  position:absolute; left:0; right:0; top:0; height:45%; z-index:33; pointer-events:none;
+                  background: linear-gradient(180deg, transparent, rgba(255,255,255,.05) 44%, rgba(255,255,255,.11) 50%, rgba(255,255,255,.05) 56%, transparent);
+                  mix-blend-mode: screen; animation: pSweep 5.5s linear infinite;
+                }
+                .palpite-vignette {
+                  position:absolute; inset:0; z-index:34; pointer-events:none;
+                  background: radial-gradient(ellipse at center, transparent 72%, rgba(0,0,0,.24) 100%);
+                }
+                .palpite-bezel { position:absolute; inset:0; z-index:35; border-radius:16px; pointer-events:none; }
+                .palpite-ticker-wrap {
+                  position:relative; overflow:hidden; border-top:1px solid #ffffff14; border-bottom:1px solid #ffffff14;
+                  background: rgba(0,0,0,.45); padding: 5px 0;
+                }
+                .palpite-ticker {
+                  display:inline-flex; white-space:nowrap; font-weight:900; letter-spacing:.18em;
+                  font-size:11px; animation: pTicker 26s linear infinite;
+                  text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
+                }
+                @keyframes pSweep   { 0%{transform:translateY(-110%)} 100%{transform:translateY(230%)} }
+                @keyframes pTicker  { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+                @keyframes pFlicker {
+                  0%,100%{opacity:.03} 10%{opacity:.07} 11%{opacity:.02} 40%{opacity:.05}
+                  41%{opacity:.10} 42%{opacity:.03} 70%{opacity:.06} 71%{opacity:.02}
+                }
+                @media (prefers-reduced-motion: reduce) {
+                  .palpite-sweep, .palpite-flicker, .palpite-ticker { animation: none; }
+                }
+              `}</style>
             </motion.div>
           );
         })()}
@@ -1846,7 +1988,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                     <div key={id}
                       style={{
                         left: `${state.x}%`,
-                        top: `${12 + (state.y / 100) * 60}%`,
+                        top: `${6 + (state.y / 100) * 66}%`,
                         position: 'absolute',
                         transform: 'translate(-50%, -50%)',
                       }}
@@ -2047,10 +2189,24 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                 </motion.button>
               )}
 
+              {/* Compartilhar escalação pré-jogo (depois de salvar) */}
+              {hadSaved && (
+                <CompartilharEscalacao
+                  jogadores={selectedPlayers.map(p => ({
+                    id: p.id, nome: p.name, apelido: p.short, foto: p.foto ?? '', pos: p.pos,
+                  }))}
+                  capitaoId={captainId}
+                  heroiId={heroId}
+                  formacao={formation}
+                  adversario={slugToNome(jogoData?.visitanteSlug ?? propVisitanteSlug)}
+                  nomeUsuario={userName}
+                />
+              )}
+
               {/* Compartilhar */}
               <div className="grid grid-cols-3 gap-2">
                 <button onClick={shareWhatsApp}
-                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase transition-all hover:scale-105"
+                  className="min-h-[48px] py-3 rounded-xl text-[10px] font-black tracking-wider uppercase transition-all active:scale-95"
                   style={{
                     background: 'rgba(37,211,102,0.12)',
                     border: '1px solid rgba(37,211,102,0.4)',
@@ -2059,7 +2215,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                   WhatsApp
                 </button>
                 <button onClick={shareInstagram}
-                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase transition-all hover:scale-105"
+                  className="min-h-[48px] py-3 rounded-xl text-[10px] font-black tracking-wider uppercase transition-all active:scale-95"
                   style={{
                     background: 'rgba(225,48,108,0.12)',
                     border: '1px solid rgba(225,48,108,0.4)',
@@ -2068,7 +2224,7 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                   Instagram
                 </button>
                 <button onClick={shareX}
-                  className="py-3 rounded-xl text-[10px] font-black tracking-wider uppercase transition-all hover:scale-105"
+                  className="min-h-[48px] py-3 rounded-xl text-[10px] font-black tracking-wider uppercase transition-all active:scale-95"
                   style={{
                     background: 'rgba(255,255,255,0.06)',
                     border: '1px solid rgba(255,255,255,0.15)',
@@ -2089,11 +2245,64 @@ ${SHARE_BASE_URL}/${jogoId ?? ''}`
                   Arena →
                 </button>
               </div>
+
+              {/* Voltar para home — botão explícito no rodapé do card final */}
+              <button onClick={() => router.push('/tigre-fc')}
+                className="mt-5 w-full flex items-center justify-center gap-2 rounded-2xl border border-white/10 py-3.5 text-[11px] font-black uppercase tracking-widest text-zinc-400 transition-all hover:border-yellow-500/30 hover:text-yellow-400 active:scale-95">
+                ← Voltar para a arena
+              </button>
             </div>
             <div className="h-8" />
           </motion.div>
         )}
 
+      </AnimatePresence>
+
+      {/* Modal WhatsApp — aparece após o primeiro save */}
+      <AnimatePresence>
+        {showWaModal && tfcUserId && (
+          <WhatsAppCaptureModal
+            usuarioId={tfcUserId}
+            onClose={() => { setShowWaModal(false); setWaSolicitado(true); }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Modal de login — aparece quando tenta salvar sem estar autenticado */}
+      <AnimatePresence>
+        {showLoginModal && (
+          <motion.div
+            className="fixed inset-0 z-[400] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowLoginModal(false)}>
+            <motion.div
+              className="w-full max-w-sm rounded-3xl overflow-hidden"
+              style={{ background: 'linear-gradient(180deg,#141414 0%,#0d0d0d 100%)', border: '1px solid rgba(245,196,0,0.25)', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}
+              initial={{ scale: 0.9, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 20, opacity: 0 }} transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}>
+              <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#F5C400,#fbbf24,#F5C400)' }} />
+              <div className="p-7 text-center">
+                <div className="text-5xl mb-4">🐯</div>
+                <h3 className="text-white font-black text-xl mb-2">Faça login para salvar</h3>
+                <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
+                  Entre com o Google para salvar sua escalação no ranking e competir com os outros torcedores.
+                </p>
+                <button
+                  onClick={() => { supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } }); }}
+                  className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3"
+                  style={{ background: 'linear-gradient(90deg,#F5C400,#f59e0b)', color: '#000' }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+                  Entrar com Google
+                </button>
+                <button onClick={() => setShowLoginModal(false)} className="mt-3 w-full py-2.5 text-zinc-600 text-xs font-bold hover:text-zinc-400 transition-colors">
+                  Continuar montando
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {hadSaved && step === 'arena' && (
