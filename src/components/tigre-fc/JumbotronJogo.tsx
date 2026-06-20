@@ -26,7 +26,7 @@ const LOGOS: Record<string, string> = {
   'avai': ESCUDO_AVAI_OFICIAL,
   'criciuma': 'https://logodownload.org/wp-content/uploads/2018/06/criciuma-logo-escudo-1.png',
   'vila-nova': 'https://logodownload.org/wp-content/uploads/2017/02/vila-nova-logo-escudo.png',
-  'ponte-preta': 'https://logodownload.org/wp-content/uploads/2017/02/ponte-preta-logo-escudo.png',
+  'ponte-preta': `${STORAGE_BASE}/escudo-ponte-preta.png`,
   'athletico-pr': 'https://logodownload.org/wp-content/uploads/2017/02/athletico-pr-logo-escudo.png',
   'goias': 'https://logodownload.org/wp-content/uploads/2017/02/goias-logo-escudo.png',
   'coritiba': 'https://logodownload.org/wp-content/uploads/2017/02/coritiba-logo-escudo.png',
@@ -47,10 +47,9 @@ const LOGOS: Record<string, string> = {
   'juventude': 'https://logodownload.org/wp-content/uploads/2017/02/juventude-logo-escudo.png',
   'ceara': 'https://logodownload.org/wp-content/uploads/2017/02/ceara-logo-escudo.png',
   'sao-bernardo': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20SAO%20BERNARDO.png',
-  // adicionados p/ próximas rodadas:
-  'nautico': 'https://logodownload.org/wp-content/uploads/2017/02/nautico-logo-escudo.png',
+  'nautico': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/escudo-nautico.png',
+  'atletico-go': 'https://logodownload.org/wp-content/uploads/2017/02/atletico-goianiense-logo-escudo.png',
   'fortaleza': 'https://logodownload.org/wp-content/uploads/2017/02/fortaleza-logo-escudo.png',
-  'atletico-go': 'https://logodownload.org/wp-content/uploads/2017/02/atletico-go-logo-escudo.png',
 };
 
 const NOMES: Record<string, string> = {
