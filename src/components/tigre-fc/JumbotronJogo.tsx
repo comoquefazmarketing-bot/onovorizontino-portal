@@ -18,39 +18,47 @@ export const C = {
 
 const FONT_FAMILY = "'Barlow Condensed', 'Barlow', system-ui, -apple-system, sans-serif";
 const STORAGE_BASE = 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal';
+const SUPA_REST   = 'https://whoglnpvqjbaczgnebbn.supabase.co/rest/v1';
+const SUPA_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indob2dsbnB2cWpiYWN6Z25lYmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODA2MTksImV4cCI6MjA4OTM1NjYxOX0.4JMjKuE3G5aBIIP-VEa8qc9M6c1NMKiSe0ZfgjIXY_Y';
 const ESCUDO_NOVORIZONTINO = `${STORAGE_BASE}/Escudo%20Novorizontino.png`;
-const ESCUDO_AVAI_OFICIAL = 'https://logodownload.org/wp-content/uploads/2017/02/avai-fc-logo-escudo.png';
 
-const LOGOS: Record<string, string> = {
-  'novorizontino': ESCUDO_NOVORIZONTINO, 'gremio-novorizontino': ESCUDO_NOVORIZONTINO,
-  'avai': ESCUDO_AVAI_OFICIAL,
-  'criciuma': 'https://logodownload.org/wp-content/uploads/2018/06/criciuma-logo-escudo-1.png',
-  'vila-nova': 'https://logodownload.org/wp-content/uploads/2017/02/vila-nova-logo-escudo.png',
-  'ponte-preta': `${STORAGE_BASE}/escudo-ponte-preta.png`,
-  'athletico-pr': 'https://logodownload.org/wp-content/uploads/2017/02/athletico-pr-logo-escudo.png',
-  'goias': 'https://logodownload.org/wp-content/uploads/2017/02/goias-logo-escudo.png',
-  'coritiba': 'https://logodownload.org/wp-content/uploads/2017/02/coritiba-logo-escudo.png',
-  'cuiaba': 'https://logodownload.org/wp-content/uploads/2017/02/cuiaba-logo-escudo.png',
-  'chapecoense': 'https://logodownload.org/wp-content/uploads/2017/02/chapecoense-logo-escudo.png',
-  'paysandu': 'https://logodownload.org/wp-content/uploads/2017/02/paysandu-logo-escudo.png',
-  'remo': 'https://logodownload.org/wp-content/uploads/2017/02/remo-logo-escudo.png',
-  'amazonas': 'https://logodownload.org/wp-content/uploads/2017/02/amazonas-fc-logo-escudo.png',
-  'operario-pr': 'https://logodownload.org/wp-content/uploads/2017/02/operario-pr-logo-escudo.png',
-  'volta-redonda': 'https://logodownload.org/wp-content/uploads/2017/02/volta-redonda-logo-escudo.png',
-  'crb': 'https://logodownload.org/wp-content/uploads/2017/02/crb-logo-escudo.png',
-  'america-mg': 'https://logodownload.org/wp-content/uploads/2017/02/america-mg-logo-escudo.png',
-  'athletic-mg': 'https://logodownload.org/wp-content/uploads/2017/02/athletic-club-mg-logo-escudo.png',
-  'athletic': 'https://logodownload.org/wp-content/uploads/2017/02/athletic-club-mg-logo-escudo.png',
-  'botafogo-sp': 'https://logodownload.org/wp-content/uploads/2017/02/botafogo-sp-logo-escudo.png',
-  'sport': 'https://logodownload.org/wp-content/uploads/2017/02/sport-logo-escudo.png',
-  'londrina': 'https://logodownload.org/wp-content/uploads/2017/02/londrina-logo-escudo.png',
-  'juventude': 'https://logodownload.org/wp-content/uploads/2017/02/juventude-logo-escudo.png',
-  'ceara': 'https://logodownload.org/wp-content/uploads/2017/02/ceara-logo-escudo.png',
-  'sao-bernardo': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/ESCUDO%20SAO%20BERNARDO.png',
-  'nautico': 'https://whoglnpvqjbaczgnebbn.supabase.co/storage/v1/object/public/imagens-portal/escudo-nautico.png',
-  'atletico-go': 'https://logodownload.org/wp-content/uploads/2017/02/atletico-goianiense-logo-escudo.png',
-  'fortaleza': 'https://logodownload.org/wp-content/uploads/2017/02/fortaleza-logo-escudo.png',
+/* Fallback estático enquanto a tabela carrega (cobre os times que já temos no Supabase) */
+const LOGOS_FALLBACK: Record<string, string> = {
+  'novorizontino': ESCUDO_NOVORIZONTINO,
+  'gremio-novorizontino': ESCUDO_NOVORIZONTINO,
+  'sao-bernardo': `${STORAGE_BASE}/ESCUDO%20SAO%20BERNARDO.png`,
+  'nautico':      `${STORAGE_BASE}/escudo-nautico.png`,
+  'ponte-preta':  `${STORAGE_BASE}/escudo-ponte-preta.png`,
+  'cuiaba':       `${STORAGE_BASE}/ESCUDO%20CUIABA.png`,
+  'america-mg':   `${STORAGE_BASE}/ESCUDO%20AMERICA%20MINEIRO.png`,
+  'botafogo-sp':  `${STORAGE_BASE}/Botafogo_sp.svg`,
+  'avai':         `${STORAGE_BASE}/Avai_Futebol_Clube_logo.svg.png`,
 };
+
+/* Cache em memória — populado uma única vez por sessão */
+let _logosCache: Record<string, string> | null = null;
+
+async function fetchLogos(): Promise<Record<string, string>> {
+  if (_logosCache) return _logosCache;
+  try {
+    const res = await fetch(`${SUPA_REST}/times_serie_b?select=slug,escudo_url`, {
+      headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` },
+      next: { revalidate: 3600 },
+    });
+    const rows: { slug: string; escudo_url: string }[] = await res.json();
+    _logosCache = { ...LOGOS_FALLBACK };
+    for (const r of rows) {
+      if (r.slug && r.escudo_url) {
+        _logosCache[r.slug] = r.escudo_url;
+        // alias gremio-novorizontino → novorizontino
+        if (r.slug === 'novorizontino') _logosCache['gremio-novorizontino'] = r.escudo_url;
+      }
+    }
+  } catch {
+    _logosCache = LOGOS_FALLBACK;
+  }
+  return _logosCache;
+}
 
 const NOMES: Record<string, string> = {
   'novorizontino': 'NOVORIZONTINO', 'gremio-novorizontino': 'NOVORIZONTINO', 'avai': 'AVAÍ',
@@ -64,7 +72,10 @@ const NOMES: Record<string, string> = {
 };
 
 const slugToNome = (slug?: string | null) => slug ? NOMES[slug] ?? slug.replace(/-/g, ' ').toUpperCase() : '---';
-const slugToLogo = (slug?: string | null) => slug ? LOGOS[slug] ?? ESCUDO_NOVORIZONTINO : ESCUDO_NOVORIZONTINO;
+const slugToLogo = (slug?: string | null, logos?: Record<string, string>) => {
+  const map = logos ?? LOGOS_FALLBACK;
+  return slug ? (map[slug] ?? ESCUDO_NOVORIZONTINO) : ESCUDO_NOVORIZONTINO;
+};
 const normalizarCompeticao = (raw?: string | null): string => {
   if (!raw) return 'BRASILEIRÃO SÉRIE B';
   const s = raw.toString().toUpperCase();
@@ -120,6 +131,8 @@ export default function JumbotronJogo({
   const safeJogo = jogo ?? {};
   const router = useRouter();
   const id = safeJogo.id ?? 0;
+  const [logos, setLogos] = useState<Record<string, string>>(LOGOS_FALLBACK);
+  useEffect(() => { fetchLogos().then(setLogos); }, []);
   const rodada = safeJogo.rodada ?? '—';
   const competicaoDisplay = normalizarCompeticao(safeJogo.competicao);
   const mandanteSlug = safeJogo.mandante_slug ?? 'sao-bernardo';
@@ -213,10 +226,11 @@ export default function JumbotronJogo({
               return (
                 <React.Fragment key={t.slug + idx}>
                   <div className="flex-1 flex flex-col items-center justify-start gap-2 min-w-0">
-                    <img src={slugToLogo(t.slug)} alt={t.nome}
+                    <img src={slugToLogo(t.slug, logos)} alt={t.nome}
                       className="w-20 h-20 md:w-24 md:h-24 object-contain"
                       style={{ filter: `brightness(1.18) contrast(1.12) saturate(1.25) drop-shadow(0 0 16px ${cor})` }}
-                      onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_NOVORIZONTINO; }} />
+                      onError={e => { (e.currentTarget as HTMLImageElement).src = ESCUDO_NOVORIZONTINO; }}
+                    />
                     <div className="text-center font-black uppercase tracking-tight leading-none"
                       style={{ fontSize: 'clamp(18px,5vw,30px)', ...emissive(cor, isNovo) }}>{t.nome}</div>
                     <div className="text-[9px] font-black tracking-[2px]" style={{ color: '#ffffff66' }}>{t.lado}</div>
